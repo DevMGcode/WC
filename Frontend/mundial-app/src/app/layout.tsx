@@ -9,6 +9,10 @@ export const metadata: Metadata = {
   title: 'Orionix Gol',
   description: 'Predicciones y seguimiento de Orionix Gol',
   viewport: 'width=device-width, initial-scale=1.0, viewport-fit=cover',
+  icons: {
+    icon: '/Logo_Pestaña.png',
+    apple: '/Logo_Pestaña.png',
+  },
 };
 
 export default function RootLayout({

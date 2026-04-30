@@ -26,11 +26,11 @@ export interface AuthResponse {
 export const authService = {
   /**
    * Login con email y password
-   * Usa URL relativa para que Next.js intercepte con el proxy/route handler
+   * Llamada directa al backend con JWT
    */
   async login(email: string, password: string): Promise<AuthResponse> {
     try {
-      const response = await fetch('/api/v1/public/users/login', {
+      const response = await fetch('/api/v1/auth/login', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

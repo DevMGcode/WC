@@ -12,6 +12,7 @@ export default function GroupsPage() {
   const [groups, setGroups] = useState<any[]>([]);
   const [bracketsData, setBracketsData] = useState<any>(null);
   const [loading, setLoading] = useState(true);
+  const [activeTab, setActiveTab] = useState<'grupos' | 'eliminatorias' | 'campeon'>('grupos');
 
   useEffect(() => {
     // Mock data
@@ -201,10 +202,56 @@ export default function GroupsPage() {
   }, []);
 
   return (
-    <div className="w-full">
-      <Header title="⚙️ Grupos & Eliminatorias" subtitle="Tabla de posiciones y ruta al campeonato" />
+    <div className="w-full relative min-h-screen bg-gradient-to-b from-[#040912] via-[#0a1828] to-[#051015]">
+      <div className="absolute inset-0 opacity-30 bg-[radial-gradient(circle_at_20%_20%,rgba(34,211,238,0.25),transparent_35%),radial-gradient(circle_at_80%_80%,rgba(16,185,129,0.2),transparent_35%)]" />
+      <div className="absolute inset-0 opacity-15 bg-[linear-gradient(to_right,rgba(148,163,184,0.12)_1px,transparent_1px),linear-gradient(to_bottom,rgba(148,163,184,0.12)_1px,transparent_1px)] bg-[size:28px_28px]" />
+      
+      <div className="relative z-10">
+        <Header title="⚙️ Grupos & Eliminatorias" subtitle="Tabla de posiciones y ruta al campeonato" centered />
 
-      <div className="relative z-10 px-4 py-6 max-w-7xl mx-auto w-full pb-32">
+      {/* Navigation Bar - Always Visible */}
+      <div className="sticky top-0 z-50 bg-gradient-to-r from-[#07192f] via-[#0a2740] to-[#081525] border-b border-cyan-300/20 shadow-lg">
+        <div className="px-2 md:px-4 py-3 max-w-7xl mx-auto w-full flex items-center gap-2 md:gap-4 overflow-x-auto">
+          <motion.button
+            onClick={() => setActiveTab('grupos')}
+            className={`px-4 md:px-6 py-2 md:py-2.5 rounded-lg font-bold text-xs md:text-sm whitespace-nowrap transition-all ${
+              activeTab === 'grupos'
+                ? 'border-2 border-cyan-300/40 bg-cyan-400/10 text-cyan-100'
+                : 'border-2 border-slate-500/40 text-slate-300 hover:border-cyan-300/40 hover:bg-cyan-400/10'
+            }`}
+            whileHover={{ scale: 1.05 }}
+            whileTap={{ scale: 0.95 }}
+          >
+            📊 Fase de Grupos
+          </motion.button>
+          <motion.button
+            onClick={() => setActiveTab('eliminatorias')}
+            className={`px-4 md:px-6 py-2 md:py-2.5 rounded-lg font-bold text-xs md:text-sm whitespace-nowrap transition-all ${
+              activeTab === 'eliminatorias'
+                ? 'border-2 border-cyan-300/40 bg-cyan-400/10 text-cyan-100'
+                : 'border-2 border-slate-500/40 text-slate-300 hover:border-cyan-300/40 hover:bg-cyan-400/10'
+            }`}
+            whileHover={{ scale: 1.05 }}
+            whileTap={{ scale: 0.95 }}
+          >
+            🏆 Eliminatorias
+          </motion.button>
+          <motion.button
+            onClick={() => setActiveTab('campeon')}
+            className={`px-4 md:px-6 py-2 md:py-2.5 rounded-lg font-bold text-xs md:text-sm whitespace-nowrap transition-all ${
+              activeTab === 'campeon'
+                ? 'border-2 border-cyan-300/40 bg-cyan-400/10 text-cyan-100'
+                : 'border-2 border-slate-500/40 text-slate-300 hover:border-cyan-300/40 hover:bg-cyan-400/10'
+            }`}
+            whileHover={{ scale: 1.05 }}
+            whileTap={{ scale: 0.95 }}
+          >
+            👑 Campeón
+          </motion.button>
+        </div>
+      </div>
+
+      <div className="relative px-4 md:px-6 py-4 md:py-6 max-w-7xl mx-auto w-full pb-4 overflow-hidden">
         {loading ? (
           <div className="flex items-center justify-center min-h-96">
             <div className="text-center">
@@ -213,19 +260,20 @@ export default function GroupsPage() {
             </div>
           </div>
         ) : (
-          <div className="space-y-12">
+          <div className="space-y-4 md:space-y-6">
             {/* SECCIÓN 1: GRUPOS DE FASE CLASIFICATORIA */}
+            {activeTab === 'grupos' && (
             <motion.div
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.4 }}
             >
-              <div className="mb-8">
-                <h2 className="text-3xl md:text-4xl font-black text-white mb-2">📊 Fase de Grupos</h2>
-                <div className="h-1.5 w-24 bg-gradient-to-r from-cyan-400 to-transparent rounded-full"></div>
+              <div className="mb-6">
+                <h2 className="text-2xl md:text-4xl font-black text-white mb-2">📊 Fase de Grupos</h2>
+                <div className="h-1.5 w-20 md:w-24 bg-gradient-to-r from-cyan-400 to-transparent rounded-full"></div>
               </div>
 
-              <div className="space-y-8">
+              <div className="space-y-6">
                 {groups.map((group, gIdx) => (
                   <motion.div
                     key={group.id}
@@ -234,32 +282,32 @@ export default function GroupsPage() {
                     transition={{ duration: 0.28, delay: gIdx * 0.06 }}
                   >
                     <Card className="overflow-hidden glass-premium hover-lift-premium border border-cyan-200/35">
-                      <h3 className="text-xl font-black text-slate-800 mb-4 px-4 pt-4">{group.name}</h3>
+                      <h3 className="text-lg md:text-xl font-black text-slate-800 mb-3 px-3 md:px-4 pt-3">{group.name}</h3>
 
                       <div className="overflow-x-auto">
-                        <table className="w-full">
+                        <table className="w-full text-sm">
                           <thead>
                             <tr className="bg-gradient-to-r from-slate-900 via-cyan-800 to-slate-900 text-cyan-100">
-                              <th className="px-4 py-2 text-left text-sm font-bold">Pos.</th>
-                              <th className="px-4 py-2 text-left text-sm font-bold">Equipo</th>
-                              <th className="px-4 py-2 text-center text-sm font-bold">PJ</th>
-                              <th className="px-4 py-2 text-center text-sm font-bold">G</th>
-                              <th className="px-4 py-2 text-center text-sm font-bold">E</th>
-                              <th className="px-4 py-2 text-center text-sm font-bold">P</th>
-                              <th className="px-4 py-2 text-center text-sm font-bold">DG</th>
-                              <th className="px-4 py-2 text-center text-sm font-bold">Pts</th>
+                              <th className="px-2 md:px-4 py-2 text-left text-xs md:text-sm font-bold">Pos.</th>
+                              <th className="px-2 md:px-4 py-2 text-left text-xs md:text-sm font-bold">Equipo</th>
+                              <th className="px-2 md:px-4 py-2 text-center text-xs md:text-sm font-bold">PJ</th>
+                              <th className="px-2 md:px-4 py-2 text-center text-xs md:text-sm font-bold">G</th>
+                              <th className="px-2 md:px-4 py-2 text-center text-xs md:text-sm font-bold">E</th>
+                              <th className="px-2 md:px-4 py-2 text-center text-xs md:text-sm font-bold">P</th>
+                              <th className="px-2 md:px-4 py-2 text-center text-xs md:text-sm font-bold">DG</th>
+                              <th className="px-2 md:px-4 py-2 text-center text-xs md:text-sm font-bold">Pts</th>
                             </tr>
                           </thead>
                           <tbody>
                             {group.standings.map((standing: any, idx: number) => (
                               <tr
                                 key={standing.team.id}
-                                className={`border-b border-slate-200/60 ${idx === 0 || idx === 1 ? 'bg-cyan-50/60' : 'bg-white/80 hover:bg-slate-50/80'}`}
+                                className={`border-b border-slate-200/20 ${idx === 0 || idx === 1 ? 'bg-cyan-300/10' : 'bg-white/15 hover:bg-slate-100/20'}`}
                               >
-                                <td className="px-4 py-3 font-bold text-slate-800">{standing.position}</td>
-                                <td className="px-4 py-3">
-                                  <div className="flex items-center gap-2">
-                                    <div className="w-6 h-4 rounded overflow-hidden flex-shrink-0">
+                                <td className="px-2 md:px-4 py-2 font-bold text-slate-800 text-xs md:text-sm">{standing.position}</td>
+                                <td className="px-2 md:px-4 py-2">
+                                  <div className="flex items-center gap-1.5">
+                                    <div className="w-5 h-3 md:w-6 md:h-4 rounded overflow-hidden flex-shrink-0">
                                       <Image
                                         src={standing.team.flagUrl}
                                         alt={standing.team.name}
@@ -269,17 +317,17 @@ export default function GroupsPage() {
                                         unoptimized
                                       />
                                     </div>
-                                    <span className="font-semibold text-slate-800">{standing.team.shortName}</span>
+                                    <span className="font-semibold text-slate-800 text-xs md:text-sm">{standing.team.shortName}</span>
                                   </div>
                                 </td>
-                                <td className="px-4 py-3 text-center text-sm">{standing.played}</td>
-                                <td className="px-4 py-3 text-center text-sm text-emerald-600 font-bold">{standing.won}</td>
-                                <td className="px-4 py-3 text-center text-sm text-amber-600 font-bold">{standing.drawn}</td>
-                                <td className="px-4 py-3 text-center text-sm text-rose-600 font-bold">{standing.lost}</td>
-                                <td className="px-4 py-3 text-center text-sm font-semibold">
+                                <td className="px-2 md:px-4 py-2 text-center text-xs">{standing.played}</td>
+                                <td className="px-2 md:px-4 py-2 text-center text-xs text-emerald-600 font-bold">{standing.won}</td>
+                                <td className="px-2 md:px-4 py-2 text-center text-xs text-amber-600 font-bold">{standing.drawn}</td>
+                                <td className="px-2 md:px-4 py-2 text-center text-xs text-rose-600 font-bold">{standing.lost}</td>
+                                <td className="px-2 md:px-4 py-2 text-center text-xs font-semibold">
                                   {standing.goalDiff > 0 ? '+' : ''}{standing.goalDiff}
                                 </td>
-                                <td className="px-4 py-3 text-center text-sm font-black text-slate-800">
+                                <td className="px-2 md:px-4 py-2 text-center text-xs font-black text-slate-800">
                                   {standing.points}
                                 </td>
                               </tr>
@@ -292,17 +340,19 @@ export default function GroupsPage() {
                 ))}
               </div>
             </motion.div>
+            )}
 
             {/* SECCIÓN 2: BRACKET DE ELIMINATORIAS */}
+            {activeTab === 'eliminatorias' && (
             <motion.div
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.4, delay: 0.2 }}
-              className="mt-16"
+              transition={{ duration: 0.4 }}
+              className="mt-2 md:mt-4"
             >
-              <div className="mb-8">
-                <h2 className="text-3xl md:text-4xl font-black text-white mb-2">🏆 Fase de Eliminatorias</h2>
-                <div className="h-1.5 w-24 bg-gradient-to-r from-cyan-400 to-transparent rounded-full"></div>
+              <div className="mb-3">
+                <h2 className="text-2xl md:text-4xl font-black text-white mb-1">🏆 Fase de Eliminatorias</h2>
+                <div className="h-1.5 w-20 md:w-24 bg-gradient-to-r from-cyan-400 to-transparent rounded-full"></div>
               </div>
 
               {bracketsData && (
@@ -310,35 +360,42 @@ export default function GroupsPage() {
                   initial={{ opacity: 0 }}
                   animate={{ opacity: 1 }}
                   transition={{ duration: 0.5, delay: 0.3 }}
+                  className="w-full overflow-x-auto"
                 >
-                  <Bracket data={bracketsData} />
+                  <div className="min-w-full scale-90 lg:scale-100 origin-top-left transform">
+                    <Bracket data={bracketsData} />
+                  </div>
                 </motion.div>
               )}
             </motion.div>
+            )}
 
             {/* Footer */}
             <motion.div
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               transition={{ delay: 0.6 }}
-              className="flex gap-3 mt-8"
+              className="flex gap-2 md:gap-3 -mt-24 md:-mt-32"
             >
               <Link href="/" className="flex-1">
                 <Button
                   variant="outline"
                   className="w-full text-cyan-800 hover:text-cyan-900 border-cyan-300/70 bg-gradient-to-r from-white/85 via-cyan-50/70 to-white/85 hover:from-cyan-100/90 hover:to-sky-100/90 shadow-[0_8px_20px_rgba(6,182,212,0.16)] hover:shadow-[0_12px_24px_rgba(6,182,212,0.24)]"
                 >
-                  ← Volver
+                  <span className="hidden md:inline">← Volver</span>
+                  <span className="md:hidden">←</span>
                 </Button>
               </Link>
               <Link href="/predictions" className="flex-1">
                 <Button className="w-full">
-                  🎯 Haz Predicciones
+                  <span className="hidden md:inline">🎯 Haz Predicciones</span>
+                  <span className="md:hidden">🎯</span>
                 </Button>
               </Link>
             </motion.div>
           </div>
         )}
+      </div>
       </div>
     </div>
   );

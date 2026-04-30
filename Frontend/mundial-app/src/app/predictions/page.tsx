@@ -78,7 +78,7 @@ export default function PredictionsPage() {
 
   return (
     <div className="w-full">
-      <Header title="🎯 Porras" subtitle="Predicciones y rankings" />
+      <Header title="🎯 Porras" subtitle="Predicciones y rankings" centered />
 
       <div className="relative z-10 px-4 py-6 max-w-4xl mx-auto w-full pb-32">
         {/* Tabs */}

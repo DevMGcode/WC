@@ -1,5 +1,6 @@
 package com.mundial2026.backend.user.api.mapper;
 
+import com.mundial2026.backend.user.api.dto.AuthUserResponse;
 import com.mundial2026.backend.user.api.dto.UserResponse;
 import com.mundial2026.backend.user.domain.AppUser;
 import org.springframework.stereotype.Component;
@@ -24,6 +25,16 @@ public class UserMapper {
                 user.getStatus().name(),
                 user.getEmailVerified(),
                 user.getRoles().stream().map(role -> role.getCode()).collect(Collectors.toSet()),
+                user.getCreatedAt()
+        );
+    }
+
+    public AuthUserResponse toAuthResponse(AppUser user) {
+        return new AuthUserResponse(
+                user.getId().toString(),
+                user.getEmail(),
+                user.getFirstName() != null ? user.getFirstName() : user.getUsername(),
+                user.getStatus().name(),
                 user.getCreatedAt()
         );
     }

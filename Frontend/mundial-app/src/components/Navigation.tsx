@@ -19,7 +19,6 @@ const navItems: NavItem[] = [
   { label: 'Calendario', href: '/fixtures', icon: <FiCalendar /> },
   { label: 'Grupos', href: '/groups', icon: <FiTarget /> },
   { label: 'Porras', href: '/predictions', icon: <FiTrendingUp /> },
-  { label: 'Perfil', href: '/profile', icon: <FiUser /> },
 ];
 
 export const Navigation: React.FC = () => {
@@ -155,41 +154,82 @@ export const Navigation: React.FC = () => {
   );
 };
 
-export const Header: React.FC<{ title?: string; subtitle?: string; centerContent?: React.ReactNode }> = ({
+export const Header: React.FC<{ title?: string; subtitle?: string; centerContent?: React.ReactNode; centered?: boolean }> = ({
   title,
   subtitle,
   centerContent,
+  centered = false,
 }) => {
+  const pathname = usePathname();
+  if (centered && !centerContent) {
+    return (
+      <header className="relative overflow-hidden bg-gradient-to-r from-[#08111f] via-[#0d1b2a] to-[#101a2f] text-white py-4 px-4 rounded-b-2xl shadow-2xl border-b border-cyan-400/30">
+        <div className="pointer-events-none absolute inset-x-0 bottom-0 h-px bg-gradient-to-r from-transparent via-cyan-400/80 to-transparent" />
+        <div className="relative z-10 mx-auto flex w-full max-w-4xl items-center justify-center">
+          <div className="text-center">
+            {title && (
+              <div className="mb-1 inline-flex items-center gap-1.5">
+                <Image
+                  src="/Logo_Pestaña.png"
+                  alt="Logo Icon"
+                  width={64}
+                  height={64}
+                  className="h-10 w-auto object-contain flex-shrink-0"
+                />
+                <Image
+                  src="/texto_logo_pestaña.png"
+                  alt="Orionix Gol"
+                  width={280}
+                  height={60}
+                  className="h-10 w-auto object-contain drop-shadow-[0_0_10px_rgba(34,211,238,0.2)] flex-shrink-0"
+                />
+              </div>
+            )}
+            {subtitle && <p className="text-xs text-cyan-200/85 font-medium mt-1">{subtitle}</p>}
+          </div>
+        </div>
+      </header>
+    );
+  }
+
   return (
     <header className="relative overflow-hidden bg-gradient-to-r from-[#08111f] via-[#0d1b2a] to-[#101a2f] text-white py-6 px-4 rounded-b-2xl shadow-2xl border-b border-cyan-400/30">
       <div className="pointer-events-none absolute inset-x-0 bottom-0 h-px bg-gradient-to-r from-transparent via-cyan-400/80 to-transparent" />
-      <div className={`relative z-10 mx-auto flex w-full max-w-6xl flex-col items-center gap-4 text-center md:grid md:items-center md:gap-6 md:text-left ${
-        centerContent
-          ? 'md:grid-cols-[minmax(0,1fr)_minmax(0,360px)_minmax(0,1fr)]'
-          : 'md:grid-cols-[minmax(0,1fr)_auto]'
-      }`}>
-        <div className="max-w-2xl">
-          {title && <h1 className="text-4xl md:text-5xl font-black mb-2 tracking-wide text-white drop-shadow-[0_0_16px_rgba(34,211,238,0.35)]">{title}</h1>}
-          {subtitle && <p className="text-lg text-cyan-200/90 font-semibold">{subtitle}</p>}
-        </div>
+      <div className="relative z-10 mx-auto w-full max-w-6xl px-2">
+        <div className="flex items-center justify-between">
+          {/* Left - User Info */}
+          {centerContent && (
+            <Link href="/profile">
+              <motion.div
+                whileHover={{ scale: 1.02, y: -2 }}
+                className="w-80 flex-shrink-0 rounded-xl border border-cyan-300/40 bg-gradient-to-br from-cyan-400/12 via-emerald-400/8 to-cyan-400/10 px-4 py-3 shadow-[0_8px_32px_rgba(6,182,212,0.15)] backdrop-blur-sm hover:border-cyan-300/60 hover:shadow-[0_12px_40px_rgba(6,182,212,0.2)] transition-all duration-300 cursor-pointer"
+              >
+                {centerContent}
+              </motion.div>
+            </Link>
+          )}
 
-        {centerContent && (
-          <div className="w-full rounded-xl border border-cyan-300/30 bg-cyan-400/10 px-4 py-3 shadow-[0_10px_25px_rgba(6,182,212,0.16)] backdrop-blur-sm md:justify-self-center">
-            {centerContent}
-          </div>
-        )}
-
-        <div className="inline-flex w-fit max-w-full self-center items-center gap-3 rounded-2xl border border-cyan-300/25 bg-white/5 p-2 pr-4 shadow-lg shadow-cyan-500/10 backdrop-blur-sm md:justify-self-end">
-          <Image
-            src="/logotipo.jpeg"
-            alt="Logotipo de Orionix Gol"
-            width={72}
-            height={72}
-            className="h-16 w-16 rounded-xl object-cover shadow-md shadow-cyan-500/20"
-          />
-          <div className="leading-tight">
-            <div className="text-[11px] font-bold uppercase tracking-[0.32em] text-cyan-200/80">Orionix Gol</div>
-            <div className="text-sm font-semibold text-white/90">Football Tech Experience</div>
+          {/* Center - Logo and Subtitle (Absolute Center) */}
+          <div className="absolute left-1/2 transform -translate-x-1/2 text-center">
+            {title && (
+              <div className="mb-2 inline-flex items-center gap-2.5">
+                <Image
+                  src="/Logo_Pestaña.png"
+                  alt="Logo Icon"
+                  width={64}
+                  height={64}
+                  className="h-12 w-auto object-contain flex-shrink-0"
+                />
+                <Image
+                  src="/texto_logo_pestaña.png"
+                  alt="Orionix Gol"
+                  width={280}
+                  height={60}
+                  className="h-12 w-auto object-contain drop-shadow-[0_0_10px_rgba(34,211,238,0.2)] flex-shrink-0"
+                />
+              </div>
+            )}
+            {subtitle && <p className="text-xs text-cyan-200/85 font-medium">{subtitle}</p>}
           </div>
         </div>
       </div>

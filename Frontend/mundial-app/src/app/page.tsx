@@ -130,18 +130,42 @@ export default function HomePage() {
               initial={{ opacity: 0, y: -12 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.45 }}
-              className="text-center md:text-left"
+              className="flex items-center gap-4"
             >
-              <p className="text-sm md:text-base text-cyan-100/95 font-semibold">
-                ¡Bienvenido,{' '}
-                <span className="font-black text-transparent bg-clip-text bg-gradient-to-r from-cyan-200 to-emerald-200">
-                  {user.displayName}
-                </span>
-                !
-              </p>
-              <p className="text-xs md:text-sm text-cyan-100/70 mt-1">
-                📧 {user.email} • Miembro desde {new Date(user.createdAt).toLocaleDateString('es-ES')}
-              </p>
+              {/* Avatar Circle */}
+              <div className="relative flex-shrink-0">
+                <div className="w-12 h-12 rounded-full bg-gradient-to-br from-cyan-400 to-emerald-400 flex items-center justify-center text-white font-black text-lg shadow-[0_0_20px_rgba(34,211,238,0.4)]">
+                  {user.displayName.charAt(0).toUpperCase()}
+                </div>
+                <div className="absolute inset-0 rounded-full border-2 border-cyan-300/50 animate-pulse" />
+              </div>
+
+              {/* User Info */}
+              <div className="flex-1">
+                <div className="flex items-center gap-2 mb-1">
+                  <p className="text-sm md:text-base text-cyan-100/95 font-black">
+                    <span className="text-transparent bg-clip-text bg-gradient-to-r from-cyan-200 via-emerald-200 to-cyan-200">
+                      {user.displayName}
+                    </span>
+                  </p>
+                  <span className="px-2 py-0.5 rounded-full text-xs font-bold bg-gradient-to-r from-amber-500/30 to-orange-500/30 border border-amber-400/50 text-amber-200">
+                    ⭐ PRO
+                  </span>
+                </div>
+                
+                <div className="h-px bg-gradient-to-r from-cyan-400/30 via-transparent to-transparent mb-1.5" />
+                
+                <div className="space-y-0.5">
+                  <p className="text-xs text-cyan-100/70 flex items-center gap-1.5">
+                    <span className="text-cyan-400">✉️</span>
+                    {user.email}
+                  </p>
+                  <p className="text-xs text-cyan-100/60 flex items-center gap-1.5">
+                    <span className="text-emerald-400">📅</span>
+                    Miembro desde {new Date(user.createdAt).toLocaleDateString('es-ES')}
+                  </p>
+                </div>
+              </div>
             </motion.div>
           ) : null
         }
@@ -160,7 +184,7 @@ export default function HomePage() {
                     <div className="flex justify-center lg:justify-start">
                       <div className="w-full max-w-[420px] rounded-[2rem] border border-cyan-300/20 bg-white/5 p-4 shadow-[0_24px_80px_rgba(15,23,42,0.35)] backdrop-blur-sm">
                         <Image
-                          src="/logotipo.jpeg"
+                          src="/logotipo_Orionix_Gol_transparente.png"
                           alt="Logotipo de Orionix Gol"
                           width={840}
                           height={840}
@@ -171,13 +195,9 @@ export default function HomePage() {
                     </div>
 
                     <div>
-                      <div className="mb-4 inline-block">
-                        <span className="text-5xl md:text-6xl font-black text-white tracking-wide drop-shadow-[0_0_18px_rgba(34,211,238,0.28)]">ORIONIX GOL</span>
-                        <div className="mt-2 flex justify-end">
-                          <span className="inline-flex items-center rounded-full border border-cyan-300/40 bg-cyan-400/10 px-3 py-1 text-xs font-bold tracking-wider text-cyan-100">
-                            FOOTBALL TECH EXPERIENCE
-                          </span>
-                        </div>
+                      <div className="mb-6 inline-block">
+                        <div className="text-3xl md:text-4xl font-black text-white tracking-wide drop-shadow-[0_0_12px_rgba(34,211,238,0.25)]">ORIONIX GOL</div>
+                        <div className="text-xs md:text-sm font-semibold tracking-[0.15em] text-cyan-200/85">Football Tech Experience</div>
                       </div>
                       <p className="text-xl md:text-2xl text-slate-100 font-semibold mb-6 max-w-2xl">Sigue el torneo con una experiencia premium: calendario, resultados, grupos y predicciones en una interfaz rápida, clara y diseñada para vivir el Mundial partido a partido.</p>
                     <div className="flex flex-wrap gap-2 mb-6">

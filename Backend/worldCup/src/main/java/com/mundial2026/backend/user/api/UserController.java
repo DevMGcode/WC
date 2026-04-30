@@ -1,11 +1,8 @@
 package com.mundial2026.backend.user.api;
 
 import com.mundial2026.backend.common.response.ApiResponse;
-import com.mundial2026.backend.user.api.dto.CreateUserRequest;
-import com.mundial2026.backend.user.api.dto.LoginRequest;
-import com.mundial2026.backend.user.api.dto.LoginResponse;
-import com.mundial2026.backend.user.api.dto.AuthUserResponse;
 import com.mundial2026.backend.user.api.dto.ChangePasswordRequest;
+import com.mundial2026.backend.user.api.dto.CreateUserRequest;
 import com.mundial2026.backend.user.api.dto.UpdateUserProfileRequest;
 import com.mundial2026.backend.user.api.dto.UserResponse;
 import com.mundial2026.backend.user.api.mapper.UserMapper;
@@ -16,10 +13,6 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
-
-import java.nio.charset.StandardCharsets;
-import java.time.OffsetDateTime;
-import java.util.Base64;
 
 @RestController
 @RequestMapping("/api/v1/public/users")
@@ -47,52 +40,22 @@ public class UserController {
     @PutMapping("/{id}/profile")
     public ResponseEntity<ApiResponse<UserResponse>> updateProfile(
             @PathVariable Long id,
-            @Valid @RequestBody UpdateUserProfileRequest request
-    ) {
-        AppUser updated = userService.updateProfile(id, request);
-        return ResponseEntity.ok(ApiResponse.ok("Perfil actualizado correctamente", userMapper.toResponse(updated)));
+            @Valid @RequestBody UpdateUserProfileRequest request) {
+        AppUser user = userService.updateProfile(id, request);
+        return ResponseEntity.ok(ApiResponse.ok(
+                "Perfil actualizado correctamente",
+                userMapper.toResponse(user)
+        ));
     }
 
     @PutMapping("/{id}/password")
-    public ResponseEntity<ApiResponse<Void>> changePassword(
+    public ResponseEntity<ApiResponse<UserResponse>> changePassword(
             @PathVariable Long id,
-            @Valid @RequestBody ChangePasswordRequest request
-    ) {
-        userService.changePassword(id, request);
-        return ResponseEntity.ok(ApiResponse.ok("Contraseña actualizada correctamente", null));
-    }
-
-    @PostMapping("/login")
-    public ResponseEntity<ApiResponse<LoginResponse>> login(@Valid @RequestBody LoginRequest request) {
-        AppUser user = userService.authenticate(request.email(), request.password());
-
-        String displayName = user.getFirstName() != null && !user.getFirstName().isBlank()
-            ? user.getFirstName()
-            : (user.getUsername() != null ? user.getUsername() : "Usuario");
-
-        String userStatus = user.getStatus() != null ? user.getStatus().name() : "ACTIVE";
-        String userEmail = user.getEmail() != null ? user.getEmail() : request.email();
-        String userId = user.getId() != null ? String.valueOf(user.getId()) : "0";
-
-        AuthUserResponse authUser = new AuthUserResponse(
-            userId,
-            userEmail,
-                displayName,
-            userStatus,
-                user.getCreatedAt() != null ? user.getCreatedAt() : OffsetDateTime.now()
-        );
-
-        Long tokenUserId = user.getId() != null ? user.getId() : 0L;
-        String accessToken = generateToken(userEmail, tokenUserId);
-        String refreshToken = generateToken(userEmail, tokenUserId) + ".refresh";
-
-        LoginResponse loginResponse = new LoginResponse(authUser, accessToken, refreshToken);
-
-        return ResponseEntity.ok(ApiResponse.ok("Login exitoso", loginResponse));
-    }
-
-    private String generateToken(String email, Long userId) {
-        String raw = email + ":" + userId + ":" + System.currentTimeMillis();
-        return Base64.getUrlEncoder().withoutPadding().encodeToString(raw.getBytes(StandardCharsets.UTF_8));
+            @Valid @RequestBody ChangePasswordRequest request) {
+        AppUser user = userService.changePassword(id, request);
+        return ResponseEntity.ok(ApiResponse.ok(
+                "Contraseña cambiada correctamente",
+                userMapper.toResponse(user)
+        ));
     }
 }

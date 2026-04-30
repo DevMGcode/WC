@@ -13,22 +13,27 @@ export async function POST(request: NextRequest) {
       }, { status: 400 });
     }
 
-    const username = email.split('@')[0] || 'user';
-    
-    // Test simple - devolver success
+    // Llamar al backend real
+    const backendResponse = await fetch('http://localhost:8080/api/v1/auth/login', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ email, password }),
+    });
+
+    const data = await backendResponse.json();
+
+    if (!backendResponse.ok) {
+      return NextResponse.json({
+        success: false,
+        message: data.message || 'Error en login'
+      }, { status: backendResponse.status });
+    }
+
     return NextResponse.json({
       success: true,
-      data: {
-        user: {
-          id: '1',
-          email: email,
-          displayName: username,
-          status: 'ACTIVE',
-          createdAt: new Date().toISOString()
-        },
-        accessToken: 'test-token-' + Date.now(),
-        refreshToken: 'refresh-token'
-      },
+      data: data.data,
       message: 'Login exitoso'
     }, { status: 200 });
 

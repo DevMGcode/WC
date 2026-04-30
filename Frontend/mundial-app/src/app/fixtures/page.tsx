@@ -95,7 +95,7 @@ export default function FixturesPage() {
 
   return (
     <div className="w-full">
-      <Header title="📅 Calendario" subtitle="Todos los partidos de Orionix Gol" />
+      <Header title="📅 Calendario" subtitle="Todos los partidos de Orionix Gol" centered />
 
       <div className="px-4 py-6 max-w-6xl mx-auto w-full">
         {/* Filtros */}

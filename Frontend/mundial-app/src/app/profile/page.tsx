@@ -238,7 +238,7 @@ export default function ProfilePage() {
 
   return (
     <div className="w-full">
-      <Header title="👤 Mi Perfil" subtitle="Configuración y preferencias" />
+      <Header title="👤 Mi Perfil" subtitle="Configuración y preferencias" centered />
 
       <div className="relative z-10 px-4 py-6 max-w-4xl mx-auto w-full pb-32">
         {/* Tabs */}

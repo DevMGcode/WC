@@ -2,15 +2,15 @@ package com.mundial2026.backend.user.service;
 
 import com.mundial2026.backend.common.exception.BusinessRuleException;
 import com.mundial2026.backend.common.exception.ResourceNotFoundException;
-import com.mundial2026.backend.user.api.dto.CreateUserRequest;
 import com.mundial2026.backend.user.api.dto.ChangePasswordRequest;
+import com.mundial2026.backend.user.api.dto.CreateUserRequest;
 import com.mundial2026.backend.user.api.dto.UpdateUserProfileRequest;
 import com.mundial2026.backend.user.domain.AppUser;
 import com.mundial2026.backend.user.domain.RoleEntity;
 import com.mundial2026.backend.user.repository.AppUserRepository;
 import com.mundial2026.backend.user.repository.RoleRepository;
 import lombok.RequiredArgsConstructor;
-import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -20,7 +20,7 @@ public class UserService {
 
     private final AppUserRepository appUserRepository;
     private final RoleRepository roleRepository;
-    private final BCryptPasswordEncoder passwordEncoder = new BCryptPasswordEncoder();
+    private final PasswordEncoder passwordEncoder;
 
     @Transactional
     public AppUser create(CreateUserRequest request) {
@@ -60,62 +60,56 @@ public class UserService {
                 .orElseThrow(() -> new ResourceNotFoundException("Usuario no encontrado con id=" + id));
     }
 
+    @Transactional(readOnly = true)
+    public AppUser authenticate(String email, String password) {
+        AppUser user = appUserRepository.findByEmail(email)
+                .orElseThrow(() -> new ResourceNotFoundException("Usuario no encontrado con email=" + email));
+        
+        if (!passwordEncoder.matches(password, user.getPasswordHash())) {
+            throw new BusinessRuleException("Contraseña incorrecta");
+        }
+        
+        if (!user.getStatus().name().equals("ACTIVE")) {
+            throw new BusinessRuleException("Usuario no está activo");
+        }
+        
+        return user;
+    }
+
     @Transactional
     public AppUser updateProfile(Long id, UpdateUserProfileRequest request) {
         AppUser user = appUserRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Usuario no encontrado con id=" + id));
 
-        String normalizedEmail = request.email().trim().toLowerCase();
-        boolean emailChanged = !normalizedEmail.equalsIgnoreCase(user.getEmail());
-
-        if (emailChanged && appUserRepository.existsByEmail(normalizedEmail)) {
+        // Validar que el email no esté siendo usado por otro usuario
+        if (!user.getEmail().equals(request.email()) && appUserRepository.existsByEmail(request.email())) {
             throw new BusinessRuleException("El email ya existe");
         }
 
-        user.setFirstName(request.firstName().trim());
-        user.setEmail(normalizedEmail);
+        user.setEmail(request.email());
+        user.setFirstName(request.firstName());
 
         return appUserRepository.save(user);
     }
 
     @Transactional
-    public void changePassword(Long id, ChangePasswordRequest request) {
+    public AppUser changePassword(Long id, ChangePasswordRequest request) {
         AppUser user = appUserRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Usuario no encontrado con id=" + id));
 
-        if (!matchesPassword(request.currentPassword(), user.getPasswordHash())) {
-            throw new BusinessRuleException("La contraseña actual no es correcta");
+        // Validar que la contraseña actual sea correcta
+        if (!passwordEncoder.matches(request.currentPassword(), user.getPasswordHash())) {
+            throw new BusinessRuleException("La contraseña actual es incorrecta");
         }
 
-        user.setPasswordHash(passwordEncoder.encode(request.newPassword().trim()));
-        appUserRepository.save(user);
-    }
-
-    @Transactional(readOnly = true)
-    public AppUser authenticate(String email, String password) {
-        AppUser user = appUserRepository.findByEmail(email)
-                .orElseThrow(() -> new BusinessRuleException("Email o contraseña incorrectos"));
-
-        if (!matchesPassword(password, user.getPasswordHash())) {
-            throw new BusinessRuleException("Email o contraseña incorrectos");
+        // Validar que la nueva contraseña sea diferente
+        if (request.currentPassword().equals(request.newPassword())) {
+            throw new BusinessRuleException("La nueva contraseña debe ser diferente a la actual");
         }
 
-        return user;
-    }
+        // Actualizar la contraseña
+        user.setPasswordHash(passwordEncoder.encode(request.newPassword()));
 
-    private boolean matchesPassword(String rawPassword, String storedPassword) {
-        if (storedPassword == null) {
-            return false;
-        }
-
-        if (storedPassword.startsWith("$2")) {
-            try {
-                return passwordEncoder.matches(rawPassword, storedPassword);
-            } catch (Exception ex) {
-                return storedPassword.equals(rawPassword);
-            }
-        }
-
-        return storedPassword.equals(rawPassword);
+        return appUserRepository.save(user);
     }
 }
