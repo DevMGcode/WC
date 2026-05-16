@@ -1,0 +1,13 @@
+# Frontend
+Frontend/mundial-app/node_modules/
+Frontend/mundial-app/.next/
+
+# Backend
+Backend/worldCup/target/
+Backend/worldCup/.env
+
+# IDE / OS
+**/.idea/
+**/.vscode/
+**/.DS_Store
+**/Thumbs.db
