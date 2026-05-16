@@ -1,0 +1,369 @@
+@import url('https://fonts.googleapis.com/css2?family=Rajdhani:wght@500;600;700&family=Space+Grotesk:wght@400;500;600;700&display=swap');
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* Variables de color global */
+:root {
+  --color-grass: #1e7e34;
+  --color-grass-light: #2ecc71;
+  --color-gold: #f39c12;
+  --color-dark: #1a1a2e;
+  --color-usa-blue: #0A3161;
+  --color-usa-red: #B31942;
+  --color-mex-green: #006847;
+  --color-mex-red: #CE1126;
+  --color-can-red: #D80621;
+  --color-can-ice: #F5F7FA;
+  --color-stadium-night: #0D1B2A;
+  --font-ui: 'Space Grotesk', 'Segoe UI', sans-serif;
+  --font-display: 'Rajdhani', 'Trebuchet MS', sans-serif;
+}
+
+html {
+  background-color: #010508;
+}
+
+body {
+  font-family: var(--font-ui);
+}
+
+h1,
+h2,
+h3,
+h4,
+h5,
+h6 {
+  font-family: var(--font-display);
+  letter-spacing: 0.01em;
+}
+
+.tech-app-bg {
+  background-color: #e8edf4;
+  background-image:
+    linear-gradient(120deg, rgba(34, 211, 238, 0.04) 0%, transparent 45%),
+    linear-gradient(300deg, rgba(16, 185, 129, 0.04) 0%, transparent 40%),
+    linear-gradient(to right, rgba(15, 23, 42, 0.05) 1px, transparent 1px),
+    linear-gradient(to bottom, rgba(15, 23, 42, 0.05) 1px, transparent 1px),
+    linear-gradient(180deg, #edf2f8 0%, #e3e9f2 100%);
+  background-size: auto, auto, 26px 26px, 26px 26px, auto;
+}
+
+.tech-app-bg::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  background-image:
+    radial-gradient(circle at 12% 78%, rgba(148, 163, 184, 0.12) 0 1px, transparent 2px),
+    radial-gradient(circle at 78% 22%, rgba(148, 163, 184, 0.12) 0 1px, transparent 2px),
+    radial-gradient(circle at 82% 86%, rgba(148, 163, 184, 0.1) 0 1px, transparent 2px),
+    linear-gradient(110deg, transparent 0%, rgba(56, 189, 248, 0.04) 35%, transparent 65%);
+  background-size: 180px 180px, 220px 220px, 160px 160px, 100% 100%;
+  opacity: 0.32;
+  z-index: 0;
+}
+
+body.login-route {
+  background: radial-gradient(ellipse at 25% 60%, #080f22 0%, #010810 45%, #000509 100%);
+}
+
+body.login-route .app-shell {
+  min-height: 100dvh;
+  padding-bottom: 0 !important;
+}
+
+.tech-panel {
+  background: linear-gradient(145deg, rgba(8, 18, 36, 0.96), rgba(12, 25, 48, 0.94));
+  border: 1px solid rgba(56, 189, 248, 0.24);
+  box-shadow: 0 10px 30px rgba(2, 6, 23, 0.35), inset 0 0 0 1px rgba(255, 255, 255, 0.02);
+  color: #e2e8f0;
+}
+
+.tech-text-glow {
+  text-shadow: 0 0 16px rgba(34, 211, 238, 0.25);
+}
+
+.glass-premium {
+  background: linear-gradient(140deg, rgba(255, 255, 255, 0.72), rgba(255, 255, 255, 0.48));
+  backdrop-filter: blur(16px);
+  border: 1px solid rgba(148, 163, 184, 0.22);
+  box-shadow: 0 12px 32px rgba(15, 23, 42, 0.12), inset 0 1px 0 rgba(255, 255, 255, 0.3);
+}
+
+.glass-premium-dark {
+  background: linear-gradient(145deg, rgba(9, 20, 38, 0.88), rgba(14, 30, 56, 0.85));
+  backdrop-filter: blur(14px);
+  border: 1px solid rgba(56, 189, 248, 0.24);
+  box-shadow: 0 14px 34px rgba(2, 6, 23, 0.35), inset 0 1px 0 rgba(148, 163, 184, 0.15);
+}
+
+.hover-lift-premium {
+  transition: transform 320ms cubic-bezier(0.22, 1, 0.36, 1), box-shadow 320ms ease, border-color 320ms ease;
+}
+
+.hover-lift-premium:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 18px 38px rgba(2, 6, 23, 0.22);
+}
+
+.neon-outline-cyan {
+  border: 1px solid rgba(34, 211, 238, 0.35);
+  box-shadow: 0 0 0 1px rgba(34, 211, 238, 0.08), 0 0 20px rgba(34, 211, 238, 0.16);
+}
+
+/* Scrollbar personalizada */
+::-webkit-scrollbar {
+  width: 10px;
+  height: 10px;
+}
+
+::-webkit-scrollbar-track {
+  background: linear-gradient(180deg, #071426 0%, #0a223b 100%);
+}
+
+::-webkit-scrollbar-thumb {
+  background: linear-gradient(180deg, #1f8a8c 0%, #1f7f98 55%, #216e91 100%);
+  border-radius: 9999px;
+  border: 2px solid #081426;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: linear-gradient(180deg, #2a9ba0 0%, #2a8ea8 55%, #2b7f9f 100%);
+}
+
+html {
+  scrollbar-color: #1f7f98 #071426;
+  scrollbar-width: thin;
+}
+
+/* Animaciones personalizadas */
+@keyframes slideInUp {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes loaderSlide {
+  0% {
+    transform: translateX(-120%);
+  }
+  100% {
+    transform: translateX(360%);
+  }
+}
+
+@keyframes dockSweep {
+  0% {
+    transform: translateX(-120%);
+  }
+  100% {
+    transform: translateX(120%);
+  }
+}
+
+.animate-slide-in-up {
+  animation: slideInUp 0.3s ease-out;
+}
+
+.animate-fade-in {
+  animation: fadeIn 0.5s ease-out;
+}
+
+.dock-sweep::before {
+  content: '';
+  position: absolute;
+  inset: -25% auto -25% -35%;
+  width: 46%;
+  transform: skewX(-20deg);
+  background: linear-gradient(
+    90deg,
+    transparent 0%,
+    rgba(34, 211, 238, 0.04) 20%,
+    rgba(125, 211, 252, 0.24) 50%,
+    rgba(16, 185, 129, 0.14) 70%,
+    transparent 100%
+  );
+  animation: dockSweep 8s linear infinite;
+}
+
+/* Utilidades */
+.gradient-football {
+  background: linear-gradient(135deg, #1e7e34 0%, #2ecc71 100%);
+}
+
+.gradient-football-dark {
+  background: linear-gradient(135deg, #1a1a2e 0%, #0d5a2a 100%);
+}
+
+.gradient-host-2026 {
+  background: linear-gradient(
+    120deg,
+    var(--color-usa-blue) 0%,
+    var(--color-usa-red) 20%,
+    var(--color-mex-green) 45%,
+    var(--color-mex-red) 68%,
+    var(--color-can-red) 100%
+  );
+}
+
+/* Animaciones de fondo 3D */
+@keyframes float {
+  0%, 100% {
+    transform: translateY(0px) translateX(0px);
+  }
+  25% {
+    transform: translateY(-20px) translateX(10px);
+  }
+  50% {
+    transform: translateY(-40px) translateX(-10px);
+  }
+  75% {
+    transform: translateY(-20px) translateX(10px);
+  }
+}
+
+@keyframes rotate3d {
+  0% {
+    transform: rotateX(0deg) rotateY(0deg) rotateZ(0deg);
+  }
+  100% {
+    transform: rotateX(360deg) rotateY(360deg) rotateZ(0deg);
+  }
+}
+
+@keyframes pulse-glow {
+  0%, 100% {
+    opacity: 0.6;
+    filter: blur(30px);
+  }
+  50% {
+    opacity: 0.8;
+    filter: blur(40px);
+  }
+}
+
+@keyframes shimmer {
+  0% {
+    background-position: -1000px 0;
+  }
+  100% {
+    background-position: 1000px 0;
+  }
+}
+
+.animate-float {
+  animation: float 6s ease-in-out infinite;
+}
+
+.animate-rotate-3d {
+  animation: rotate3d 20s linear infinite;
+}
+
+.animate-pulse-glow {
+  animation: pulse-glow 3s ease-in-out infinite;
+}
+
+.theme-city-usa {
+  background: linear-gradient(135deg, #0A3161 0%, #1C4E80 55%, #B31942 100%);
+  color: #ffffff;
+}
+
+.theme-city-mexico {
+  background: linear-gradient(135deg, #006847 0%, #00A878 55%, #CE1126 100%);
+  color: #ffffff;
+}
+
+.theme-city-canada {
+  background: linear-gradient(135deg, #8B0015 0%, #D80621 55%, #F5F7FA 100%);
+  color: #ffffff;
+}
+
+.city-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  padding: 0.4rem 0.75rem;
+  border-radius: 9999px;
+  font-size: 0.75rem;
+  font-weight: 700;
+  border: 1px solid rgba(255, 255, 255, 0.25);
+  backdrop-filter: blur(8px);
+}
+
+.glass-effect {
+  background: rgba(255, 255, 255, 0.95);
+  backdrop-filter: blur(10px);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+.glass-dark {
+  background: rgba(26, 26, 46, 0.8);
+  backdrop-filter: blur(10px);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+/* Responsivo seguro */
+@supports (padding-top: max(0px)) {
+  body {
+    padding-left: max(1rem, constant(safe-area-inset-left));
+    padding-right: max(1rem, constant(safe-area-inset-right));
+  }
+
+  nav {
+    padding-left: max(0, constant(safe-area-inset-left));
+    padding-right: max(0, constant(safe-area-inset-right));
+  }
+}
+
+/* Scroll suave */
+
+/* Input focus custom */
+input:focus,
+textarea:focus,
+select:focus {
+  outline: none;
+  border-color: var(--color-grass);
+  box-shadow: 0 0 0 3px rgba(30, 126, 52, 0.1);
+}
+
+/* Hover effects */
+.hover-scale {
+  transition: transform 0.2s ease;
+}
+
+.hover-scale:hover {
+  transform: scale(1.05);
+}
+
+/* Badge styles */
+.badge-success {
+  @apply bg-green-100 text-green-800 px-3 py-1 rounded-full text-sm font-semibold;
+}
+
+.badge-warning {
+  @apply bg-yellow-100 text-yellow-800 px-3 py-1 rounded-full text-sm font-semibold;
+}
+
+.badge-danger {
+  @apply bg-red-100 text-red-800 px-3 py-1 rounded-full text-sm font-semibold;
+}
+
+.badge-info {
+  @apply bg-blue-100 text-blue-800 px-3 py-1 rounded-full text-sm font-semibold;
+}
