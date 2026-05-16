@@ -1,10 +1,8 @@
-# Frontend
-Frontend/mundial-app/node_modules/
-Frontend/mundial-app/.next/
-
-# Backend
-Backend/worldCup/target/
-Backend/worldCup/.env
+# Source code — not published on GitHub public repo
+Backend/
+Frontend/
+qa-automation/
+GUIA_DOCKER_PROYECTO.md
 
 # IDE / OS
 **/.idea/
