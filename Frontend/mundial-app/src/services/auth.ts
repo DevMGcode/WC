@@ -13,6 +13,7 @@ export interface AuthUser {
 
 export interface AuthResponse {
   success: boolean;
+  emailVerificationRequired?: boolean;
   data?: {
     user: AuthUser;
     accessToken: string;
@@ -42,6 +43,9 @@ export const authService = {
       const data = contentType.includes('application/json') ? await response.json() : null;
 
       if (!response.ok) {
+        if (data?.message === 'EMAIL_NOT_VERIFIED') {
+          return { success: false, message: 'Debes verificar tu email antes de iniciar sesión. Revisa tu bandeja de entrada.' };
+        }
         if (data?.message) return { success: false, message: data.message };
         if (response.status >= 500) {
           return { success: false, message: 'El servidor se está reiniciando. Intenta de nuevo en unos segundos.' };
@@ -53,6 +57,9 @@ export const authService = {
 
       if (data.success && data.data?.accessToken) {
         localStorage.setItem('authToken', data.data.accessToken);
+        if (data.data.refreshToken) {
+          localStorage.setItem('refreshToken', data.data.refreshToken);
+        }
         localStorage.setItem('user', JSON.stringify(data.data.user));
       }
 
@@ -89,8 +96,12 @@ export const authService = {
         };
       }
 
-      // 2. Auto-login to get the JWT token
-      return await authService.login(req.email, req.password);
+      // Email verification required — do NOT auto-login
+      return {
+        success: true,
+        emailVerificationRequired: true,
+        message: 'Cuenta creada. Revisa tu correo y haz clic en el enlace de verificación para activarla.',
+      };
     } catch {
       return { success: false, message: 'Error de conexión con el servidor' };
     }
@@ -98,7 +109,35 @@ export const authService = {
 
   logout(): void {
     localStorage.removeItem('authToken');
+    localStorage.removeItem('refreshToken');
     localStorage.removeItem('user');
+  },
+
+  async refreshAccessToken(): Promise<string | null> {
+    try {
+      const refreshToken = localStorage.getItem('refreshToken');
+      if (!refreshToken) return null;
+
+      const response = await fetch('/api/v1/auth/refresh', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ refreshToken }),
+      });
+
+      if (!response.ok) return null;
+
+      const data = await response.json();
+      if (data.success && data.data?.accessToken) {
+        localStorage.setItem('authToken', data.data.accessToken);
+        if (data.data.refreshToken) {
+          localStorage.setItem('refreshToken', data.data.refreshToken);
+        }
+        return data.data.accessToken;
+      }
+      return null;
+    } catch {
+      return null;
+    }
   },
 
   getToken(): string | null {

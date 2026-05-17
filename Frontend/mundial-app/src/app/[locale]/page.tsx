@@ -248,11 +248,11 @@ export default function HomePage() {
   const { t } = useT();
   const { user, loading: authLoading, isAuthenticated } = useAuth();
 
-  const [loading, setLoading]           = useState(true);
-  const [nextFixture, setNextFixture]   = useState<any>(null);
-  const [lastResult, setLastResult]     = useState<any>(null);
-  const [myPrediction, setMyPrediction] = useState<any>(null);
-  const [topRanking, setTopRanking]     = useState<any[]>([]);
+  const [loading, setLoading]             = useState(true);
+  const [todayUpcoming, setTodayUpcoming] = useState<any[]>([]);
+  const [recentResults, setRecentResults] = useState<any[]>([]);
+  const [myPredictions, setMyPredictions] = useState<Record<number, any>>({});
+  const [topRanking, setTopRanking]       = useState<any[]>([]);
   const [stats, setStats]               = useState({ predictions: 0, exactas: 0, puntos: 0, rank: 0 });
   const [countdown, setCountdown]       = useState({ days: 0, hours: 0, minutes: 0, seconds: 0 });
   const [mundialStarted, setMundialStarted] = useState(false);
@@ -307,11 +307,21 @@ export default function HomePage() {
         .filter(f => f.status === 'FINISHED')
         .sort((a, b) => new Date(b.kickoffAt).getTime() - new Date(a.kickoffAt).getTime());
 
-      setNextFixture(upcoming[0] ?? null);
-      setLastResult(finished[0] ?? null);
+      // Show next 5 upcoming fixtures (across any day)
+      const upcomingGroup = upcoming.slice(0, 5);
+      // Show last 5 finished fixtures regardless of day
+      const finishedGroup = finished.slice(0, 5);
+
+      setTodayUpcoming(upcomingGroup);
+      setRecentResults(finishedGroup);
 
       const preds: any[] = predJson?.data ?? [];
-      if (finished[0]) setMyPrediction(preds.find(p => p.fixtureId === finished[0].id) ?? null);
+      const predMap: Record<number, any> = {};
+      finishedGroup.forEach(r => {
+        const p = preds.find((p: any) => p.fixtureId === r.id);
+        if (p) predMap[r.id] = p;
+      });
+      setMyPredictions(predMap);
 
       const score = scoreJson?.data;
       setStats({ predictions: preds.length, exactas: score?.exactScores ?? 0, puntos: score?.totalPoints ?? 0, rank: score?.rankPosition ?? 0 });
@@ -352,13 +362,14 @@ export default function HomePage() {
       + ' · ' + dt.toLocaleTimeString(undefined, { hour: '2-digit', minute: '2-digit' });
   };
 
-  const predResult = myPrediction && lastResult ? (() => {
-    const { predictedHomeScore: ph, predictedAwayScore: pa } = myPrediction;
-    const { homeScore: rh, awayScore: ra } = lastResult;
+  const getPredResult = (fixture: any, prediction: any) => {
+    if (!prediction || !fixture) return null;
+    const { predictedHomeScore: ph, predictedAwayScore: pa } = prediction;
+    const { homeScore: rh, awayScore: ra } = fixture;
     if (ph === rh && pa === ra) return { label: t('home.result.exactScore'), pts: '+3 pts', color: 'text-emerald-400', glow: '#34d399', border: 'rgba(52,211,153,0.30)' };
     if (Math.sign(ph - pa) === Math.sign(rh - ra)) return { label: t('home.result.correct'), pts: '+1 pt', color: 'text-sky-400', glow: '#38bdf8', border: 'rgba(56,189,248,0.30)' };
     return { label: t('home.result.wrong'), pts: '0 pts', color: 'text-red-400', glow: '#ef4444', border: 'rgba(239,68,68,0.30)' };
-  })() : null;
+  };
 
   const accuracyPct = stats.predictions > 0
     ? Math.round((stats.exactas / stats.predictions) * 100)
@@ -672,7 +683,15 @@ export default function HomePage() {
                 <div className="flex items-center justify-between mb-4">
                   <div className="flex items-center gap-2">
                     <div className="w-[3px] h-5 rounded-full" style={{ background: 'linear-gradient(180deg, #22d3ee, #06b6d4)' }} />
-                    <span className="text-[10px] font-black text-slate-400 tracking-[0.24em] uppercase">{t('home.nextMatch')}</span>
+                    <span className="text-[10px] font-black text-slate-400 tracking-[0.24em] uppercase">
+                      {todayUpcoming.length > 1 ? 'PRÓXIMOS PARTIDOS' : t('home.nextMatch')}
+                    </span>
+                    {todayUpcoming.length > 0 && (
+                      <span className="text-[8px] font-black px-1.5 py-0.5 rounded-full"
+                        style={{ background: 'rgba(34,211,238,0.10)', color: '#22d3ee', border: '1px solid rgba(34,211,238,0.20)' }}>
+                        {todayUpcoming.length}
+                      </span>
+                    )}
                   </div>
                   <motion.div
                     className="flex items-center gap-1.5 px-2.5 py-1 rounded-full"
@@ -686,73 +705,112 @@ export default function HomePage() {
                   </motion.div>
                 </div>
 
-                {nextFixture ? (
-                  <>
-                    {/* Teams vs display */}
-                    <div className="flex items-center justify-around py-4">
-                      {/* Home team */}
-                      <div className="flex flex-col items-center gap-2 flex-1">
-                        <motion.div whileHover={{ scale: 1.08 }}>
-                          <Flag url={nextFixture.homeTeam.flagUrl} name={nextFixture.homeTeam.name} size="lg" glow="rgba(34,211,238,0.18)" />
-                        </motion.div>
-                        <div className="text-center">
-                          <p className="text-sm font-black text-slate-200 tracking-wider">{nextFixture.homeTeam.shortName}</p>
-                          <p className="text-[9px] text-slate-600 font-medium mt-0.5 hidden sm:block truncate max-w-[80px]">{nextFixture.homeTeam.name}</p>
+                {todayUpcoming.length > 0 ? (
+                  todayUpcoming.length === 1 ? (
+                    /* ── Single match: big layout ── */
+                    <>
+                      <div className="flex items-center justify-around py-4">
+                        <div className="flex flex-col items-center gap-2 flex-1">
+                          <motion.div whileHover={{ scale: 1.08 }}>
+                            <Flag url={todayUpcoming[0].homeTeam.flagUrl} name={todayUpcoming[0].homeTeam.name} size="lg" glow="rgba(34,211,238,0.18)" />
+                          </motion.div>
+                          <div className="text-center">
+                            <p className="text-sm font-black text-slate-200 tracking-wider">{todayUpcoming[0].homeTeam.shortName}</p>
+                            <p className="text-[9px] text-slate-600 font-medium mt-0.5 hidden sm:block truncate max-w-[80px]">{todayUpcoming[0].homeTeam.name}</p>
+                          </div>
+                        </div>
+                        <div className="flex flex-col items-center px-3 flex-shrink-0">
+                          <motion.div className="text-lg font-black tabular-nums"
+                            style={{ color: 'rgba(34,211,238,0.30)', letterSpacing: '0.1em' }}
+                            animate={{ opacity: [0.25, 0.55, 0.25] }} transition={{ duration: 2.2, repeat: Infinity }}>
+                            VS
+                          </motion.div>
+                          <p className="text-[9px] text-slate-600 text-center leading-relaxed mt-1 max-w-[90px]">{fmtDate(todayUpcoming[0].kickoffAt)}</p>
+                          <motion.div className="mt-2 text-lg" animate={{ y: [0, -3, 0] }} transition={{ duration: 2, repeat: Infinity, ease: 'easeInOut' }}>🏟️</motion.div>
+                        </div>
+                        <div className="flex flex-col items-center gap-2 flex-1">
+                          <motion.div whileHover={{ scale: 1.08 }}>
+                            <Flag url={todayUpcoming[0].awayTeam.flagUrl} name={todayUpcoming[0].awayTeam.name} size="lg" glow="rgba(34,211,238,0.18)" />
+                          </motion.div>
+                          <div className="text-center">
+                            <p className="text-sm font-black text-slate-200 tracking-wider">{todayUpcoming[0].awayTeam.shortName}</p>
+                            <p className="text-[9px] text-slate-600 font-medium mt-0.5 hidden sm:block truncate max-w-[80px]">{todayUpcoming[0].awayTeam.name}</p>
+                          </div>
                         </div>
                       </div>
-
-                      {/* VS center */}
-                      <div className="flex flex-col items-center px-3 flex-shrink-0">
-                        <motion.div
-                          className="text-lg font-black tabular-nums"
-                          style={{ color: 'rgba(34,211,238,0.30)', letterSpacing: '0.1em' }}
-                          animate={{ opacity: [0.25, 0.55, 0.25] }}
-                          transition={{ duration: 2.2, repeat: Infinity }}
+                      <div className="h-px w-full mb-4" style={{ background: 'linear-gradient(90deg, transparent, rgba(34,211,238,0.12), transparent)' }} />
+                      <Link href={`/fixtures/${todayUpcoming[0].id}`}>
+                        <motion.button
+                          whileHover={{ scale: 1.03, boxShadow: '0 12px 40px rgba(0,210,185,0.50)' }}
+                          whileTap={{ scale: 0.97 }}
+                          className="relative w-full py-3 rounded-xl text-sm font-black text-white tracking-wide overflow-hidden"
+                          style={{ background: 'linear-gradient(135deg, #0d9488, #06b6d4, #0ea5e9)', boxShadow: '0 6px 24px rgba(0,210,185,0.30)' }}
                         >
-                          VS
-                        </motion.div>
-                        <p className="text-[9px] text-slate-600 text-center leading-relaxed mt-1 max-w-[90px]">{fmtDate(nextFixture.kickoffAt)}</p>
-                        {/* Pulsing stadium icon */}
-                        <motion.div
-                          className="mt-2 text-lg"
-                          animate={{ y: [0, -3, 0] }}
-                          transition={{ duration: 2, repeat: Infinity, ease: 'easeInOut' }}
-                        >
-                          🏟️
-                        </motion.div>
-                      </div>
-
-                      {/* Away team */}
-                      <div className="flex flex-col items-center gap-2 flex-1">
-                        <motion.div whileHover={{ scale: 1.08 }}>
-                          <Flag url={nextFixture.awayTeam.flagUrl} name={nextFixture.awayTeam.name} size="lg" glow="rgba(34,211,238,0.18)" />
-                        </motion.div>
-                        <div className="text-center">
-                          <p className="text-sm font-black text-slate-200 tracking-wider">{nextFixture.awayTeam.shortName}</p>
-                          <p className="text-[9px] text-slate-600 font-medium mt-0.5 hidden sm:block truncate max-w-[80px]">{nextFixture.awayTeam.name}</p>
-                        </div>
-                      </div>
+                          <motion.div className="absolute inset-0"
+                            style={{ background: 'linear-gradient(108deg, transparent 28%, rgba(255,255,255,0.20) 50%, transparent 72%)' }}
+                            animate={{ x: ['-120%', '120%'] }}
+                            transition={{ duration: 2.5, repeat: Infinity, ease: 'linear', repeatDelay: 2 }} />
+                          <span className="relative">{t('home.makePrediction')}</span>
+                        </motion.button>
+                      </Link>
+                    </>
+                  ) : (
+                    /* ── Multiple matches: interactive card list ── */
+                    <div className="flex flex-col gap-2">
+                      {todayUpcoming.map((fixture, i) => {
+                        const kickoff = new Date(fixture.kickoffAt);
+                        const dayLabel = kickoff.toLocaleDateString(undefined, { weekday: 'short', day: 'numeric', month: 'short' });
+                        const timeLabel = kickoff.toLocaleTimeString(undefined, { hour: '2-digit', minute: '2-digit' });
+                        return (
+                          <motion.div
+                            key={fixture.id}
+                            initial={{ opacity: 0, x: -10 }}
+                            animate={{ opacity: 1, x: 0 }}
+                            transition={{ delay: 0.08 * i, duration: 0.35, ease: [0.22, 1, 0.36, 1] }}
+                            whileHover={{ scale: 1.01 }}
+                            className="relative overflow-hidden rounded-xl group"
+                            style={{
+                              background: 'rgba(34,211,238,0.03)',
+                              border: '1px solid rgba(34,211,238,0.10)',
+                              transition: 'border-color 0.2s ease, background 0.2s ease',
+                            }}
+                          >
+                            {/* Hover top accent line */}
+                            <div className="absolute inset-x-0 top-0 h-px opacity-0 group-hover:opacity-100 transition-opacity duration-200"
+                              style={{ background: 'linear-gradient(90deg, transparent, rgba(34,211,238,0.60), transparent)' }} />
+                            <div className="flex items-center gap-2 px-3 py-2.5">
+                              {/* Home team */}
+                              <div className="flex items-center gap-2 flex-1 min-w-0">
+                                <Flag url={fixture.homeTeam.flagUrl} name={fixture.homeTeam.name} size="sm" />
+                                <span className="text-xs font-black text-slate-200 tracking-wide truncate">{fixture.homeTeam.shortName}</span>
+                              </div>
+                              {/* Date + Time — bigger & prominent */}
+                              <div className="text-center shrink-0 px-2 min-w-[72px]">
+                                <span className="text-[10px] font-semibold text-slate-500 block leading-none whitespace-nowrap mb-0.5">{dayLabel}</span>
+                                <span className="text-sm font-black text-cyan-400 whitespace-nowrap leading-none" style={{ textShadow: '0 0 10px rgba(34,211,238,0.45)' }}>{timeLabel}</span>
+                              </div>
+                              {/* Away team */}
+                              <div className="flex items-center gap-2 flex-1 min-w-0 justify-end">
+                                <span className="text-xs font-black text-slate-200 tracking-wide truncate">{fixture.awayTeam.shortName}</span>
+                                <Flag url={fixture.awayTeam.flagUrl} name={fixture.awayTeam.name} size="sm" />
+                              </div>
+                              {/* CTA — clear text button */}
+                              <Link href={`/fixtures/${fixture.id}`} className="shrink-0 ml-1">
+                                <motion.button
+                                  whileHover={{ scale: 1.06, boxShadow: '0 4px 20px rgba(0,210,185,0.50)' }}
+                                  whileTap={{ scale: 0.93 }}
+                                  className="flex items-center gap-1 px-2.5 py-1.5 rounded-lg font-black text-white whitespace-nowrap"
+                                  style={{ background: 'linear-gradient(135deg, #0d9488, #06b6d4)', boxShadow: '0 3px 10px rgba(0,210,185,0.25)', fontSize: '10px' }}
+                                >
+                                  ⚡ Porra
+                                </motion.button>
+                              </Link>
+                            </div>
+                          </motion.div>
+                        );
+                      })}
                     </div>
-
-                    {/* Bottom accent line */}
-                    <div className="h-px w-full mb-4" style={{ background: 'linear-gradient(90deg, transparent, rgba(34,211,238,0.12), transparent)' }} />
-
-                    {/* CTA */}
-                    <Link href={`/fixtures/${nextFixture.id}`}>
-                      <motion.button
-                        whileHover={{ scale: 1.03, boxShadow: '0 12px 40px rgba(0,210,185,0.50)' }}
-                        whileTap={{ scale: 0.97 }}
-                        className="relative w-full py-3 rounded-xl text-sm font-black text-white tracking-wide overflow-hidden"
-                        style={{ background: 'linear-gradient(135deg, #0d9488, #06b6d4, #0ea5e9)', boxShadow: '0 6px 24px rgba(0,210,185,0.30)' }}
-                      >
-                        <motion.div className="absolute inset-0"
-                          style={{ background: 'linear-gradient(108deg, transparent 28%, rgba(255,255,255,0.20) 50%, transparent 72%)' }}
-                          animate={{ x: ['-120%', '120%'] }}
-                          transition={{ duration: 2.5, repeat: Infinity, ease: 'linear', repeatDelay: 2 }} />
-                        <span className="relative">{t('home.makePrediction')}</span>
-                      </motion.button>
-                    </Link>
-                  </>
+                  )
                 ) : (
                   <div className="flex flex-col items-center justify-center py-10">
                     <motion.span className="text-5xl" animate={{ y: [0, -6, 0] }} transition={{ duration: 2.5, repeat: Infinity }}>⚽</motion.span>
@@ -783,7 +841,15 @@ export default function HomePage() {
                 <div className="flex items-center justify-between mb-4">
                   <div className="flex items-center gap-2">
                     <div className="w-[3px] h-5 rounded-full" style={{ background: 'linear-gradient(180deg, #fbbf24, #f59e0b)' }} />
-                    <span className="text-[10px] font-black text-slate-400 tracking-[0.24em] uppercase">{t('home.lastResult')}</span>
+                    <span className="text-[10px] font-black text-slate-400 tracking-[0.24em] uppercase">
+                      {recentResults.length > 1 ? 'ÚLTIMOS RESULTADOS' : t('home.lastResult')}
+                    </span>
+                    {recentResults.length > 1 && (
+                      <span className="text-[8px] font-black px-1.5 py-0.5 rounded-full"
+                        style={{ background: 'rgba(251,191,36,0.10)', color: '#fbbf24', border: '1px solid rgba(251,191,36,0.20)' }}>
+                        {recentResults.length}
+                      </span>
+                    )}
                   </div>
                   <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-full"
                     style={{ border: '1px solid rgba(251,191,36,0.28)', background: 'rgba(251,191,36,0.08)' }}>
@@ -791,80 +857,114 @@ export default function HomePage() {
                   </div>
                 </div>
 
-                {lastResult ? (
-                  <>
-                    {/* Score row */}
-                    <div className="flex items-center justify-around py-3">
-                      <div className="flex flex-col items-center gap-2 flex-1">
-                        <motion.div whileHover={{ scale: 1.08 }}>
-                          <Flag url={lastResult.homeTeam.flagUrl} name={lastResult.homeTeam.name} size="md" glow="rgba(251,191,36,0.15)" />
-                        </motion.div>
-                        <p className="text-sm font-black text-slate-300 tracking-wider">{lastResult.homeTeam.shortName}</p>
-                      </div>
-
-                      <div className="text-center px-2 flex-shrink-0">
-                        <motion.p
-                          className="font-black text-white leading-none"
-                          style={{ fontSize: 'clamp(2rem, 5vw, 3rem)', textShadow: '0 0 30px rgba(255,255,255,0.15)' }}
-                          initial={{ scale: 0.6, opacity: 0 }}
-                          animate={{ scale: 1, opacity: 1 }}
-                          transition={{ delay: 0.65, duration: 0.5, ease: [0.22, 1, 0.36, 1] }}
+                {recentResults.length > 0 ? (
+                  <div className="flex flex-col gap-3">
+                    {recentResults.map((fixture, i) => {
+                      const pred = myPredictions[fixture.id];
+                      const pr = getPredResult(fixture, pred);
+                      const isSingle = recentResults.length === 1;
+                      return (
+                        <motion.div
+                          key={fixture.id}
+                          initial={{ opacity: 0, y: 10 }}
+                          animate={{ opacity: 1, y: 0 }}
+                          transition={{ delay: 0.1 * i, duration: 0.4, ease: [0.22, 1, 0.36, 1] }}
+                          className="relative overflow-hidden rounded-xl"
+                          style={{
+                            background: pr
+                              ? `linear-gradient(135deg, ${pr.glow}06 0%, rgba(0,0,0,0) 100%)`
+                              : 'rgba(255,255,255,0.02)',
+                            border: `1px solid ${pr?.border ?? 'rgba(255,255,255,0.06)'}`,
+                          }}
                         >
-                          {lastResult.homeScore}
-                          <span className="mx-2 text-slate-700">–</span>
-                          {lastResult.awayScore}
-                        </motion.p>
-                        <p className="text-[9px] text-slate-600 mt-1">{fmtDate(lastResult.kickoffAt)}</p>
-                      </div>
-
-                      <div className="flex flex-col items-center gap-2 flex-1">
-                        <motion.div whileHover={{ scale: 1.08 }}>
-                          <Flag url={lastResult.awayTeam.flagUrl} name={lastResult.awayTeam.name} size="md" glow="rgba(251,191,36,0.15)" />
-                        </motion.div>
-                        <p className="text-sm font-black text-slate-300 tracking-wider">{lastResult.awayTeam.shortName}</p>
-                      </div>
-                    </div>
-
-                    {/* My prediction result */}
-                    {myPrediction ? (
-                      <motion.div
-                        initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }}
-                        transition={{ delay: 0.75 }}
-                        className="mt-3 relative overflow-hidden rounded-2xl p-4"
-                        style={{
-                          background: `linear-gradient(135deg, ${predResult?.glow ?? '#ffffff'}08 0%, rgba(0,0,0,0) 100%)`,
-                          border: `1px solid ${predResult?.border ?? 'rgba(255,255,255,0.06)'}`,
-                          backdropFilter: 'blur(12px)',
-                        }}
-                      >
-                        {predResult && (
-                          <div className="absolute inset-x-0 top-0 h-px"
-                            style={{ background: `linear-gradient(90deg, transparent, ${predResult.glow}80, transparent)` }} />
-                        )}
-                        <div className="flex items-center justify-between">
-                          <div>
-                            <p className="text-[8px] text-slate-600 uppercase tracking-[0.22em]">{t('home.myPrediction')}</p>
-                            <p className="text-2xl font-black text-slate-200 mt-0.5">
-                              {myPrediction.predictedHomeScore}
-                              <span className="text-slate-700 mx-1 text-lg">–</span>
-                              {myPrediction.predictedAwayScore}
-                            </p>
-                          </div>
-                          {predResult && (
-                            <div className="text-right">
-                              <p className={`text-[10px] font-bold ${predResult.color}`}>{predResult.label}</p>
-                              <p className={`text-xl font-black mt-0.5 ${predResult.color}`}
-                                style={{ textShadow: `0 0 18px ${predResult.glow}` }}>
-                                {predResult.pts}
-                              </p>
+                          {pr && <div className="absolute inset-x-0 top-0 h-px"
+                            style={{ background: `linear-gradient(90deg, transparent, ${pr.glow}70, transparent)` }} />}
+                          <div className="p-3">
+                            {/* Score row */}
+                            <div className="flex items-center justify-around py-1">
+                              <div className="flex flex-col items-center gap-1.5 flex-1">
+                                <motion.div whileHover={{ scale: 1.1 }}>
+                                  <Flag url={fixture.homeTeam.flagUrl} name={fixture.homeTeam.name} size={isSingle ? 'md' : 'sm'} glow="rgba(251,191,36,0.18)" />
+                                </motion.div>
+                                <p className={`font-black text-slate-300 tracking-wider ${isSingle ? 'text-sm' : 'text-xs'}`}>{fixture.homeTeam.shortName}</p>
+                              </div>
+                              <div className="text-center px-2 flex-shrink-0">
+                                <motion.p
+                                  className="font-black text-white leading-none"
+                                  style={{ fontSize: isSingle ? 'clamp(2rem,5vw,3rem)' : '1.5rem', textShadow: '0 0 30px rgba(255,255,255,0.18)' }}
+                                  initial={{ scale: 0.6, opacity: 0 }}
+                                  animate={{ scale: 1, opacity: 1 }}
+                                  transition={{ delay: 0.45 + i * 0.1, duration: 0.4, ease: [0.22, 1, 0.36, 1] }}
+                                >
+                                  {fixture.homeScore}<span className="mx-2 text-slate-700">–</span>{fixture.awayScore}
+                                </motion.p>
+                                <p className="text-[9px] text-slate-600 mt-1">{fmtDate(fixture.kickoffAt)}</p>
+                              </div>
+                              <div className="flex flex-col items-center gap-1.5 flex-1">
+                                <motion.div whileHover={{ scale: 1.1 }}>
+                                  <Flag url={fixture.awayTeam.flagUrl} name={fixture.awayTeam.name} size={isSingle ? 'md' : 'sm'} glow="rgba(251,191,36,0.18)" />
+                                </motion.div>
+                                <p className={`font-black text-slate-300 tracking-wider ${isSingle ? 'text-sm' : 'text-xs'}`}>{fixture.awayTeam.shortName}</p>
+                              </div>
                             </div>
-                          )}
-                        </div>
-                      </motion.div>
-                    ) : (
-                      <p className="text-center text-xs text-slate-700 py-3 mt-2">{t('home.noPrediction')}</p>
-                    )}
-                  </>
+                            {/* Goleadores — dos columnas local | visitante */}
+                            {fixture.scorers && fixture.scorers.length > 0 && (
+                              <div className="mt-2 pt-2" style={{ borderTop: '1px solid rgba(255,255,255,0.05)' }}>
+                                <div className="flex gap-2">
+                                  {/* Local — cyan */}
+                                  <div className="flex-1 space-y-0.5 min-w-0">
+                                    {fixture.scorers
+                                      .filter((s: any) => s.teamId === fixture.homeTeam.id)
+                                      .map((s: any) => (
+                                        <div key={s.id} className="flex items-center gap-1 text-[9px]" style={{ color: '#22d3ee' }}>
+                                          <span className="shrink-0">⚽</span>
+                                          <span className="font-bold truncate">{s.playerName}</span>
+                                          {s.minute && <span className="shrink-0 opacity-50">{s.minute}&apos;</span>}
+                                        </div>
+                                    ))}
+                                  </div>
+                                  {/* Divisor */}
+                                  <div className="w-px shrink-0" style={{ background: 'rgba(255,255,255,0.07)' }} />
+                                  {/* Visitante — rose */}
+                                  <div className="flex-1 space-y-0.5 min-w-0">
+                                    {fixture.scorers
+                                      .filter((s: any) => s.teamId === fixture.awayTeam.id)
+                                      .map((s: any) => (
+                                        <div key={s.id} className="flex items-center justify-end gap-1 text-[9px]" style={{ color: '#fb7185' }}>
+                                          {s.minute && <span className="shrink-0 opacity-50">{s.minute}&apos;</span>}
+                                          <span className="font-bold truncate">{s.playerName}</span>
+                                          <span className="shrink-0">⚽</span>
+                                        </div>
+                                    ))}
+                                  </div>
+                                </div>
+                              </div>
+                            )}
+                            {/* Prediction row */}
+                            {pred ? (
+                              <div className="flex items-center justify-between mt-2 pt-2 border-t" style={{ borderColor: 'rgba(255,255,255,0.05)' }}>
+                                <div>
+                                  <p className="text-[8px] text-slate-600 uppercase tracking-[0.22em]">{t('home.myPrediction')}</p>
+                                  <p className={`font-black text-slate-200 mt-0.5 ${isSingle ? 'text-2xl' : 'text-lg'}`}>
+                                    {pred.predictedHomeScore}<span className="text-slate-700 mx-1 text-sm">–</span>{pred.predictedAwayScore}
+                                  </p>
+                                </div>
+                                {pr && (
+                                  <div className="text-right">
+                                    <p className={`text-[10px] font-bold ${pr.color}`}>{pr.label}</p>
+                                    <p className={`font-black mt-0.5 ${pr.color} ${isSingle ? 'text-xl' : 'text-lg'}`}
+                                      style={{ textShadow: `0 0 18px ${pr.glow}` }}>{pr.pts}</p>
+                                  </div>
+                                )}
+                              </div>
+                            ) : (
+                              <p className="text-center text-[10px] text-slate-700 mt-2 pt-2 border-t" style={{ borderColor: 'rgba(255,255,255,0.05)' }}>{t('home.noPrediction')}</p>
+                            )}
+                          </div>
+                        </motion.div>
+                      );
+                    })}
+                  </div>
                 ) : (
                   <div className="flex flex-col items-center justify-center py-10">
                     <motion.span className="text-5xl" animate={{ y: [0, -6, 0] }} transition={{ duration: 2.8, repeat: Infinity }}>🏆</motion.span>

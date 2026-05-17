@@ -8,7 +8,7 @@ export interface AuthContextType {
   loading: boolean;
   isAuthenticated: boolean;
   login: (email: string, password: string) => Promise<boolean>;
-  register: (req: RegisterRequest) => Promise<{ ok: boolean; message?: string }>;
+  register: (req: RegisterRequest) => Promise<{ ok: boolean; emailVerificationRequired?: boolean; message?: string }>;
   logout: () => void;
   error: string | null;
 }
@@ -46,11 +46,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
   };
 
-  const register = async (req: RegisterRequest): Promise<{ ok: boolean; message?: string }> => {
+  const register = async (req: RegisterRequest): Promise<{ ok: boolean; emailVerificationRequired?: boolean; message?: string }> => {
     setLoading(true);
     setError(null);
     try {
       const response = await authService.register(req);
+      if (response.success && response.emailVerificationRequired) {
+        return { ok: true, emailVerificationRequired: true, message: response.message };
+      }
       if (response.success && response.data) {
         setUser(response.data.user);
         return { ok: true };

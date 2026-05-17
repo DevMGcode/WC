@@ -10,12 +10,16 @@ import com.mundial2026.backend.user.domain.RoleEntity;
 import com.mundial2026.backend.user.repository.AppUserRepository;
 import com.mundial2026.backend.user.repository.RoleRepository;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.security.SecureRandom;
+import java.util.UUID;
 
+@Slf4j
 @Service
 @RequiredArgsConstructor
 public class UserService {
@@ -23,6 +27,10 @@ public class UserService {
     private final AppUserRepository appUserRepository;
     private final RoleRepository roleRepository;
     private final PasswordEncoder passwordEncoder;
+    private final EmailService emailService;
+
+    @Value("${app.frontend-url:http://localhost:3000}")
+    private String frontendUrl;
 
     @Transactional
     public AppUser create(CreateUserRequest request) {
@@ -53,7 +61,17 @@ public class UserService {
         user.setTimeZone(request.timeZone() == null ? "UTC" : request.timeZone());
         user.getRoles().add(userRole);
 
-        return appUserRepository.save(user);
+        String token = UUID.randomUUID().toString().replace("-", "");
+        user.setVerificationToken(token);
+
+        AppUser saved = appUserRepository.save(user);
+        try {
+            String verifyUrl = frontendUrl + "/api/v1/auth/verify-email?token=" + token;
+            emailService.sendVerificationEmail(saved.getEmail(), saved.getUsername(), verifyUrl);
+        } catch (Exception e) {
+            log.warn("[UserService] Verification email failed for {}: {}", saved.getEmail(), e.getMessage());
+        }
+        return saved;
     }
 
     @Transactional(readOnly = true)
@@ -79,8 +97,35 @@ public class UserService {
         if (!user.getStatus().name().equals("ACTIVE")) {
             throw new BusinessRuleException("Usuario no está activo");
         }
-        
+
+        if (!Boolean.TRUE.equals(user.getEmailVerified())) {
+            throw new BusinessRuleException("EMAIL_NOT_VERIFIED");
+        }
+
         return user;
+    }
+
+    @Transactional(readOnly = true)
+    public AppUser findByUsername(String username) {
+        return appUserRepository.findByUsername(username)
+                .orElseThrow(() -> new ResourceNotFoundException("Usuario no encontrado"));
+    }
+
+    @Transactional
+    public boolean verifyEmail(String token) {
+        return appUserRepository.findByVerificationToken(token)
+                .map(user -> {
+                    user.setEmailVerified(true);
+                    user.setVerificationToken(null);
+                    appUserRepository.save(user);
+                    try {
+                        emailService.sendWelcomeEmail(user.getEmail(), user.getUsername());
+                    } catch (Exception e) {
+                        log.warn("[UserService] Post-verification welcome email failed: {}", e.getMessage());
+                    }
+                    return true;
+                })
+                .orElse(false);
     }
 
     @Transactional
