@@ -295,6 +295,51 @@ const MatchCard = ({ fixture, index, t }: { fixture: any; index: number; t: (key
             </div>
           </div>
 
+          {/* ── GOLEADORES (solo partidos FINISHED con scorers) ── */}
+          {isFinished && fixture.scorers && fixture.scorers.length > 0 && (
+            <div className="px-4 pb-3">
+              <div className="rounded-xl px-3 py-2.5" style={{ background: 'rgba(0,0,0,0.28)', border: '1px solid rgba(255,255,255,0.05)' }}>
+                {/* Header */}
+                <div className="flex items-center gap-1.5 mb-2">
+                  <span className="text-[8px] font-black tracking-[0.22em] uppercase" style={{ color: 'rgba(251,191,36,0.55)' }}>Goleadores</span>
+                  <span className="text-[7px] font-black px-1.5 py-0.5 rounded-full"
+                    style={{ background: 'rgba(251,191,36,0.08)', color: 'rgba(251,191,36,0.7)', border: '1px solid rgba(251,191,36,0.18)' }}>
+                    {fixture.scorers.length}
+                  </span>
+                </div>
+                {/* Dos columnas */}
+                <div className="flex gap-2">
+                  {/* Local — cyan */}
+                  <div className="flex-1 space-y-1 min-w-0">
+                    {fixture.scorers
+                      .filter((s: any) => s.teamId === fixture.homeTeam?.id)
+                      .map((s: any) => (
+                        <div key={s.id} className="flex items-center gap-1 text-[9px]" style={{ color: '#22d3ee' }}>
+                          <span className="shrink-0">⚽</span>
+                          <span className="font-bold truncate">{s.playerName}</span>
+                          {s.minute && <span className="shrink-0 opacity-50">{s.minute}&apos;</span>}
+                        </div>
+                      ))}
+                  </div>
+                  {/* Divisor */}
+                  <div className="w-px shrink-0" style={{ background: 'rgba(255,255,255,0.07)' }} />
+                  {/* Visitante — rose */}
+                  <div className="flex-1 space-y-1 min-w-0">
+                    {fixture.scorers
+                      .filter((s: any) => s.teamId === fixture.awayTeam?.id)
+                      .map((s: any) => (
+                        <div key={s.id} className="flex items-center justify-end gap-1 text-[9px]" style={{ color: '#fb7185' }}>
+                          {s.minute && <span className="shrink-0 opacity-50">{s.minute}&apos;</span>}
+                          <span className="font-bold truncate">{s.playerName}</span>
+                          <span className="shrink-0">⚽</span>
+                        </div>
+                      ))}
+                  </div>
+                </div>
+              </div>
+            </div>
+          )}
+
           {/* ── FOOTER ── */}
           <div className="flex items-center justify-between px-5 py-2.5 gap-3"
             style={{ borderTop: '1px solid rgba(255,255,255,0.05)', background: 'rgba(0,0,0,0.22)' }}>

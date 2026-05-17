@@ -60,4 +60,5 @@ app:
   security:
     jwt-secret: "${JWT_SECRET:change-this-secret-key-change-this-secret-key}"
     jwt-expiration-ms: 86400000
+    jwt-refresh-expiration-ms: 604800000
   frontend-url: "${FRONTEND_URL:http://localhost:3000}"

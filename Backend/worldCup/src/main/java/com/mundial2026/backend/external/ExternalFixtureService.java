@@ -3,6 +3,7 @@ package com.mundial2026.backend.external;
 import com.mundial2026.backend.config.AppConfigService;
 import com.mundial2026.backend.tournament.domain.*;
 import com.mundial2026.backend.tournament.repository.*;
+import com.mundial2026.backend.tournament.service.MatchEventService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.*;
@@ -59,6 +60,8 @@ public class ExternalFixtureService {
     private final TeamRepository        teamRepository;
     private final StageRepository       stageRepository;
     private final GroupStageRepository  groupStageRepository;
+    private final MatchEventService      matchEventService;
+    private final MatchEventRepository   matchEventRepository;
 
     /* ── JSON response shapes ─────────────────────────────────── */
     record FdMatchesResponse(List<FdMatch> matches) {}
@@ -67,6 +70,12 @@ public class ExternalFixtureService {
     record FdTeam(Long id, String name, String shortName, String tla, String crest) {}
     record FdScore(FdFullTime fullTime) {}
     record FdFullTime(Integer home, Integer away) {}
+
+    /* Shapes para el endpoint individual /matches/{id} (incluye goles) */
+    record FdMatchDetail(List<FdGoal> goals) {}
+    record FdGoal(Integer minute, FdGoalTeam team, FdGoalScorer scorer) {}
+    record FdGoalTeam(Long id) {}
+    record FdGoalScorer(Long id, String name) {}
 
     /* ── Public API ───────────────────────────────────────────── */
 
@@ -132,6 +141,11 @@ public class ExternalFixtureService {
 
                 fixtureRepository.save(fixture);
                 if (isNew) created++; else updated++;
+
+                // Para partidos FINALIZADOS sincronizar goleadores desde la API
+                if (fixture.getStatus() == FixtureStatus.FINISHED && match.id() != null) {
+                    syncScorers(apiKey, fixture.getId(), match.id());
+                }
 
             } catch (Exception e) {
                 log.warn("Error procesando partido {}: {}", match.id(), e.getMessage());
@@ -265,6 +279,69 @@ public class ExternalFixtureService {
             case "THIRD_PLACE"    -> "FINAL";
             default               -> "GROUPS";
         };
+    }
+
+    /**
+     * Sincroniza goleadores para todos los partidos FINALIZADOS con externalProviderId
+     * que hayan kickedoff en las últimas 24 h y aún no tengan datos de la API.
+     * Llamado por el ScorerSyncScheduler cada 5 min.
+     */
+    @Transactional
+    public void syncScorersForRecentlyFinished() {
+        if (!isConfigured()) return;
+        String apiKey = appConfigService.getValue(API_KEY_CFG).orElse(null);
+        if (apiKey == null) return;
+
+        OffsetDateTime since = OffsetDateTime.now().minusHours(24);
+        List<Fixture> candidates = fixtureRepository
+                .findByStatusAndExternalProviderIdNotNullAndKickoffAtAfter(
+                        FixtureStatus.FINISHED, since);
+
+        for (Fixture fixture : candidates) {
+            boolean alreadySynced = !matchEventRepository
+                    .findByFixtureIdAndSource(fixture.getId(), MatchEvent.Source.API)
+                    .isEmpty();
+            if (!alreadySynced) {
+                syncScorers(apiKey, fixture.getId(), fixture.getExternalProviderId());
+            }
+        }
+    }
+
+    /**
+     * Llama a /v4/matches/{externalId} para obtener los goleadores del partido
+     * y delega la comparación/corrección al MatchEventService.
+     */
+    void syncScorers(String apiKey, Long fixtureId, Long externalMatchId) {
+        try {
+            RestTemplate rest = new RestTemplate();
+            HttpHeaders headers = new HttpHeaders();
+            headers.set("X-Auth-Token", apiKey);
+            headers.setAccept(List.of(MediaType.APPLICATION_JSON));
+
+            ResponseEntity<FdMatchDetail> resp = rest.exchange(
+                    FD_BASE + "/matches/" + externalMatchId,
+                    HttpMethod.GET,
+                    new HttpEntity<>(headers),
+                    FdMatchDetail.class
+            );
+
+            FdMatchDetail detail = resp.getBody();
+            if (detail == null || detail.goals() == null) return;
+
+            List<MatchEventService.ApiGoal> apiGoals = detail.goals().stream()
+                    .filter(g -> g.scorer() != null && g.scorer().name() != null)
+                    .map(g -> new MatchEventService.ApiGoal(
+                            g.scorer().name(),
+                            g.minute(),
+                            g.team() != null ? g.team().id() : null
+                    ))
+                    .toList();
+
+            matchEventService.syncFromApi(fixtureId, apiGoals);
+
+        } catch (Exception e) {
+            log.warn("[Scorers] No se pudieron obtener goleadores para externalId={}: {}", externalMatchId, e.getMessage());
+        }
     }
 
     public record SyncResult(int created, int updated, List<String> errors) {}

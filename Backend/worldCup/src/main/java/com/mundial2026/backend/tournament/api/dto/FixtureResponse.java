@@ -1,6 +1,7 @@
 package com.mundial2026.backend.tournament.api.dto;
 
 import java.time.OffsetDateTime;
+import java.util.List;
 
 public record FixtureResponse(
         Long id,
@@ -18,7 +19,8 @@ public record FixtureResponse(
         String status,
         Integer homeScore,
         Integer awayScore,
-        Long externalProviderId
+        Long externalProviderId,
+        List<MatchEventResponse> scorers
 ) {
     public record TeamResponse(
             Long id,
@@ -26,6 +28,5 @@ public record FixtureResponse(
             String shortName,
             String fifaCode,
             String flagUrl
-    ) {
-    }
+    ) {}
 }

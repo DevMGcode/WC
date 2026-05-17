@@ -488,40 +488,69 @@ export default function FixtureDetailPage({ params }: { params: { id: string } }
           </DarkCard>
         )}
 
-        {/* ── EVENTS ── */}
-        {fixture.events && fixture.events.length > 0 && (
+        {/* ── GOLEADORES ── */}
+        {isFinished && fixture.scorers && fixture.scorers.length > 0 && (
           <DarkCard accent="#fbbf24" delay={0.22} className="mb-4">
             <div className="p-5">
-              <div className="flex items-center gap-2 mb-4">
-                <div className="w-[3px] h-5 rounded-full"
-                  style={{ background: 'linear-gradient(180deg, #fbbf24, #f59e0b)' }} />
-                <span className="text-[10px] font-black text-slate-400 tracking-[0.24em] uppercase">Eventos del Partido</span>
+              <div className="flex items-center justify-between mb-4">
+                <div className="flex items-center gap-2">
+                  <div className="w-[3px] h-5 rounded-full"
+                    style={{ background: 'linear-gradient(180deg, #fbbf24, #f59e0b)' }} />
+                  <span className="text-[10px] font-black text-slate-400 tracking-[0.24em] uppercase">Goleadores</span>
+                  <span className="text-[8px] font-black px-1.5 py-0.5 rounded-full"
+                    style={{ background: 'rgba(251,191,36,0.10)', color: '#fbbf24', border: '1px solid rgba(251,191,36,0.20)' }}>
+                    {fixture.scorers.length}
+                  </span>
+                </div>
+                {fixture.scorers.some((s: any) => s.mismatch) && (
+                  <span className="text-[8px] font-bold text-amber-400/60 flex items-center gap-1">
+                    ⚠ Corregido por API
+                  </span>
+                )}
               </div>
               <div className="space-y-2">
-                {fixture.events.map((event: any) => (
-                  <div key={event.id}
-                    className="flex items-center gap-3 p-3 rounded-xl"
-                    style={{
-                      background: 'rgba(4,12,28,0.60)',
-                      border: '1px solid rgba(255,255,255,0.04)',
-                      borderLeft: `3px solid ${event.teamId === fixture.homeTeam.id ? '#06b6d4' : '#f43f5e'}`,
-                    }}>
-                    <span className="text-xl w-8 text-center">
-                      {event.type === 'GOAL'         && '⚽'}
-                      {event.type === 'CARD'         && '🟨'}
-                      {event.type === 'SUBSTITUTION' && '🔄'}
-                      {event.type === 'INJURY'       && '🚑'}
-                    </span>
-                    <div className="flex-1">
-                      <p className="font-bold text-slate-300 text-sm">{event.playerName}</p>
-                      <p className="text-xs text-slate-600">{event.description}</p>
-                    </div>
-                    <span className="text-[10px] font-black text-slate-500 px-2 py-1 rounded-lg"
-                      style={{ background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.06)' }}>
-                      {event.minute}'
-                    </span>
-                  </div>
-                ))}
+                {fixture.scorers.map((scorer: any) => {
+                  const isHome = scorer.teamId === fixture.homeTeam.id;
+                  const accentColor = isHome ? '#06b6d4' : '#f43f5e';
+                  return (
+                    <motion.div
+                      key={scorer.id}
+                      initial={{ opacity: 0, x: isHome ? -8 : 8 }}
+                      animate={{ opacity: 1, x: 0 }}
+                      transition={{ duration: 0.3 }}
+                      className="flex items-center gap-3 px-3 py-2.5 rounded-xl"
+                      style={{
+                        background: 'rgba(4,12,28,0.60)',
+                        border: '1px solid rgba(255,255,255,0.04)',
+                        borderLeft: `3px solid ${accentColor}`,
+                      }}
+                    >
+                      <span className="text-lg">⚽</span>
+                      <div className="flex-1 min-w-0">
+                        <p className="font-bold text-slate-200 text-sm truncate">{scorer.playerName}</p>
+                        {scorer.teamName && (
+                          <p className="text-[10px] text-slate-600">{scorer.teamFifaCode ?? scorer.teamName}</p>
+                        )}
+                        {scorer.mismatch && scorer.apiPlayerName && (
+                          <p className="text-[9px] text-amber-500/70 mt-0.5">
+                            ✎ Corregido: era «{scorer.apiPlayerName}» según API
+                          </p>
+                        )}
+                      </div>
+                      <div className="flex items-center gap-2 shrink-0">
+                        {scorer.minute && (
+                          <span className="text-[10px] font-black text-slate-500 px-2 py-1 rounded-lg"
+                            style={{ background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.06)' }}>
+                            {scorer.minute}&apos;
+                          </span>
+                        )}
+                        {scorer.verified && (
+                          <span className="text-[8px] font-black text-emerald-500/70">✓</span>
+                        )}
+                      </div>
+                    </motion.div>
+                  );
+                })}
               </div>
             </div>
           </DarkCard>
