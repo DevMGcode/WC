@@ -6,6 +6,7 @@ const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8080/api';
 class ApiClient {
   private client: AxiosInstance;
   private accessToken: string | null = null;
+  private isRefreshing = false;
 
   constructor() {
     this.client = axios.create({
@@ -24,14 +25,41 @@ class ApiClient {
       return config;
     });
 
-    // Interceptor para manejo de errores
+    // Interceptor para manejo de errores — intenta refrescar el token en 401
     this.client.interceptors.response.use(
       (response) => response,
-      (error: AxiosError) => {
-        if (error.response?.status === 401) {
-          // Token expirado o inválido
+      async (error: AxiosError) => {
+        const original = error.config as any;
+        if (error.response?.status === 401 && !original?._retry && !this.isRefreshing) {
+          original._retry = true;
+          this.isRefreshing = true;
+          try {
+            const refreshToken = localStorage.getItem('refreshToken');
+            if (refreshToken) {
+              const res = await fetch('/api/v1/auth/refresh', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ refreshToken }),
+              });
+              if (res.ok) {
+                const data = await res.json();
+                if (data.success && data.data?.accessToken) {
+                  this.setAccessToken(data.data.accessToken);
+                  if (data.data.refreshToken) {
+                    localStorage.setItem('refreshToken', data.data.refreshToken);
+                  }
+                  original.headers.Authorization = `Bearer ${data.data.accessToken}`;
+                  return this.client(original);
+                }
+              }
+            }
+          } catch {
+            // refresh failed — fall through to clearAuth
+          } finally {
+            this.isRefreshing = false;
+          }
           this.clearAuth();
-          window.location.href = '/login';
+          window.location.href = '/es/login';
         }
         return Promise.reject(error);
       }

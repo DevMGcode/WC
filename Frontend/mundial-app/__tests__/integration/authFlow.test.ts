@@ -75,17 +75,11 @@ describe('Auth Service - Deep Integration Tests', () => {
         },
       };
 
-      (global.fetch as jest.Mock)
-        .mockResolvedValueOnce({
-          ok: true,
-          json: async () => mockRegisterResponse,
-          headers: new Headers({ 'content-type': 'application/json' }),
-        })
-        .mockResolvedValueOnce({
-          ok: true,
-          json: async () => mockLoginResponse,
-          headers: new Headers({ 'content-type': 'application/json' }),
-        });
+      (global.fetch as jest.Mock).mockResolvedValueOnce({
+        ok: true,
+        json: async () => mockRegisterResponse,
+        headers: new Headers({ 'content-type': 'application/json' }),
+      });
 
       const result = await authService.register({
         username: 'newuser',
@@ -95,8 +89,10 @@ describe('Auth Service - Deep Integration Tests', () => {
         lastName: 'User',
       });
 
+      // register now returns emailVerificationRequired — no auto-login
       expect(result.success).toBe(true);
-      expect(global.fetch).toHaveBeenCalledTimes(2);
+      expect(result.emailVerificationRequired).toBe(true);
+      expect(global.fetch).toHaveBeenCalledTimes(1);
     });
 
     it('should handle registration errors', async () => {

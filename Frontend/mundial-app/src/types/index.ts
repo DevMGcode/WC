@@ -57,6 +57,7 @@ export interface FixtureDetail extends Fixture {
   stadiumName?: string;
   events?: FixtureEvent[];
   standing?: Standing;
+  scorers?: MatchEventScorer[];
 }
 
 // Alineado con tabla fixture_result
@@ -80,6 +81,22 @@ export interface FixtureEvent {
   playerName?: string;
   description: string;
   createdAt: Date;
+}
+
+// Goleador — alineado con MatchEventResponse del backend
+export interface MatchEventScorer {
+  id: number;
+  fixtureId: number;
+  playerName: string;
+  teamId: number | null;
+  teamName: string | null;
+  teamFifaCode: string | null;
+  minute: number | null;
+  eventType: string;
+  source: 'MANUAL' | 'API';
+  verified: boolean;
+  apiPlayerName: string | null;
+  mismatch: boolean;
 }
 
 // Grupos de fases

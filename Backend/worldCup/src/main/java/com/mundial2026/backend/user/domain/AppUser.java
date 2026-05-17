@@ -67,6 +67,9 @@ public class AppUser {
     @Column(name = "email_verified", nullable = false)
     private Boolean emailVerified = false;
 
+    @Column(name = "email_verification_token", length = 64)
+    private String verificationToken;
+
     @Column(name = "created_at", insertable = false, updatable = false)
     private OffsetDateTime createdAt;
 

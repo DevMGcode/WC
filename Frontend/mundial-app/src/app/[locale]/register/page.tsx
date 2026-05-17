@@ -100,7 +100,9 @@ export default function RegisterPage() {
 
     if (result.ok) {
       setSuccess(true);
-      setTimeout(() => router.replace('/'), 1200);
+      if (!result.emailVerificationRequired) {
+        setTimeout(() => router.replace('/'), 1200);
+      }
     } else {
       setError(result.message || 'No se pudo crear la cuenta. Intenta de nuevo.');
       setIsLoading(false);
@@ -291,7 +293,7 @@ export default function RegisterPage() {
                 <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
                   <polyline points="20 6 9 17 4 12" />
                 </svg>
-                ¡Cuenta creada! Redirigiendo...
+                ¡Cuenta creada! Revisa tu correo (incluso la carpeta de spam) y haz clic en el enlace para activarla.
               </motion.div>
             )}
           </AnimatePresence>

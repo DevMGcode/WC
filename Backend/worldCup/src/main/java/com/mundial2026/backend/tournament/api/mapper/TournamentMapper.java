@@ -1,15 +1,23 @@
 package com.mundial2026.backend.tournament.api.mapper;
 
 import com.mundial2026.backend.tournament.api.dto.FixtureResponse;
+import com.mundial2026.backend.tournament.api.dto.MatchEventResponse;
 import com.mundial2026.backend.tournament.api.dto.TeamResponse;
 import com.mundial2026.backend.tournament.api.dto.TournamentResponse;
 import com.mundial2026.backend.tournament.domain.Fixture;
 import com.mundial2026.backend.tournament.domain.Team;
 import com.mundial2026.backend.tournament.domain.Tournament;
+import com.mundial2026.backend.tournament.service.MatchEventService;
+import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 
+import java.util.List;
+
 @Component
+@RequiredArgsConstructor
 public class TournamentMapper {
+
+    private final MatchEventService matchEventService;
 
     public TournamentResponse toResponse(Tournament tournament) {
         return new TournamentResponse(
@@ -22,6 +30,7 @@ public class TournamentMapper {
     }
 
     public FixtureResponse toResponse(Fixture fixture) {
+        List<MatchEventResponse> scorers = matchEventService.getEvents(fixture.getId());
         return new FixtureResponse(
                 fixture.getId(),
                 fixture.getName(),
@@ -38,7 +47,8 @@ public class TournamentMapper {
                 fixture.getStatus().name(),
                 fixture.getHomeScore(),
                 fixture.getAwayScore(),
-                fixture.getExternalProviderId()
+                fixture.getExternalProviderId(),
+                scorers
         );
     }
 

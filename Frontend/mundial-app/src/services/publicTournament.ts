@@ -1,4 +1,4 @@
-import { Fixture, FixtureDetail, Team, Tournament } from '@/types';
+import { Fixture, FixtureDetail, MatchEventScorer, Team, Tournament } from '@/types';
 import { request } from './publicApi';
 
 type RawTeam = Partial<Team> & {
@@ -30,6 +30,7 @@ type RawFixture = Partial<FixtureDetail> & {
   awayTeam?: RawTeam | string;
   events?: FixtureDetail['events'];
   standing?: FixtureDetail['standing'];
+  scorers?: MatchEventScorer[];
 };
 
 function normalizeTeam(
@@ -101,6 +102,7 @@ function normalizeFixture(raw: RawFixture, fallbackIndex = 0): FixtureDetail {
     stadiumName: raw.stadiumName,
     events: raw.events,
     standing: raw.standing,
+    scorers: raw.scorers ?? [],
   };
 }
 

@@ -1,6 +1,6 @@
 'use client';
 import React, { useState, useEffect, useRef, useCallback } from 'react';
-import { useRouter } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 import Image from 'next/image';
 import { motion, AnimatePresence, useMotionValue, useSpring, useTransform } from 'framer-motion';
 import { useAuth } from '@/contexts/AuthContext';
@@ -101,6 +101,7 @@ const SpeedRay = ({ angle, index }: { angle: number; index: number }) => (
 
 export default function LoginPage() {
   const router = useRouter();
+  const searchParams = useSearchParams();
   const { login, isAuthenticated, loading: authLoading, error: authError } = useAuth();
 
   const [email,     setEmail]     = useState('');
@@ -108,6 +109,14 @@ export default function LoginPage() {
   const [isLoading, setIsLoading] = useState(false);
   const [error,     setError]     = useState('');
   const [focused,   setFocused]   = useState<string | null>(null);
+  const [verifiedBanner, setVerifiedBanner] = useState<'verified' | 'invalid' | null>(null);
+
+  useEffect(() => {
+    const v = searchParams.get('verified');
+    const e = searchParams.get('error');
+    if (v === 'true') setVerifiedBanner('verified');
+    else if (e === 'invalid_token') setVerifiedBanner('invalid');
+  }, [searchParams]);
 
   const [countdown, setCountdown] = useState({ days: 0, hours: 0, minutes: 0, seconds: 0 });
   const [predCount, setPredCount] = useState(0);
@@ -628,6 +637,20 @@ export default function LoginPage() {
 
                   {/* Form */}
                   <form onSubmit={handleSubmit} className="space-y-5">
+
+                    {/* Email verification banner */}
+                    {verifiedBanner === 'verified' && (
+                      <div className="rounded-xl px-4 py-3 text-sm font-medium flex items-center gap-2"
+                        style={{ background: 'rgba(16,185,129,0.10)', border: '1px solid rgba(16,185,129,0.30)', color: '#34d399' }}>
+                        ✓ Email verificado exitosamente. Ya puedes iniciar sesión.
+                      </div>
+                    )}
+                    {verifiedBanner === 'invalid' && (
+                      <div className="rounded-xl px-4 py-3 text-sm font-medium flex items-center gap-2"
+                        style={{ background: 'rgba(239,68,68,0.10)', border: '1px solid rgba(239,68,68,0.30)', color: '#f87171' }}>
+                        ✗ El enlace de verificación es inválido o ya fue usado.
+                      </div>
+                    )}
 
                     {/* Email */}
                     <div>

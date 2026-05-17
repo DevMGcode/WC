@@ -2,13 +2,21 @@
 Frontend/mundial-app/node_modules/
 Frontend/mundial-app/.next/
 Frontend/mundial-app/coverage/
+Frontend/mundial-app/.env.local
 
 # Backend
 Backend/worldCup/target/
 Backend/worldCup/.env
+
+# Logs
+logs/
+*.log
 
 # IDE / OS
 **/.idea/
 **/.vscode/
 **/.DS_Store
 **/Thumbs.db
+
+# TypeScript build info
+**/tsconfig.tsbuildinfo
