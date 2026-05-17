@@ -23,10 +23,12 @@
 
 html {
   background-color: #010508;
+  overflow-x: hidden;
 }
 
 body {
   font-family: var(--font-ui);
+  overflow-x: hidden;
 }
 
 h1,
@@ -345,6 +347,131 @@ select:focus {
 /* Hover effects */
 .hover-scale {
   transition: transform 0.2s ease;
+}
+
+/* ══════════════════════════════════════════
+   REACT-JOYRIDE — DARK THEME OVERRIDE
+══════════════════════════════════════════ */
+
+/* Beacon: invisible pero en el DOM (opacity:0 ≠ display:none), posicionado sobre el botón ? */
+.react-joyride__beacon {
+  position: fixed !important;
+  bottom: 6rem !important;
+  right: 1rem !important;
+  top: auto !important;
+  left: auto !important;
+  width: 42px !important;
+  height: 42px !important;
+  opacity: 0 !important;
+  z-index: 9999 !important;
+  transform: none !important;
+  cursor: pointer !important;
+}
+.react-joyride__beacon > span {
+  display: none !important;
+}
+@media (min-width: 768px) {
+  .react-joyride__beacon {
+    bottom: 2rem !important;
+    right: 1.5rem !important;
+  }
+}
+.__floater.__floater__open {
+  filter: drop-shadow(0 20px 60px rgba(0,0,0,0.70)) !important;
+}
+
+.react-joyride__tooltip {
+  background: linear-gradient(145deg, #0a1628, #0d1f3a) !important;
+  border: 1px solid rgba(34,211,238,0.22) !important;
+  border-radius: 18px !important;
+  box-shadow: 0 24px 64px rgba(0,0,0,0.65), 0 0 0 1px rgba(34,211,238,0.08) !important;
+  padding: 0 !important;
+  max-width: 340px !important;
+}
+
+.react-joyride__tooltip > div {
+  background: transparent !important;
+  border-radius: 18px !important;
+  overflow: hidden !important;
+}
+
+/* Header del tooltip */
+.react-joyride__tooltip__header {
+  background: linear-gradient(90deg, rgba(34,211,238,0.08), transparent) !important;
+  border-bottom: 1px solid rgba(34,211,238,0.12) !important;
+  padding: 16px 20px 12px !important;
+  color: #ffffff !important;
+  font-size: 14px !important;
+  font-weight: 800 !important;
+  letter-spacing: 0.02em !important;
+}
+
+/* Cuerpo del tooltip */
+.react-joyride__tooltip__body {
+  color: rgba(148,163,184,0.92) !important;
+  font-size: 13px !important;
+  line-height: 1.65 !important;
+  padding: 14px 20px !important;
+}
+
+/* Footer (botones) */
+.react-joyride__tooltip__footer {
+  padding: 10px 20px 16px !important;
+  border-top: 1px solid rgba(255,255,255,0.04) !important;
+  display: flex !important;
+  align-items: center !important;
+  gap: 8px !important;
+}
+
+/* Botón Siguiente / Entendido */
+.react-joyride__tooltip button[data-action="primary"] {
+  background: linear-gradient(135deg, #0d9488, #06b6d4) !important;
+  border-radius: 10px !important;
+  border: none !important;
+  color: #fff !important;
+  font-size: 12px !important;
+  font-weight: 800 !important;
+  padding: 8px 20px !important;
+  cursor: pointer !important;
+  box-shadow: 0 4px 14px rgba(6,182,212,0.35) !important;
+  letter-spacing: 0.02em !important;
+  transition: opacity 0.15s !important;
+}
+.react-joyride__tooltip button[data-action="primary"]:hover {
+  opacity: 0.88 !important;
+}
+
+/* Botón Anterior */
+.react-joyride__tooltip button[data-action="back"] {
+  background: transparent !important;
+  border: none !important;
+  color: rgba(34,211,238,0.75) !important;
+  font-size: 12px !important;
+  font-weight: 700 !important;
+  cursor: pointer !important;
+  padding: 8px 4px !important;
+}
+
+/* Botón Omitir */
+.react-joyride__tooltip button[data-action="skip"] {
+  background: transparent !important;
+  border: none !important;
+  color: rgba(148,163,184,0.45) !important;
+  font-size: 11px !important;
+  cursor: pointer !important;
+  padding: 6px 4px !important;
+}
+
+/* Flecha del tooltip */
+.__floater__arrow polygon,
+.__floater__arrow svg {
+  fill: #0a1628 !important;
+}
+
+/* Progreso (X/N) */
+.react-joyride__tooltip__footer span {
+  color: rgba(100,116,139,0.70) !important;
+  font-size: 11px !important;
 }
 
 .hover-scale:hover {

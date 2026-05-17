@@ -52,6 +52,8 @@ services:
       NEXT_PUBLIC_API_URL: http://localhost:8080/api
       INTERNAL_API_BASE_URL: http://backend:8080
       WATCHPACK_POLLING: "true"
+      NEXT_PUBLIC_APP_URL: http://localhost:3000
+      NEXT_PUBLIC_SENTRY_DSN: https://a39aa7b66ccd81d016ff6d3a7a78337f@o4511406011908096.ingest.de.sentry.io/4511406039040080
     ports:
       - "3000:3000"
     volumes:

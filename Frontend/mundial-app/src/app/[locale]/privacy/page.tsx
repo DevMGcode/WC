@@ -25,7 +25,10 @@ export default function PrivacyPage() {
       <div className="relative z-10 max-w-3xl mx-auto px-6 py-12">
         {/* Back button */}
         <button
-          onClick={() => router.back()}
+          onClick={() => {
+            if (window.history.length > 1) router.back();
+            else window.close();
+          }}
           className="flex items-center gap-2 mb-8 text-xs font-semibold tracking-widest uppercase transition-colors duration-200"
           style={{ color: 'rgba(0,210,185,0.7)' }}
           onMouseEnter={e => (e.currentTarget.style.color = 'rgba(0,210,185,1)')}

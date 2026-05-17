@@ -5,7 +5,7 @@ import { defaultLocale, isLocale } from '@/i18n/locales';
 export function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
 
-  if (pathname.startsWith('/_next') || pathname.startsWith('/api') || pathname.includes('.')) {
+  if (pathname.startsWith('/_next') || pathname.startsWith('/api') || pathname.startsWith('/og') || pathname.includes('.')) {
     return NextResponse.next();
   }
 

@@ -610,6 +610,7 @@ export default function ProfilePage() {
                       background: 'rgba(34,211,238,0.10)',
                       border: '1px solid rgba(34,211,238,0.28)',
                       color: '#22d3ee',
+                      boxShadow: '0 0 0px transparent',
                     }}
                   >
                     <FiEdit3 size={13} />

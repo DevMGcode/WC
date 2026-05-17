@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect } from 'react';
 import Image from 'next/image';
-import { useRouter } from 'next/navigation';
+import { useRouter, useParams } from 'next/navigation';
 import { useT } from '@/hooks/useT';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
@@ -11,9 +11,12 @@ import {
   FiStar, FiPlus, FiLogIn, FiChevronRight, FiShield,
 } from 'react-icons/fi';
 import { Header } from '@/components/Navigation';
+import ShareButton from '@/components/ShareButton';
 import { getUserPredictions, getFixtureById, getCurrentTournament } from '@/services/publicTournament';
 import { scoringService, leagueService } from '@/services/predictions';
 import { useAuth } from '@/contexts/AuthContext';
+import TourButton from '@/components/Tour/TourButton';
+import { getTourSteps } from '@/components/Tour/tourSteps';
 
 /* ══════════════════════════════════════════
    TYPES
@@ -187,6 +190,13 @@ const PredictionCard = ({ pred, index, t }: { pred: any; index: number; t: (key:
               </span>
             )}
           </div>
+          <ShareButton
+            variant="icon"
+            size="sm"
+            title="⚽ Orionix Gol — Mundial 2026"
+            text={`⚽ Predije ${pred.predictedHomeScore}-${pred.predictedAwayScore} en ${fixture.homeTeam?.name ?? '?'} vs ${fixture.awayTeam?.name ?? '?'}\n🔮 ¿Acertaré? Juega conmigo en Orionix Gol 👇`}
+            label="Compartir porra"
+          />
         </div>
       </div>
 
@@ -248,6 +258,8 @@ const PredictionCard = ({ pred, index, t }: { pred: any; index: number; t: (key:
 export default function PredictionsPage() {
   const router = useRouter();
   const { t } = useT();
+  const params = useParams();
+  const locale = (params?.locale as string) ?? 'es';
   const { user } = useAuth();
   const [activeTab,       setActiveTab]       = useState<'MY_PREDICTIONS' | 'RANKING' | 'LEAGUES'>('MY_PREDICTIONS');
   const [myPredictions,   setMyPredictions]   = useState<any[]>([]);
@@ -395,7 +407,7 @@ export default function PredictionsPage() {
       </div>
 
       {/* ── STICKY TAB BAR ── */}
-      <div className="sticky top-0 z-40"
+      <div data-tour="predictions-tabs" className="sticky top-0 z-40"
         style={{ background: 'rgba(3,9,22,0.92)', borderBottom: '1px solid rgba(34,211,238,0.08)', backdropFilter: 'blur(20px)', boxShadow: '0 4px 32px rgba(0,0,0,0.55)' }}>
         <div className="absolute inset-x-0 bottom-0 h-px"
           style={{ background: 'linear-gradient(90deg, transparent, rgba(34,211,238,0.22), rgba(251,191,36,0.12), transparent)' }} />
@@ -457,7 +469,7 @@ export default function PredictionsPage() {
                 </div>
 
                 {/* Stats grid */}
-                <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+                <div data-tour="predictions-stats" className="grid grid-cols-2 md:grid-cols-4 gap-3">
                   {STAT_CARDS.map((s, i) => (
                     <motion.div key={s.label}
                       initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }}
@@ -487,6 +499,7 @@ export default function PredictionsPage() {
 
                 {/* Scoring rules */}
                 <motion.div
+                  data-tour="predictions-rules"
                   initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.2 }}
                   className="relative overflow-hidden rounded-2xl p-4"
                   style={{
@@ -533,7 +546,7 @@ export default function PredictionsPage() {
 
                 {/* Predictions list */}
                 {myPredictions.length > 0 ? (
-                  <div className="space-y-3">
+                  <div data-tour="predictions-list" className="space-y-3">
                     <div className="flex items-center gap-2">
                       <p className="text-[9px] font-black tracking-[0.28em] uppercase text-slate-600">
                         {myPredictions.length} {t('predictions.predictionsRegistered')}
@@ -544,7 +557,7 @@ export default function PredictionsPage() {
                     ))}
                   </div>
                 ) : (
-                  <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.3 }}
+                  <motion.div data-tour="predictions-list" initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.3 }}
                     className="flex flex-col items-center gap-4 py-16">
                     <div className="relative">
                       <div className="absolute inset-0 rounded-2xl"
@@ -831,6 +844,8 @@ export default function PredictionsPage() {
           </AnimatePresence>
         )}
       </div>
+
+      <TourButton steps={getTourSteps(locale, 'predictions')} />
 
       {/* ── LEAGUE MODAL ── */}
       <AnimatePresence>
