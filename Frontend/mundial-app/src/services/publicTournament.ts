@@ -70,13 +70,13 @@ function normalizeFixture(raw: RawFixture, fallbackIndex = 0): FixtureDetail {
     homeTeamInput,
     raw.homeTeamId ?? fixtureId * 2 - 1,
     homeTeamInput?.name ?? 'Local',
-    homeTeamInput?.shortName ?? 'LOC'
+    ('shortName' in (homeTeamInput ?? {}) ? (homeTeamInput as any).shortName : undefined) ?? 'LOC'
   );
   const awayTeam = normalizeTeam(
     awayTeamInput,
     raw.awayTeamId ?? fixtureId * 2,
     awayTeamInput?.name ?? 'Visitante',
-    awayTeamInput?.shortName ?? 'VIS'
+    ('shortName' in (awayTeamInput ?? {}) ? (awayTeamInput as any).shortName : undefined) ?? 'VIS'
   );
 
   return {

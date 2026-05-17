@@ -570,7 +570,7 @@ export const Bracket = ({ data }: BracketProps) => {
           {/* Flecha */}
           <div className="flex items-center text-red-500 text-2xl font-bold">→</div>
 
-          {/* SEMIFINALES - 2 partidos */
+          {/* SEMIFINALES - 2 partidos */}
           <motion.div
             initial={{ opacity: 0, x: -10 }}
             animate={{ opacity: 1, x: 0 }}

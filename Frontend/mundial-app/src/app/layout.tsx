@@ -2,14 +2,43 @@ import type { Metadata } from 'next';
 import './globals.css';
 import ServiceWorkerRegistration from '@/components/ServiceWorkerRegistration';
 
+const APP_URL = process.env.NEXT_PUBLIC_APP_URL ?? 'https://orionixgol.azurewebsites.net';
+
 export const metadata: Metadata = {
-  title: 'Orionix Gol',
-  description: 'Predicciones y seguimiento del Mundial de Fútbol 2026',
+  metadataBase: new URL(APP_URL),
+  title: {
+    default: 'Orionix Gol — Mundial 2026',
+    template: '%s | Orionix Gol',
+  },
+  description: 'Predice los resultados del Mundial de Fútbol 2026, compite en ligas privadas y sigue el ranking en tiempo real.',
+  keywords: ['mundial 2026', 'predicciones fútbol', 'world cup 2026', 'porra mundial', 'ligas privadas'],
+  authors: [{ name: 'Orionix Gol' }],
   viewport: 'width=device-width, initial-scale=1.0, viewport-fit=cover',
   themeColor: '#22d3ee',
   icons: {
     icon: '/Logo_Pestaña.png',
     apple: '/Logo_Pestaña.png',
+  },
+  openGraph: {
+    type: 'website',
+    siteName: 'Orionix Gol',
+    title: 'Orionix Gol — Mundial 2026',
+    description: 'Predice los resultados del Mundial de Fútbol 2026, compite en ligas privadas y sigue el ranking en tiempo real.',
+    url: APP_URL,
+    images: [
+      {
+        url: '/og',
+        width: 1200,
+        height: 630,
+        alt: 'Orionix Gol — Mundial 2026',
+      },
+    ],
+  },
+  twitter: {
+    card: 'summary_large_image',
+    title: 'Orionix Gol — Mundial 2026',
+    description: 'Predice los resultados del Mundial 2026 y compite con tus amigos.',
+    images: ['/og'],
   },
 };
 

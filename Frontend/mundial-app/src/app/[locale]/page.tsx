@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { useRouter } from 'next/navigation';
+import { useRouter, useParams } from 'next/navigation';
 import Link from 'next/link';
 import {
   FiActivity, FiCrosshair, FiAward, FiTrendingUp,
@@ -13,6 +13,9 @@ import { Header } from '@/components/Navigation';
 import { useT } from '@/hooks/useT';
 import { getCurrentTournament, getTournamentFixtures, getUserPredictions } from '@/services/publicTournament';
 import { scoringService } from '@/services/predictions';
+import ShareButton from '@/components/ShareButton';
+import TourButton from '@/components/Tour/TourButton';
+import { getTourSteps } from '@/components/Tour/tourSteps';
 
 const MEDAL = ['🥇', '🥈', '🥉'];
 
@@ -246,6 +249,8 @@ const Particle = ({ index }: { index: number }) => {
 export default function HomePage() {
   const router = useRouter();
   const { t } = useT();
+  const params = useParams();
+  const locale = (params?.locale as string) ?? 'es';
   const { user, loading: authLoading, isAuthenticated } = useAuth();
 
   const [loading, setLoading]             = useState(true);
@@ -260,6 +265,7 @@ export default function HomePage() {
   useEffect(() => {
     if (!authLoading && !isAuthenticated) router.push('/login');
   }, [isAuthenticated, authLoading, router]);
+
 
   useEffect(() => {
     const target = new Date('2026-06-11T00:00:00');
@@ -490,7 +496,7 @@ export default function HomePage() {
         {/* ══════════════════════════════════════════════
             ROW 1 — KPI CHIPS
         ══════════════════════════════════════════════ */}
-        <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-4">
+        <div data-tour="stats" className="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-4">
           <KPIChip icon={<FiActivity />}   value={stats.predictions}              label={t('home.stats.predictions')} color="#22d3ee" glow="#22d3ee" bg="rgba(34,211,238,0.07)"  delay={0.08} bars={9} />
           <KPIChip icon={<FiCrosshair />}  value={stats.exactas}                  label={t('home.stats.exact')}        color="#34d399" glow="#34d399" bg="rgba(52,211,153,0.07)"  delay={0.14} bars={8} />
           <KPIChip icon={<FiAward />}      value={stats.puntos}                   label={t('home.stats.points')}       color="#fbbf24" glow="#fbbf24" bg="rgba(251,191,36,0.07)"  delay={0.20} bars={10} />
@@ -592,6 +598,7 @@ export default function HomePage() {
             /* ── COUNTDOWN ── */
             <motion.div
               key="countdown"
+              data-tour="countdown"
               initial={{ opacity: 0, y: 14 }}
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0 }}
@@ -659,6 +666,7 @@ export default function HomePage() {
 
             {/* ─── NEXT MATCH ─── */}
             <motion.div
+              data-tour="matches"
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.6, delay: 0.38, ease: [0.22, 1, 0.36, 1] }}
@@ -1035,6 +1043,7 @@ export default function HomePage() {
 
             {/* ─── RANKING CARD ─── */}
             <motion.div
+              data-tour="ranking"
               initial={{ opacity: 0, x: 20 }}
               animate={{ opacity: 1, x: 0 }}
               transition={{ duration: 0.55, delay: 0.52, ease: [0.22, 1, 0.36, 1] }}
@@ -1056,7 +1065,18 @@ export default function HomePage() {
                     <div className="w-[3px] h-5 rounded-full" style={{ background: 'linear-gradient(180deg, #fbbf24, #f59e0b)' }} />
                     <span className="text-[10px] font-black text-slate-400 tracking-[0.24em] uppercase">{t('home.globalRanking')}</span>
                   </div>
-                  <EQBars color="rgba(251,191,36,0.45)" count={6} maxH={14} />
+                  <div className="flex items-center gap-2">
+                    <EQBars color="rgba(251,191,36,0.45)" count={6} maxH={14} />
+                    {stats.rank > 0 && (
+                      <ShareButton
+                        title="⚽ Orionix Gol — Mundial 2026"
+                        text={`🏆 Estoy en el puesto #${stats.rank} del ranking con ${stats.puntos} pts en el Mundial 2026\n¿Puedes superarme? 👇`}
+                        label="Compartir"
+                        size="sm"
+                        variant="icon"
+                      />
+                    )}
+                  </div>
                 </div>
 
                 <div className="space-y-1.5">
@@ -1161,6 +1181,7 @@ export default function HomePage() {
           ))}
         </motion.div>
       </div>
+      <TourButton steps={getTourSteps(locale, 'dashboard')} />
     </div>
   );
 }
