@@ -4,17 +4,25 @@ import { usePathname } from 'next/navigation';
 import { useState, useEffect, ReactNode } from 'react';
 import { useSidebar } from '@/contexts/SidebarContext';
 
-const AUTH_ROUTES = ['/login', '/register', '/onboarding'];
+const AUTH_ROUTES = ['/login', '/register', '/onboarding', '/privacy'];
 
 export function AppShell({ children }: { children: ReactNode }) {
   const pathname = usePathname();
   const { collapsed } = useSidebar();
   const [mounted, setMounted] = useState(false);
+  const [isDesktop, setIsDesktop] = useState(false);
 
-  useEffect(() => { setMounted(true); }, []);
+  useEffect(() => {
+    setMounted(true);
+    const mq = window.matchMedia('(min-width: 1024px)');
+    setIsDesktop(mq.matches);
+    const handler = (e: MediaQueryListEvent) => setIsDesktop(e.matches);
+    mq.addEventListener('change', handler);
+    return () => mq.removeEventListener('change', handler);
+  }, []);
 
-  const isAuth = AUTH_ROUTES.includes(pathname);
-  const pl = mounted && !isAuth ? (collapsed ? 64 : 200) : 0;
+  const isAuth = AUTH_ROUTES.some(r => pathname.endsWith(r));
+  const pl = mounted && !isAuth && isDesktop ? (collapsed ? 64 : 200) : 0;
 
   return (
     <div

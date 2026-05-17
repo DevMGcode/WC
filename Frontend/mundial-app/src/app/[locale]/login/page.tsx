@@ -276,7 +276,7 @@ export default function LoginPage() {
                 animate={{ rotate: [-3, 3, -3] }}
                 transition={{ duration: 4.5, repeat: Infinity, ease: 'easeInOut' }}
               >
-                <Image src="/Logo_Pestaña.png" alt="Orionix Gol" fill style={{ objectFit: 'contain', filter: 'drop-shadow(0 0 14px rgba(251,191,36,0.85)) drop-shadow(0 0 30px rgba(249,115,22,0.45))' }} />
+                <Image src="/Logo_Pestaña.png" alt="Orionix Gol" fill sizes="52px" style={{ objectFit: 'contain', filter: 'drop-shadow(0 0 14px rgba(251,191,36,0.85)) drop-shadow(0 0 30px rgba(249,115,22,0.45))' }} />
               </motion.div>
               <div className="leading-none">
                 <div className="text-[2rem] font-black tracking-tight text-white leading-none"
@@ -372,7 +372,7 @@ export default function LoginPage() {
                 animate={{ rotate: [-3, 3, -3] }}
                 transition={{ duration: 4.5, repeat: Infinity, ease: 'easeInOut' }}
               >
-                <Image src="/Logo_Pestaña.png" alt="Orionix Gol" fill style={{ objectFit: 'contain', filter: 'drop-shadow(0 0 18px rgba(251,191,36,0.9)) drop-shadow(0 0 40px rgba(249,115,22,0.55))' }} />
+                <Image src="/Logo_Pestaña.png" alt="Orionix Gol" fill sizes="52px" style={{ objectFit: 'contain', filter: 'drop-shadow(0 0 18px rgba(251,191,36,0.9)) drop-shadow(0 0 40px rgba(249,115,22,0.55))' }} />
               </motion.div>
 
               <div className="leading-none">
@@ -600,7 +600,7 @@ export default function LoginPage() {
                       transition={{ type: 'spring', stiffness: 280, damping: 18 }}
                     >
                       <div className="w-9 h-9 relative">
-                        <Image src="/logotipo_Orionix_Gol_transparente.png" alt="logo" fill style={{ objectFit: 'contain' }} />
+                        <Image src="/logotipo_Orionix_Gol_transparente.png" alt="logo" fill sizes="36px" style={{ objectFit: 'contain' }} />
                       </div>
                     </motion.div>
 

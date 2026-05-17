@@ -104,7 +104,7 @@ export const Navigation: React.FC = () => {
     return () => window.removeEventListener('scroll', onScroll);
   }, []);
 
-  const authRoutes = ['/login', '/register', '/onboarding'];
+  const authRoutes = ['/login', '/register', '/onboarding', '/privacy'];
   if (!mounted || authRoutes.some(r => pathname.endsWith(r))) return null;
 
   const toLocalHref = (h: string) => h === '/' ? `/${locale}` : `/${locale}${h}`;
@@ -243,7 +243,7 @@ export const Navigation: React.FC = () => {
 
                   {/* Mundial 2026 badge */}
                   <motion.div className="mt-3 flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg cursor-default overflow-hidden"
-                    style={{ background: 'linear-gradient(135deg, rgba(217,119,6,0.14), rgba(120,53,15,0.08))', border: '1px solid rgba(217,119,6,0.20)' }}
+                    style={{ background: 'linear-gradient(135deg, rgba(217,119,6,0.14), rgba(120,53,15,0.08))', border: '1px solid rgba(217,119,6,0.20)', boxShadow: '0 0 6px rgba(217,119,6,0.06)' }}
                     animate={{ boxShadow: ['0 0 6px rgba(217,119,6,0.06)', '0 0 16px rgba(217,119,6,0.18)', '0 0 6px rgba(217,119,6,0.06)'] }}
                     transition={{ duration: 2.8, repeat: Infinity }}
                   >
@@ -327,7 +327,7 @@ export const Navigation: React.FC = () => {
                       }}
                       animate={isActive
                         ? { boxShadow: [`0 0 5px ${item.glowRgba}`, `0 0 14px ${item.glowRgba}`, `0 0 5px ${item.glowRgba}`] }
-                        : { boxShadow: 'none' }}
+                        : { boxShadow: '0 0 0px rgba(0,0,0,0)' }}
                       transition={{ duration: 2.2, repeat: Infinity }}
                     >
                       {item.icon}
@@ -419,7 +419,7 @@ export const Navigation: React.FC = () => {
                     {user?.displayName?.charAt(0).toUpperCase() ?? '?'}
                   </div>
                   <motion.div className="absolute -bottom-0.5 -right-0.5 w-2 h-2 rounded-full bg-emerald-400"
-                    style={{ border: '1.5px solid rgba(3,9,24,1)' }}
+                    style={{ border: '1.5px solid rgba(3,9,24,1)', boxShadow: '0 0 3px rgba(52,211,153,0.5)' }}
                     animate={{ boxShadow: ['0 0 3px rgba(52,211,153,0.5)', '0 0 8px rgba(52,211,153,0.9)', '0 0 3px rgba(52,211,153,0.5)'] }}
                     transition={{ duration: 2.2, repeat: Infinity }} />
                 </div>
@@ -504,7 +504,7 @@ export const Navigation: React.FC = () => {
                       style={{ color: isActive ? item.accentHex : 'rgba(255,255,255,0.20)' }}
                       animate={isActive
                         ? { filter: [`drop-shadow(0 0 3px ${item.accentHex})`, `drop-shadow(0 0 9px ${item.accentHex})`, `drop-shadow(0 0 3px ${item.accentHex})`] }
-                        : { filter: 'none' }}
+                        : { filter: 'drop-shadow(0 0 0px rgba(0,0,0,0))' }}
                       transition={{ duration: 2.2, repeat: Infinity }}
                     >
                       {item.icon}

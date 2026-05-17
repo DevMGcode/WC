@@ -7,9 +7,12 @@ import {
   FiCalendar, FiClock, FiActivity, FiCheck, FiList,
   FiChevronRight, FiZap, FiTrendingUp,
 } from 'react-icons/fi';
+import { useParams } from 'next/navigation';
 import { Header } from '@/components/Navigation';
 import { getAllFixtures, getCurrentTournament } from '@/services/publicTournament';
 import { useT } from '@/hooks/useT';
+import TourButton from '@/components/Tour/TourButton';
+import { getTourSteps } from '@/components/Tour/tourSteps';
 
 /* ══════════════════════════════════════════
    CONSTANTS
@@ -130,7 +133,7 @@ const FlagBubble = ({ url, name, size = 60, glow = 'rgba(34,211,238,0.20)' }: { 
   </div>
 );
 
-const MatchCard = ({ fixture, index, t }: { fixture: any; index: number; t: (key: string) => string }) => {
+const MatchCard = ({ fixture, index, isFirst, t }: { fixture: any; index: number; t: (key: string) => string; isFirst?: boolean }) => {
   const effectiveStatus = getEffectiveStatus(fixture);
   const isLive     = effectiveStatus === 'LIVE';
   const isFinished = effectiveStatus === 'FINISHED';
@@ -148,6 +151,7 @@ const MatchCard = ({ fixture, index, t }: { fixture: any; index: number; t: (key
       transition={{ duration: 0.42, delay: index * 0.04, ease: [0.22, 1, 0.36, 1] }}
       whileHover={{ y: -5, scale: 1.012 }}
       className="group"
+      {...(isFirst ? { 'data-tour': 'calendar-match' } : {})}
     >
       <Link href={`fixtures/${fixture.id}`}>
         <div className="relative overflow-hidden rounded-2xl cursor-pointer"
@@ -386,6 +390,8 @@ const MatchCard = ({ fixture, index, t }: { fixture: any; index: number; t: (key
 ══════════════════════════════════════════ */
 export default function FixturesPage() {
   const { t } = useT();
+  const params = useParams();
+  const locale = (params?.locale as string) ?? 'es';
   const [allFixtures, setAllFixtures] = useState<any[]>([]);
   const [filter, setFilter]           = useState<FilterKey>('ALL');
   const [loading, setLoading]         = useState(true);
@@ -491,7 +497,7 @@ export default function FixturesPage() {
 
         {/* ── KPI CHIPS ── */}
         {!loading && (
-          <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-5">
+          <div data-tour="calendar-kpi" className="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-5">
             <KPIChip icon={<FiList />}        value={counts.total}     label={t('fixtures.total')}            color="#94a3b8" glow="rgba(148,163,184,0.55)" bg="rgba(148,163,184,0.07)" delay={0.06} />
             <KPIChip icon={<FiActivity />}    value={counts.live}      label={t('fixtures.filters.live')}     color="#ef4444" glow="rgba(239,68,68,0.60)"   bg="rgba(239,68,68,0.08)"   delay={0.12} />
             <KPIChip icon={<FiClock />}       value={counts.scheduled} label={t('fixtures.filters.pending')}  color="#22d3ee" glow="rgba(34,211,238,0.60)"  bg="rgba(34,211,238,0.07)"  delay={0.18} />
@@ -502,6 +508,7 @@ export default function FixturesPage() {
         {/* ── FILTER BAR ── */}
         <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.45, delay: 0.15 }}
+          data-tour="calendar-filters"
           className="relative overflow-hidden rounded-2xl mb-6 p-2"
           style={{
             background: 'linear-gradient(145deg, rgba(4,12,28,0.96), rgba(5,16,38,0.94))',
@@ -601,7 +608,7 @@ export default function FixturesPage() {
                   <AnimatePresence>
                     {items.map((fixture) => {
                       const idx = globalIdx++;
-                      return <MatchCard key={fixture.id} fixture={fixture} index={idx} t={t} />;
+                      return <MatchCard key={fixture.id} fixture={fixture} index={idx} isFirst={idx === 0} t={t} />;
                     })}
                   </AnimatePresence>
                 </div>
@@ -635,6 +642,7 @@ export default function FixturesPage() {
           </motion.div>
         )}
       </div>
+      <TourButton steps={getTourSteps(locale, 'calendar')} />
     </div>
   );
 }

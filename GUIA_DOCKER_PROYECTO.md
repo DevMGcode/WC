@@ -26,7 +26,17 @@ cd <NOMBRE_DEL_REPOSITORIO>
 
 ## 3. Levantar todo con Docker
 
+### Opción rápida (recomendada)
+
 Desde la **raiz del repositorio**, ejecutar:
+
+```bash
+./dev.sh
+```
+
+> Si la primera vez da error de permisos, ejecuta `chmod +x dev.sh` y vuelve a intentarlo.
+
+### Opción manual
 
 ```bash
 docker compose -f Backend/worldCup/docker-compose.dev.yml up -d --build

@@ -30,7 +30,7 @@ async function request<T>(
     headers: {
       'Content-Type': 'application/json',
     },
-    cache: 'no-store',
+    cache: 'default',
   });
 
   if (!response.ok) {

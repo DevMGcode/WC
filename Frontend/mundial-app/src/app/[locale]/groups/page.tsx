@@ -3,11 +3,14 @@
 import React, { useState, useEffect } from 'react';
 import Image from 'next/image';
 import { motion, AnimatePresence } from 'framer-motion';
+import { useParams } from 'next/navigation';
 import { FiAward, FiBarChart2, FiShield, FiZap, FiGrid, FiTarget, FiCrosshair } from 'react-icons/fi';
 import { Header } from '@/components/Navigation';
 import { Bracket } from '@/components/BracketChampions';
 import { getCurrentTournament, getTournamentFixtures, getTournamentGroups } from '@/services/publicTournament';
 import { useT } from '@/hooks/useT';
+import TourButton from '@/components/Tour/TourButton';
+import { getTourSteps } from '@/components/Tour/tourSteps';
 
 /* ══════════════════════════════════════════
    TYPES
@@ -566,6 +569,8 @@ const buildBracketFromFixtures = (fixtures: any[]): BracketData => {
 
 export default function GroupsPage() {
   const { t } = useT();
+  const params = useParams();
+  const locale = (params?.locale as string) ?? 'es';
   const [groups,       setGroups]       = useState<Group[]>([]);
   const [bracketsData, setBracketsData] = useState<BracketData | null>(null);
   const [loading,      setLoading]      = useState(true);
@@ -643,7 +648,7 @@ export default function GroupsPage() {
       </div>
 
       {/* ── STICKY TAB BAR ── */}
-      <div className="sticky top-0 z-40"
+      <div data-tour="groups-tabs" className="sticky top-0 z-40"
         style={{ background: 'rgba(3,9,22,0.92)', borderBottom: '1px solid rgba(34,211,238,0.10)', backdropFilter: 'blur(20px)', boxShadow: '0 4px 32px rgba(0,0,0,0.55)' }}>
         <div className="absolute inset-x-0 bottom-0 h-px"
           style={{ background: 'linear-gradient(90deg, transparent, rgba(34,211,238,0.25), rgba(251,191,36,0.15), transparent)' }} />
@@ -707,7 +712,7 @@ export default function GroupsPage() {
                     <span className="text-[8px] font-black text-cyan-400 tracking-[0.2em]">{groups.length} {t('groups.title').toUpperCase()}</span>
                   </div>
                 </motion.div>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div data-tour="groups-grid" className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   {groups.map((g, i) => <GroupCard key={g.id} group={g} index={i} t={t} />)}
                 </div>
                 <motion.div className="mt-5 flex flex-wrap items-center gap-4"
@@ -733,7 +738,7 @@ export default function GroupsPage() {
 
             {/* ═══════════════════ ELIMINATORIAS ═══════════════════ */}
             {activeTab === 'eliminatorias' && bracketsData && (
-              <motion.div key="eliminatorias"
+              <motion.div key="eliminatorias" data-tour="groups-knockout"
                 initial={{ opacity: 0, y: 14 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -8 }}
                 transition={{ duration: 0.32 }}>
 
@@ -848,6 +853,7 @@ export default function GroupsPage() {
           </AnimatePresence>
         )}
       </div>
+      <TourButton steps={getTourSteps(locale, 'groups')} />
     </div>
   );
 }

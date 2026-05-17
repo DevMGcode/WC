@@ -209,7 +209,7 @@ const MatchBox = ({
 };
 
 /* ── Premium SVG Connector Lines ── */
-const BracketConnectorsSymmetric = React.forwardRef<HTMLDivElement, {
+const BracketConnectorsSymmetric = ({ octavosLeftRefs, cuartosLeftRefs, semifinalesLeftRefs, octavosRightRefs, cuartosRightRefs, semifinalesRightRefs, finalRef, containerRef }: {
   octavosLeftRefs:    React.MutableRefObject<(HTMLDivElement | null)[]>;
   cuartosLeftRefs:    React.MutableRefObject<(HTMLDivElement | null)[]>;
   semifinalesLeftRefs: React.MutableRefObject<(HTMLDivElement | null)[]>;
@@ -218,7 +218,7 @@ const BracketConnectorsSymmetric = React.forwardRef<HTMLDivElement, {
   semifinalesRightRefs: React.MutableRefObject<(HTMLDivElement | null)[]>;
   finalRef:           React.MutableRefObject<HTMLDivElement | null>;
   containerRef:       React.MutableRefObject<HTMLDivElement | null>;
-}>(({ octavosLeftRefs, cuartosLeftRefs, semifinalesLeftRefs, octavosRightRefs, cuartosRightRefs, semifinalesRightRefs, finalRef, containerRef }) => {
+}) => {
   const svgRef = React.useRef<SVGSVGElement>(null);
   const [paths, setPaths] = React.useState<Array<{ d: string; id: string; isFinal: boolean }>>([]);
 
@@ -345,9 +345,7 @@ const BracketConnectorsSymmetric = React.forwardRef<HTMLDivElement, {
       })}
     </svg>
   );
-});
-
-BracketConnectorsSymmetric.displayName = 'BracketConnectorsSymmetric';
+};
 
 /* ── Bracket ── */
 export const Bracket = ({ data, showBg = false }: BracketProps) => {
