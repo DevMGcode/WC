@@ -56,22 +56,22 @@ export default function CookieConsent() {
         >
           <div className="relative rounded-2xl overflow-hidden"
             style={{
-              background: 'linear-gradient(145deg, rgba(2,8,24,0.98), rgba(4,14,36,0.97))',
-              border: '1px solid rgba(34,211,238,0.18)',
+              background: 'linear-gradient(145deg, rgba(6,17,10,0.98), rgba(11,27,18,0.97))',
+              border: '1px solid rgba(76,175,80,0.18)',
               boxShadow: '0 20px 60px rgba(0,0,0,0.60)',
             }}>
             <div className="absolute inset-x-0 top-0 h-px"
-              style={{ background: 'linear-gradient(90deg, transparent, rgba(34,211,238,0.5), transparent)' }} />
+              style={{ background: 'linear-gradient(90deg, transparent, rgba(76,175,80,0.5), transparent)' }} />
 
             <div className="p-4">
               <div className="flex items-start gap-3 mb-3">
                 <span className="text-2xl shrink-0">🍪</span>
                 <div>
                   <p className="text-white font-black text-sm">Cookies y privacidad</p>
-                  <p className="text-slate-400 text-xs mt-0.5 leading-relaxed">
+                  <p className="text-orionix-text-muted text-xs mt-0.5 leading-relaxed">
                     Usamos Google Analytics para mejorar la app. No vendemos tus datos.
                     Aplica{' '}
-                    <a href={privacyUrl} target="_blank" rel="noopener noreferrer" className="text-cyan-400 underline underline-offset-2">
+                    <a href={privacyUrl} target="_blank" rel="noopener noreferrer" className="text-green-400 underline underline-offset-2">
                       Política de privacidad
                     </a>{' '}
                     (GDPR · Ley 1581 CO).
@@ -83,7 +83,7 @@ export default function CookieConsent() {
                 <motion.button
                   onClick={handleReject}
                   whileTap={{ scale: 0.96 }}
-                  className="flex-1 py-2 rounded-xl text-xs font-black text-slate-400"
+                  className="flex-1 py-2 rounded-xl text-xs font-black text-orionix-text-muted"
                   style={{ background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.08)' }}
                 >
                   Rechazar
@@ -92,7 +92,7 @@ export default function CookieConsent() {
                   onClick={handleAccept}
                   whileTap={{ scale: 0.96 }}
                   className="flex-1 py-2 rounded-xl text-xs font-black text-white"
-                  style={{ background: 'linear-gradient(135deg, #0d9488, #06b6d4)', boxShadow: '0 4px 16px rgba(0,210,185,0.25)' }}
+                  style={{ background: 'linear-gradient(135deg, #1B5E20, #388E3C)', boxShadow: '0 4px 16px rgba(76,175,80,0.25)' }}
                 >
                   Aceptar
                 </motion.button>

@@ -262,7 +262,7 @@ export function CustomTour({ steps, run, locale, onFinish }: Props) {
               </button>
             )}
             <button onClick={() => isLast ? onFinish() : setIndex(i => i + 1)} style={{
-              background: 'linear-gradient(135deg, #0d9488, #06b6d4)',
+              background: 'linear-gradient(135deg, #1B5E20, #388E3C)',
               border: 'none', borderRadius: 9, cursor: 'pointer',
               color: '#fff', fontSize: 11, fontWeight: 800,
               padding: '7px 18px',

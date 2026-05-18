@@ -90,7 +90,7 @@ function AnalyticsTab() {
   }, []);
 
   const statCards = [
-    { label: 'Usuarios registrados', sublabel: 'Total en la plataforma', value: stats.totalUsers, icon: <IconUsers />, from: '#06b6d4', to: '#0ea5e9', glow: 'rgba(6,182,212,0.3)' },
+    { label: 'Usuarios registrados', sublabel: 'Total en la plataforma', value: stats.totalUsers, icon: <IconUsers />, from: '#2E7D32', to: '#4CAF50', glow: 'rgba(46,125,50,0.3)' },
     { label: 'Predicciones totales', sublabel: 'Porras registradas', value: stats.totalPredictions, icon: <IconBall />, from: '#10b981', to: '#059669', glow: 'rgba(16,185,129,0.3)' },
   ];
 
@@ -103,7 +103,7 @@ function AnalyticsTab() {
             initial={{ opacity: 0, scale: 0.92 }} animate={{ opacity: 1, scale: 1 }}
             transition={{ delay: i * 0.1, type: 'spring', stiffness: 260, damping: 22 }}
             className="relative rounded-2xl overflow-hidden group"
-            style={{ background: `linear-gradient(145deg, rgba(9,20,38,0.95), rgba(14,30,56,0.9))`, border: `1px solid ${from}40`, boxShadow: `0 0 30px ${glow}30, 0 8px 24px rgba(2,6,23,0.5)` }}>
+            style={{ background: `linear-gradient(145deg, rgba(6,17,10,0.95), rgba(11,27,18,0.90))`, border: `1px solid ${from}40`, boxShadow: `0 0 30px ${glow}30, 0 8px 24px rgba(2,6,23,0.5)` }}>
             {/* Glow radial de fondo */}
             <div className="absolute inset-0 opacity-20 transition-opacity group-hover:opacity-30"
               style={{ background: `radial-gradient(circle at 40% 40%, ${from} 0%, transparent 65%)` }} />
@@ -133,7 +133,7 @@ function AnalyticsTab() {
       {/* GA4 Card: 2 columnas restantes en desktop */}
       <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.2 }}
         className="md:col-span-2 relative rounded-2xl overflow-hidden"
-        style={{ background: 'linear-gradient(145deg, rgba(9,20,38,0.95), rgba(14,30,56,0.9))', border: '1px solid rgba(249,115,22,0.35)', boxShadow: '0 0 30px rgba(249,115,22,0.1), 0 8px 24px rgba(2,6,23,0.5)' }}>
+        style={{ background: 'linear-gradient(145deg, rgba(6,17,10,0.95), rgba(11,27,18,0.90))', border: '1px solid rgba(249,115,22,0.35)', boxShadow: '0 0 30px rgba(249,115,22,0.1), 0 8px 24px rgba(2,6,23,0.5)' }}>
         <div className="absolute top-0 left-4 right-4 h-px" style={{ background: 'linear-gradient(90deg, transparent, #f97316, transparent)' }} />
         <div className="absolute inset-0 opacity-10" style={{ background: 'radial-gradient(circle at 80% 30%, #f97316 0%, transparent 60%)' }} />
 
@@ -149,9 +149,9 @@ function AnalyticsTab() {
             </div>
             <div className={`shrink-0 flex items-center gap-1.5 text-[10px] font-bold px-2.5 py-1 rounded-full`}
               style={{
-                background: GA_ID ? 'rgba(52,211,153,0.1)' : 'rgba(251,191,36,0.1)',
-                border: `1px solid ${GA_ID ? 'rgba(52,211,153,0.3)' : 'rgba(251,191,36,0.3)'}`,
-                color: GA_ID ? '#34d399' : '#fbbf24',
+                background: GA_ID ? 'rgba(56,142,60,0.1)' : 'rgba(212,167,44,0.1)',
+                border: `1px solid ${GA_ID ? 'rgba(56,142,60,0.3)' : 'rgba(212,167,44,0.3)'}`,
+                color: GA_ID ? '#388E3C' : '#D4A72C',
               }}>
               <span className={`w-1.5 h-1.5 rounded-full ${GA_ID ? 'bg-emerald-400 animate-pulse' : 'bg-amber-400'}`} />
               {GA_ID ? 'Activo' : 'Sin configurar'}
@@ -163,7 +163,7 @@ function AnalyticsTab() {
               <div className="flex items-center gap-2 rounded-xl px-3 py-2 mb-4"
                 style={{ background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.07)' }}>
                 <span className="text-[10px] uppercase tracking-widest" style={{ color: 'rgba(148,163,184,0.5)' }}>ID</span>
-                <span className="font-mono text-xs font-bold" style={{ color: '#22d3ee' }}>{GA_ID}</span>
+                <span className="font-mono text-xs font-bold text-orionix-green-bright">{GA_ID}</span>
               </div>
               <motion.a
                 href="https://analytics.google.com/analytics/web/#/a394949491p537871988/reports/intelligenthome"
@@ -176,7 +176,7 @@ function AnalyticsTab() {
             </>
           ) : (
             <div className="rounded-xl p-3.5 text-xs font-medium"
-              style={{ background: 'rgba(251,191,36,0.08)', border: '1px solid rgba(251,191,36,0.2)', color: 'rgba(251,191,36,0.9)' }}>
+              style={{ background: 'rgba(212,167,44,0.08)', border: '1px solid rgba(212,167,44,0.2)', color: 'rgba(212,167,44,0.9)' }}>
               Agrega <span className="font-mono">NEXT_PUBLIC_GA_ID=G-XXXXXXXXXX</span> en <span className="font-mono">.env.local</span>
             </div>
           )}
@@ -252,14 +252,14 @@ function GoalScorerPanel({ fixtureId, homeTeam, awayTeam }: {
   };
 
   return (
-    <div className="mt-3 pt-3" style={{ borderTop: '1px solid rgba(251,191,36,0.12)' }}>
+    <div className="mt-3 pt-3" style={{ borderTop: '1px solid rgba(212,167,44,0.12)' }}>
       {/* Header */}
       <div className="flex items-center justify-between mb-2">
         <div className="flex items-center gap-1.5">
-          <span className="text-[9px] font-black tracking-widest uppercase" style={{ color: '#fbbf24' }}>⚽ Goleadores</span>
+          <span className="text-[9px] font-black tracking-widest uppercase text-orionix-gold">⚽ Goleadores</span>
           {scorers.length > 0 && (
             <span className="text-[8px] font-black px-1.5 py-0.5 rounded-full"
-              style={{ background: 'rgba(251,191,36,0.10)', color: '#fbbf24', border: '1px solid rgba(251,191,36,0.20)' }}>
+              style={{ background: 'rgba(212,167,44,0.10)', color: '#D4A72C', border: '1px solid rgba(212,167,44,0.20)' }}>
               {scorers.length}
             </span>
           )}
@@ -268,7 +268,7 @@ function GoalScorerPanel({ fixtureId, homeTeam, awayTeam }: {
           onClick={() => setShowForm(f => !f)}
           whileTap={{ scale: 0.95 }}
           className="text-[9px] font-black px-2 py-1 rounded-lg"
-          style={{ background: showForm ? 'rgba(239,68,68,0.08)' : 'rgba(251,191,36,0.08)', border: `1px solid ${showForm ? 'rgba(239,68,68,0.28)' : 'rgba(251,191,36,0.25)'}`, color: showForm ? '#f87171' : '#fbbf24' }}
+          style={{ background: showForm ? 'rgba(239,68,68,0.08)' : 'rgba(212,167,44,0.08)', border: `1px solid ${showForm ? 'rgba(239,68,68,0.28)' : 'rgba(212,167,44,0.25)'}`, color: showForm ? '#f87171' : '#D4A72C' }}
         >
           {showForm ? '✕ Cancelar' : '+ Añadir gol'}
         </motion.button>
@@ -279,9 +279,9 @@ function GoalScorerPanel({ fixtureId, homeTeam, awayTeam }: {
         <div className="space-y-1.5 mb-2">
           {scorers.map((s: any) => (
             <div key={s.id} className="flex items-center gap-2 px-2.5 py-1.5 rounded-lg"
-              style={{ background: 'rgba(251,191,36,0.04)', border: '1px solid rgba(251,191,36,0.10)' }}>
+              style={{ background: 'rgba(212,167,44,0.04)', border: '1px solid rgba(212,167,44,0.10)' }}>
               <span className="text-sm shrink-0">⚽</span>
-              <span className="flex-1 text-xs font-bold text-slate-300 truncate">
+              <span className="flex-1 text-xs font-bold text-orionix-text-secondary truncate">
                 {s.playerName}{s.minute ? ` · ${s.minute}'` : ''}
               </span>
               <div className="flex items-center gap-1.5 shrink-0">
@@ -291,7 +291,7 @@ function GoalScorerPanel({ fixtureId, homeTeam, awayTeam }: {
                     {s.teamFifaCode}
                   </span>
                 )}
-                {s.source === 'API' && <span className="text-[8px] text-cyan-500/60 font-bold">API</span>}
+                {s.source === 'API' && <span className="text-[8px] text-green-500/60 font-bold">API</span>}
                 {s.mismatch   && <span className="text-[8px] text-amber-400/70 font-bold">✎ corregido</span>}
                 {s.verified   && s.source !== 'API' && <span className="text-[8px] text-emerald-500/60">✓</span>}
                 <motion.button
@@ -309,7 +309,7 @@ function GoalScorerPanel({ fixtureId, homeTeam, awayTeam }: {
           ))}
         </div>
       ) : (
-        !showForm && <p className="text-[10px] text-slate-700 mb-2 text-center">Sin goleadores aún — pulsa &quot;+ Añadir gol&quot;</p>
+        !showForm && <p className="text-[10px] text-orionix-text-muted mb-2 text-center">Sin goleadores aún — pulsa &quot;+ Añadir gol&quot;</p>
       )}
 
       {/* Formulario para agregar */}
@@ -320,7 +320,7 @@ function GoalScorerPanel({ fixtureId, homeTeam, awayTeam }: {
             exit={{ opacity: 0, height: 0 }} className="overflow-hidden"
           >
             <div className="rounded-xl p-3 space-y-2.5 mt-1"
-              style={{ background: 'rgba(251,191,36,0.04)', border: '1px solid rgba(251,191,36,0.20)' }}>
+              style={{ background: 'rgba(212,167,44,0.04)', border: '1px solid rgba(212,167,44,0.20)' }}>
               {/* Nombre del jugador */}
               <input
                 value={playerName}
@@ -328,7 +328,7 @@ function GoalScorerPanel({ fixtureId, homeTeam, awayTeam }: {
                 onKeyDown={e => e.key === 'Enter' && addScorer()}
                 placeholder="Nombre del jugador que anotó..."
                 className="w-full px-3 py-2 rounded-lg text-xs font-bold outline-none"
-                style={{ background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)', color: '#e2e8f0', caretColor: '#fbbf24' }}
+                style={{ background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)', color: '#e2e8f0', caretColor: '#D4A72C' }}
                 autoFocus
               />
               {/* Equipo + minuto */}
@@ -337,7 +337,7 @@ function GoalScorerPanel({ fixtureId, homeTeam, awayTeam }: {
                   value={teamId}
                   onChange={e => setTeamId(e.target.value)}
                   className="flex-1 px-2 py-1.5 rounded-lg text-xs outline-none"
-                  style={{ background: 'rgba(9,18,36,0.95)', border: '1px solid rgba(255,255,255,0.10)', color: '#e2e8f0', appearance: 'none' }}
+                  style={{ background: 'rgba(6,17,10,0.95)', border: '1px solid rgba(255,255,255,0.10)', color: '#e2e8f0', appearance: 'none' }}
                 >
                   <option value="">¿Qué equipo anotó?</option>
                   {homeTeam.id && <option value={homeTeam.id}>{homeTeam.shortName || homeTeam.name} (local)</option>}
@@ -359,7 +359,7 @@ function GoalScorerPanel({ fixtureId, homeTeam, awayTeam }: {
                 whileHover={!saving && playerName.trim() ? { scale: 1.02 } : {}}
                 whileTap={{ scale: 0.97 }}
                 className="w-full py-2.5 rounded-lg text-xs font-black disabled:opacity-40"
-                style={{ background: 'linear-gradient(90deg, rgba(251,191,36,0.18), rgba(251,191,36,0.12))', border: '1px solid rgba(251,191,36,0.40)', color: '#fbbf24' }}
+                style={{ background: 'linear-gradient(90deg, rgba(212,167,44,0.18), rgba(212,167,44,0.12))', border: '1px solid rgba(212,167,44,0.40)', color: '#D4A72C' }}
               >
                 {saving ? 'Guardando...' : '⚽ Guardar goleador'}
               </motion.button>
@@ -395,23 +395,23 @@ function FixtureCard({
         background: isSuccess
           ? 'linear-gradient(145deg, rgba(6,40,30,0.95), rgba(9,50,38,0.9))'
           : isFinished
-          ? 'linear-gradient(145deg, rgba(9,18,36,0.95), rgba(12,24,46,0.9))'
+          ? 'linear-gradient(145deg, rgba(6,17,10,0.95), rgba(11,27,18,0.90))'
           : 'linear-gradient(145deg, rgba(20,14,6,0.95), rgba(28,18,6,0.9))',
-        border: `1px solid ${isSuccess ? 'rgba(52,211,153,0.5)' : isFinished ? 'rgba(56,189,248,0.18)' : 'rgba(251,191,36,0.3)'}`,
+        border: `1px solid ${isSuccess ? 'rgba(56,142,60,0.5)' : isFinished ? 'rgba(102,187,106,0.18)' : 'rgba(212,167,44,0.3)'}`,
         boxShadow: isSuccess
-          ? '0 0 28px rgba(52,211,153,0.15), 0 8px 24px rgba(2,6,23,0.5)'
+          ? '0 0 28px rgba(56,142,60,0.15), 0 8px 24px rgba(2,6,23,0.5)'
           : isPending
-          ? '0 0 28px rgba(251,191,36,0.08), 0 8px 24px rgba(2,6,23,0.5)'
+          ? '0 0 28px rgba(212,167,44,0.08), 0 8px 24px rgba(2,6,23,0.5)'
           : '0 8px 24px rgba(2,6,23,0.45)',
       }}>
       {/* Línea decorativa superior */}
       <div className="absolute top-0 left-0 right-0 h-0.5"
-        style={{ background: isSuccess ? 'linear-gradient(90deg, transparent, #34d399, transparent)' : isFinished ? 'linear-gradient(90deg, transparent, #38bdf8, transparent)' : 'linear-gradient(90deg, transparent, #fbbf24, transparent)' }} />
+        style={{ background: isSuccess ? 'linear-gradient(90deg, transparent, #388E3C, transparent)' : isFinished ? 'linear-gradient(90deg, transparent, #66BB6A, transparent)' : 'linear-gradient(90deg, transparent, #D4A72C, transparent)' }} />
 
       {/* Pulso de fondo en pendientes */}
       {isPending && !isEditing && (
         <motion.div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-500"
-          style={{ background: 'radial-gradient(circle at 50% 0%, rgba(251,191,36,0.05) 0%, transparent 70%)' }} />
+          style={{ background: 'radial-gradient(circle at 50% 0%, rgba(212,167,44,0.05) 0%, transparent 70%)' }} />
       )}
 
       <div className="relative p-4">
@@ -423,11 +423,11 @@ function FixtureCard({
           </span>
           <div className="flex items-center gap-1.5 text-[10px] font-bold px-2.5 py-1 rounded-full"
             style={{
-              color: isSuccess ? '#34d399' : isFinished ? '#38bdf8' : '#fbbf24',
-              background: isSuccess ? 'rgba(52,211,153,0.1)' : isFinished ? 'rgba(56,189,248,0.1)' : 'rgba(251,191,36,0.1)',
-              border: `1px solid ${isSuccess ? 'rgba(52,211,153,0.25)' : isFinished ? 'rgba(56,189,248,0.2)' : 'rgba(251,191,36,0.25)'}`,
+              color: isSuccess ? '#388E3C' : isFinished ? '#66BB6A' : '#D4A72C',
+              background: isSuccess ? 'rgba(56,142,60,0.1)' : isFinished ? 'rgba(102,187,106,0.1)' : 'rgba(212,167,44,0.1)',
+              border: `1px solid ${isSuccess ? 'rgba(56,142,60,0.25)' : isFinished ? 'rgba(102,187,106,0.2)' : 'rgba(212,167,44,0.25)'}`,
             }}>
-            <span className={`w-1.5 h-1.5 rounded-full ${isSuccess ? 'bg-emerald-400' : isFinished ? 'bg-sky-400' : 'bg-amber-400 animate-pulse'}`} />
+            <span className={`w-1.5 h-1.5 rounded-full ${isSuccess ? 'bg-emerald-400' : isFinished ? 'bg-green-400' : 'bg-amber-400 animate-pulse'}`} />
             {isSuccess ? 'Guardado' : isFinished ? 'Finalizado' : 'Pendiente'}
           </div>
         </div>
@@ -442,13 +442,13 @@ function FixtureCard({
           {/* Score box */}
           <div className="shrink-0 flex items-center justify-center px-4 py-2.5 rounded-2xl"
             style={{
-              background: isFinished && !isEditing ? 'rgba(34,211,238,0.08)' : 'rgba(255,255,255,0.05)',
-              border: `1.5px solid ${isFinished && !isEditing ? 'rgba(34,211,238,0.3)' : 'rgba(255,255,255,0.08)'}`,
+              background: isFinished && !isEditing ? 'rgba(76,175,80,0.08)' : 'rgba(255,255,255,0.05)',
+              border: `1.5px solid ${isFinished && !isEditing ? 'rgba(76,175,80,0.3)' : 'rgba(255,255,255,0.08)'}`,
               minWidth: 88,
-              boxShadow: isFinished && !isEditing ? '0 0 16px rgba(34,211,238,0.1)' : 'none',
+              boxShadow: isFinished && !isEditing ? '0 0 16px rgba(76,175,80,0.1)' : 'none',
             }}>
             {isFinished && fixture.homeScore !== null && !isEditing ? (
-              <span className="font-black text-2xl tracking-wider" style={{ color: '#22d3ee', fontFamily: 'var(--font-display)', letterSpacing: '0.12em' }}>
+              <span className="font-black text-2xl tracking-wider" style={{ color: '#4CAF50', fontFamily: 'var(--font-display)', letterSpacing: '0.12em' }}>
                 {fixture.homeScore}<span style={{ color: 'rgba(148,163,184,0.35)', margin: '0 4px' }}>—</span>{fixture.awayScore}
               </span>
             ) : (
@@ -473,7 +473,7 @@ function FixtureCard({
         {isSuccess && (
           <motion.div initial={{ opacity: 0, y: -6 }} animate={{ opacity: 1, y: 0 }}
             className="flex items-center gap-2 rounded-xl px-3 py-2 mb-3 text-xs font-bold"
-            style={{ background: 'rgba(52,211,153,0.12)', border: '1px solid rgba(52,211,153,0.25)', color: '#34d399' }}>
+            style={{ background: 'rgba(56,142,60,0.12)', border: '1px solid rgba(56,142,60,0.25)', color: '#388E3C' }}>
             <IconCheck /> Resultado guardado — ranking actualizado
           </motion.div>
         )}
@@ -498,7 +498,7 @@ function FixtureCard({
                         <p className="text-[10px] text-center truncate mb-1.5" style={{ color: 'rgba(148,163,184,0.5)' }}>{team.label}</p>
                         <input type="number" min="0" max="20" value={team.value} onChange={e => team.onChange(e.target.value)}
                           className="w-full text-center text-4xl font-black py-3 rounded-xl outline-none transition-all focus:scale-105"
-                          style={{ background: 'rgba(34,211,238,0.06)', border: '1.5px solid rgba(34,211,238,0.3)', color: '#22d3ee', fontFamily: 'var(--font-display)', boxShadow: '0 0 20px rgba(34,211,238,0.1)' }}
+                          style={{ background: 'rgba(76,175,80,0.06)', border: '1.5px solid rgba(76,175,80,0.3)', color: '#4CAF50', fontFamily: 'var(--font-display)', boxShadow: '0 0 20px rgba(76,175,80,0.1)' }}
                           placeholder="0" />
                       </div>
                     </React.Fragment>
@@ -520,7 +520,7 @@ function FixtureCard({
                   </motion.button>
                   <motion.button onClick={onSave} disabled={saving} whileTap={{ scale: 0.97 }}
                     className="flex-1 flex items-center justify-center gap-1.5 py-2.5 rounded-xl text-sm font-black text-white disabled:opacity-50"
-                    style={{ background: 'linear-gradient(90deg, #10b981, #06b6d4)', boxShadow: '0 4px 18px rgba(16,185,129,0.35)', fontFamily: 'var(--font-display)', letterSpacing: '0.05em' }}>
+                    style={{ background: 'linear-gradient(90deg, #10b981, #2E7D32)', boxShadow: '0 4px 18px rgba(16,185,129,0.35)', fontFamily: 'var(--font-display)', letterSpacing: '0.05em' }}>
                     <IconCheck /> {saving ? 'GUARDANDO…' : 'CONFIRMAR'}
                   </motion.button>
                 </div>
@@ -535,11 +535,11 @@ function FixtureCard({
             <motion.button onClick={onEdit} whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.97 }}
               className="flex-1 flex items-center justify-center gap-2 py-2.5 rounded-xl text-xs font-black transition-all"
               style={{
-                background: isFinished ? 'rgba(255,255,255,0.05)' : 'linear-gradient(90deg, rgba(34,211,238,0.12), rgba(16,185,129,0.12))',
-                border: `1px solid ${isFinished ? 'rgba(255,255,255,0.09)' : 'rgba(34,211,238,0.3)'}`,
-                color: isFinished ? 'rgba(148,163,184,0.7)' : '#22d3ee',
+                background: isFinished ? 'rgba(255,255,255,0.05)' : 'linear-gradient(90deg, rgba(76,175,80,0.12), rgba(16,185,129,0.12))',
+                border: `1px solid ${isFinished ? 'rgba(255,255,255,0.09)' : 'rgba(76,175,80,0.3)'}`,
+                color: isFinished ? 'rgba(148,163,184,0.7)' : '#4CAF50',
                 fontFamily: 'var(--font-display)', letterSpacing: '0.06em',
-                boxShadow: isFinished ? 'none' : '0 0 16px rgba(34,211,238,0.08)',
+                boxShadow: isFinished ? 'none' : '0 0 16px rgba(76,175,80,0.08)',
               }}>
               <IconEdit />
               {isFinished ? 'EDITAR RESULTADO' : 'INGRESAR RESULTADO'}
@@ -548,9 +548,9 @@ function FixtureCard({
               <motion.button onClick={onExtend} whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.97 }}
                 className="flex-1 flex items-center justify-center gap-2 py-2 rounded-xl text-xs font-black"
                 style={{
-                  background: 'rgba(251,191,36,0.08)',
-                  border: '1px solid rgba(251,191,36,0.28)',
-                  color: '#fbbf24',
+                  background: 'rgba(212,167,44,0.08)',
+                  border: '1px solid rgba(212,167,44,0.28)',
+                  color: '#D4A72C',
                 }}>
                 ⏱ EXTENDER PARTIDO
               </motion.button>
@@ -589,8 +589,8 @@ interface StageItem  { id: number; code: string; name: string; sortOrder: number
 interface GroupItem  { id: number; code: string; name: string; }
 
 const SCHED_SELECT: React.CSSProperties = {
-  background: 'rgba(9,18,36,0.95)',
-  border: '1px solid rgba(34,211,238,0.18)',
+  background: 'rgba(6,17,10,0.95)',
+  border: '1px solid rgba(76,175,80,0.18)',
   color: '#e2e8f0',
   borderRadius: 10,
   padding: '9px 11px',
@@ -602,10 +602,10 @@ const SCHED_SELECT: React.CSSProperties = {
 };
 
 const STATUS_CFG_SCHED: Record<string, { label: string; color: string; bg: string; border: string; dot: string; cardBg: string; cardBorder: string; line: string }> = {
-  SCHEDULED: { label: 'Programado', color: '#fbbf24', bg: 'rgba(251,191,36,0.1)',  border: 'rgba(251,191,36,0.28)', dot: 'bg-amber-400 animate-pulse', cardBg: 'linear-gradient(145deg,rgba(20,14,6,0.96),rgba(28,18,6,0.92))',  cardBorder: 'rgba(251,191,36,0.28)', line: '#fbbf2455' },
+  SCHEDULED: { label: 'Programado', color: '#D4A72C', bg: 'rgba(212,167,44,0.1)',  border: 'rgba(212,167,44,0.28)', dot: 'bg-amber-400 animate-pulse', cardBg: 'linear-gradient(145deg,rgba(20,14,6,0.96),rgba(28,18,6,0.92))',  cardBorder: 'rgba(212,167,44,0.28)', line: '#D4A72C55' },
   LIVE:      { label: 'En Vivo',    color: '#f87171', bg: 'rgba(248,113,113,0.1)', border: 'rgba(248,113,113,0.32)',dot: 'bg-red-400 animate-pulse',   cardBg: 'linear-gradient(145deg,rgba(24,6,6,0.96),rgba(34,8,8,0.92))',    cardBorder: 'rgba(248,113,113,0.35)',line: '#f8717155' },
-  FINISHED:  { label: 'Finalizado', color: '#38bdf8', bg: 'rgba(56,189,248,0.1)',  border: 'rgba(56,189,248,0.22)', dot: 'bg-sky-400',                  cardBg: 'linear-gradient(145deg,rgba(9,18,36,0.96),rgba(12,24,46,0.92))',  cardBorder: 'rgba(56,189,248,0.2)',  line: '#38bdf855' },
-  POSTPONED: { label: 'Pospuesto', color: '#94a3b8',  bg: 'rgba(148,163,184,0.08)',border: 'rgba(148,163,184,0.2)', dot: 'bg-slate-400',                cardBg: 'linear-gradient(145deg,rgba(9,18,36,0.96),rgba(12,24,46,0.92))',  cardBorder: 'rgba(148,163,184,0.18)',line: '#94a3b833' },
+  FINISHED:  { label: 'Finalizado', color: '#66BB6A', bg: 'rgba(102,187,106,0.1)',  border: 'rgba(102,187,106,0.22)', dot: 'bg-green-400',                  cardBg: 'linear-gradient(145deg,rgba(6,17,10,0.96),rgba(11,27,18,0.92))',  cardBorder: 'rgba(102,187,106,0.2)',  line: '#66BB6A55' },
+  POSTPONED: { label: 'Pospuesto', color: '#94a3b8',  bg: 'rgba(148,163,184,0.08)',border: 'rgba(148,163,184,0.2)', dot: 'bg-slate-400',                cardBg: 'linear-gradient(145deg,rgba(6,17,10,0.96),rgba(11,27,18,0.92))',  cardBorder: 'rgba(148,163,184,0.18)',line: '#94a3b833' },
 };
 
 function StatusPill({ status }: { status: string }) {
@@ -751,32 +751,32 @@ function ConfigTab() {
 
       {/* Status card */}
       <div className="rounded-2xl p-5 overflow-hidden relative"
-        style={{ background: 'linear-gradient(145deg, rgba(4,12,28,0.97), rgba(6,18,42,0.95))', border: `1px solid ${configured ? 'rgba(52,211,153,0.25)' : 'rgba(192,132,252,0.20)'}`, backdropFilter: 'blur(20px)' }}>
-        <div className="absolute inset-x-0 top-0 h-px" style={{ background: configured ? 'linear-gradient(90deg,transparent,rgba(52,211,153,0.6),transparent)' : 'linear-gradient(90deg,transparent,rgba(192,132,252,0.5),transparent)' }} />
+        style={{ background: 'linear-gradient(145deg, rgba(6,17,10,0.97), rgba(11,27,18,0.95))', border: `1px solid ${configured ? 'rgba(56,142,60,0.25)' : 'rgba(211,47,47,0.20)'}`, backdropFilter: 'blur(20px)' }}>
+        <div className="absolute inset-x-0 top-0 h-px" style={{ background: configured ? 'linear-gradient(90deg,transparent,rgba(56,142,60,0.6),transparent)' : 'linear-gradient(90deg,transparent,rgba(211,47,47,0.5),transparent)' }} />
 
         <div className="flex items-center gap-3 mb-4">
           <div className="flex items-center justify-center w-10 h-10 rounded-xl shrink-0"
-            style={{ background: configured ? 'rgba(52,211,153,0.12)' : 'rgba(192,132,252,0.10)', border: `1px solid ${configured ? 'rgba(52,211,153,0.30)' : 'rgba(192,132,252,0.25)'}` }}>
-            <FiWifi size={18} style={{ color: configured ? '#34d399' : '#c084fc' }} />
+            style={{ background: configured ? 'rgba(56,142,60,0.12)' : 'rgba(211,47,47,0.10)', border: `1px solid ${configured ? 'rgba(56,142,60,0.30)' : 'rgba(211,47,47,0.25)'}` }}>
+            <FiWifi size={18} style={{ color: configured ? '#388E3C' : '#D32F2F' }} />
           </div>
           <div>
             <p className="text-sm font-black text-white tracking-wide">football-data.org</p>
             <div className="flex items-center gap-1.5 mt-0.5">
               <motion.div className="w-1.5 h-1.5 rounded-full"
-                style={{ background: configured ? '#34d399' : '#94a3b8' }}
+                style={{ background: configured ? '#388E3C' : '#94a3b8' }}
                 animate={configured ? { scale: [1, 1.5, 1], opacity: [1, 0.4, 1] } : {}}
                 transition={{ duration: 1.8, repeat: Infinity }} />
               <span className="text-[10px] font-bold tracking-widest uppercase"
-                style={{ color: configured ? '#34d399' : 'rgba(148,163,184,0.5)' }}>
+                style={{ color: configured ? '#388E3C' : 'rgba(148,163,184,0.5)' }}>
                 {configured ? 'Conectado · Plan Free' : 'Sin configurar'}
               </span>
             </div>
           </div>
           {configured && (
             <div className="ml-auto flex items-center gap-1.5 px-3 py-1 rounded-full"
-              style={{ background: 'rgba(52,211,153,0.08)', border: '1px solid rgba(52,211,153,0.20)' }}>
-              <FiCheck size={10} style={{ color: '#34d399' }} />
-              <span className="text-[9px] font-black text-emerald-400 tracking-widest uppercase">Activo</span>
+              style={{ background: 'rgba(56,142,60,0.08)', border: '1px solid rgba(56,142,60,0.20)' }}>
+              <FiCheck size={10} style={{ color: '#388E3C' }} />
+              <span className="text-[9px] font-black text-green-500 tracking-widest uppercase">Activo</span>
             </div>
           )}
         </div>
@@ -784,11 +784,11 @@ function ConfigTab() {
         {/* Info pills */}
         <div className="flex flex-wrap gap-2 mb-4">
           {[
-            { label: 'Fixtures ✓', color: '#34d399' },
-            { label: 'Horarios (delay)', color: '#fbbf24' },
-            { label: 'Resultados (delay)', color: '#fbbf24' },
-            { label: '10 llamadas/min', color: '#38bdf8' },
-            { label: 'Gratis €0/mes', color: '#c084fc' },
+            { label: 'Fixtures ✓', color: '#388E3C' },
+            { label: 'Horarios (delay)', color: '#D4A72C' },
+            { label: 'Resultados (delay)', color: '#D4A72C' },
+            { label: '10 llamadas/min', color: '#66BB6A' },
+            { label: 'Gratis €0/mes', color: '#D32F2F' },
           ].map(({ label, color }) => (
             <span key={label} className="text-[9px] font-black px-2.5 py-1 rounded-full tracking-widest uppercase"
               style={{ color, background: `${color}12`, border: `1px solid ${color}28` }}>
@@ -799,8 +799,8 @@ function ConfigTab() {
 
         {configured && maskedKey && (
           <div className="flex items-center justify-between px-3 py-2 rounded-xl mb-4"
-            style={{ background: 'rgba(52,211,153,0.06)', border: '1px solid rgba(52,211,153,0.15)' }}>
-            <span className="text-[10px] text-emerald-400/60 font-mono">{maskedKey}</span>
+            style={{ background: 'rgba(56,142,60,0.06)', border: '1px solid rgba(56,142,60,0.15)' }}>
+            <span className="text-[10px] text-green-500/60 font-mono">{maskedKey}</span>
             <motion.button onClick={deleteKey} disabled={saving}
               className="flex items-center gap-1 px-2 py-1 rounded-lg text-[9px] font-black tracking-widest uppercase"
               style={{ color: '#ef4444', background: 'rgba(239,68,68,0.08)', border: '1px solid rgba(239,68,68,0.20)' }}
@@ -812,7 +812,7 @@ function ConfigTab() {
 
         {/* Input nueva key */}
         <div className="space-y-3">
-          <label className="text-[9px] font-black tracking-[0.28em] uppercase" style={{ color: 'rgba(192,132,252,0.60)' }}>
+          <label className="text-[9px] font-black tracking-[0.28em] uppercase" style={{ color: 'rgba(211,47,47,0.60)' }}>
             {configured ? 'Reemplazar API Key' : 'API Key de football-data.org'}
           </label>
           <div className="flex gap-2">
@@ -823,11 +823,11 @@ function ConfigTab() {
               onKeyDown={e => e.key === 'Enter' && saveKey()}
               placeholder="Pega tu API key aquí..."
               className="flex-1 px-4 py-2.5 rounded-xl text-[12px] font-mono outline-none"
-              style={{ background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(192,132,252,0.22)', color: '#e2e8f0', caretColor: '#c084fc' }}
+              style={{ background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(211,47,47,0.22)', color: '#e2e8f0', caretColor: '#D32F2F' }}
             />
             <motion.button onClick={saveKey} disabled={saving || !apiKey.trim()}
               className="px-4 py-2.5 rounded-xl text-[11px] font-black tracking-widest uppercase shrink-0"
-              style={{ background: apiKey.trim() ? 'rgba(192,132,252,0.15)' : 'rgba(255,255,255,0.04)', border: `1px solid ${apiKey.trim() ? 'rgba(192,132,252,0.40)' : 'rgba(255,255,255,0.08)'}`, color: apiKey.trim() ? '#c084fc' : 'rgba(148,163,184,0.30)', transition: 'all 0.2s' }}
+              style={{ background: apiKey.trim() ? 'rgba(211,47,47,0.15)' : 'rgba(255,255,255,0.04)', border: `1px solid ${apiKey.trim() ? 'rgba(211,47,47,0.40)' : 'rgba(255,255,255,0.08)'}`, color: apiKey.trim() ? '#D32F2F' : 'rgba(148,163,184,0.30)', transition: 'all 0.2s' }}
               whileHover={apiKey.trim() ? { scale: 1.03 } : {}} whileTap={apiKey.trim() ? { scale: 0.97 } : {}}>
               {saving ? '...' : 'Guardar'}
             </motion.button>
@@ -838,8 +838,8 @@ function ConfigTab() {
       {/* Sync card */}
       {configured && (
         <div className="rounded-2xl p-5"
-          style={{ background: 'linear-gradient(145deg, rgba(4,12,28,0.97), rgba(6,18,42,0.95))', border: '1px solid rgba(56,189,248,0.18)', backdropFilter: 'blur(20px)' }}>
-          <div className="absolute inset-x-0 top-0 h-px" style={{ background: 'linear-gradient(90deg,transparent,rgba(56,189,248,0.5),transparent)' }} />
+          style={{ background: 'linear-gradient(145deg, rgba(6,17,10,0.97), rgba(11,27,18,0.95))', border: '1px solid rgba(102,187,106,0.18)', backdropFilter: 'blur(20px)' }}>
+          <div className="absolute inset-x-0 top-0 h-px" style={{ background: 'linear-gradient(90deg,transparent,rgba(102,187,106,0.5),transparent)' }} />
 
           <div className="flex items-center justify-between mb-3">
             <div>
@@ -850,8 +850,8 @@ function ConfigTab() {
             </div>
             <motion.button onClick={sync} disabled={syncing}
               className="flex items-center gap-2 px-4 py-2.5 rounded-xl text-[11px] font-black tracking-widest uppercase shrink-0"
-              style={{ background: 'rgba(56,189,248,0.12)', border: '1px solid rgba(56,189,248,0.35)', color: '#38bdf8', boxShadow: syncing ? 'none' : '0 0 16px rgba(56,189,248,0.15)' }}
-              whileHover={!syncing ? { scale: 1.03, boxShadow: '0 0 24px rgba(56,189,248,0.28)' } : {}}
+              style={{ background: 'rgba(102,187,106,0.12)', border: '1px solid rgba(102,187,106,0.35)', color: '#66BB6A', boxShadow: syncing ? 'none' : '0 0 16px rgba(102,187,106,0.15)' }}
+              whileHover={!syncing ? { scale: 1.03, boxShadow: '0 0 24px rgba(102,187,106,0.28)' } : {}}
               whileTap={!syncing ? { scale: 0.97 } : {}}>
               <motion.span animate={syncing ? { rotate: 360 } : {}} transition={{ duration: 1, repeat: Infinity, ease: 'linear' }}>
                 <FiRefreshCw size={13} />
@@ -863,20 +863,20 @@ function ConfigTab() {
           {syncResult && (
             <motion.div initial={{ opacity: 0, y: 6 }} animate={{ opacity: 1, y: 0 }}
               className="rounded-xl p-4 space-y-2"
-              style={{ background: 'rgba(52,211,153,0.06)', border: '1px solid rgba(52,211,153,0.18)' }}>
+              style={{ background: 'rgba(56,142,60,0.06)', border: '1px solid rgba(56,142,60,0.18)' }}>
               <div className="flex gap-4">
                 <div className="text-center">
-                  <p className="text-2xl font-black text-emerald-400">{syncResult.created}</p>
-                  <p className="text-[9px] text-slate-600 uppercase tracking-widest">Creados</p>
+                  <p className="text-2xl font-black text-green-500">{syncResult.created}</p>
+                  <p className="text-[9px] text-orionix-text-muted uppercase tracking-widest">Creados</p>
                 </div>
                 <div className="text-center">
-                  <p className="text-2xl font-black text-sky-400">{syncResult.updated}</p>
-                  <p className="text-[9px] text-slate-600 uppercase tracking-widest">Actualizados</p>
+                  <p className="text-2xl font-black text-green-400">{syncResult.updated}</p>
+                  <p className="text-[9px] text-orionix-text-muted uppercase tracking-widest">Actualizados</p>
                 </div>
                 {syncResult.errors.length > 0 && (
                   <div className="text-center">
                     <p className="text-2xl font-black text-amber-400">{syncResult.errors.length}</p>
-                    <p className="text-[9px] text-slate-600 uppercase tracking-widest">Advertencias</p>
+                    <p className="text-[9px] text-orionix-text-muted uppercase tracking-widest">Advertencias</p>
                   </div>
                 )}
               </div>
@@ -894,8 +894,8 @@ function ConfigTab() {
 
       {/* Recalcular Standings */}
       <div className="relative p-4 rounded-2xl overflow-hidden"
-        style={{ background: 'linear-gradient(145deg, rgba(4,12,28,0.97), rgba(6,18,42,0.95))', border: '1px solid rgba(251,191,36,0.15)', backdropFilter: 'blur(20px)' }}>
-        <div className="absolute inset-x-0 top-0 h-px" style={{ background: 'linear-gradient(90deg,transparent,rgba(251,191,36,0.4),transparent)' }} />
+        style={{ background: 'linear-gradient(145deg, rgba(6,17,10,0.97), rgba(11,27,18,0.95))', border: '1px solid rgba(212,167,44,0.15)', backdropFilter: 'blur(20px)' }}>
+        <div className="absolute inset-x-0 top-0 h-px" style={{ background: 'linear-gradient(90deg,transparent,rgba(212,167,44,0.4),transparent)' }} />
         <div className="flex items-start justify-between gap-4">
           <div className="min-w-0">
             <p className="text-sm font-black text-white tracking-wide">Recalcular standings</p>
@@ -906,7 +906,7 @@ function ConfigTab() {
           <motion.button onClick={recalculateStandings} disabled={recalculating}
             whileHover={{ scale: 1.03 }} whileTap={{ scale: 0.97 }}
             className="flex items-center gap-1.5 px-3 py-2 rounded-xl text-[10px] font-black shrink-0"
-            style={{ background: 'rgba(251,191,36,0.08)', border: '1px solid rgba(251,191,36,0.22)', color: '#fbbf24' }}>
+            style={{ background: 'rgba(212,167,44,0.08)', border: '1px solid rgba(212,167,44,0.22)', color: '#D4A72C' }}>
             <FiRefreshCw size={11} className={recalculating ? 'animate-spin' : ''} />
             {recalculating ? 'Calculando...' : 'Recalcular'}
           </motion.button>
@@ -915,13 +915,13 @@ function ConfigTab() {
 
       {/* Restaurar datos BD */}
       <div className="relative p-4 rounded-2xl overflow-hidden"
-        style={{ background: 'linear-gradient(145deg, rgba(4,12,28,0.97), rgba(6,18,42,0.95))', border: '1px solid rgba(52,211,153,0.15)', backdropFilter: 'blur(20px)' }}>
-        <div className="absolute inset-x-0 top-0 h-px" style={{ background: 'linear-gradient(90deg,transparent,rgba(52,211,153,0.4),transparent)' }} />
+        style={{ background: 'linear-gradient(145deg, rgba(6,17,10,0.97), rgba(11,27,18,0.95))', border: '1px solid rgba(56,142,60,0.15)', backdropFilter: 'blur(20px)' }}>
+        <div className="absolute inset-x-0 top-0 h-px" style={{ background: 'linear-gradient(90deg,transparent,rgba(56,142,60,0.4),transparent)' }} />
         <div className="flex items-start justify-between gap-4">
           <div className="min-w-0">
             <p className="text-sm font-black text-white tracking-wide">Restaurar datos BD</p>
             <p className="text-[10px] mt-0.5" style={{ color: 'rgba(148,163,184,0.45)' }}>
-              Vuelve a insertar los fixtures y standings marcados como <span className="font-black" style={{ color: '#34d399' }}>BD</span> (partidos demo originales)
+              Vuelve a insertar los fixtures y standings marcados como <span className="font-black text-orionix-green-hover">BD</span> (partidos demo originales)
             </p>
           </div>
           <AnimatePresence mode="wait">
@@ -935,14 +935,14 @@ function ConfigTab() {
                 </motion.button>
                 <motion.button onClick={restoreDemo} disabled={restoring} whileTap={{ scale: 0.95 }}
                   className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[10px] font-black"
-                  style={{ background: 'rgba(52,211,153,0.15)', border: '1px solid rgba(52,211,153,0.35)', color: '#34d399' }}>
+                  style={{ background: 'rgba(56,142,60,0.15)', border: '1px solid rgba(56,142,60,0.35)', color: '#388E3C' }}>
                   <FiRefreshCw size={11} /> {restoring ? '...' : 'Confirmar'}
                 </motion.button>
               </motion.div>
             ) : (
               <motion.button key="btn-restore" onClick={() => setConfirmRestore(true)} whileHover={{ scale: 1.03 }} whileTap={{ scale: 0.97 }}
                 className="flex items-center gap-1.5 px-3 py-2 rounded-xl text-[10px] font-black shrink-0"
-                style={{ background: 'rgba(52,211,153,0.08)', border: '1px solid rgba(52,211,153,0.22)', color: '#34d399' }}>
+                style={{ background: 'rgba(56,142,60,0.08)', border: '1px solid rgba(56,142,60,0.22)', color: '#388E3C' }}>
                 <FiRefreshCw size={11} /> Restaurar BD
               </motion.button>
             )}
@@ -952,13 +952,13 @@ function ConfigTab() {
 
       {/* Clean demo fixtures card */}
       <div className="rounded-2xl p-5 relative overflow-hidden"
-        style={{ background: 'linear-gradient(145deg, rgba(4,12,28,0.97), rgba(6,18,42,0.95))', border: '1px solid rgba(192,132,252,0.15)', backdropFilter: 'blur(20px)' }}>
-        <div className="absolute inset-x-0 top-0 h-px" style={{ background: 'linear-gradient(90deg,transparent,rgba(192,132,252,0.4),transparent)' }} />
+        style={{ background: 'linear-gradient(145deg, rgba(6,17,10,0.97), rgba(11,27,18,0.95))', border: '1px solid rgba(211,47,47,0.15)', backdropFilter: 'blur(20px)' }}>
+        <div className="absolute inset-x-0 top-0 h-px" style={{ background: 'linear-gradient(90deg,transparent,rgba(211,47,47,0.4),transparent)' }} />
         <div className="flex items-start justify-between gap-4">
           <div className="min-w-0">
             <p className="text-sm font-black text-white tracking-wide">Limpiar datos demo</p>
             <p className="text-[10px] mt-0.5" style={{ color: 'rgba(148,163,184,0.45)' }}>
-              Elimina todos los fixtures marcados como <span className="font-black" style={{ color: '#c084fc' }}>BD</span> (creados manualmente, sin origen API)
+              Elimina todos los fixtures marcados como <span className="font-black" style={{ color: '#D32F2F' }}>BD</span> (creados manualmente, sin origen API)
             </p>
           </div>
           <AnimatePresence mode="wait">
@@ -979,7 +979,7 @@ function ConfigTab() {
             ) : (
               <motion.button key="btn" onClick={() => setConfirmClean(true)} whileHover={{ scale: 1.03 }} whileTap={{ scale: 0.97 }}
                 className="flex items-center gap-1.5 px-3 py-2 rounded-xl text-[10px] font-black shrink-0"
-                style={{ background: 'rgba(192,132,252,0.08)', border: '1px solid rgba(192,132,252,0.22)', color: '#c084fc' }}>
+                style={{ background: 'rgba(211,47,47,0.08)', border: '1px solid rgba(211,47,47,0.22)', color: '#D32F2F' }}>
                 <FiTrash2 size={11} /> Limpiar BD
               </motion.button>
             )}
@@ -989,13 +989,13 @@ function ConfigTab() {
 
       {/* Limpiar datos API */}
       <div className="relative p-4 rounded-2xl overflow-hidden"
-        style={{ background: 'linear-gradient(145deg, rgba(4,12,28,0.97), rgba(6,18,42,0.95))', border: '1px solid rgba(56,189,248,0.15)', backdropFilter: 'blur(20px)' }}>
-        <div className="absolute inset-x-0 top-0 h-px" style={{ background: 'linear-gradient(90deg,transparent,rgba(56,189,248,0.4),transparent)' }} />
+        style={{ background: 'linear-gradient(145deg, rgba(6,17,10,0.97), rgba(11,27,18,0.95))', border: '1px solid rgba(102,187,106,0.15)', backdropFilter: 'blur(20px)' }}>
+        <div className="absolute inset-x-0 top-0 h-px" style={{ background: 'linear-gradient(90deg,transparent,rgba(102,187,106,0.4),transparent)' }} />
         <div className="flex items-start justify-between gap-4">
           <div className="min-w-0">
             <p className="text-sm font-black text-white tracking-wide">Limpiar datos API</p>
             <p className="text-[10px] mt-0.5" style={{ color: 'rgba(148,163,184,0.45)' }}>
-              Elimina todos los fixtures marcados como <span className="font-black" style={{ color: '#38bdf8' }}>API</span> (sincronizados desde el proveedor externo)
+              Elimina todos los fixtures marcados como <span className="font-black text-orionix-green-muted">API</span> (sincronizados desde el proveedor externo)
             </p>
           </div>
           <AnimatePresence mode="wait">
@@ -1016,7 +1016,7 @@ function ConfigTab() {
             ) : (
               <motion.button key="btn-api" onClick={() => setConfirmCleanApi(true)} whileHover={{ scale: 1.03 }} whileTap={{ scale: 0.97 }}
                 className="flex items-center gap-1.5 px-3 py-2 rounded-xl text-[10px] font-black shrink-0"
-                style={{ background: 'rgba(56,189,248,0.08)', border: '1px solid rgba(56,189,248,0.22)', color: '#38bdf8' }}>
+                style={{ background: 'rgba(102,187,106,0.08)', border: '1px solid rgba(102,187,106,0.22)', color: '#66BB6A' }}>
                 <FiTrash2 size={11} /> Limpiar API
               </motion.button>
             )}
@@ -1027,7 +1027,7 @@ function ConfigTab() {
       {/* Messages */}
       {message && (
         <motion.p initial={{ opacity: 0 }} animate={{ opacity: 1 }}
-          className="text-[11px] font-bold text-emerald-400 text-center">{message}</motion.p>
+          className="text-[11px] font-bold text-green-500 text-center">{message}</motion.p>
       )}
       {error && (
         <motion.p initial={{ opacity: 0 }} animate={{ opacity: 1 }}
@@ -1163,7 +1163,7 @@ function ScheduleTab({ tournamentId, token }: { tournamentId: number; token: str
         </div>
         <motion.button onClick={() => { setShowForm(v => !v); setCError(''); }} whileHover={{ scale: 1.04 }} whileTap={{ scale: 0.96 }}
           className="flex items-center gap-2 px-4 py-2.5 rounded-xl text-xs font-black"
-          style={{ background: showForm ? 'rgba(255,255,255,0.06)' : 'linear-gradient(90deg,#06b6d4,#10b981)', border: showForm ? '1px solid rgba(255,255,255,0.1)' : 'none', color: showForm ? 'rgba(148,163,184,0.7)' : '#fff', fontFamily: 'var(--font-display)', letterSpacing: '0.06em', boxShadow: showForm ? 'none' : '0 4px 18px rgba(6,182,212,0.3)' }}>
+          style={{ background: showForm ? 'rgba(255,255,255,0.06)' : 'linear-gradient(90deg,#2E7D32,#10b981)', border: showForm ? '1px solid rgba(255,255,255,0.1)' : 'none', color: showForm ? 'rgba(148,163,184,0.7)' : '#fff', fontFamily: 'var(--font-display)', letterSpacing: '0.06em', boxShadow: showForm ? 'none' : '0 4px 18px rgba(46,125,50,0.3)' }}>
           {showForm ? <IconX /> : <IconPlus />}{showForm ? 'CANCELAR' : 'AGREGAR PARTIDO'}
         </motion.button>
       </div>
@@ -1172,10 +1172,10 @@ function ScheduleTab({ tournamentId, token }: { tournamentId: number; token: str
       <AnimatePresence>
         {showForm && (
           <motion.div initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: 'auto' }} exit={{ opacity: 0, height: 0 }} className="overflow-hidden" transition={{ type: 'spring', stiffness: 300, damping: 32 }}>
-            <div className="relative rounded-2xl overflow-hidden" style={{ background: 'linear-gradient(145deg,rgba(9,20,38,0.96),rgba(14,30,56,0.92))', border: '1px solid rgba(34,211,238,0.25)', boxShadow: '0 8px 28px rgba(2,6,23,0.5)' }}>
-              <div className="absolute top-0 left-4 right-4 h-px" style={{ background: 'linear-gradient(90deg,transparent,#22d3ee,transparent)' }} />
+            <div className="relative rounded-2xl overflow-hidden" style={{ background: 'linear-gradient(145deg,rgba(6,17,10,0.96),rgba(11,27,18,0.92))', border: '1px solid rgba(76,175,80,0.25)', boxShadow: '0 8px 28px rgba(2,6,23,0.5)' }}>
+              <div className="absolute top-0 left-4 right-4 h-px" style={{ background: 'linear-gradient(90deg,transparent,#4CAF50,transparent)' }} />
               <div className="p-5">
-                <p className="text-[10px] font-black tracking-[0.2em] mb-4" style={{ color: '#22d3ee', fontFamily: 'var(--font-display)' }}>NUEVO PARTIDO</p>
+                <p className="text-[10px] font-black tracking-[0.2em] mb-4" style={{ color: '#4CAF50', fontFamily: 'var(--font-display)' }}>NUEVO PARTIDO</p>
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-3">
                   {[
                     { label: 'EQUIPO LOCAL', val: cHome, set: setCHome },
@@ -1215,7 +1215,7 @@ function ScheduleTab({ tournamentId, token }: { tournamentId: number; token: str
                   {cHomeTeam && cAwayTeam && (
                     <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
                       className="flex items-center justify-center gap-4 py-3 px-4 rounded-xl mb-3"
-                      style={{ background: 'rgba(34,211,238,0.05)', border: '1px solid rgba(34,211,238,0.12)' }}>
+                      style={{ background: 'rgba(76,175,80,0.05)', border: '1px solid rgba(76,175,80,0.12)' }}>
                       <div className="flex items-center gap-2 min-w-0">
                         <FlagBig url={cHomeTeam.flagUrl} name={cHomeTeam.name} />
                         <span className="font-black text-sm truncate" style={{ color: '#e2e8f0', fontFamily: 'var(--font-display)' }}>{cHomeTeam.shortName || cHomeTeam.name}</span>
@@ -1231,7 +1231,7 @@ function ScheduleTab({ tournamentId, token }: { tournamentId: number; token: str
                 {cError && <p className="text-xs text-center mb-3" style={{ color: '#f87171' }}>{cError}</p>}
                 <motion.button onClick={handleCreate} disabled={creating} whileTap={{ scale: 0.98 }}
                   className="w-full py-3 rounded-xl text-sm font-black text-white disabled:opacity-50 flex items-center justify-center gap-2"
-                  style={{ background: 'linear-gradient(90deg,#06b6d4,#0ea5e9,#10b981)', boxShadow: '0 4px 18px rgba(6,182,212,0.3)', fontFamily: 'var(--font-display)', letterSpacing: '0.06em' }}>
+                  style={{ background: 'linear-gradient(90deg,#2E7D32,#4CAF50,#10b981)', boxShadow: '0 4px 18px rgba(46,125,50,0.3)', fontFamily: 'var(--font-display)', letterSpacing: '0.06em' }}>
                   <IconPlus />{creating ? 'CREANDO…' : 'CREAR PARTIDO'}
                 </motion.button>
               </div>
@@ -1245,21 +1245,21 @@ function ScheduleTab({ tournamentId, token }: { tournamentId: number; token: str
         {cOk && (
           <motion.div initial={{ opacity: 0, y: -6 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -6 }}
             className="flex items-center gap-2 px-4 py-3 rounded-xl text-sm font-bold"
-            style={{ background: 'rgba(52,211,153,0.1)', border: '1px solid rgba(52,211,153,0.25)', color: '#34d399' }}>
+            style={{ background: 'rgba(56,142,60,0.1)', border: '1px solid rgba(56,142,60,0.25)', color: '#388E3C' }}>
             <IconCheck /> Partido creado correctamente
           </motion.div>
         )}
       </AnimatePresence>
 
       {/* Filters */}
-      <div className="grid grid-cols-4 gap-1.5 p-1.5 rounded-xl" style={{ background: 'rgba(9,18,36,0.92)', border: '1px solid rgba(34,211,238,0.12)' }}>
+      <div className="grid grid-cols-4 gap-1.5 p-1.5 rounded-xl" style={{ background: 'rgba(6,17,10,0.92)', border: '1px solid rgba(76,175,80,0.12)' }}>
         {FILTERS.map(f => (
           <motion.button key={f.key} onClick={() => setFilter(f.key)} whileTap={{ scale: 0.96 }}
             className="relative py-2.5 rounded-lg text-[8px] font-black flex flex-col items-center gap-0.5"
             style={{ color: filter === f.key ? '#fff' : 'rgba(148,163,184,0.4)', fontFamily: 'var(--font-display)' }}>
             {filter === f.key && (
               <motion.span layoutId="sched-filter" className="absolute inset-0 rounded-lg"
-                style={{ background: 'linear-gradient(90deg,#06b6d4,#0ea5e9,#10b981)', boxShadow: '0 2px 12px rgba(6,182,212,0.25)' }}
+                style={{ background: 'linear-gradient(90deg,#2E7D32,#4CAF50,#10b981)', boxShadow: '0 2px 12px rgba(46,125,50,0.25)' }}
                 transition={{ type: 'spring', stiffness: 360, damping: 30 }} />
             )}
             <span className="relative z-10 text-sm font-black leading-none" style={{ fontFamily: 'var(--font-display)' }}>{f.n}</span>
@@ -1270,7 +1270,7 @@ function ScheduleTab({ tournamentId, token }: { tournamentId: number; token: str
 
       {/* Cards grid */}
       {loading ? (
-        <div className="flex justify-center py-20"><div className="w-10 h-10 rounded-full border-2 border-t-cyan-400 border-cyan-400/15 animate-spin" /></div>
+        <div className="flex justify-center py-20"><div className="w-10 h-10 rounded-full border-2 border-t-green-400 border-green-400/15 animate-spin" /></div>
       ) : filtered.length === 0 ? (
         <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="text-center py-16">
           <p className="text-4xl opacity-20 mb-3">📅</p>
@@ -1292,7 +1292,7 @@ function ScheduleTab({ tournamentId, token }: { tournamentId: number; token: str
                   initial={{ opacity: 0, y: 14 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, scale: 0.97 }}
                   transition={{ delay: idx * 0.03, type: 'spring', stiffness: 280, damping: 26 }}
                   className={`relative rounded-2xl overflow-hidden ${isEditing ? 'md:col-span-2' : ''}`}
-                  style={{ background: isEditOk ? 'linear-gradient(145deg,rgba(6,40,30,0.96),rgba(9,50,38,0.92))' : cfg.cardBg, border: `1px solid ${isEditOk ? 'rgba(52,211,153,0.4)' : cfg.cardBorder}`, boxShadow: '0 8px 24px rgba(2,6,23,0.45)' }}>
+                  style={{ background: isEditOk ? 'linear-gradient(145deg,rgba(6,40,30,0.96),rgba(9,50,38,0.92))' : cfg.cardBg, border: `1px solid ${isEditOk ? 'rgba(56,142,60,0.4)' : cfg.cardBorder}`, boxShadow: '0 8px 24px rgba(2,6,23,0.45)' }}>
 
                   {/* Top accent line */}
                   <div className="absolute top-0 left-0 right-0 h-0.5" style={{ background: `linear-gradient(90deg,transparent,${cfg.line},transparent)` }} />
@@ -1315,9 +1315,9 @@ function ScheduleTab({ tournamentId, token }: { tournamentId: number; token: str
                         <FlagBig url={f.homeTeam.flagUrl} name={f.homeTeam.name} />
                       </div>
                       <div className="shrink-0 flex items-center justify-center px-3 py-2 rounded-xl"
-                        style={{ background: f.status === 'FINISHED' ? 'rgba(34,211,238,0.08)' : 'rgba(255,255,255,0.04)', border: `1.5px solid ${f.status === 'FINISHED' ? 'rgba(34,211,238,0.3)' : 'rgba(255,255,255,0.08)'}`, minWidth: 70 }}>
+                        style={{ background: f.status === 'FINISHED' ? 'rgba(76,175,80,0.08)' : 'rgba(255,255,255,0.04)', border: `1.5px solid ${f.status === 'FINISHED' ? 'rgba(76,175,80,0.3)' : 'rgba(255,255,255,0.08)'}`, minWidth: 70 }}>
                         {f.status === 'FINISHED' && f.homeScore !== null
-                          ? <span className="font-black text-lg tracking-wider" style={{ color: '#22d3ee', fontFamily: 'var(--font-display)' }}>{f.homeScore}<span style={{ color: 'rgba(148,163,184,0.3)', margin: '0 3px' }}>-</span>{f.awayScore}</span>
+                          ? <span className="font-black text-lg tracking-wider" style={{ color: '#4CAF50', fontFamily: 'var(--font-display)' }}>{f.homeScore}<span style={{ color: 'rgba(148,163,184,0.3)', margin: '0 3px' }}>-</span>{f.awayScore}</span>
                           : f.status === 'LIVE'
                           ? <span className="font-black text-xs" style={{ color: '#f87171', fontFamily: 'var(--font-display)' }}>LIVE</span>
                           : <span className="font-black text-xs" style={{ color: 'rgba(148,163,184,0.28)', fontFamily: 'var(--font-display)' }}>VS</span>
@@ -1338,12 +1338,12 @@ function ScheduleTab({ tournamentId, token }: { tournamentId: number; token: str
                           {/* Source badge */}
                           {f.externalProviderId != null ? (
                             <span className="text-[8px] px-1.5 py-0.5 rounded font-black tracking-widest"
-                              style={{ background: 'rgba(56,189,248,0.10)', border: '1px solid rgba(56,189,248,0.25)', color: '#38bdf8' }}>
+                              style={{ background: 'rgba(102,187,106,0.10)', border: '1px solid rgba(102,187,106,0.25)', color: '#66BB6A' }}>
                               API
                             </span>
                           ) : (
                             <span className="text-[8px] px-1.5 py-0.5 rounded font-black tracking-widest"
-                              style={{ background: 'rgba(192,132,252,0.10)', border: '1px solid rgba(192,132,252,0.25)', color: '#c084fc' }}>
+                              style={{ background: 'rgba(211,47,47,0.10)', border: '1px solid rgba(211,47,47,0.25)', color: '#D32F2F' }}>
                               BD
                             </span>
                           )}
@@ -1353,7 +1353,7 @@ function ScheduleTab({ tournamentId, token }: { tournamentId: number; token: str
                         <div className="flex items-center gap-1.5 shrink-0">
                           <motion.button onClick={() => startEdit(f)} whileHover={{ scale: 1.08 }} whileTap={{ scale: 0.92 }}
                             className="flex items-center gap-1 px-2.5 py-1.5 rounded-lg text-[10px] font-black"
-                            style={{ background: 'rgba(34,211,238,0.08)', border: '1px solid rgba(34,211,238,0.18)', color: '#22d3ee', fontFamily: 'var(--font-display)' }}>
+                            style={{ background: 'rgba(76,175,80,0.08)', border: '1px solid rgba(76,175,80,0.18)', color: '#4CAF50', fontFamily: 'var(--font-display)' }}>
                             <IconEdit /> EDITAR
                           </motion.button>
                           {canDelete && (
@@ -1383,7 +1383,7 @@ function ScheduleTab({ tournamentId, token }: { tournamentId: number; token: str
                     {isEditOk && (
                       <motion.div initial={{ opacity: 0, y: -4 }} animate={{ opacity: 1, y: 0 }}
                         className="flex items-center gap-2 px-3 py-2 rounded-xl text-xs font-bold mt-2"
-                        style={{ background: 'rgba(52,211,153,0.1)', border: '1px solid rgba(52,211,153,0.25)', color: '#34d399' }}>
+                        style={{ background: 'rgba(56,142,60,0.1)', border: '1px solid rgba(56,142,60,0.25)', color: '#388E3C' }}>
                         <IconCheck /> Actualizado correctamente
                       </motion.div>
                     )}
@@ -1394,7 +1394,7 @@ function ScheduleTab({ tournamentId, token }: { tournamentId: number; token: str
                     {isEditing && (
                       <motion.div initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: 'auto' }} exit={{ opacity: 0, height: 0 }} className="overflow-hidden" transition={{ type: 'spring', stiffness: 320, damping: 30 }}>
                         <div className="px-4 pb-4 pt-1" style={{ borderTop: '1px solid rgba(255,255,255,0.07)' }}>
-                          <p className="text-[9px] font-black tracking-[0.2em] mb-3 pt-3" style={{ color: '#22d3ee', fontFamily: 'var(--font-display)' }}>EDITAR PARTIDO #{f.id}</p>
+                          <p className="text-[9px] font-black tracking-[0.2em] mb-3 pt-3" style={{ color: '#4CAF50', fontFamily: 'var(--font-display)' }}>EDITAR PARTIDO #{f.id}</p>
                           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-3">
                             {[
                               { label: 'EQUIPO LOCAL', val: eHome, set: setEHome, preview: eHomeTeam },
@@ -1436,7 +1436,7 @@ function ScheduleTab({ tournamentId, token }: { tournamentId: number; token: str
                             </motion.button>
                             <motion.button onClick={() => handleSaveEdit(f.id)} disabled={saving} whileTap={{ scale: 0.97 }}
                               className="flex-1 flex items-center justify-center gap-1.5 py-2.5 rounded-xl text-xs font-black text-white disabled:opacity-50"
-                              style={{ background: 'linear-gradient(90deg,#10b981,#06b6d4)', boxShadow: '0 4px 14px rgba(16,185,129,0.3)', fontFamily: 'var(--font-display)', letterSpacing: '0.05em' }}>
+                              style={{ background: 'linear-gradient(90deg,#10b981,#2E7D32)', boxShadow: '0 4px 14px rgba(16,185,129,0.3)', fontFamily: 'var(--font-display)', letterSpacing: '0.05em' }}>
                               <IconCheck />{saving ? 'GUARDANDO…' : 'GUARDAR CAMBIOS'}
                             </motion.button>
                           </div>
@@ -1543,14 +1543,14 @@ export default function AdminPage() {
   if (!isAuthenticated || !isAdmin) return null;
 
   const MAIN_TABS = [
-    { key: 'resultados' as const, icon: <FiTarget size={13} />,    label: 'Resultados', accent: '#22d3ee', glow: 'rgba(34,211,238,0.45)' },
-    { key: 'horario'    as const, icon: <FiCalendar size={13} />,  label: 'Horario',    accent: '#38bdf8', glow: 'rgba(56,189,248,0.45)' },
-    { key: 'analytics'  as const, icon: <FiBarChart2 size={13} />, label: 'Analytics',  accent: '#34d399', glow: 'rgba(52,211,153,0.45)' },
-    { key: 'config'     as const, icon: <FiSettings size={13} />,  label: 'Config',     accent: '#c084fc', glow: 'rgba(192,132,252,0.45)' },
+    { key: 'resultados' as const, icon: <FiTarget size={13} />,    label: 'Resultados', accent: '#4CAF50', glow: 'rgba(76,175,80,0.45)' },
+    { key: 'horario'    as const, icon: <FiCalendar size={13} />,  label: 'Horario',    accent: '#66BB6A', glow: 'rgba(102,187,106,0.45)' },
+    { key: 'analytics'  as const, icon: <FiBarChart2 size={13} />, label: 'Analytics',  accent: '#388E3C', glow: 'rgba(56,142,60,0.45)' },
+    { key: 'config'     as const, icon: <FiSettings size={13} />,  label: 'Config',     accent: '#D32F2F', glow: 'rgba(211,47,47,0.45)' },
   ];
   const FILTER_TABS = [
-    { key: 'SCHEDULED' as const, label: 'Pendientes',  count: pendingCount,  dot: '#fbbf24' },
-    { key: 'FINISHED'  as const, label: 'Finalizados', count: finishedCount, dot: '#34d399' },
+    { key: 'SCHEDULED' as const, label: 'Pendientes',  count: pendingCount,  dot: '#D4A72C' },
+    { key: 'FINISHED'  as const, label: 'Finalizados', count: finishedCount, dot: '#388E3C' },
     { key: 'ALL'       as const, label: 'Todos',       count: fixtures.length, dot: '#94a3b8' },
   ];
 
@@ -1558,7 +1558,7 @@ export default function AdminPage() {
     <div className="w-full min-h-screen relative">
       {/* Fondo oscuro completo del admin */}
       <div className="fixed inset-0 pointer-events-none" style={{ zIndex: 0,
-        background: 'radial-gradient(ellipse at 20% 0%, rgba(6,30,60,0.55) 0%, transparent 55%), radial-gradient(ellipse at 80% 100%, rgba(4,46,46,0.4) 0%, transparent 50%), linear-gradient(180deg, rgba(6,18,38,0.7) 0%, rgba(4,14,30,0.65) 100%)',
+        background: 'radial-gradient(ellipse at 20% 0%, rgba(6,30,10,0.55) 0%, transparent 55%), radial-gradient(ellipse at 80% 100%, rgba(4,40,10,0.4) 0%, transparent 50%), linear-gradient(180deg, rgba(6,17,10,0.70) 0%, rgba(4,11,7,0.65) 100%)',
       }} />
 
       {/* Partículas decorativas */}
@@ -1566,7 +1566,7 @@ export default function AdminPage() {
         <motion.div key={i} className="fixed rounded-full pointer-events-none" style={{ zIndex: 0,
           width: [120,80,160,100,140,90][i], height: [120,80,160,100,140,90][i],
           left: ['8%','72%','45%','15%','85%','55%'][i], top: ['15%','8%','60%','80%','40%','25%'][i],
-          background: ['rgba(6,182,212,0.04)','rgba(16,185,129,0.03)','rgba(56,189,248,0.04)','rgba(251,191,36,0.03)','rgba(6,182,212,0.03)','rgba(16,185,129,0.04)'][i],
+          background: ['rgba(46,125,50,0.04)','rgba(16,185,129,0.03)','rgba(102,187,106,0.04)','rgba(212,167,44,0.03)','rgba(46,125,50,0.03)','rgba(16,185,129,0.04)'][i],
           filter: 'blur(40px)',
         }}
           animate={{ scale: [1, 1.2, 1], opacity: [0.5, 0.8, 0.5] }}
@@ -1576,28 +1576,28 @@ export default function AdminPage() {
       <div className="relative" style={{ zIndex: 1 }}>
         {/* Header admin con logo */}
         <div className="relative overflow-hidden"
-          style={{ background: 'linear-gradient(180deg, rgba(3,6,20,0.98) 0%, rgba(8,4,28,0.96) 50%, rgba(4,8,24,0.95) 100%)', borderBottom: '1px solid rgba(192,132,252,0.18)' }}>
+          style={{ background: 'linear-gradient(180deg, rgba(4,8,5,0.98) 0%, rgba(6,12,7,0.96) 50%, rgba(5,10,6,0.95) 100%)', borderBottom: '1px solid rgba(211,47,47,0.18)' }}>
           {/* Ambient glow layers */}
-          <div className="absolute inset-0 pointer-events-none" style={{ background: 'radial-gradient(ellipse 80% 60% at 50% 0%, rgba(192,132,252,0.10) 0%, transparent 65%)' }} />
-          <div className="absolute inset-0 pointer-events-none" style={{ background: 'linear-gradient(90deg, transparent 10%, rgba(192,132,252,0.04) 50%, transparent 90%)' }} />
+          <div className="absolute inset-0 pointer-events-none" style={{ background: 'radial-gradient(ellipse 80% 60% at 50% 0%, rgba(211,47,47,0.10) 0%, transparent 65%)' }} />
+          <div className="absolute inset-0 pointer-events-none" style={{ background: 'linear-gradient(90deg, transparent 10%, rgba(211,47,47,0.04) 50%, transparent 90%)' }} />
           {/* Animated bottom border glow */}
           <motion.div className="absolute inset-x-0 bottom-0 h-px pointer-events-none"
-            style={{ background: 'linear-gradient(90deg, transparent, rgba(192,132,252,0.7), rgba(34,211,238,0.5), rgba(192,132,252,0.7), transparent)' }}
+            style={{ background: 'linear-gradient(90deg, transparent, rgba(211,47,47,0.7), rgba(76,175,80,0.5), rgba(211,47,47,0.7), transparent)' }}
             animate={{ opacity: [0.4, 1, 0.4] }} transition={{ duration: 2.8, repeat: Infinity, ease: 'easeInOut' }} />
           {/* Animated top corner orbs */}
           <motion.div className="absolute -top-16 -left-16 w-48 h-48 rounded-full pointer-events-none"
-            style={{ background: 'radial-gradient(circle, rgba(192,132,252,0.12) 0%, transparent 65%)', filter: 'blur(32px)' }}
+            style={{ background: 'radial-gradient(circle, rgba(211,47,47,0.12) 0%, transparent 65%)', filter: 'blur(32px)' }}
             animate={{ scale: [1, 1.25, 1], opacity: [0.5, 0.9, 0.5] }} transition={{ duration: 5, repeat: Infinity, ease: 'easeInOut' }} />
           <motion.div className="absolute -top-12 -right-12 w-40 h-40 rounded-full pointer-events-none"
-            style={{ background: 'radial-gradient(circle, rgba(34,211,238,0.10) 0%, transparent 65%)', filter: 'blur(28px)' }}
+            style={{ background: 'radial-gradient(circle, rgba(76,175,80,0.10) 0%, transparent 65%)', filter: 'blur(28px)' }}
             animate={{ scale: [1, 1.3, 1], opacity: [0.4, 0.8, 0.4] }} transition={{ duration: 6, repeat: Infinity, ease: 'easeInOut', delay: 1.5 }} />
 
           <div className="relative px-4 py-5 max-w-2xl mx-auto">
             {/* Badge */}
             <div className="flex items-center justify-center mb-3">
               <motion.div className="flex items-center gap-1.5 px-3 py-1 rounded-full text-[10px] font-black tracking-widest"
-                style={{ background: 'rgba(192,132,252,0.12)', border: '1px solid rgba(192,132,252,0.30)', color: '#c084fc', fontFamily: 'var(--font-display)' }}
-                animate={{ boxShadow: ['0 0 8px rgba(192,132,252,0.10)', '0 0 22px rgba(192,132,252,0.30)', '0 0 8px rgba(192,132,252,0.10)'] }}
+                style={{ background: 'rgba(211,47,47,0.12)', border: '1px solid rgba(211,47,47,0.30)', color: '#D32F2F', fontFamily: 'var(--font-display)' }}
+                animate={{ boxShadow: ['0 0 8px rgba(211,47,47,0.10)', '0 0 22px rgba(211,47,47,0.30)', '0 0 8px rgba(211,47,47,0.10)'] }}
                 transition={{ duration: 2.4, repeat: Infinity, ease: 'easeInOut' }}>
                 <IconShield /> ACCESO ADMIN
               </motion.div>
@@ -1608,17 +1608,17 @@ export default function AdminPage() {
               <div className="flex items-center justify-center gap-2.5 mb-2">
                 <div className="relative shrink-0">
                   <motion.div className="absolute inset-0 rounded-full pointer-events-none"
-                    style={{ background: 'rgba(192,132,252,0.45)', filter: 'blur(14px)' }}
+                    style={{ background: 'rgba(211,47,47,0.45)', filter: 'blur(14px)' }}
                     animate={{ scale: [0.8, 1.5, 0.8], opacity: [0.3, 0.8, 0.3] }}
                     transition={{ duration: 3, repeat: Infinity }} />
                   <motion.div
-                    animate={{ filter: ['drop-shadow(0 0 8px rgba(192,132,252,0.6))', 'drop-shadow(0 0 20px rgba(192,132,252,0.9)) drop-shadow(0 0 40px rgba(34,211,238,0.4))', 'drop-shadow(0 0 8px rgba(192,132,252,0.6))'] }}
+                    animate={{ filter: ['drop-shadow(0 0 8px rgba(211,47,47,0.6))', 'drop-shadow(0 0 20px rgba(211,47,47,0.9)) drop-shadow(0 0 40px rgba(76,175,80,0.4))', 'drop-shadow(0 0 8px rgba(211,47,47,0.6))'] }}
                     transition={{ duration: 2.8, repeat: Infinity, ease: 'easeInOut' }}>
                     <Image src="/Logo_Pestaña.png" alt="Orionix Gol" width={52} height={52} className="relative z-10 w-12 h-12 object-contain" />
                   </motion.div>
                 </div>
                 <motion.div
-                  animate={{ filter: ['drop-shadow(0 0 6px rgba(192,132,252,0.4))', 'drop-shadow(0 0 18px rgba(192,132,252,0.75)) drop-shadow(0 0 36px rgba(34,211,238,0.30))', 'drop-shadow(0 0 6px rgba(192,132,252,0.4))'] }}
+                  animate={{ filter: ['drop-shadow(0 0 6px rgba(211,47,47,0.4))', 'drop-shadow(0 0 18px rgba(211,47,47,0.75)) drop-shadow(0 0 36px rgba(76,175,80,0.30))', 'drop-shadow(0 0 6px rgba(211,47,47,0.4))'] }}
                   transition={{ duration: 2.8, repeat: Infinity, ease: 'easeInOut' }}>
                   <Image src="/texto_logo_pestaña.png" alt="Orionix Gol" width={160} height={40} className="h-9 w-auto object-contain" style={{ mixBlendMode: 'screen' }} />
                 </motion.div>
@@ -1626,11 +1626,11 @@ export default function AdminPage() {
 
               {/* Title */}
               <motion.h1 className="text-center font-black text-xl leading-none mb-1"
-                style={{ fontFamily: 'var(--font-display)', letterSpacing: '0.10em', background: 'linear-gradient(135deg, #c084fc, #e2e8f0, #818cf8)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}
+                style={{ fontFamily: 'var(--font-display)', letterSpacing: '0.10em', background: 'linear-gradient(135deg, #D32F2F, #e2e8f0, #818cf8)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}
                 animate={{ textShadow: ['0 0 0px transparent', '0 0 0px transparent'] }}>
                 PANEL DE CONTROL
               </motion.h1>
-              <p className="text-center text-[10px] tracking-widest uppercase" style={{ color: 'rgba(192,132,252,0.45)', letterSpacing: '0.20em' }}>
+              <p className="text-center text-[10px] tracking-widest uppercase" style={{ color: 'rgba(211,47,47,0.45)', letterSpacing: '0.20em' }}>
                 Mundial 2026 · Gestión de resultados
               </p>
             </div>
@@ -1642,8 +1642,8 @@ export default function AdminPage() {
           {/* ── Tabs principales ── */}
           <div className="flex gap-2 mb-5 p-2 rounded-2xl"
             style={{
-              background: 'linear-gradient(135deg, rgba(4,10,26,0.85) 0%, rgba(6,16,38,0.80) 100%)',
-              border: '1px solid rgba(34,211,238,0.14)',
+              background: 'linear-gradient(135deg, rgba(6,17,10,0.85) 0%, rgba(11,27,18,0.80) 100%)',
+              border: '1px solid rgba(76,175,80,0.14)',
               boxShadow: '0 8px 32px rgba(2,6,23,0.6), inset 0 1px 0 rgba(255,255,255,0.06)',
               backdropFilter: 'blur(20px)',
             }}>
@@ -1726,7 +1726,7 @@ export default function AdminPage() {
             {activeTab === 'horario' && !tournamentId && (
               <motion.div key="horario-loading" initial={{ opacity: 0 }} animate={{ opacity: 1 }}
                 className="flex justify-center py-20">
-                <div className="w-10 h-10 rounded-full border-2 border-t-cyan-400 border-cyan-400/15 animate-spin" />
+                <div className="w-10 h-10 rounded-full border-2 border-t-green-400 border-green-400/15 animate-spin" />
               </motion.div>
             )}
           </AnimatePresence>
@@ -1738,14 +1738,14 @@ export default function AdminPage() {
 
                 {/* Filtros con contadores */}
                 <div className="flex gap-1.5 mb-5 p-1.5 rounded-2xl"
-                  style={{ background: 'rgba(9,18,36,0.92)', border: '1px solid rgba(34,211,238,0.15)', boxShadow: '0 6px 18px rgba(2,6,23,0.45)', inset: '0 1px 0 rgba(255,255,255,0.04)' }}>
+                  style={{ background: 'rgba(6,17,10,0.92)', border: '1px solid rgba(76,175,80,0.15)', boxShadow: '0 6px 18px rgba(2,6,23,0.45)', inset: '0 1px 0 rgba(255,255,255,0.04)' }}>
                   {FILTER_TABS.map(f => (
                     <motion.button key={f.key} onClick={() => setFilterStatus(f.key)} whileTap={{ scale: 0.97 }}
                       className="relative flex-1 py-2 px-1 rounded-xl text-[11px] font-black transition-colors flex flex-col items-center gap-0.5"
                       style={{ color: filterStatus === f.key ? '#fff' : 'rgba(148,163,184,0.5)', fontFamily: 'var(--font-display)', letterSpacing: '0.04em' }}>
                       {filterStatus === f.key && (
                         <motion.span layoutId="admin-filter-pill" className="absolute inset-0 rounded-xl"
-                          style={{ background: 'linear-gradient(90deg, #06b6d4, #0ea5e9, #10b981)', boxShadow: '0 4px 14px rgba(6,182,212,0.3)' }}
+                          style={{ background: 'linear-gradient(90deg, #2E7D32, #4CAF50, #10b981)', boxShadow: '0 4px 14px rgba(46,125,50,0.3)' }}
                           transition={{ type: 'spring', stiffness: 340, damping: 30 }} />
                       )}
                       <span className="relative z-10 flex flex-col items-center gap-0.5">
@@ -1759,7 +1759,7 @@ export default function AdminPage() {
                 {/* Lista partidos */}
                 {loading ? (
                   <div className="flex flex-col items-center justify-center py-24 gap-4">
-                    <div className="w-12 h-12 rounded-full border-2 border-t-cyan-400 border-cyan-400/15 animate-spin" />
+                    <div className="w-12 h-12 rounded-full border-2 border-t-green-400 border-green-400/15 animate-spin" />
                     <p className="text-xs tracking-widest" style={{ color: 'rgba(148,163,184,0.4)', fontFamily: 'var(--font-display)' }}>CARGANDO PARTIDOS</p>
                   </div>
                 ) : (
@@ -1772,23 +1772,23 @@ export default function AdminPage() {
                         onClick={() => { setExtendId(null); setExtraMins(null); }}>
                         <motion.div initial={{ scale: 0.9, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} exit={{ scale: 0.9, opacity: 0 }}
                           className="relative rounded-2xl p-6 w-full max-w-sm"
-                          style={{ background: 'linear-gradient(145deg, rgba(4,12,28,0.99), rgba(6,18,42,0.97))', border: '1px solid rgba(251,191,36,0.25)' }}
+                          style={{ background: 'linear-gradient(145deg, rgba(6,17,10,0.99), rgba(11,27,18,0.97))', border: '1px solid rgba(212,167,44,0.25)' }}
                           onClick={e => e.stopPropagation()}>
                           <div className="absolute inset-x-0 top-0 h-px rounded-t-2xl"
-                            style={{ background: 'linear-gradient(90deg,transparent,rgba(251,191,36,0.5),transparent)' }} />
+                            style={{ background: 'linear-gradient(90deg,transparent,rgba(212,167,44,0.5),transparent)' }} />
                           <p className="text-base font-black text-white mb-1">⏱ Extender partido</p>
                           <p className="text-[11px] mb-5" style={{ color: 'rgba(148,163,184,0.5)' }}>
                             {fixtures.find(f => f.id === extendId)?.name}
                           </p>
-                          <p className="text-[10px] font-black mb-3 tracking-widest" style={{ color: 'rgba(251,191,36,0.6)' }}>MINUTOS ADICIONALES</p>
+                          <p className="text-[10px] font-black mb-3 tracking-widest" style={{ color: 'rgba(212,167,44,0.6)' }}>MINUTOS ADICIONALES</p>
                           <div className="grid grid-cols-3 gap-2 mb-4">
                             {[15, 30, 45].map(m => (
                               <motion.button key={m} onClick={() => setExtraMins(m)} whileTap={{ scale: 0.95 }}
                                 className="py-3 rounded-xl text-sm font-black"
                                 style={{
-                                  background: extraMins === m ? 'rgba(251,191,36,0.2)' : 'rgba(255,255,255,0.04)',
-                                  border: `1px solid ${extraMins === m ? 'rgba(251,191,36,0.5)' : 'rgba(255,255,255,0.08)'}`,
-                                  color: extraMins === m ? '#fbbf24' : 'rgba(148,163,184,0.6)',
+                                  background: extraMins === m ? 'rgba(212,167,44,0.2)' : 'rgba(255,255,255,0.04)',
+                                  border: `1px solid ${extraMins === m ? 'rgba(212,167,44,0.5)' : 'rgba(255,255,255,0.08)'}`,
+                                  color: extraMins === m ? '#D4A72C' : 'rgba(148,163,184,0.6)',
                                 }}>
                                 +{m} min
                               </motion.button>
@@ -1801,7 +1801,7 @@ export default function AdminPage() {
                               onChange={e => setExtraMins(parseInt(e.target.value) || null)}
                               placeholder="Ej: 20"
                               className="w-full text-center text-2xl font-black py-2.5 rounded-xl outline-none"
-                              style={{ background: 'rgba(251,191,36,0.06)', border: '1.5px solid rgba(251,191,36,0.2)', color: '#fbbf24' }} />
+                              style={{ background: 'rgba(212,167,44,0.06)', border: '1.5px solid rgba(212,167,44,0.2)', color: '#D4A72C' }} />
                           </div>
                           <div className="flex gap-2">
                             <motion.button onClick={() => { setExtendId(null); setExtraMins(null); }} whileTap={{ scale: 0.97 }}
@@ -1811,7 +1811,7 @@ export default function AdminPage() {
                             </motion.button>
                             <motion.button onClick={confirmExtend} disabled={!extraMins || extending} whileTap={{ scale: 0.97 }}
                               className="flex-1 py-2.5 rounded-xl text-sm font-black disabled:opacity-40"
-                              style={{ background: 'rgba(251,191,36,0.15)', border: '1px solid rgba(251,191,36,0.35)', color: '#fbbf24' }}>
+                              style={{ background: 'rgba(212,167,44,0.15)', border: '1px solid rgba(212,167,44,0.35)', color: '#D4A72C' }}>
                               {extending ? 'Aplicando...' : `Aplicar +${extraMins ?? 0} min`}
                             </motion.button>
                           </div>
