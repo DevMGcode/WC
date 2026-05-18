@@ -116,11 +116,11 @@ export default function LeagueDetailPage() {
   if (loading) {
     return (
       <div className="flex items-center justify-center h-screen"
-        style={{ background: 'radial-gradient(ellipse at 30% 50%, #060f1e 0%, #030a14 42%, #010408 100%)' }}>
+        style={{ background: 'radial-gradient(ellipse at 30% 50%, #050D07 0%, #08170D 42%, #06110A 100%)' }}>
         <div className="flex flex-col items-center gap-4">
-          <motion.div className="w-12 h-12 rounded-full border-2 border-cyan-400/20 border-t-cyan-400"
+          <motion.div className="w-12 h-12 rounded-full border-2 border-green-500/20 border-t-green-500"
             animate={{ rotate: 360 }} transition={{ duration: 0.9, repeat: Infinity, ease: 'linear' }} />
-          <p className="text-[10px] text-cyan-400/60 tracking-[0.3em] uppercase font-bold">Cargando</p>
+          <p className="text-[10px] text-green-500/60 tracking-[0.3em] uppercase font-bold">Cargando</p>
         </div>
       </div>
     );
@@ -129,11 +129,11 @@ export default function LeagueDetailPage() {
   if (!league) {
     return (
       <div className="flex items-center justify-center h-screen"
-        style={{ background: 'radial-gradient(ellipse at 30% 50%, #060f1e 0%, #030a14 42%, #010408 100%)' }}>
+        style={{ background: 'radial-gradient(ellipse at 30% 50%, #050D07 0%, #08170D 42%, #06110A 100%)' }}>
         <div className="text-center">
-          <p className="text-slate-400 mb-4">Liga no encontrada</p>
+          <p className="text-orionix-text-secondary mb-4">Liga no encontrada</p>
           <button onClick={() => router.back()}
-            className="px-5 py-2 rounded-xl text-sm font-bold text-cyan-300 border border-cyan-500/30">
+            className="px-5 py-2 rounded-xl text-sm font-bold text-green-300 border border-green-500/30">
             ← Volver
           </button>
         </div>
@@ -201,13 +201,13 @@ export default function LeagueDetailPage() {
                 </div>
                 <div>
                   <h2 className="text-lg font-black text-white leading-none">{league.name}</h2>
-                  {league.description && <p className="text-[11px] text-slate-500 mt-0.5">{league.description}</p>}
+                  {league.description && <p className="text-[11px] text-orionix-text-muted mt-0.5">{league.description}</p>}
                 </div>
               </div>
               <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-full"
                 style={{ border: '1px solid rgba(34,211,238,0.22)', background: 'rgba(34,211,238,0.07)' }}>
                 <FiUsers size={10} style={{ color: '#22d3ee' }} />
-                <span className="text-[9px] font-black text-cyan-300 tracking-widest">{ranking.length} miembros</span>
+                <span className="text-[9px] font-black text-green-300 tracking-widest">{ranking.length} miembros</span>
               </div>
             </div>
 
@@ -215,7 +215,7 @@ export default function LeagueDetailPage() {
             <div className="grid grid-cols-3 gap-2 mb-4">
               {statChips.map(({ label, value, color }) => (
                 <div key={label} className="relative overflow-hidden rounded-xl p-3 text-center"
-                  style={{ background: 'rgba(4,12,28,0.80)', border: `1px solid ${color}22` }}>
+                  style={{ background: 'rgba(6,17,10,0.80)', border: `1px solid ${color}22` }}>
                   <div className="absolute inset-x-0 top-0 h-px"
                     style={{ background: `linear-gradient(90deg, transparent, ${color}60, transparent)` }} />
                   <p className="text-xl font-black" style={{ color, textShadow: `0 0 14px ${color}80` }}>{value}</p>
@@ -281,21 +281,21 @@ export default function LeagueDetailPage() {
             <div className="flex items-center gap-2 mb-4">
               <div className="w-[3px] h-5 rounded-full"
                 style={{ background: 'linear-gradient(180deg, #fbbf24, #f59e0b)' }} />
-              <span className="text-[10px] font-black text-slate-400 tracking-[0.24em] uppercase">Ranking de Liga</span>
+              <span className="text-[10px] font-black text-orionix-text-secondary tracking-[0.24em] uppercase">Ranking de Liga</span>
               <span className="text-lg ml-1">🏆</span>
             </div>
 
             {ranking.length === 0 ? (
-              <p className="text-slate-600 text-sm text-center py-6">Sin participantes aún</p>
+              <p className="text-orionix-text-muted text-sm text-center py-6">Sin participantes aún</p>
             ) : (
               <div className="space-y-1.5">
                 {/* Header row */}
                 <div className="grid grid-cols-[32px_1fr_56px_64px_52px] gap-2 px-3 pb-1">
-                  <span className="text-[8px] font-black text-slate-600 uppercase tracking-widest">Pos</span>
-                  <span className="text-[8px] font-black text-slate-600 uppercase tracking-widest">Jugador</span>
-                  <span className="text-[8px] font-black text-slate-600 uppercase tracking-widest text-center">Exactas</span>
-                  <span className="text-[8px] font-black text-slate-600 uppercase tracking-widest text-center">Ganadores</span>
-                  <span className="text-[8px] font-black text-slate-600 uppercase tracking-widest text-right">Pts</span>
+                  <span className="text-[8px] font-black text-orionix-text-muted uppercase tracking-widest">Pos</span>
+                  <span className="text-[8px] font-black text-orionix-text-muted uppercase tracking-widest">Jugador</span>
+                  <span className="text-[8px] font-black text-orionix-text-muted uppercase tracking-widest text-center">Exactas</span>
+                  <span className="text-[8px] font-black text-orionix-text-muted uppercase tracking-widest text-center">Ganadores</span>
+                  <span className="text-[8px] font-black text-orionix-text-muted uppercase tracking-widest text-right">Pts</span>
                 </div>
 
                 {ranking.map((player: any, idx: number) => {
@@ -319,15 +319,15 @@ export default function LeagueDetailPage() {
                         <span className="text-lg text-center leading-none">
                           {idx < 3
                             ? MEDALS[idx]
-                            : <span className="text-slate-600 text-xs font-bold">{idx + 1}</span>}
+                            : <span className="text-orionix-text-muted text-xs font-bold">{idx + 1}</span>}
                         </span>
-                        <span className={`text-xs font-bold truncate ${isMe ? 'text-cyan-300' : 'text-slate-300'}`}>
-                          {isMe && <span className="text-cyan-500 mr-0.5">›</span>}
+                        <span className={`text-xs font-bold truncate ${isMe ? 'text-green-300' : 'text-orionix-text-secondary'}`}>
+                          {isMe && <span className="text-green-500 mr-0.5">›</span>}
                           {player.fullName || player.username}
                           {isMe && ' (Tú)'}
                         </span>
-                        <span className="text-xs font-black tabular-nums text-center text-slate-400">{player.exactScores}</span>
-                        <span className="text-xs font-black tabular-nums text-center text-slate-400">{player.winnerHits}</span>
+                        <span className="text-xs font-black tabular-nums text-center text-orionix-text-secondary">{player.exactScores}</span>
+                        <span className="text-xs font-black tabular-nums text-center text-orionix-text-secondary">{player.winnerHits}</span>
                         <span className="text-xs font-black tabular-nums text-right"
                           style={{ color: rowColor, textShadow: `0 0 8px ${rowColor}60` }}>
                           {player.totalPoints}
@@ -364,21 +364,21 @@ export default function LeagueDetailPage() {
               <div className="flex items-center gap-2 mb-3">
                 <div className="w-[3px] h-5 rounded-full"
                   style={{ background: 'linear-gradient(180deg, #ef4444, #b91c1c)' }} />
-                <span className="text-[10px] font-black text-slate-400 tracking-[0.24em] uppercase">Gestión de Propiedad</span>
+                <span className="text-[10px] font-black text-orionix-text-secondary tracking-[0.24em] uppercase">Gestión de Propiedad</span>
               </div>
 
               {transferableMembers.length > 0 ? (
                 <div className="space-y-3">
-                  <p className="text-xs text-slate-500">Transfiere la propiedad si quieres salir de la liga.</p>
+                  <p className="text-xs text-orionix-text-muted">Transfiere la propiedad si quieres salir de la liga.</p>
                   <select
                     value={selectedNewOwnerId}
                     onChange={e => setSelectedNewOwnerId(e.target.value)}
-                    className="w-full px-3 py-2.5 rounded-xl text-sm text-slate-200 font-medium"
+                    className="w-full px-3 py-2.5 rounded-xl text-sm text-orionix-text-secondary font-medium"
                     style={{ background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.10)', outline: 'none' }}
                   >
-                    <option value="" style={{ background: '#0a1628' }}>Selecciona nuevo propietario…</option>
+                    <option value="" style={{ background: '#06110A' }}>Selecciona nuevo propietario…</option>
                     {transferableMembers.map((m: any) => (
-                      <option key={m.userId} value={m.userId} style={{ background: '#0a1628' }}>
+                      <option key={m.userId} value={m.userId} style={{ background: '#06110A' }}>
                         {m.fullName || m.username}
                       </option>
                     ))}
@@ -388,7 +388,7 @@ export default function LeagueDetailPage() {
                     disabled={actionLoading || !selectedNewOwnerId}
                     whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.97 }}
                     className="w-full py-3 rounded-xl text-sm font-black text-white flex items-center justify-center gap-2 disabled:opacity-40"
-                    style={{ background: 'linear-gradient(135deg, #0d9488, #06b6d4)', boxShadow: '0 4px 20px rgba(0,210,185,0.25)' }}
+                    style={{ background: 'linear-gradient(135deg, #1B5E20, #388E3C)', boxShadow: '0 4px 20px rgba(76,175,80,0.25)' }}
                   >
                     <FiRepeat size={14} />
                     {actionLoading ? 'Transfiriendo…' : 'Transferir Propiedad'}
@@ -396,7 +396,7 @@ export default function LeagueDetailPage() {
                 </div>
               ) : (
                 <div className="space-y-3">
-                  <p className="text-xs text-slate-500">Eres el único miembro. Puedes eliminar la liga.</p>
+                  <p className="text-xs text-orionix-text-muted">Eres el único miembro. Puedes eliminar la liga.</p>
                   <motion.button
                     onClick={handleDeleteLeague}
                     disabled={actionLoading}
@@ -432,7 +432,7 @@ export default function LeagueDetailPage() {
           <motion.button
             onClick={() => router.back()}
             whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.97 }}
-            className="flex-1 py-3 rounded-xl text-sm font-black text-slate-400 flex items-center justify-center gap-2"
+            className="flex-1 py-3 rounded-xl text-sm font-black text-orionix-text-secondary flex items-center justify-center gap-2"
             style={{ border: '1px solid rgba(255,255,255,0.07)', background: 'rgba(255,255,255,0.02)' }}
           >
             <FiArrowLeft size={14} /> Volver

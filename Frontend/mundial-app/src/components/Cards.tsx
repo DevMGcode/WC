@@ -31,7 +31,7 @@ export const TeamCard: React.FC<TeamCardProps> = ({
 }) => {
   return (
     <div
-      className={`${sizeStyles[size]} tech-panel rounded-xl hover:shadow-cyan-500/25 transition-all duration-300 p-2 flex flex-col items-center justify-center cursor-pointer group`}
+      className={`${sizeStyles[size]} tech-panel rounded-xl hover:shadow-green-500/25 transition-all duration-300 p-2 flex flex-col items-center justify-center cursor-pointer group`}
       onClick={onClick}
     >
       {/* Bandera */}
@@ -48,7 +48,7 @@ export const TeamCard: React.FC<TeamCardProps> = ({
       </div>
 
       {/* Nombre del equipo */}
-      <p className={`${teamNameSizes[size]} font-bold text-slate-100 text-center truncate w-full`}>
+      <p className={`${teamNameSizes[size]} font-bold text-white text-center truncate w-full`}>
         {team.shortName || team.name}
       </p>
 
@@ -109,13 +109,13 @@ export const FixtureCard: React.FC<FixtureCardProps> = ({
   return (
     <div
       className={`rounded-xl overflow-hidden cursor-pointer transition-all duration-300 hover:shadow-xl ${
-        isLive ? 'ring-2 ring-rose-500 shadow-lg shadow-rose-500/30' : 'shadow-lg shadow-slate-900/20'
+        isLive ? 'ring-2 ring-rose-500 shadow-lg shadow-rose-500/30' : 'shadow-lg shadow-black/20'
       }`}
       onClick={onClick}
     >
       {/* Status badge */}
       <div className={`px-4 py-2 text-center text-white text-sm font-bold ${
-        isLive ? 'bg-rose-600 animate-pulse' : isFinished ? 'bg-slate-900' : 'bg-cyan-700'
+        isLive ? 'bg-rose-600 animate-pulse' : isFinished ? 'bg-[#06110A]' : 'bg-green-700'
       }`}>
         {isLive && '🔴 EN VIVO'}
         {isFinished && 'FINALIZADO'}
@@ -141,24 +141,24 @@ export const FixtureCard: React.FC<FixtureCardProps> = ({
                 />
               )}
             </div>
-            <p className="text-sm font-bold text-center text-slate-100">{homeTeam.shortName}</p>
+            <p className="text-sm font-bold text-center text-white">{homeTeam.shortName}</p>
           </div>
 
           {/* Score / VS */}
           <div className="text-center flex-shrink-0">
             {isFinished || isLive ? (
               <div className="text-center">
-                <p className="text-3xl font-black text-slate-100 tech-text-glow">
+                <p className="text-3xl font-black text-white tech-text-glow">
                   {homeScore} - {awayScore}
                 </p>
                 {showPrediction && predictions && (
-                  <p className="text-xs text-cyan-300 font-semibold mt-1">
+                  <p className="text-xs text-green-300 font-semibold mt-1">
                     {predictions.home} - {predictions.away}
                   </p>
                 )}
               </div>
             ) : (
-              <p className="text-xl font-bold text-cyan-300">vs</p>
+              <p className="text-xl font-bold text-green-300">vs</p>
             )}
           </div>
 
@@ -176,7 +176,7 @@ export const FixtureCard: React.FC<FixtureCardProps> = ({
                 />
               )}
             </div>
-            <p className="text-sm font-bold text-center text-slate-100">{awayTeam.shortName}</p>
+            <p className="text-sm font-bold text-center text-white">{awayTeam.shortName}</p>
           </div>
         </div>
       </div>

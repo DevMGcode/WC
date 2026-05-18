@@ -22,14 +22,14 @@ type FilterKey = 'ALL' | 'LIVE' | 'SCHEDULED' | 'FINISHED';
 const FILTERS: { key: FilterKey; labelKey: string; icon: React.ReactNode; color: string; glow: string }[] = [
   { key: 'ALL',       labelKey: 'fixtures.filters.all',      icon: <FiList size={12} />,     color: '#94a3b8', glow: 'rgba(148,163,184,0.55)' },
   { key: 'LIVE',      labelKey: 'fixtures.filters.live',     icon: <FiActivity size={12} />, color: '#ef4444', glow: 'rgba(239,68,68,0.60)'   },
-  { key: 'SCHEDULED', labelKey: 'fixtures.filters.pending',  icon: <FiClock size={12} />,    color: '#22d3ee', glow: 'rgba(34,211,238,0.60)'  },
-  { key: 'FINISHED',  labelKey: 'fixtures.filters.finished', icon: <FiCheck size={12} />,    color: '#34d399', glow: 'rgba(52,211,153,0.60)'  },
+  { key: 'SCHEDULED', labelKey: 'fixtures.filters.pending',  icon: <FiClock size={12} />,    color: '#4CAF50', glow: 'rgba(76,175,80,0.60)'  },
+  { key: 'FINISHED',  labelKey: 'fixtures.filters.finished', icon: <FiCheck size={12} />,    color: '#388E3C', glow: 'rgba(56,142,60,0.60)'  },
 ];
 
 const STATUS_CFG = {
   LIVE:      { labelKey: 'fixtures.filters.live',     color: '#ef4444', glow: 'rgba(239,68,68,0.60)',   bg: 'rgba(239,68,68,0.10)',  cardBg: 'rgba(239,68,68,0.04)'  },
-  SCHEDULED: { labelKey: 'fixtures.filters.pending',  color: '#22d3ee', glow: 'rgba(34,211,238,0.60)',  bg: 'rgba(34,211,238,0.08)', cardBg: 'rgba(34,211,238,0.02)' },
-  FINISHED:  { labelKey: 'common.finished',           color: '#34d399', glow: 'rgba(52,211,153,0.60)',  bg: 'rgba(52,211,153,0.08)', cardBg: 'rgba(52,211,153,0.02)' },
+  SCHEDULED: { labelKey: 'fixtures.filters.pending',  color: '#4CAF50', glow: 'rgba(76,175,80,0.60)',  bg: 'rgba(76,175,80,0.08)', cardBg: 'rgba(76,175,80,0.02)' },
+  FINISHED:  { labelKey: 'common.finished',           color: '#388E3C', glow: 'rgba(56,142,60,0.60)',  bg: 'rgba(56,142,60,0.08)', cardBg: 'rgba(56,142,60,0.02)' },
   POSTPONED: { labelKey: 'common.pending',            color: '#94a3b8', glow: 'rgba(148,163,184,0.45)', bg: 'rgba(148,163,184,0.06)', cardBg: 'transparent'          },
 } as const;
 
@@ -120,14 +120,14 @@ const KPIChip = ({
   </motion.div>
 );
 
-const FlagBubble = ({ url, name, size = 60, glow = 'rgba(34,211,238,0.20)' }: { url: string; name: string; size?: number; glow?: string }) => (
+const FlagBubble = ({ url, name, size = 60, glow = 'rgba(76,175,80,0.20)' }: { url: string; name: string; size?: number; glow?: string }) => (
   <div className="relative shrink-0" style={{ width: size, height: size }}>
     <motion.div className="absolute inset-0 rounded-full pointer-events-none"
       style={{ background: glow, filter: 'blur(12px)', transform: 'scale(1.3)' }}
       animate={{ opacity: [0.5, 0.9, 0.5] }}
       transition={{ duration: 2.5, repeat: Infinity, ease: 'easeInOut' }} />
     <div className="relative w-full h-full rounded-full overflow-hidden shadow-2xl"
-      style={{ border: '1.5px solid rgba(255,255,255,0.12)', background: '#0a1628' }}>
+      style={{ border: '1.5px solid rgba(255,255,255,0.12)', background: '#102417' }}>
       {url && <img src={url} alt={name} className="w-full h-full object-cover" />}
     </div>
   </div>
@@ -156,7 +156,7 @@ const MatchCard = ({ fixture, index, isFirst, t }: { fixture: any; index: number
       <Link href={`fixtures/${fixture.id}`}>
         <div className="relative overflow-hidden rounded-2xl cursor-pointer"
           style={{
-            background: `linear-gradient(145deg, rgba(4,12,28,0.98) 0%, rgba(5,16,36,0.97) 60%, ${cfg.cardBg} 100%)`,
+            background: `linear-gradient(145deg, rgba(6,17,10,0.98) 0%, rgba(11,27,18,0.97) 60%, ${cfg.cardBg} 100%)`,
             border: `1px solid ${isLive ? 'rgba(239,68,68,0.35)' : cfg.color + '18'}`,
             backdropFilter: 'blur(28px)',
             boxShadow: isLive
@@ -211,8 +211,8 @@ const MatchCard = ({ fixture, index, isFirst, t }: { fixture: any; index: number
               </span>
             )}
 
-            <motion.span className="text-slate-700 shrink-0 group-hover:text-slate-500"
-              style={{ transition: 'color 0.2s' }}
+            <motion.span className="shrink-0"
+              style={{ color: '#6E7C72', transition: 'color 0.2s' }}
               animate={isLive ? { x: [0, 3, 0] } : {}}
               transition={{ duration: 1.5, repeat: Infinity }}>
               <FiChevronRight size={14} />
@@ -224,8 +224,8 @@ const MatchCard = ({ fixture, index, isFirst, t }: { fixture: any; index: number
             {/* Home team */}
             <div className="flex flex-col items-center gap-2.5 flex-1 min-w-0">
               <FlagBubble url={fixture.homeTeam?.flagUrl} name={fixture.homeTeam?.name} size={62}
-                glow={isFinished || isLive ? cfg.glow.replace('0.60', '0.22') : 'rgba(34,211,238,0.14)'} />
-              <p className="text-[11px] font-black text-slate-200 tracking-widest text-center leading-none truncate w-full uppercase">
+                glow={isFinished || isLive ? cfg.glow.replace('0.60', '0.22') : 'rgba(76,175,80,0.14)'} />
+              <p className="text-[11px] font-black tracking-widest text-center leading-none truncate w-full uppercase text-orionix-text-secondary">
                 {fixture.homeTeam?.shortName}
               </p>
             </div>
@@ -292,8 +292,8 @@ const MatchCard = ({ fixture, index, isFirst, t }: { fixture: any; index: number
             {/* Away team */}
             <div className="flex flex-col items-center gap-2.5 flex-1 min-w-0">
               <FlagBubble url={fixture.awayTeam?.flagUrl} name={fixture.awayTeam?.name} size={62}
-                glow={isFinished || isLive ? cfg.glow.replace('0.60', '0.22') : 'rgba(34,211,238,0.14)'} />
-              <p className="text-[11px] font-black text-slate-200 tracking-widest text-center leading-none truncate w-full uppercase">
+                glow={isFinished || isLive ? cfg.glow.replace('0.60', '0.22') : 'rgba(76,175,80,0.14)'} />
+              <p className="text-[11px] font-black tracking-widest text-center leading-none truncate w-full uppercase text-orionix-text-secondary">
                 {fixture.awayTeam?.shortName}
               </p>
             </div>
@@ -305,9 +305,9 @@ const MatchCard = ({ fixture, index, isFirst, t }: { fixture: any; index: number
               <div className="rounded-xl px-3 py-2.5" style={{ background: 'rgba(0,0,0,0.28)', border: '1px solid rgba(255,255,255,0.05)' }}>
                 {/* Header */}
                 <div className="flex items-center gap-1.5 mb-2">
-                  <span className="text-[8px] font-black tracking-[0.22em] uppercase" style={{ color: 'rgba(251,191,36,0.55)' }}>Goleadores</span>
+                  <span className="text-[8px] font-black tracking-[0.22em] uppercase" style={{ color: 'rgba(212,167,44,0.55)' }}>Goleadores</span>
                   <span className="text-[7px] font-black px-1.5 py-0.5 rounded-full"
-                    style={{ background: 'rgba(251,191,36,0.08)', color: 'rgba(251,191,36,0.7)', border: '1px solid rgba(251,191,36,0.18)' }}>
+                    style={{ background: 'rgba(212,167,44,0.08)', color: 'rgba(212,167,44,0.7)', border: '1px solid rgba(212,167,44,0.18)' }}>
                     {fixture.scorers.length}
                   </span>
                 </div>
@@ -318,7 +318,7 @@ const MatchCard = ({ fixture, index, isFirst, t }: { fixture: any; index: number
                     {fixture.scorers
                       .filter((s: any) => s.teamId === fixture.homeTeam?.id)
                       .map((s: any) => (
-                        <div key={s.id} className="flex items-center gap-1 text-[9px]" style={{ color: '#22d3ee' }}>
+                        <div key={s.id} className="flex items-center gap-1 text-[9px] text-orionix-green-bright">
                           <span className="shrink-0">⚽</span>
                           <span className="font-bold truncate">{s.playerName}</span>
                           {s.minute && <span className="shrink-0 opacity-50">{s.minute}&apos;</span>}
@@ -332,7 +332,7 @@ const MatchCard = ({ fixture, index, isFirst, t }: { fixture: any; index: number
                     {fixture.scorers
                       .filter((s: any) => s.teamId === fixture.awayTeam?.id)
                       .map((s: any) => (
-                        <div key={s.id} className="flex items-center justify-end gap-1 text-[9px]" style={{ color: '#fb7185' }}>
+                        <div key={s.id} className="flex items-center justify-end gap-1 text-[9px]" style={{ color: '#E0C15A' }}>
                           {s.minute && <span className="shrink-0 opacity-50">{s.minute}&apos;</span>}
                           <span className="font-bold truncate">{s.playerName}</span>
                           <span className="shrink-0">⚽</span>
@@ -350,14 +350,14 @@ const MatchCard = ({ fixture, index, isFirst, t }: { fixture: any; index: number
             <div className="flex items-center gap-3">
               <div className="flex items-center gap-1.5">
                 <FiCalendar size={9} style={{ color: 'rgba(148,163,184,0.25)' }} />
-                <span className="text-[8px] text-slate-600 font-semibold capitalize">{dateStr}</span>
+                <span className="text-[8px] font-semibold capitalize text-orionix-text-muted">{dateStr}</span>
               </div>
               {!isLive && !isFinished && (
                 <>
                   <div className="w-px h-2.5" style={{ background: 'rgba(255,255,255,0.06)' }} />
                   <div className="flex items-center gap-1.5">
                     <FiClock size={9} style={{ color: 'rgba(148,163,184,0.25)' }} />
-                    <span className="text-[8px] text-slate-600 font-semibold">{timeStr}</span>
+                    <span className="text-[8px] font-semibold text-orionix-text-muted">{timeStr}</span>
                   </div>
                 </>
               )}
@@ -365,17 +365,17 @@ const MatchCard = ({ fixture, index, isFirst, t }: { fixture: any; index: number
             {/* Predict CTA for scheduled */}
             {!isFinished && !isLive && (
               <motion.div className="flex items-center gap-1 px-2.5 py-1 rounded-full shrink-0"
-                style={{ background: 'rgba(34,211,238,0.06)', border: '1px solid rgba(34,211,238,0.18)', color: 'rgba(34,211,238,0.65)' }}
-                whileHover={{ scale: 1.05, backgroundColor: 'rgba(34,211,238,0.12)' }}>
+                style={{ background: 'rgba(76,175,80,0.06)', border: '1px solid rgba(76,175,80,0.18)', color: 'rgba(76,175,80,0.65)' }}
+                whileHover={{ scale: 1.05, backgroundColor: 'rgba(76,175,80,0.12)' }}>
                 <FiZap size={8} />
                 <span className="text-[7px] font-black tracking-[0.18em] uppercase">{t('fixtures.predict')}</span>
               </motion.div>
             )}
             {isFinished && (
               <div className="flex items-center gap-1 px-2.5 py-1 rounded-full shrink-0"
-                style={{ background: 'rgba(52,211,153,0.06)', border: '1px solid rgba(52,211,153,0.18)' }}>
-                <FiCheck size={8} style={{ color: '#34d399' }} />
-                <span className="text-[7px] font-black tracking-[0.18em] uppercase text-emerald-400">{t('fixtures.final')}</span>
+                style={{ background: 'rgba(56,142,60,0.06)', border: '1px solid rgba(56,142,60,0.18)' }}>
+                <FiCheck size={8} className="text-orionix-green-hover" />
+                <span className="text-[7px] font-black tracking-[0.18em] uppercase text-orionix-green-bright">{t('fixtures.final')}</span>
               </div>
             )}
           </div>
@@ -440,14 +440,14 @@ export default function FixturesPage() {
 
   return (
     <div className="w-full min-h-screen relative"
-      style={{ background: 'radial-gradient(ellipse at 20% 30%, #060f1e 0%, #030a14 50%, #010508 100%)' }}>
+      style={{ background: 'radial-gradient(ellipse at 20% 30%, #06110A 0%, #0B1B12 50%, #06110A 100%)' }}>
 
       {/* Ambient orbs */}
       <motion.div className="fixed rounded-full pointer-events-none"
-        style={{ width: 700, height: 700, top: -200, left: -150, background: 'radial-gradient(circle, rgba(0,210,185,0.07) 0%, transparent 65%)', filter: 'blur(70px)', zIndex: 0 }}
+        style={{ width: 700, height: 700, top: -200, left: -150, background: 'radial-gradient(circle, rgba(56,142,60,0.07) 0%, transparent 65%)', filter: 'blur(70px)', zIndex: 0 }}
         animate={{ scale: [1, 1.18, 1], opacity: [0.5, 0.85, 0.5] }} transition={{ duration: 12, repeat: Infinity }} />
       <motion.div className="fixed rounded-full pointer-events-none"
-        style={{ width: 500, height: 500, bottom: -80, right: -80, background: 'radial-gradient(circle, rgba(56,189,248,0.07) 0%, transparent 65%)', filter: 'blur(65px)', zIndex: 0 }}
+        style={{ width: 500, height: 500, bottom: -80, right: -80, background: 'radial-gradient(circle, rgba(102,187,106,0.07) 0%, transparent 65%)', filter: 'blur(65px)', zIndex: 0 }}
         animate={{ scale: [1, 1.22, 1], opacity: [0.4, 0.75, 0.4] }} transition={{ duration: 14, repeat: Infinity, delay: 4 }} />
 
       <div className="relative z-10">
@@ -462,19 +462,19 @@ export default function FixturesPage() {
           <div>
             <div className="flex items-center gap-2.5 mb-1">
               <div className="w-[3px] h-6 rounded-full"
-                style={{ background: 'linear-gradient(180deg, #22d3ee, #10b981)', boxShadow: '0 0 8px rgba(34,211,238,0.6)' }} />
+                style={{ background: 'linear-gradient(180deg, #4CAF50, #10b981)', boxShadow: '0 0 8px rgba(76,175,80,0.6)' }} />
               <h1 className="text-2xl sm:text-3xl font-black text-white leading-none tracking-tight">
                 {t('fixtures.title')}
               </h1>
               <motion.div className="flex items-center gap-1.5 px-2.5 py-1 rounded-full ml-1"
-                style={{ background: 'rgba(34,211,238,0.08)', border: '1px solid rgba(34,211,238,0.22)' }}
-                animate={{ boxShadow: ['0 0 6px rgba(34,211,238,0.06)', '0 0 16px rgba(34,211,238,0.18)', '0 0 6px rgba(34,211,238,0.06)'] }}
+                style={{ background: 'rgba(76,175,80,0.08)', border: '1px solid rgba(76,175,80,0.22)' }}
+                animate={{ boxShadow: ['0 0 6px rgba(76,175,80,0.06)', '0 0 16px rgba(76,175,80,0.18)', '0 0 6px rgba(76,175,80,0.06)'] }}
                 transition={{ duration: 2.5, repeat: Infinity }}>
-                <span className="text-[9px] font-black text-cyan-300 tabular-nums">{counts.total}</span>
-                <span className="text-[7px] text-slate-600 tracking-widest uppercase font-bold">{t('fixtures.matches')}</span>
+                <span className="text-[9px] font-black tabular-nums text-orionix-green-soft">{counts.total}</span>
+                <span className="text-[7px] tracking-widest uppercase font-bold text-orionix-text-muted">{t('fixtures.matches')}</span>
               </motion.div>
             </div>
-            <p className="text-[11px] tracking-widest text-slate-700 ml-5 uppercase">
+            <p className="text-[11px] tracking-widest ml-5 uppercase text-orionix-text-muted">
               Mundial 2026 · USA · México · Canadá
             </p>
           </div>
@@ -500,8 +500,8 @@ export default function FixturesPage() {
           <div data-tour="calendar-kpi" className="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-5">
             <KPIChip icon={<FiList />}        value={counts.total}     label={t('fixtures.total')}            color="#94a3b8" glow="rgba(148,163,184,0.55)" bg="rgba(148,163,184,0.07)" delay={0.06} />
             <KPIChip icon={<FiActivity />}    value={counts.live}      label={t('fixtures.filters.live')}     color="#ef4444" glow="rgba(239,68,68,0.60)"   bg="rgba(239,68,68,0.08)"   delay={0.12} />
-            <KPIChip icon={<FiClock />}       value={counts.scheduled} label={t('fixtures.filters.pending')}  color="#22d3ee" glow="rgba(34,211,238,0.60)"  bg="rgba(34,211,238,0.07)"  delay={0.18} />
-            <KPIChip icon={<FiCheck />}       value={counts.finished}  label={t('fixtures.filters.finished')} color="#34d399" glow="rgba(52,211,153,0.60)"  bg="rgba(52,211,153,0.07)"  delay={0.24} />
+            <KPIChip icon={<FiClock />}       value={counts.scheduled} label={t('fixtures.filters.pending')}  color="#4CAF50" glow="rgba(76,175,80,0.60)"  bg="rgba(76,175,80,0.07)"  delay={0.18} />
+            <KPIChip icon={<FiCheck />}       value={counts.finished}  label={t('fixtures.filters.finished')} color="#388E3C" glow="rgba(56,142,60,0.60)"  bg="rgba(56,142,60,0.07)"  delay={0.24} />
           </div>
         )}
 
@@ -511,8 +511,8 @@ export default function FixturesPage() {
           data-tour="calendar-filters"
           className="relative overflow-hidden rounded-2xl mb-6 p-2"
           style={{
-            background: 'linear-gradient(145deg, rgba(4,12,28,0.96), rgba(5,16,38,0.94))',
-            border: '1px solid rgba(34,211,238,0.10)',
+            background: 'linear-gradient(145deg, rgba(6,17,10,0.96), rgba(11,27,18,0.94))',
+            border: '1px solid rgba(76,175,80,0.10)',
             backdropFilter: 'blur(28px)',
             boxShadow: '0 8px 32px rgba(0,0,0,0.45), inset 0 1px 0 rgba(255,255,255,0.04)',
           }}>
@@ -557,7 +557,7 @@ export default function FixturesPage() {
             })}
             <div className="flex-1" />
             <div className="hidden sm:flex items-center pr-2">
-              <EQBars color="rgba(34,211,238,0.30)" count={6} maxH={14} />
+              <EQBars color="rgba(76,175,80,0.30)" count={6} maxH={14} />
             </div>
           </div>
         </motion.div>
@@ -567,7 +567,7 @@ export default function FixturesPage() {
           <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
             {Array.from({ length: 6 }).map((_, i) => (
               <motion.div key={i} className="rounded-2xl overflow-hidden"
-                style={{ background: 'rgba(4,12,28,0.95)', border: '1px solid rgba(34,211,238,0.07)', height: 180 }}
+                style={{ background: 'rgba(6,17,10,0.95)', border: '1px solid rgba(76,175,80,0.07)', height: 180 }}
                 animate={{ opacity: [0.25, 0.55, 0.25] }}
                 transition={{ duration: 1.8, repeat: Infinity, delay: i * 0.18 }}>
                 <div className="h-full flex flex-col">
@@ -590,16 +590,16 @@ export default function FixturesPage() {
                 <div className="flex items-center gap-4 mb-4">
                   <div className="flex items-center gap-2.5">
                     <motion.div className="w-2 h-2 rounded-full"
-                      style={{ background: '#22d3ee', boxShadow: '0 0 8px rgba(34,211,238,0.8)' }}
+                      style={{ background: '#4CAF50', boxShadow: '0 0 8px rgba(76,175,80,0.8)' }}
                       animate={{ scale: [1, 1.5, 1], opacity: [0.7, 1, 0.7] }}
                       transition={{ duration: 2.4, repeat: Infinity }} />
                     <span className="text-[11px] font-black tracking-[0.28em] uppercase"
-                      style={{ color: 'rgba(34,211,238,0.70)', textShadow: '0 0 10px rgba(34,211,238,0.30)' }}>
+                      style={{ color: 'rgba(76,175,80,0.70)', textShadow: '0 0 10px rgba(76,175,80,0.30)' }}>
                       {label}
                     </span>
                   </div>
-                  <div className="flex-1 h-px" style={{ background: 'linear-gradient(90deg, rgba(34,211,238,0.18), transparent)' }} />
-                  <span className="text-[8px] font-black text-slate-700 tracking-[0.22em] uppercase shrink-0">
+                  <div className="flex-1 h-px" style={{ background: 'linear-gradient(90deg, rgba(76,175,80,0.18), transparent)' }} />
+                  <span className="text-[8px] font-black tracking-[0.22em] uppercase shrink-0 text-orionix-text-muted">
                     {items.length} {items.length === 1 ? t('fixtures.match') : t('fixtures.matches')}
                   </span>
                 </div>
@@ -620,22 +620,22 @@ export default function FixturesPage() {
             className="flex flex-col items-center justify-center py-28 gap-6">
             <div className="relative">
               <motion.div className="absolute inset-0 rounded-full pointer-events-none"
-                style={{ background: 'rgba(34,211,238,0.12)', filter: 'blur(22px)', transform: 'scale(1.5)' }}
+                style={{ background: 'rgba(76,175,80,0.12)', filter: 'blur(22px)', transform: 'scale(1.5)' }}
                 animate={{ scale: [1.3, 1.7, 1.3], opacity: [0.5, 0.9, 0.5] }}
                 transition={{ duration: 3, repeat: Infinity }} />
               <div className="relative w-18 h-18 rounded-2xl flex items-center justify-center p-5"
-                style={{ background: 'linear-gradient(145deg, rgba(34,211,238,0.14), rgba(4,12,28,0.90))', border: '1px solid rgba(34,211,238,0.24)' }}>
-                <FiCalendar size={30} style={{ color: 'rgba(34,211,238,0.60)' }} />
+                style={{ background: 'linear-gradient(145deg, rgba(76,175,80,0.14), rgba(6,17,10,0.90))', border: '1px solid rgba(76,175,80,0.24)' }}>
+                <FiCalendar size={30} style={{ color: 'rgba(76,175,80,0.60)' }} />
               </div>
             </div>
             <div className="text-center">
-              <p className="text-sm font-black text-slate-400 mb-1 tracking-wide">{t('fixtures.noMatches')}</p>
-              <p className="text-[11px] text-slate-700 tracking-widest uppercase">{t('fixtures.tryOtherFilter')}</p>
+              <p className="text-sm font-black mb-1 tracking-wide text-orionix-text-muted">{t('fixtures.noMatches')}</p>
+              <p className="text-[11px] tracking-widest uppercase text-orionix-text-muted">{t('fixtures.tryOtherFilter')}</p>
             </div>
             <motion.button onClick={() => setFilter('ALL')}
               className="px-6 py-2.5 rounded-xl text-[10px] font-black tracking-[0.22em] uppercase"
-              style={{ color: '#22d3ee', border: '1px solid rgba(34,211,238,0.25)', background: 'rgba(34,211,238,0.08)', boxShadow: '0 0 16px rgba(34,211,238,0.10)' }}
-              whileHover={{ scale: 1.05, boxShadow: '0 0 24px rgba(34,211,238,0.22)' }}
+              style={{ color: '#4CAF50', border: '1px solid rgba(76,175,80,0.25)', background: 'rgba(76,175,80,0.08)', boxShadow: '0 0 16px rgba(76,175,80,0.10)' }}
+              whileHover={{ scale: 1.05, boxShadow: '0 0 24px rgba(76,175,80,0.22)' }}
               whileTap={{ scale: 0.96 }}>
               {t('fixtures.viewAllMatches')}
             </motion.button>

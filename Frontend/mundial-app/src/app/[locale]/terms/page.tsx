@@ -55,13 +55,13 @@ export default function TermsPage() {
             <h1 className="text-2xl font-black text-white mt-3" style={{ fontFamily: 'var(--font-display)' }}>
               Términos y Condiciones
             </h1>
-            <p className="text-xs text-slate-500 mt-2">Última actualización: mayo de 2026 · Orionix Gol</p>
+            <p className="text-xs text-orionix-text-muted mt-2">Última actualización: mayo de 2026 · Orionix Gol</p>
           </div>
 
           <div className="space-y-8 text-sm leading-relaxed" style={{ color: 'rgba(148,163,184,0.85)' }}>
 
             <section>
-              <h2 className="text-base font-bold text-slate-200 mb-3">1. Aceptación de los términos</h2>
+              <h2 className="text-base font-bold text-orionix-text-secondary mb-3">1. Aceptación de los términos</h2>
               <p>
                 Al registrarte o utilizar Orionix Gol, aceptas estos Términos y Condiciones en su totalidad.
                 Si no estás de acuerdo, te pedimos que no utilices la aplicación.
@@ -70,7 +70,7 @@ export default function TermsPage() {
             </section>
 
             <section>
-              <h2 className="text-base font-bold text-slate-200 mb-3">2. Descripción del servicio</h2>
+              <h2 className="text-base font-bold text-orionix-text-secondary mb-3">2. Descripción del servicio</h2>
               <p>
                 Orionix Gol es una plataforma gratuita de predicciones deportivas para el Mundial de Fútbol 2026.
                 Los usuarios pueden realizar predicciones de partidos, acumular puntos según la precisión de sus pronósticos,
@@ -79,7 +79,7 @@ export default function TermsPage() {
             </section>
 
             <section>
-              <h2 className="text-base font-bold text-slate-200 mb-3">3. Requisitos de edad</h2>
+              <h2 className="text-base font-bold text-orionix-text-secondary mb-3">3. Requisitos de edad</h2>
               <p>
                 Debes tener al menos 13 años para registrarte. Si eres menor de 18 años, debes contar con el
                 consentimiento de tu tutor legal para usar la aplicación.
@@ -87,7 +87,7 @@ export default function TermsPage() {
             </section>
 
             <section>
-              <h2 className="text-base font-bold text-slate-200 mb-3">4. Cuenta de usuario</h2>
+              <h2 className="text-base font-bold text-orionix-text-secondary mb-3">4. Cuenta de usuario</h2>
               <ul className="space-y-1.5 pl-4">
                 {[
                   'Eres responsable de mantener la confidencialidad de tu contraseña.',
@@ -104,7 +104,7 @@ export default function TermsPage() {
             </section>
 
             <section>
-              <h2 className="text-base font-bold text-slate-200 mb-3">5. Uso aceptable</h2>
+              <h2 className="text-base font-bold text-orionix-text-secondary mb-3">5. Uso aceptable</h2>
               <p className="mb-3">Queda prohibido:</p>
               <ul className="space-y-1.5 pl-4">
                 {[
@@ -123,7 +123,7 @@ export default function TermsPage() {
             </section>
 
             <section>
-              <h2 className="text-base font-bold text-slate-200 mb-3">6. Suspensión y cancelación de cuentas</h2>
+              <h2 className="text-base font-bold text-orionix-text-secondary mb-3">6. Suspensión y cancelación de cuentas</h2>
               <p>
                 Nos reservamos el derecho de suspender o eliminar cuentas que incumplan estos términos,
                 sin previo aviso y a nuestra entera discreción. En casos graves (fraude, acceso no autorizado),
@@ -132,7 +132,7 @@ export default function TermsPage() {
             </section>
 
             <section>
-              <h2 className="text-base font-bold text-slate-200 mb-3">7. Propiedad intelectual</h2>
+              <h2 className="text-base font-bold text-orionix-text-secondary mb-3">7. Propiedad intelectual</h2>
               <p>
                 Todo el contenido de Orionix Gol — incluyendo diseño, código, logotipos, animaciones y textos —
                 es propiedad de Orionix Gol o de sus respectivos titulares. No puedes reproducir, distribuir
@@ -141,7 +141,7 @@ export default function TermsPage() {
             </section>
 
             <section>
-              <h2 className="text-base font-bold text-slate-200 mb-3">8. Disponibilidad del servicio</h2>
+              <h2 className="text-base font-bold text-orionix-text-secondary mb-3">8. Disponibilidad del servicio</h2>
               <p>
                 Nos esforzamos por mantener la aplicación disponible en todo momento, pero no garantizamos
                 un servicio ininterrumpido. Podemos realizar tareas de mantenimiento, actualizaciones o
@@ -151,7 +151,7 @@ export default function TermsPage() {
             </section>
 
             <section>
-              <h2 className="text-base font-bold text-slate-200 mb-3">9. Limitación de responsabilidad</h2>
+              <h2 className="text-base font-bold text-orionix-text-secondary mb-3">9. Limitación de responsabilidad</h2>
               <p>
                 Orionix Gol es una aplicación de entretenimiento. Los resultados, puntuaciones y rankings
                 son meramente informativos y no tienen valor económico ni legal. No nos hacemos responsables
@@ -160,7 +160,7 @@ export default function TermsPage() {
             </section>
 
             <section>
-              <h2 className="text-base font-bold text-slate-200 mb-3">10. Contacto</h2>
+              <h2 className="text-base font-bold text-orionix-text-secondary mb-3">10. Contacto</h2>
               <p>
                 Para cualquier consulta sobre estos términos, puedes escribirnos a{' '}
                 <a href="mailto:orionixgol@gmail.com" className="underline" style={{ color: 'rgba(0,210,185,0.8)' }}>
@@ -172,7 +172,7 @@ export default function TermsPage() {
           </div>
 
           <div className="mt-10 pt-6 text-center" style={{ borderTop: '1px solid rgba(255,255,255,0.06)' }}>
-            <p className="text-[10px] text-slate-600 tracking-widest uppercase">
+            <p className="text-[10px] text-orionix-text-muted tracking-widest uppercase">
               © 2026 ORIONIX GOL — TODOS LOS DERECHOS RESERVADOS
             </p>
           </div>

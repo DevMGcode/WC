@@ -15,28 +15,28 @@ const AnimatedBackground = ({ constrained = false }: { constrained?: boolean }) 
   }, []);
 
   return (
-    <div className={`${constrained ? 'absolute inset-0' : 'fixed inset-0'} -z-10 overflow-hidden bg-slate-950`}>
-      <div className="absolute inset-0 bg-gradient-to-br from-slate-900 via-slate-800 to-slate-950" />
-      <motion.div className="absolute w-96 h-96 bg-cyan-500/25 rounded-full blur-3xl"
+    <div className={`${constrained ? 'absolute inset-0' : 'fixed inset-0'} -z-10 overflow-hidden`} style={{ background: '#06110A' }}>
+      <div className="absolute inset-0" style={{ background: 'linear-gradient(135deg, #06110A, #0B1B12, #06110A)' }} />
+      <motion.div className="absolute w-96 h-96 rounded-full blur-3xl"
         animate={{ x: mousePosition.x - 192, y: mousePosition.y - 192 }}
         transition={{ type: 'spring', damping: 30, stiffness: 100 }}
-        style={{ pointerEvents: 'none', filter: 'blur(80px)' }} />
-      <motion.div className="absolute top-1/4 right-1/4 w-80 h-80 bg-teal-500/20 rounded-full blur-3xl"
-        style={{ pointerEvents: 'none' }} />
-      <motion.div className="absolute bottom-0 left-1/3 w-96 h-96 bg-emerald-500/15 rounded-full blur-3xl"
-        style={{ pointerEvents: 'none' }} />
+        style={{ pointerEvents: 'none', filter: 'blur(80px)', background: 'rgba(76,175,80,0.12)' }} />
+      <motion.div className="absolute top-1/4 right-1/4 w-80 h-80 rounded-full blur-3xl"
+        style={{ pointerEvents: 'none', background: 'rgba(56,142,60,0.10)' }} />
+      <motion.div className="absolute bottom-0 left-1/3 w-96 h-96 rounded-full blur-3xl"
+        style={{ pointerEvents: 'none', background: 'rgba(46,125,50,0.08)' }} />
       <svg className="absolute inset-0 w-full h-full opacity-5" style={{ pointerEvents: 'none' }}>
         <defs>
           <pattern id="grid-bg" width="60" height="60" patternUnits="userSpaceOnUse">
             <path d="M 60 0 L 0 0 0 60" fill="none" stroke="currentColor" strokeWidth="1" />
           </pattern>
           <linearGradient id="gridGradient-bg" x1="0%" y1="0%" x2="100%" y2="100%">
-            <stop offset="0%" stopColor="#06b6d4" stopOpacity="0.15" />
-            <stop offset="100%" stopColor="#14b8a6" stopOpacity="0.1" />
+            <stop offset="0%" stopColor="#4CAF50" stopOpacity="0.15" />
+            <stop offset="100%" stopColor="#388E3C" stopOpacity="0.10" />
           </linearGradient>
         </defs>
         <rect width="100%" height="100%" fill="url(#gridGradient-bg)" />
-        <rect width="100%" height="100%" fill="url(#grid-bg)" className="text-cyan-400" />
+        <rect width="100%" height="100%" fill="url(#grid-bg)" style={{ color: 'rgba(76,175,80,0.4)' }} />
       </svg>
       <div className="absolute inset-0 pointer-events-none"
         style={{ backgroundImage: 'radial-gradient(circle at center, transparent 30%, rgba(0,0,0,0.5) 100%)' }} />
@@ -77,20 +77,20 @@ const RoundLabel = ({ label, isFinal = false }: { label: string; isFinal?: boole
   <div className="text-center mb-2">
     <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full"
       style={{
-        background: isFinal ? 'rgba(251,191,36,0.08)' : 'rgba(34,211,238,0.06)',
-        border: `1px solid ${isFinal ? 'rgba(251,191,36,0.28)' : 'rgba(34,211,238,0.20)'}`,
-        boxShadow: isFinal ? '0 0 14px rgba(251,191,36,0.14)' : '0 0 12px rgba(34,211,238,0.10)',
+        background: isFinal ? 'rgba(212,167,44,0.08)' : 'rgba(76,175,80,0.06)',
+        border: `1px solid ${isFinal ? 'rgba(212,167,44,0.28)' : 'rgba(76,175,80,0.20)'}`,
+        boxShadow: isFinal ? '0 0 14px rgba(212,167,44,0.14)' : '0 0 12px rgba(76,175,80,0.10)',
       }}>
       <motion.div className="w-1.5 h-1.5 rounded-full flex-shrink-0"
-        style={{ background: isFinal ? '#fbbf24' : '#22d3ee' }}
+        style={{ background: isFinal ? '#D4A72C' : '#4CAF50' }}
         animate={{
           boxShadow: isFinal
             ? ['0 0 4px #fbbf2480', '0 0 10px #fbbf24', '0 0 4px #fbbf2480']
-            : ['0 0 4px #22d3ee80', '0 0 10px #22d3ee', '0 0 4px #22d3ee80'],
+            : ['0 0 4px #4CAF5080', '0 0 10px #4CAF50', '0 0 4px #4CAF5080'],
         }}
         transition={{ duration: 2.2, repeat: Infinity }} />
       <span className="text-[8px] font-black tracking-[0.22em] uppercase whitespace-nowrap"
-        style={{ color: isFinal ? '#fbbf24' : '#22d3ee' }}>
+        style={{ color: isFinal ? '#D4A72C' : '#4CAF50' }}>
         {label}
       </span>
     </div>
@@ -125,34 +125,34 @@ const TeamBadge = ({
     <div className={`${h} flex items-center gap-2 rounded-lg px-2 relative overflow-hidden`}
       style={{
         background: isWinner
-          ? 'linear-gradient(90deg, rgba(34,211,238,0.14), rgba(34,211,238,0.04))'
+          ? 'linear-gradient(90deg, rgba(76,175,80,0.14), rgba(76,175,80,0.04))'
           : 'rgba(255,255,255,0.015)',
-        border: `1px solid ${isWinner ? 'rgba(34,211,238,0.38)' : 'rgba(255,255,255,0.05)'}`,
+        border: `1px solid ${isWinner ? 'rgba(76,175,80,0.38)' : 'rgba(255,255,255,0.05)'}`,
         transition: 'all 0.2s',
       }}>
       {isWinner && (
         <div className="absolute left-0 top-1 bottom-1 w-[2px] rounded-full"
-          style={{ background: '#22d3ee', boxShadow: '0 0 8px rgba(34,211,238,0.90)' }} />
+          style={{ background: '#4CAF50', boxShadow: '0 0 8px rgba(76,175,80,0.90)' }} />
       )}
       <div className={`relative shrink-0 ${flagCls} rounded-full overflow-hidden`}
         style={{
-          border: `1.5px solid ${isWinner ? 'rgba(34,211,238,0.55)' : 'rgba(255,255,255,0.08)'}`,
-          boxShadow: isWinner ? '0 0 8px rgba(34,211,238,0.45)' : 'none',
+          border: `1.5px solid ${isWinner ? 'rgba(76,175,80,0.55)' : 'rgba(255,255,255,0.08)'}`,
+          boxShadow: isWinner ? '0 0 8px rgba(76,175,80,0.45)' : 'none',
         }}>
         <Image src={team.flagUrl} alt={team.name} fill sizes={flagSz} className="object-cover" unoptimized />
       </div>
       <span className={`font-black flex-1 truncate ${textCls}`}
         style={{
-          color: isWinner ? '#22d3ee' : 'rgba(148,163,184,0.78)',
-          textShadow: isWinner ? '0 0 12px rgba(34,211,238,0.65)' : 'none',
+          color: isWinner ? '#4CAF50' : 'rgba(148,163,184,0.78)',
+          textShadow: isWinner ? '0 0 12px rgba(76,175,80,0.65)' : 'none',
         }}>
         {team.shortName}
       </span>
       {score !== undefined && (
         <span className={`font-black shrink-0 tabular-nums ${scoreCls} w-5 text-center`}
           style={{
-            color: isWinner ? '#22d3ee' : 'rgba(71,85,105,0.65)',
-            textShadow: isWinner ? '0 0 10px rgba(34,211,238,0.70)' : 'none',
+            color: isWinner ? '#4CAF50' : 'rgba(71,85,105,0.65)',
+            textShadow: isWinner ? '0 0 10px rgba(76,175,80,0.70)' : 'none',
           }}>
           {score}
         </span>
@@ -169,7 +169,7 @@ const MatchBox = ({
 }) => {
   const homeWon = !!(match.winner?.id === match.homeTeam?.id && match.isPlayed);
   const awayWon = !!(match.winner?.id === match.awayTeam?.id && match.isPlayed);
-  const accent  = isFinal ? '#fbbf24' : '#22d3ee';
+  const accent  = isFinal ? '#D4A72C' : '#4CAF50';
   const w       = size === 'sm' ? 'w-36' : size === 'lg' ? 'w-52' : 'w-44';
 
   return (
@@ -180,12 +180,12 @@ const MatchBox = ({
       className={`relative overflow-hidden rounded-xl ${w}`}
       style={{
         background: isFinal
-          ? 'linear-gradient(145deg, rgba(14,10,2,0.98), rgba(22,16,4,0.96))'
-          : 'linear-gradient(145deg, rgba(4,12,28,0.98), rgba(5,14,34,0.95))',
+          ? 'linear-gradient(145deg, rgba(8,18,4,0.98), rgba(11,27,7,0.96))'
+          : 'linear-gradient(145deg, rgba(6,17,10,0.98), rgba(8,22,13,0.95))',
         border: `1px solid ${accent}${isFinal ? '28' : '18'}`,
         backdropFilter: 'blur(22px)',
         boxShadow: isFinal
-          ? `0 10px 36px rgba(0,0,0,0.72), 0 0 28px rgba(251,191,36,0.12)`
+          ? `0 10px 36px rgba(0,0,0,0.72), 0 0 28px rgba(212,167,44,0.12)`
           : `0 8px 28px rgba(0,0,0,0.56)`,
       }}>
       {/* Top neon accent line */}
@@ -195,7 +195,7 @@ const MatchBox = ({
       {isFinal && (
         <motion.div className="absolute inset-0 pointer-events-none rounded-xl"
           animate={{ opacity: [0, 0.05, 0] }} transition={{ duration: 3, repeat: Infinity }}
-          style={{ background: 'radial-gradient(ellipse at 50% 50%, rgba(251,191,36,0.25), transparent 65%)' }} />
+          style={{ background: 'radial-gradient(ellipse at 50% 50%, rgba(212,167,44,0.25), transparent 65%)' }} />
       )}
       {/* Teams */}
       <div className="p-1.5 flex flex-col gap-1">
@@ -308,7 +308,7 @@ const BracketConnectorsSymmetric = ({ octavosLeftRefs, cuartosLeftRefs, semifina
     <svg ref={svgRef} className="absolute inset-0 w-full h-full pointer-events-none"
       style={{ zIndex: 5, overflow: 'visible' }}>
       <defs>
-        <filter id="bc-glow-cyan" x="-60%" y="-100%" width="220%" height="300%">
+        <filter id="bc-glow-green" x="-60%" y="-100%" width="220%" height="300%">
           <feGaussianBlur in="SourceGraphic" stdDeviation="2.8" result="blur" />
         </filter>
         <filter id="bc-glow-gold" x="-60%" y="-100%" width="220%" height="300%">
@@ -316,7 +316,7 @@ const BracketConnectorsSymmetric = ({ octavosLeftRefs, cuartosLeftRefs, semifina
         </filter>
       </defs>
       {paths.map((path) => {
-        const color   = path.isFinal ? '#fbbf24' : '#22d3ee';
+        const color   = path.isFinal ? '#D4A72C' : '#4CAF50';
         const dashArr = path.isFinal ? '10 6' : '5 4';
         const period  = path.isFinal ? 16 : 9;
         return (

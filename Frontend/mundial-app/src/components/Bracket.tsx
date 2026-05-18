@@ -49,11 +49,11 @@ const TeamBadge = ({
     return (
       <div
         className={`
-          flex items-center justify-center rounded-lg bg-slate-800/40 border border-slate-700/60 backdrop-blur
+          flex items-center justify-center rounded-lg bg-[#102417]/40 border border-white/10 backdrop-blur
           ${size === 'sm' ? 'h-12 px-2' : size === 'lg' ? 'h-16 px-3' : 'h-14 px-3'}
         `}
       >
-        <span className={`text-slate-500 font-bold ${size === 'sm' ? 'text-xs' : 'text-sm'}`}>
+        <span className={`text-orionix-text-muted font-bold ${size === 'sm' ? 'text-xs' : 'text-sm'}`}>
           Pendiente
         </span>
       </div>
@@ -67,14 +67,14 @@ const TeamBadge = ({
       className={`
         flex items-center gap-2 rounded-lg px-3 transition-all border
         ${size === 'sm' ? 'h-12 px-2' : size === 'lg' ? 'h-16 px-3' : 'h-14 px-3'}
-        ${isWinner 
-          ? 'bg-gradient-to-r from-teal-700 to-teal-800 border-teal-500 shadow-lg shadow-teal-500/50' 
-          : 'bg-slate-800/60 border-slate-700'
+        ${isWinner
+          ? 'bg-gradient-to-r from-green-800 to-green-900 border-green-600 shadow-lg shadow-green-600/40'
+          : 'bg-[#102417]/60 border-white/10'
         }
       `}
     >
       {/* Logo */}
-      <div className={`relative flex-shrink-0 rounded overflow-hidden border border-slate-600 ${size === 'sm' ? 'w-6 h-4' : size === 'lg' ? 'w-8 h-6' : 'w-7 h-5'}`}>
+      <div className={`relative flex-shrink-0 rounded overflow-hidden border border-white/15 ${size === 'sm' ? 'w-6 h-4' : size === 'lg' ? 'w-8 h-6' : 'w-7 h-5'}`}>
         <Image
           src={team.flagUrl}
           alt={team.name}
@@ -92,7 +92,7 @@ const TeamBadge = ({
 
       {/* Goles */}
       {score !== undefined && (
-        <span className={`font-black flex-shrink-0 ${size === 'sm' ? 'text-xs w-4' : size === 'lg' ? 'text-xl w-6' : 'text-lg w-5'} text-center ${isWinner ? 'text-cyan-100' : 'text-slate-400'}`}>
+        <span className={`font-black flex-shrink-0 ${size === 'sm' ? 'text-xs w-4' : size === 'lg' ? 'text-xl w-6' : 'text-lg w-5'} text-center ${isWinner ? 'text-green-100' : 'text-orionix-text-muted'}`}>
           {score}
         </span>
       )}
@@ -118,7 +118,7 @@ const MatchBox = ({
       initial={{ opacity: 0, scale: 0.85 }}
       animate={{ opacity: 1, scale: 1 }}
       transition={{ duration: 0.3 }}
-      className={`flex flex-col gap-2 bg-slate-900/60 p-2 rounded-lg backdrop-blur border border-slate-700/50 ${size === 'lg' ? 'w-56 gap-2.5 p-3' : size === 'sm' ? 'w-32 gap-1 p-1.5' : 'w-44'}`}
+      className={`flex flex-col gap-2 bg-[#0B1B12]/60 p-2 rounded-lg backdrop-blur border border-slate-700/50 ${size === 'lg' ? 'w-56 gap-2.5 p-3' : size === 'sm' ? 'w-32 gap-1 p-1.5' : 'w-44'}`}
     >
       <TeamBadge
         team={match.homeTeam}
@@ -127,7 +127,7 @@ const MatchBox = ({
         size={size}
       />
 
-      <div className={`h-px bg-gradient-to-r from-cyan-500/40 via-cyan-400/70 to-cyan-500/40 ${size === 'lg' ? '' : 'my-0.5'}`}></div>
+      <div className={`h-px bg-gradient-to-r from-green-500/40 via-green-400/70 to-green-500/40 ${size === 'lg' ? '' : 'my-0.5'}`}></div>
 
       <TeamBadge
         team={match.awayTeam}
@@ -432,7 +432,7 @@ export const Bracket = ({ data }: BracketProps) => {
       <div className="w-full space-y-8 px-3">
         {/* OCTAVOS */}
         <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.4 }} className="space-y-4">
-          <div className="bg-gradient-to-r from-cyan-500 to-cyan-400 text-white px-4 py-2 rounded-lg font-bold text-center">
+          <div className="bg-gradient-to-r from-green-600 to-green-500 text-white px-4 py-2 rounded-lg font-bold text-center">
             🏆 OCTAVOS
           </div>
           <div className="grid grid-cols-1 gap-3">
@@ -446,12 +446,12 @@ export const Bracket = ({ data }: BracketProps) => {
 
         {/* Separador entre fases */}
         <div className="flex justify-center py-3">
-          <div className="text-cyan-400 text-2xl">↓</div>
+          <div className="text-green-400 text-2xl">↓</div>
         </div>
 
         {/* CUARTOS */}
         <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.4, delay: 0.1 }} className="space-y-4">
-          <div className="bg-gradient-to-r from-cyan-500 to-cyan-400 text-white px-4 py-2 rounded-lg font-bold text-center">
+          <div className="bg-gradient-to-r from-green-600 to-green-500 text-white px-4 py-2 rounded-lg font-bold text-center">
             🏆 CUARTOS
           </div>
           <div className="grid grid-cols-1 gap-3">
@@ -465,12 +465,12 @@ export const Bracket = ({ data }: BracketProps) => {
 
         {/* Separador entre fases */}
         <div className="flex justify-center py-3">
-          <div className="text-cyan-400 text-2xl">↓</div>
+          <div className="text-green-400 text-2xl">↓</div>
         </div>
 
         {/* SEMIFINALES */}
         <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.4, delay: 0.2 }} className="space-y-4">
-          <div className="bg-gradient-to-r from-cyan-500 to-cyan-400 text-white px-4 py-2 rounded-lg font-bold text-center">
+          <div className="bg-gradient-to-r from-green-600 to-green-500 text-white px-4 py-2 rounded-lg font-bold text-center">
             🏆 SEMIFINALES
           </div>
           <div className="grid grid-cols-1 gap-3">
@@ -484,12 +484,12 @@ export const Bracket = ({ data }: BracketProps) => {
 
         {/* Separador entre fases */}
         <div className="flex justify-center py-3">
-          <div className="text-cyan-400 text-2xl">↓</div>
+          <div className="text-green-400 text-2xl">↓</div>
         </div>
 
         {/* FINAL */}
         <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.4, delay: 0.3 }} className="space-y-4">
-          <div className="bg-gradient-to-r from-cyan-500 to-cyan-400 text-white px-4 py-2 rounded-lg font-bold text-center">
+          <div className="bg-gradient-to-r from-green-600 to-green-500 text-white px-4 py-2 rounded-lg font-bold text-center">
             🏆 FINAL
           </div>
           <div className="flex justify-center">
@@ -520,7 +520,7 @@ export const Bracket = ({ data }: BracketProps) => {
             className="flex flex-col"
           >
             <div className="text-center mb-4">
-              <div className="inline-block bg-gradient-to-r from-cyan-500 to-cyan-400 text-white px-4 py-1 rounded-lg font-bold tracking-widest text-xs">
+              <div className="inline-block bg-gradient-to-r from-green-600 to-green-500 text-white px-4 py-1 rounded-lg font-bold tracking-widest text-xs">
                 OCTAVOS
               </div>
             </div>
@@ -549,7 +549,7 @@ export const Bracket = ({ data }: BracketProps) => {
             className="flex flex-col"
           >
             <div className="text-center mb-4">
-              <div className="inline-block bg-gradient-to-r from-cyan-500 to-cyan-400 text-white px-4 py-1 rounded-lg font-bold tracking-widest text-xs">
+              <div className="inline-block bg-gradient-to-r from-green-600 to-green-500 text-white px-4 py-1 rounded-lg font-bold tracking-widest text-xs">
                 CUARTOS
               </div>
             </div>
@@ -578,7 +578,7 @@ export const Bracket = ({ data }: BracketProps) => {
             className="flex flex-col"
           >
             <div className="text-center mb-4">
-              <div className="inline-block bg-gradient-to-r from-cyan-500 to-cyan-400 text-white px-4 py-1 rounded-lg font-bold tracking-widest text-xs">
+              <div className="inline-block bg-gradient-to-r from-green-600 to-green-500 text-white px-4 py-1 rounded-lg font-bold tracking-widest text-xs">
                 SEMIFINALES
               </div>
             </div>

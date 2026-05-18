@@ -6,7 +6,7 @@ import { useRouter, useParams } from 'next/navigation';
 import Link from 'next/link';
 import {
   FiActivity, FiCrosshair, FiAward, FiTrendingUp,
-  FiCalendar, FiLayers, FiBarChart2, FiZap, FiStar,
+  FiCalendar, FiLayers, FiBarChart2, FiChevronRight,
 } from 'react-icons/fi';
 import { useAuth } from '@/contexts/AuthContext';
 import { Header } from '@/components/Navigation';
@@ -20,228 +20,198 @@ import { getTourSteps } from '@/components/Tour/tourSteps';
 const MEDAL = ['🥇', '🥈', '🥉'];
 
 /* ══════════════════════════════════════════
+   DESIGN TOKENS
+══════════════════════════════════════════ */
+const C = {
+  green:      '#4CAF50',
+  greenDark:  '#388E3C',
+  greenDeep:  '#1B5E20',
+  gold:       '#D4AF37',
+  goldLight:  '#E2C760',
+  goldDim:    '#C9A227',
+  bg:         '#050D07',
+  bgCard:     'rgba(5,13,7,0.97)',
+} as const;
+
+/* ══════════════════════════════════════════
    MICRO COMPONENTS
 ══════════════════════════════════════════ */
 
-/* Animated EQ bars — deterministic heights, no Math.random() */
-const EQBars = ({
-  color, count = 9, maxH = 20,
-}: { color: string; count?: number; maxH?: number }) => {
-  const seq = [6, 14, 9, 18, 11, 16, 7, 13, 10, 17, 8, 15, 12];
+/* Glassmorphic icon box */
+const IconBox = ({
+  icon, color, size = 'md',
+}: { icon: React.ReactNode; color: string; size?: 'sm' | 'md' | 'lg' }) => {
+  const dim  = { sm: 'w-9 h-9', md: 'w-11 h-11', lg: 'w-14 h-14' }[size];
+  const px   = { sm: 14, md: 18, lg: 24 }[size];
+  const rnd  = { sm: 'rounded-xl', md: 'rounded-2xl', lg: 'rounded-2xl' }[size];
   return (
-    <div className="flex items-end gap-[2.5px]" style={{ height: maxH }}>
-      {Array.from({ length: count }).map((_, i) => {
-        const h1 = (seq[i % seq.length] / 20) * maxH;
-        const h2 = (seq[(i + 4) % seq.length] / 20) * maxH;
-        const h3 = (seq[(i + 2) % seq.length] / 20) * maxH;
-        return (
-          <motion.div
-            key={i}
-            className="rounded-full"
-            style={{ width: 2.5, background: color, boxShadow: `0 0 4px ${color}` }}
-            animate={{ height: [h1, h2, h3, h2, h1] }}
-            transition={{ duration: 1.3 + i * 0.11, repeat: Infinity, ease: 'easeInOut', delay: i * 0.09 }}
-          />
-        );
-      })}
+    <div className={`relative shrink-0 ${dim} ${rnd} flex items-center justify-center overflow-hidden`}
+      style={{
+        background: `linear-gradient(145deg, ${color}1a 0%, rgba(0,0,0,0.60) 100%)`,
+        border: `1px solid ${color}35`,
+        boxShadow: `inset 0 1px 0 rgba(255,255,255,0.07), 0 4px 16px rgba(0,0,0,0.40)`,
+      }}>
+      <div className={`absolute inset-x-0 top-0 h-px ${rnd}`}
+        style={{ background: `linear-gradient(90deg, transparent, ${color}55, transparent)` }} />
+      <span style={{ color, fontSize: px, filter: `drop-shadow(0 0 6px ${color}90)` }}>{icon}</span>
     </div>
   );
 };
 
-/* SVG Ring / donut chart */
+/* SVG Ring / donut */
 const Ring = ({
-  value, max = 100, size = 68, stroke = 5, color,
+  value, max = 100, size = 72, stroke = 6, color,
   trail = 'rgba(255,255,255,0.05)',
 }: { value: number; max?: number; size?: number; stroke?: number; color: string; trail?: string }) => {
   const r    = (size - stroke * 2) / 2;
   const circ = 2 * Math.PI * r;
-  const pct  = Math.min(1, value / Math.max(max, 1));
-  const off  = circ * (1 - pct);
+  const off  = circ * (1 - Math.min(1, value / Math.max(max, 1)));
   return (
     <svg width={size} height={size} className="rotate-[-90deg]" style={{ overflow: 'visible' }}>
-      <circle cx={size / 2} cy={size / 2} r={r} fill="none" stroke={trail} strokeWidth={stroke} />
+      <circle cx={size/2} cy={size/2} r={r} fill="none" stroke={trail} strokeWidth={stroke} />
       <motion.circle
-        cx={size / 2} cy={size / 2} r={r}
+        cx={size/2} cy={size/2} r={r}
         fill="none" stroke={color} strokeWidth={stroke} strokeLinecap="round"
         strokeDasharray={circ}
         initial={{ strokeDashoffset: circ }}
         animate={{ strokeDashoffset: off }}
-        transition={{ duration: 1.5, delay: 0.4, ease: [0.22, 1, 0.36, 1] }}
-        style={{ filter: `drop-shadow(0 0 6px ${color}) drop-shadow(0 0 14px ${color}55)` }}
+        transition={{ duration: 1.6, delay: 0.5, ease: [0.22, 1, 0.36, 1] }}
+        style={{ filter: `drop-shadow(0 0 8px ${color}) drop-shadow(0 0 18px ${color}44)` }}
       />
     </svg>
   );
 };
 
-/* Horizontal glow progress bar */
-const GlowBar = ({
-  value, max = 100, color, height = 4,
-}: { value: number; max?: number; color: string; height?: number }) => {
-  const pct = Math.min(100, (value / Math.max(max, 1)) * 100);
-  return (
-    <div
-      className="relative w-full rounded-full overflow-hidden"
-      style={{ height, background: 'rgba(255,255,255,0.05)' }}
-    >
-      <motion.div
-        className="h-full rounded-full"
-        style={{ background: `linear-gradient(90deg, ${color}80, ${color})`, boxShadow: `0 0 8px ${color}80` }}
-        initial={{ width: 0 }}
-        animate={{ width: `${pct}%` }}
-        transition={{ duration: 1.2, delay: 0.3, ease: [0.22, 1, 0.36, 1] }}
-      />
-      {/* Shimmer */}
-      <motion.div
-        className="absolute inset-0"
-        style={{ background: 'linear-gradient(90deg, transparent, rgba(255,255,255,0.18), transparent)' }}
-        animate={{ x: ['-100%', '200%'] }}
-        transition={{ duration: 2.2, repeat: Infinity, ease: 'linear', repeatDelay: 1.5 }}
-      />
-    </div>
-  );
-};
+/* Glow progress bar */
+const GlowBar = ({ value, max = 100, color, height = 3 }: {
+  value: number; max?: number; color: string; height?: number;
+}) => (
+  <div className="relative w-full rounded-full overflow-hidden" style={{ height, background: 'rgba(255,255,255,0.05)' }}>
+    <motion.div
+      className="h-full rounded-full"
+      style={{ background: `linear-gradient(90deg, ${color}70, ${color})`, boxShadow: `0 0 8px ${color}55` }}
+      initial={{ width: 0 }}
+      animate={{ width: `${Math.min(100, (value / Math.max(max, 1)) * 100)}%` }}
+      transition={{ duration: 1.3, delay: 0.35, ease: [0.22, 1, 0.36, 1] }}
+    />
+  </div>
+);
 
-/* Premium icon box — glassmorphic container with glow and pulse */
-const PremiumIcon = ({
-  icon, color, glow, bg, size = 'md', delay = 0,
-}: {
-  icon: React.ReactNode; color: string; glow: string; bg: string;
-  size?: 'sm' | 'md' | 'lg'; delay?: number;
-}) => {
-  const dim = { sm: 'w-8 h-8', md: 'w-10 h-10', lg: 'w-14 h-14' }[size];
-  const iconSize = { sm: 14, md: 18, lg: 26 }[size];
-  const radius = { sm: 'rounded-lg', md: 'rounded-xl', lg: 'rounded-2xl' }[size];
-  return (
-    <div className="relative shrink-0">
-      {/* Outer ambient glow */}
-      <div className={`absolute inset-0 ${radius} pointer-events-none`}
-        style={{ background: glow, filter: 'blur(14px)', opacity: 0.28, transform: 'scale(1.15)' }} />
-      {/* Icon container */}
-      <motion.div
-        className={`relative ${dim} ${radius} flex items-center justify-center`}
-        style={{
-          background: `linear-gradient(145deg, ${bg}, rgba(1,4,14,0.85))`,
-          border: `1px solid ${color}40`,
-          boxShadow: `0 0 0 1px rgba(255,255,255,0.03), inset 0 1px 0 rgba(255,255,255,0.06), 0 4px 16px rgba(0,0,0,0.45)`,
-        }}
-        animate={{ boxShadow: [
-          `0 0 0 1px rgba(255,255,255,0.03), 0 0 12px ${color}20`,
-          `0 0 0 1px rgba(255,255,255,0.03), 0 0 26px ${color}45`,
-          `0 0 0 1px rgba(255,255,255,0.03), 0 0 12px ${color}20`,
-        ]}}
-        transition={{ duration: 2.6 + delay, repeat: Infinity, ease: 'easeInOut' }}
-      >
-        {/* Static glass highlight */}
-        <div
-          className={`absolute inset-0 ${radius} pointer-events-none`}
-          style={{ background: 'linear-gradient(130deg, rgba(255,255,255,0.08) 0%, rgba(255,255,255,0.04) 40%, transparent 65%)' }}
-        />
-        {/* Top micro-line */}
-        <div className={`absolute inset-x-0 top-0 h-px ${radius} pointer-events-none`}
-          style={{ background: `linear-gradient(90deg, transparent, ${color}60, transparent)` }} />
-        <span style={{ color, filter: `drop-shadow(0 0 5px ${color}) drop-shadow(0 0 12px ${color}60)`, fontSize: iconSize }}>
-          {icon}
-        </span>
-      </motion.div>
-      {/* Pulse ring */}
-      <motion.div
-        className={`absolute inset-0 ${radius} pointer-events-none`}
-        style={{ border: `1px solid ${color}30` }}
-        animate={{ opacity: [0, 0.9, 0], scale: [1, 1.40, 1] }}
-        transition={{ duration: 3 + delay * 0.5, repeat: Infinity, ease: 'easeOut', delay }}
-      />
-    </div>
-  );
-};
-
-/* KPI chip — top row */
+/* KPI stat chip — scoreboard style */
 const KPIChip = ({
-  icon, value, label, color, glow, bg, delay, bars,
+  icon, value, label, color, glow, bg, delay,
 }: {
   icon: React.ReactNode; value: string | number; label: string;
-  color: string; glow: string; bg: string; delay: number; bars?: number;
+  color: string; glow: string; bg: string; delay: number;
 }) => (
   <motion.div
-    initial={{ opacity: 0, y: -16, scale: 0.92 }}
+    initial={{ opacity: 0, y: -14, scale: 0.93 }}
     animate={{ opacity: 1, y: 0, scale: 1 }}
-    transition={{ duration: 0.55, delay, ease: [0.22, 1, 0.36, 1] }}
+    transition={{ duration: 0.5, delay, ease: [0.22, 1, 0.36, 1] }}
     whileHover={{ y: -4, scale: 1.03 }}
     className="relative overflow-hidden rounded-2xl cursor-default"
     style={{
-      background: `linear-gradient(145deg, ${bg}, rgba(2,8,20,0.95))`,
-      border: `1px solid ${glow}35`,
-      backdropFilter: 'blur(24px)',
-      boxShadow: `0 8px 32px ${glow}18, inset 0 1px 0 rgba(255,255,255,0.04)`,
+      background: `linear-gradient(145deg, ${bg} 0%, rgba(5,10,7,0.97) 100%)`,
+      border: `1px solid ${color}28`,
+      boxShadow: `0 8px 30px rgba(0,0,0,0.45), 0 0 0 1px rgba(255,255,255,0.02), inset 0 1px 0 rgba(255,255,255,0.04)`,
     }}
   >
-    {/* Top neon line */}
-    <div className="absolute inset-x-0 top-0 h-px"
-      style={{ background: `linear-gradient(90deg, transparent, ${glow}, transparent)` }} />
-    {/* Corner glow */}
-    <div className="absolute -top-6 -right-6 w-16 h-16 rounded-full pointer-events-none"
-      style={{ background: `radial-gradient(circle, ${glow}30 0%, transparent 70%)`, filter: 'blur(10px)' }} />
+    {/* Top accent stripe */}
+    <div className="absolute inset-x-0 top-0 h-[2px]"
+      style={{ background: `linear-gradient(90deg, transparent, ${color}cc, transparent)` }} />
+    {/* Corner ambient */}
+    <div className="absolute -top-8 -right-8 w-20 h-20 rounded-full pointer-events-none"
+      style={{ background: `radial-gradient(circle, ${glow}28 0%, transparent 70%)`, filter: 'blur(12px)' }} />
 
     <div className="relative z-10 p-4">
-      <div className="flex items-start justify-between mb-2">
-        <div>
-          <p className="text-[9px] font-black tracking-[0.28em] uppercase mb-1.5"
-            style={{ color: `${glow}80` }}>{label}</p>
-          <motion.p
-            className="text-2xl sm:text-3xl font-black tabular-nums leading-none"
-            style={{ color, textShadow: `0 0 20px ${glow}90, 0 0 40px ${glow}35` }}
-            animate={{ textShadow: [`0 0 18px ${glow}80`, `0 0 32px ${glow}`, `0 0 18px ${glow}80`] }}
-            transition={{ duration: 2.8 + delay, repeat: Infinity, ease: 'easeInOut' }}
-          >
-            {value}
-          </motion.p>
-        </div>
-        <PremiumIcon icon={icon} color={color} glow={glow} bg={bg} size="md" delay={delay} />
+      <div className="flex items-start justify-between mb-3">
+        <p className="text-[8px] font-black tracking-[0.30em] uppercase" style={{ color: `${color}65` }}>{label}</p>
+        <IconBox icon={icon} color={color} size="sm" />
       </div>
-      <EQBars color={glow} count={bars ?? 9} maxH={16} />
+      <p className="text-[2.2rem] font-black tabular-nums leading-none"
+        style={{ color, textShadow: `0 0 24px ${glow}55`, fontVariantNumeric: 'tabular-nums' }}>
+        {value}
+      </p>
     </div>
   </motion.div>
 );
 
-/* Team flag bubble */
+/* Team flag circle */
 const Flag = ({ url, name, size = 'md', glow }: {
   url: string; name: string; size?: 'sm' | 'md' | 'lg'; glow?: string;
 }) => {
-  const sz = { sm: 'w-10 h-10', md: 'w-14 h-14', lg: 'w-16 h-16' }[size];
+  const sz = { sm: 'w-10 h-10', md: 'w-14 h-14', lg: 'w-[72px] h-[72px]' }[size];
   return (
-    <div className="relative">
-      {glow && (
-        <div className="absolute inset-0 rounded-full"
-          style={{ background: glow, filter: 'blur(12px)', transform: 'scale(1.3)' }} />
-      )}
-      <div className={`relative ${sz} rounded-full border-2 border-white/10 shadow-2xl overflow-hidden bg-slate-800 shrink-0`}>
+    <div className="relative shrink-0">
+      {glow && <div className="absolute inset-0 rounded-full pointer-events-none"
+        style={{ background: glow, filter: 'blur(14px)', transform: 'scale(1.45)', opacity: 0.6 }} />}
+      <div className={`relative ${sz} rounded-full border-2 overflow-hidden`}
+        style={{ borderColor: 'rgba(255,255,255,0.12)', background: '#0a1f0e', boxShadow: '0 4px 16px rgba(0,0,0,0.55)' }}>
         <img src={url} alt={name} className="w-full h-full object-cover" />
       </div>
     </div>
   );
 };
 
-/* Ambient floating particle */
-const Particle = ({ index }: { index: number }) => {
-  const x = (index * 137.508) % 100;
-  const size = 1 + (index % 2);
-  const delay = (index * 0.28) % 7;
-  const duration = 9 + (index % 7);
-  const cols: [string, string][] = [
-    ['rgba(34,211,238,0.60)', '0 0 8px rgba(34,211,238,0.75)'],
-    ['rgba(52,211,153,0.50)', '0 0 7px rgba(52,211,153,0.65)'],
-    ['rgba(251,191,36,0.45)', '0 0 7px rgba(251,191,36,0.60)'],
-    ['rgba(56,189,248,0.55)', '0 0 7px rgba(56,189,248,0.65)'],
-  ];
-  const [bg, shadow] = cols[index % cols.length];
+/* Football pitch SVG — quick card decoration */
+const PitchMini = ({ color }: { color: string }) => (
+  <svg viewBox="0 0 64 32" width={64} height={32} style={{ opacity: 0.28 }}>
+    <rect x="1" y="1" width="62" height="30" rx="3" fill="none" stroke={color} strokeWidth="1.2" />
+    <line x1="32" y1="1" x2="32" y2="31" stroke={color} strokeWidth="0.9" />
+    <circle cx="32" cy="16" r="6.5" fill="none" stroke={color} strokeWidth="0.9" />
+    <circle cx="32" cy="16" r="1" fill={color} />
+    <rect x="1" y="9" width="11" height="14" rx="1.5" fill="none" stroke={color} strokeWidth="0.8" />
+    <rect x="52" y="9" width="11" height="14" rx="1.5" fill="none" stroke={color} strokeWidth="0.8" />
+    <rect x="1" y="13" width="5" height="6" rx="1" fill="none" stroke={color} strokeWidth="0.6" />
+    <rect x="58" y="13" width="5" height="6" rx="1" fill="none" stroke={color} strokeWidth="0.6" />
+  </svg>
+);
+
+/* Recent prediction form strip */
+const FormStrip = ({ results, predictions }: {
+  results: any[]; predictions: Record<number, any>;
+}) => {
+  const dots = results.slice(0, 5).map(f => {
+    const pred = predictions[f.id];
+    if (!pred) return null;
+    const { predictedHomeScore: ph, predictedAwayScore: pa } = pred;
+    const { homeScore: rh, awayScore: ra } = f;
+    if (ph === rh && pa === ra) return { type: 'E', color: C.greenDark, bg: `${C.greenDark}22`, label: 'Exacta' };
+    if (Math.sign(ph - pa) === Math.sign(rh - ra)) return { type: 'W', color: C.green, bg: `${C.green}18`, label: 'Correcto' };
+    return { type: 'L', color: '#D32F2F', bg: 'rgba(211,47,47,0.14)', label: 'Fallado' };
+  }).filter(Boolean);
+
+  if (!dots.length) return null;
+
   return (
-    <motion.div
-      className="absolute rounded-full pointer-events-none"
-      style={{ width: size, height: size, left: `${x}%`, bottom: -4, background: bg, boxShadow: shadow }}
-      animate={{ y: [0, -(420 + (index % 200))], x: [0, Math.sin(index * 1.4) * 38], opacity: [0, 0.85, 0.5, 0], scale: [0.4, 1.3, 0.6, 0] }}
-      transition={{ duration, delay, repeat: Infinity, ease: 'easeOut' }}
-    />
+    <div className="flex items-center gap-2 mt-4 pt-3" style={{ borderTop: '1px solid rgba(255,255,255,0.05)' }}>
+      <span className="text-[7.5px] font-black tracking-[0.24em] uppercase" style={{ color: 'rgba(255,255,255,0.22)' }}>FORMA</span>
+      <div className="flex items-center gap-1.5">
+        {dots.map((d, i) => (
+          <div key={i}
+            className="w-[22px] h-[22px] rounded-full flex items-center justify-center text-[8px] font-black"
+            style={{ background: d!.bg, border: `1px solid ${d!.color}45`, color: d!.color }}
+            title={d!.label}>
+            {d!.type}
+          </div>
+        ))}
+      </div>
+    </div>
   );
 };
+
+/* Section header — reusable */
+const SectionHeader = ({
+  label, accent = C.green, right,
+}: { label: string; accent?: string; right?: React.ReactNode }) => (
+  <div className="flex items-center justify-between mb-5">
+    <div className="flex items-center gap-2.5">
+      <div className="w-1 h-5 rounded-full" style={{ background: `linear-gradient(180deg, ${accent}, ${accent}55)` }} />
+      <span className="text-[10px] font-black tracking-[0.26em] uppercase text-orionix-text-muted">{label}</span>
+    </div>
+    {right}
+  </div>
+);
 
 /* ══════════════════════════════════════════
    PAGE
@@ -253,28 +223,24 @@ export default function HomePage() {
   const locale = (params?.locale as string) ?? 'es';
   const { user, loading: authLoading, isAuthenticated } = useAuth();
 
-  const [loading, setLoading]             = useState(true);
-  const [todayUpcoming, setTodayUpcoming] = useState<any[]>([]);
-  const [recentResults, setRecentResults] = useState<any[]>([]);
-  const [myPredictions, setMyPredictions] = useState<Record<number, any>>({});
-  const [topRanking, setTopRanking]       = useState<any[]>([]);
-  const [stats, setStats]               = useState({ predictions: 0, exactas: 0, puntos: 0, rank: 0 });
-  const [countdown, setCountdown]       = useState({ days: 0, hours: 0, minutes: 0, seconds: 0 });
+  const [loading, setLoading]               = useState(true);
+  const [todayUpcoming, setTodayUpcoming]   = useState<any[]>([]);
+  const [recentResults, setRecentResults]   = useState<any[]>([]);
+  const [myPredictions, setMyPredictions]   = useState<Record<number, any>>({});
+  const [topRanking, setTopRanking]         = useState<any[]>([]);
+  const [stats, setStats]                   = useState({ predictions: 0, exactas: 0, puntos: 0, rank: 0 });
+  const [countdown, setCountdown]           = useState({ days: 0, hours: 0, minutes: 0, seconds: 0 });
   const [mundialStarted, setMundialStarted] = useState(false);
 
   useEffect(() => {
     if (!authLoading && !isAuthenticated) router.push('/login');
   }, [isAuthenticated, authLoading, router]);
 
-
   useEffect(() => {
     const target = new Date('2026-06-11T00:00:00');
     const tick = () => {
       const diff = target.getTime() - Date.now();
-      if (diff <= 0) {
-        setMundialStarted(true);
-        return;
-      }
+      if (diff <= 0) { setMundialStarted(true); return; }
       setCountdown({
         days:    Math.floor(diff / 86400000),
         hours:   Math.floor((diff % 86400000) / 3600000),
@@ -313,9 +279,7 @@ export default function HomePage() {
         .filter(f => f.status === 'FINISHED')
         .sort((a, b) => new Date(b.kickoffAt).getTime() - new Date(a.kickoffAt).getTime());
 
-      // Show next 5 upcoming fixtures (across any day)
       const upcomingGroup = upcoming.slice(0, 5);
-      // Show last 5 finished fixtures regardless of day
       const finishedGroup = finished.slice(0, 5);
 
       setTodayUpcoming(upcomingGroup);
@@ -330,14 +294,19 @@ export default function HomePage() {
       setMyPredictions(predMap);
 
       const score = scoreJson?.data;
-      setStats({ predictions: preds.length, exactas: score?.exactScores ?? 0, puntos: score?.totalPoints ?? 0, rank: score?.rankPosition ?? 0 });
+      setStats({
+        predictions: preds.length,
+        exactas:     score?.exactScores ?? 0,
+        puntos:      score?.totalPoints ?? 0,
+        rank:        score?.rankPosition ?? 0,
+      });
 
       if (rankData?.data) {
         setTopRanking((rankData.data as any[]).slice(0, 5).map((s: any, i: number) => ({
-          rank: s.rankPosition ?? i + 1,
-          name: s.fullName || s.username || 'Usuario',
+          rank:   s.rankPosition ?? i + 1,
+          name:   s.fullName || s.username || 'Usuario',
           points: s.totalPoints ?? 0,
-          isMe: Number(s.userId) === userId,
+          isMe:   Number(s.userId) === userId,
         })));
       }
     } catch (e) {
@@ -347,20 +316,7 @@ export default function HomePage() {
     }
   };
 
-  if (authLoading || loading) {
-    return (
-      <div className="flex items-center justify-center h-screen"
-        style={{ background: 'radial-gradient(ellipse at 30% 50%, #060f1e 0%, #030a14 42%, #010408 100%)' }}>
-        <div className="flex flex-col items-center gap-4">
-          <motion.div className="w-12 h-12 rounded-full border-2 border-cyan-400/20 border-t-cyan-400"
-            animate={{ rotate: 360 }} transition={{ duration: 0.9, repeat: Infinity, ease: 'linear' }} />
-          <p className="text-[10px] text-cyan-400/60 tracking-[0.3em] uppercase font-bold">{t('home.loading')}</p>
-        </div>
-      </div>
-    );
-  }
-
-  if (!isAuthenticated) return null;
+  if (!authLoading && !isAuthenticated) return null;
 
   const fmtDate = (d: any) => {
     const dt = new Date(d);
@@ -368,13 +324,16 @@ export default function HomePage() {
       + ' · ' + dt.toLocaleTimeString(undefined, { hour: '2-digit', minute: '2-digit' });
   };
 
+  const fmtTime = (d: any) => new Date(d).toLocaleTimeString(undefined, { hour: '2-digit', minute: '2-digit' });
+  const fmtDay  = (d: any) => new Date(d).toLocaleDateString(undefined, { weekday: 'short', day: 'numeric', month: 'short' });
+
   const getPredResult = (fixture: any, prediction: any) => {
     if (!prediction || !fixture) return null;
     const { predictedHomeScore: ph, predictedAwayScore: pa } = prediction;
     const { homeScore: rh, awayScore: ra } = fixture;
-    if (ph === rh && pa === ra) return { label: t('home.result.exactScore'), pts: '+3 pts', color: 'text-emerald-400', glow: '#34d399', border: 'rgba(52,211,153,0.30)' };
-    if (Math.sign(ph - pa) === Math.sign(rh - ra)) return { label: t('home.result.correct'), pts: '+1 pt', color: 'text-sky-400', glow: '#38bdf8', border: 'rgba(56,189,248,0.30)' };
-    return { label: t('home.result.wrong'), pts: '0 pts', color: 'text-red-400', glow: '#ef4444', border: 'rgba(239,68,68,0.30)' };
+    if (ph === rh && pa === ra) return { label: t('home.result.exactScore'), pts: '+3 pts', color: C.greenDark, glow: C.greenDark, border: 'rgba(56,142,60,0.28)' };
+    if (Math.sign(ph - pa) === Math.sign(rh - ra)) return { label: t('home.result.correct'), pts: '+1 pt', color: C.green, glow: '#66BB6A', border: 'rgba(76,175,80,0.25)' };
+    return { label: t('home.result.wrong'), pts: '0 pts', color: '#D32F2F', glow: '#ef4444', border: 'rgba(211,47,47,0.28)' };
   };
 
   const accuracyPct = stats.predictions > 0
@@ -383,7 +342,6 @@ export default function HomePage() {
 
   const maxRankPts = topRanking.length > 0 ? Math.max(...topRanking.map(r => r.points), 1) : 1;
 
-  /* ── Countdown units ── */
   const cdUnits = [
     { val: String(countdown.days).padStart(2, '0'),    label: t('home.time.days')    },
     { val: String(countdown.hours).padStart(2, '0'),   label: t('home.time.hours')   },
@@ -391,50 +349,45 @@ export default function HomePage() {
     { val: String(countdown.seconds).padStart(2, '0'), label: t('home.time.seconds') },
   ];
 
+  /* ── shared card wrapper style ── */
+  const card = (border: string, extra?: string) => ({
+    background: 'linear-gradient(145deg, rgba(3,10,5,0.98) 0%, rgba(5,14,8,0.97) 100%)',
+    border: `1px solid ${border}`,
+    backdropFilter: 'blur(28px)',
+    boxShadow: '0 20px 60px rgba(0,0,0,0.55), inset 0 1px 0 rgba(255,255,255,0.03)',
+  } as React.CSSProperties);
+
   return (
-    <div className="w-full relative min-h-screen" style={{ background: 'radial-gradient(ellipse at 22% 35%, #060f1e 0%, #030a14 48%, #010508 100%)' }}>
+    <div className="w-full relative min-h-screen" style={{ background: `radial-gradient(ellipse at 20% 30%, #06110A 0%, #09180D 55%, #050D07 100%)` }}>
 
-      {/* ══ BACKGROUND ══ */}
-      <motion.div className="fixed rounded-full pointer-events-none"
-        style={{ width: 700, height: 700, top: -200, left: -150, background: 'radial-gradient(circle, rgba(0,210,185,0.08) 0%, transparent 65%)', filter: 'blur(80px)', zIndex: 0 }}
-        animate={{ scale: [1, 1.18, 1], opacity: [0.5, 0.9, 0.5] }}
-        transition={{ duration: 12, repeat: Infinity }} />
-      <motion.div className="fixed rounded-full pointer-events-none"
-        style={{ width: 550, height: 550, bottom: -100, right: -100, background: 'radial-gradient(circle, rgba(0,140,255,0.07) 0%, transparent 65%)', filter: 'blur(70px)', zIndex: 0 }}
-        animate={{ scale: [1, 1.22, 1], opacity: [0.4, 0.8, 0.4] }}
-        transition={{ duration: 14, repeat: Infinity, delay: 4 }} />
-      <motion.div className="fixed rounded-full pointer-events-none"
-        style={{ width: 350, height: 350, top: '50%', right: '20%', background: 'radial-gradient(circle, rgba(251,191,36,0.05) 0%, transparent 65%)', filter: 'blur(55px)', zIndex: 0 }}
-        animate={{ scale: [1, 1.3, 1], opacity: [0.3, 0.7, 0.3] }}
-        transition={{ duration: 10, repeat: Infinity, delay: 7 }} />
+      {/* ═══ BACKGROUND ═══ */}
+      <div className="fixed rounded-full pointer-events-none" style={{
+        width: 800, height: 800, top: -280, left: -200,
+        background: 'radial-gradient(circle, rgba(56,142,60,0.06) 0%, transparent 60%)',
+        filter: 'blur(80px)', zIndex: 0,
+      }} />
+      <div className="fixed rounded-full pointer-events-none" style={{
+        width: 600, height: 600, bottom: -150, right: -150,
+        background: 'radial-gradient(circle, rgba(212,175,55,0.04) 0%, transparent 60%)',
+        filter: 'blur(80px)', zIndex: 0,
+      }} />
 
-      {/* Tech grid */}
-      <svg className="fixed inset-0 w-full h-full pointer-events-none opacity-[0.028]" style={{ zIndex: 0 }} xmlns="http://www.w3.org/2000/svg">
+      {/* Subtle pitch grid */}
+      <svg className="fixed inset-0 w-full h-full pointer-events-none" style={{ zIndex: 0, opacity: 0.022 }} xmlns="http://www.w3.org/2000/svg">
         <defs>
-          <pattern id="hgrid" width="48" height="48" patternUnits="userSpaceOnUse">
-            <path d="M 48 0 L 0 0 0 48" fill="none" stroke="rgba(34,211,238,1)" strokeWidth="0.4" />
+          <pattern id="pgrid" width="52" height="52" patternUnits="userSpaceOnUse">
+            <path d="M 52 0 L 0 0 0 52" fill="none" stroke="rgba(76,175,80,1)" strokeWidth="0.5" />
           </pattern>
-          <radialGradient id="hgfade" cx="40%" cy="35%" r="60%">
+          <radialGradient id="pfade" cx="45%" cy="35%" r="55%">
             <stop offset="0%" stopColor="white" stopOpacity="1" />
             <stop offset="100%" stopColor="white" stopOpacity="0" />
           </radialGradient>
-          <mask id="hgm"><rect width="100%" height="100%" fill="url(#hgfade)" /></mask>
+          <mask id="pmask"><rect width="100%" height="100%" fill="url(#pfade)" /></mask>
         </defs>
-        <rect width="100%" height="100%" fill="url(#hgrid)" mask="url(#hgm)" />
+        <rect width="100%" height="100%" fill="url(#pgrid)" mask="url(#pmask)" />
       </svg>
 
-      {/* Aurora sweep */}
-      <motion.div className="fixed inset-0 pointer-events-none" style={{ zIndex: 0,
-        background: 'linear-gradient(115deg, transparent 38%, rgba(0,210,185,0.09) 50%, rgba(34,211,238,0.04) 56%, transparent 64%)', opacity: 0 }}
-        animate={{ opacity: [0, 1, 0], x: ['-25%', '25%'] }}
-        transition={{ duration: 2.8, repeat: Infinity, repeatDelay: 9, ease: [0.4, 0, 0.6, 1] }} />
-
-      {/* Particles */}
-      <div className="fixed inset-0 pointer-events-none overflow-hidden" style={{ zIndex: 0 }}>
-        {Array.from({ length: 18 }).map((_, i) => <Particle key={i} index={i} />)}
-      </div>
-
-      {/* ══ HEADER ══ */}
+      {/* ═══ HEADER ═══ */}
       <div className="relative" style={{ zIndex: 10 }}>
         <Header
           title="⚽ Orionix Gol"
@@ -442,214 +395,242 @@ export default function HomePage() {
           centerContent={
             <div className="flex items-center gap-3">
               <div className="relative shrink-0">
-                <div className="w-10 h-10 rounded-full bg-gradient-to-br from-cyan-400 to-emerald-400 flex items-center justify-center text-white font-black text-base shadow-[0_0_18px_rgba(34,211,238,0.45)]">
+                <div className="w-10 h-10 rounded-full flex items-center justify-center text-white font-black text-base"
+                  style={{ background: 'linear-gradient(135deg, #1B5E20, #2E7D32)', boxShadow: '0 0 20px rgba(76,175,80,0.40)' }}>
                   {user?.displayName?.charAt(0).toUpperCase()}
                 </div>
-                <motion.div className="absolute inset-0 rounded-full border border-cyan-300/40"
-                  animate={{ opacity: [0.4, 1, 0.4], scale: [1, 1.08, 1] }}
-                  transition={{ duration: 2.5, repeat: Infinity }} />
+                <div className="absolute inset-0 rounded-full" style={{ border: '1px solid rgba(76,175,80,0.30)' }} />
               </div>
               <div className="hidden sm:block">
-                <p className="text-sm font-black text-transparent bg-clip-text bg-gradient-to-r from-cyan-200 to-emerald-200 leading-none">{user?.displayName}</p>
-                <p className="text-[10px] text-slate-500 leading-none mt-0.5">{user?.email}</p>
+                <p className="text-sm font-black text-transparent bg-clip-text leading-none"
+                  style={{ backgroundImage: `linear-gradient(90deg, #A5D6A7, ${C.green})` }}>
+                  {user?.displayName}
+                </p>
+                <p className="text-[10px] leading-none mt-0.5 text-orionix-text-muted">{user?.email}</p>
               </div>
             </div>
           }
         />
       </div>
 
-      {/* ══ DASHBOARD CONTENT ══ */}
-      <div className="relative z-10 px-3 sm:px-5 py-5 max-w-6xl mx-auto w-full pb-32">
+      {/* ═══ DASHBOARD CONTENT ═══ */}
+      <div className="relative z-10 px-3 sm:px-5 py-4 max-w-6xl mx-auto w-full pb-32">
 
-        {/* ── WELCOME ── */}
+        {/* Loading bar */}
+        {loading && (
+          <div className="w-full h-[2px] rounded-full overflow-hidden mb-3" style={{ background: 'rgba(76,175,80,0.08)' }}>
+            <motion.div
+              className="h-full rounded-full"
+              style={{ background: `linear-gradient(90deg, transparent, ${C.green}, transparent)`, width: '38%' }}
+              animate={{ x: ['-100%', '360%'] }}
+              transition={{ duration: 1.1, repeat: Infinity, ease: 'easeInOut' }}
+            />
+          </div>
+        )}
+
+        {/* ── TOURNAMENT MASTHEAD ── */}
         <motion.div
-          initial={{ opacity: 0, y: -10 }}
+          initial={{ opacity: 0, y: -8 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.5, ease: [0.22, 1, 0.36, 1] }}
+          transition={{ duration: 0.45, ease: [0.22, 1, 0.36, 1] }}
           className="flex items-center justify-between mb-5"
         >
+          {/* Left: user greeting */}
           <div>
             <h1 className="text-xl sm:text-2xl font-black text-white leading-none">
               {t('home.welcome')},{' '}
-              <span className="text-transparent bg-clip-text bg-gradient-to-r from-cyan-300 via-teal-200 to-emerald-300">
+              <span className="text-transparent bg-clip-text"
+                style={{ backgroundImage: `linear-gradient(90deg, #A5D6A7, ${C.green})` }}>
                 {user?.displayName?.split(' ')[0]}
               </span>{' '}
-              <motion.span animate={{ rotate: [0, 14, -8, 14, 0] }} transition={{ duration: 1.5, delay: 0.8, repeat: Infinity, repeatDelay: 4 }}>
+              <motion.span
+                animate={{ rotate: [0, 14, -8, 14, 0] }}
+                transition={{ duration: 1.5, delay: 0.9, repeat: Infinity, repeatDelay: 5 }}>
                 👋
               </motion.span>
             </h1>
-            <p className="text-[11px] text-slate-600 mt-1 tracking-wide">
+            <p className="text-[11px] mt-1 tracking-wide text-orionix-text-muted" suppressHydrationWarning>
               {new Date().toLocaleDateString(undefined, { weekday: 'long', day: 'numeric', month: 'long' })}
             </p>
           </div>
-          <motion.div
-            className="flex items-center gap-1.5 px-3 py-1.5 rounded-full"
-            style={{ border: '1px solid rgba(52,211,153,0.22)', background: 'rgba(52,211,153,0.07)' }}
-          >
-            <motion.span className="w-2 h-2 rounded-full bg-emerald-400"
-              animate={{ opacity: [1, 0.3, 1], scale: [1, 1.3, 1] }}
-              transition={{ duration: 1.6, repeat: Infinity }} />
-            <span className="text-[9px] font-black text-emerald-300 tracking-[0.2em] uppercase">{t('home.live')}</span>
-          </motion.div>
+
+          {/* Right: tournament badge */}
+          <div className="flex flex-col items-end gap-1">
+            <div className="flex items-center gap-2 px-3 py-1.5 rounded-xl"
+              style={{
+                background: `linear-gradient(135deg, rgba(212,175,55,0.12) 0%, rgba(0,0,0,0.50) 100%)`,
+                border: `1px solid rgba(212,175,55,0.28)`,
+              }}>
+              <span className="text-base">🏆</span>
+              <div>
+                <p className="text-[7px] font-black tracking-[0.30em] uppercase leading-none" style={{ color: 'rgba(212,175,55,0.55)' }}>FIFA</p>
+                <p className="text-[10px] font-black tracking-[0.14em] leading-none" style={{ color: C.gold }}>WORLD CUP 2026</p>
+              </div>
+            </div>
+            {/* Host nations */}
+            <div className="hidden sm:flex items-center gap-2">
+              {[
+                { flag: '🇺🇸', code: 'USA', color: '#B31942' },
+                { flag: '🇲🇽', code: 'MEX', color: '#006847' },
+                { flag: '🇨🇦', code: 'CAN', color: '#D80621' },
+              ].map((n, i) => (
+                <React.Fragment key={n.code}>
+                  {i > 0 && <span className="text-white/10 text-xs">·</span>}
+                  <div className="flex items-center gap-1">
+                    <span className="text-[11px] leading-none">{n.flag}</span>
+                    <span className="text-[7px] font-black tracking-[0.18em]" style={{ color: n.color }}>{n.code}</span>
+                  </div>
+                </React.Fragment>
+              ))}
+            </div>
+          </div>
         </motion.div>
 
         {/* ══════════════════════════════════════════════
             ROW 1 — KPI CHIPS
         ══════════════════════════════════════════════ */}
         <div data-tour="stats" className="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-4">
-          <KPIChip icon={<FiActivity />}   value={stats.predictions}              label={t('home.stats.predictions')} color="#22d3ee" glow="#22d3ee" bg="rgba(34,211,238,0.07)"  delay={0.08} bars={9} />
-          <KPIChip icon={<FiCrosshair />}  value={stats.exactas}                  label={t('home.stats.exact')}        color="#34d399" glow="#34d399" bg="rgba(52,211,153,0.07)"  delay={0.14} bars={8} />
-          <KPIChip icon={<FiAward />}      value={stats.puntos}                   label={t('home.stats.points')}       color="#fbbf24" glow="#fbbf24" bg="rgba(251,191,36,0.07)"  delay={0.20} bars={10} />
-          <KPIChip icon={<FiBarChart2 />}  value={stats.rank > 0 ? `#${stats.rank}` : '—'} label={t('home.stats.ranking')} color="#38bdf8" glow="#38bdf8" bg="rgba(56,189,248,0.07)" delay={0.26} bars={7} />
+          <KPIChip icon={<FiActivity />}   value={stats.predictions}                        label={t('home.stats.predictions')} color={C.green}     glow={C.green}     bg="rgba(76,175,80,0.07)"   delay={0.08} />
+          <KPIChip icon={<FiCrosshair />}  value={stats.exactas}                            label={t('home.stats.exact')}        color={C.greenDark} glow={C.greenDark} bg="rgba(56,142,60,0.07)"   delay={0.14} />
+          <KPIChip icon={<FiAward />}      value={stats.puntos}                             label={t('home.stats.points')}       color={C.gold}      glow={C.gold}      bg="rgba(212,175,55,0.07)"  delay={0.20} />
+          <KPIChip icon={<FiBarChart2 />}  value={stats.rank > 0 ? `#${stats.rank}` : '—'} label={t('home.stats.ranking')}     color="#66BB6A"     glow="#66BB6A"     bg="rgba(102,187,106,0.07)" delay={0.26} />
         </div>
 
         {/* ══════════════════════════════════════════════
-            ROW 2 — COUNTDOWN / MUNDIAL STARTED BANNER
+            ROW 2 — COUNTDOWN / MUNDIAL EN CURSO
         ══════════════════════════════════════════════ */}
         <AnimatePresence mode="wait">
           {mundialStarted ? (
-            /* ── MUNDIAL EN CURSO ── */
+            /* ── MUNDIAL EN CURSO banner ── */
             <motion.div
               key="started"
-              initial={{ opacity: 0, scale: 0.95, y: 10 }}
-              animate={{ opacity: 1, scale: 1, y: 0 }}
+              initial={{ opacity: 0, y: 10, scale: 0.97 }}
+              animate={{ opacity: 1, y: 0, scale: 1 }}
               exit={{ opacity: 0 }}
-              transition={{ duration: 0.6, ease: [0.22, 1, 0.36, 1] }}
+              transition={{ duration: 0.5, ease: [0.22, 1, 0.36, 1] }}
               className="relative overflow-hidden rounded-2xl mb-4"
               style={{
-                background: 'linear-gradient(135deg, rgba(16,48,12,0.35) 0%, rgba(4,12,28,0.97) 40%, rgba(4,18,12,0.97) 100%)',
-                border: '1px solid rgba(52,211,153,0.28)',
-                boxShadow: '0 12px 50px rgba(0,0,0,0.50), 0 0 60px rgba(52,211,153,0.08), inset 0 1px 0 rgba(52,211,153,0.08)',
+                background: 'linear-gradient(135deg, rgba(16,48,12,0.40) 0%, rgba(5,13,7,0.97) 50%, rgba(4,18,12,0.97) 100%)',
+                border: '1px solid rgba(56,142,60,0.30)',
+                boxShadow: '0 12px 48px rgba(0,0,0,0.55), inset 0 1px 0 rgba(56,142,60,0.08)',
               }}
             >
-              {/* Top neon stripe — gold → green */}
               <div className="absolute inset-x-0 top-0 h-[3px]"
-                style={{ background: 'linear-gradient(90deg, #fbbf24, #34d399, #22d3ee, #34d399, #fbbf24)' }} />
-              {/* Ambient blobs */}
-              <motion.div className="absolute -top-12 left-8 w-44 h-44 rounded-full pointer-events-none"
-                style={{ background: 'radial-gradient(circle, rgba(52,211,153,0.14) 0%, transparent 70%)', filter: 'blur(32px)' }}
-                animate={{ scale: [1, 1.18, 1], opacity: [0.6, 1, 0.6] }}
-                transition={{ duration: 3.5, repeat: Infinity }} />
-              <motion.div className="absolute -bottom-10 right-6 w-36 h-36 rounded-full pointer-events-none"
-                style={{ background: 'radial-gradient(circle, rgba(251,191,36,0.12) 0%, transparent 70%)', filter: 'blur(26px)' }}
-                animate={{ scale: [1, 1.22, 1], opacity: [0.5, 0.9, 0.5] }}
-                transition={{ duration: 4.2, repeat: Infinity, delay: 1.5 }} />
+                style={{ background: `linear-gradient(90deg, ${C.gold}, ${C.greenDark}, ${C.green}, ${C.greenDark}, ${C.gold})` }} />
 
-              <div className="relative flex flex-col sm:flex-row items-center gap-5 px-5 py-5">
-                {/* Trophy + pulse ring */}
-                <div className="relative shrink-0 flex items-center justify-center">
-                  <motion.div
-                    className="absolute rounded-full"
-                    style={{ width: 56, height: 56, border: '1.5px solid rgba(251,191,36,0.35)' }}
-                    animate={{ scale: [1, 1.55, 1], opacity: [0.8, 0, 0.8] }}
-                    transition={{ duration: 2.2, repeat: Infinity, ease: 'easeOut' }} />
-                  <motion.span
-                    className="text-4xl relative z-10"
-                    animate={{ y: [0, -5, 0], rotate: [-4, 4, -4] }}
-                    transition={{ duration: 2.4, repeat: Infinity, ease: 'easeInOut' }}
-                  >
-                    🏆
-                  </motion.span>
+              <div className="relative flex flex-col sm:flex-row items-center gap-5 px-6 py-5">
+                <div className="w-14 h-14 rounded-2xl flex items-center justify-center shrink-0"
+                  style={{
+                    background: 'linear-gradient(145deg, rgba(212,175,55,0.20), rgba(0,0,0,0.60))',
+                    border: '1px solid rgba(212,175,55,0.28)',
+                  }}>
+                  <span className="text-3xl">🏆</span>
                 </div>
 
-                {/* Center text */}
                 <div className="flex-1 text-center sm:text-left">
-                  <motion.p
-                    className="text-[8px] font-black tracking-[0.38em] uppercase mb-1"
-                    style={{ color: 'rgba(52,211,153,0.60)' }}
-                    animate={{ opacity: [0.5, 1, 0.5] }}
-                    transition={{ duration: 2, repeat: Infinity }}
-                  >
-                    {t('home.ongoing')}
-                  </motion.p>
-                  <motion.p
-                    className="text-xl sm:text-2xl font-black leading-tight"
+                  <p className="text-[8px] font-black tracking-[0.40em] uppercase mb-1.5"
+                    style={{ color: 'rgba(56,142,60,0.55)' }}>{t('home.ongoing')}</p>
+                  <p className="text-xl sm:text-2xl font-black leading-tight"
                     style={{
-                      background: 'linear-gradient(90deg, #fbbf24, #34d399, #22d3ee)',
-                      WebkitBackgroundClip: 'text',
-                      WebkitTextFillColor: 'transparent',
-                      backgroundClip: 'text',
-                    }}
-                    animate={{ backgroundPosition: ['0% 50%', '100% 50%', '0% 50%'] }}
-                    transition={{ duration: 4, repeat: Infinity, ease: 'linear' }}
-                  >
+                      background: `linear-gradient(90deg, ${C.gold}, ${C.greenDark}, ${C.green})`,
+                      WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', backgroundClip: 'text',
+                    }}>
                     {t('home.started')}
-                  </motion.p>
-                  <p className="text-[10px] text-slate-500 mt-1 tracking-wide">
-                    {t('home.registerPredictions')}
                   </p>
+                  <p className="text-[10px] mt-1.5 tracking-wide text-orionix-text-muted">{t('home.registerPredictions')}</p>
                 </div>
 
-                {/* Live pill */}
-                <motion.div
-                  className="shrink-0 flex items-center gap-2 px-3 py-2 rounded-full"
-                  style={{ border: '1px solid rgba(52,211,153,0.30)', background: 'rgba(52,211,153,0.08)' }}
-                  animate={{ boxShadow: ['0 0 8px rgba(52,211,153,0.10)', '0 0 22px rgba(52,211,153,0.30)', '0 0 8px rgba(52,211,153,0.10)'] }}
-                  transition={{ duration: 1.8, repeat: Infinity }}
-                >
-                  <motion.span className="w-2 h-2 rounded-full bg-emerald-400"
-                    animate={{ opacity: [1, 0.25, 1], scale: [1, 1.4, 1] }}
-                    transition={{ duration: 1.2, repeat: Infinity }} />
-                  <span className="text-[9px] font-black text-emerald-300 tracking-[0.22em] uppercase">{t('home.live')}</span>
-                </motion.div>
+                <div className="flex items-center gap-2 px-3 py-2 rounded-full shrink-0"
+                  style={{ border: '1px solid rgba(76,175,80,0.28)', background: 'rgba(76,175,80,0.08)' }}>
+                  <span className="w-2 h-2 rounded-full" style={{ background: C.green, opacity: 0.9 }} />
+                  <span className="text-[9px] font-black tracking-[0.24em] uppercase text-orionix-green-soft">{t('home.live')}</span>
+                </div>
               </div>
             </motion.div>
           ) : (
-            /* ── COUNTDOWN ── */
+            /* ── COUNTDOWN banner ── */
             <motion.div
               key="countdown"
               data-tour="countdown"
-              initial={{ opacity: 0, y: 14 }}
+              initial={{ opacity: 0, y: 12 }}
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0 }}
-              transition={{ duration: 0.55, delay: 0.32, ease: [0.22, 1, 0.36, 1] }}
+              transition={{ duration: 0.55, delay: 0.30, ease: [0.22, 1, 0.36, 1] }}
               className="relative overflow-hidden rounded-2xl mb-4"
               style={{
-                background: 'linear-gradient(135deg, rgba(120,53,15,0.22) 0%, rgba(4,12,28,0.96) 40%, rgba(8,20,44,0.96) 100%)',
-                border: '1px solid rgba(217,119,6,0.20)',
-                boxShadow: '0 12px 40px rgba(0,0,0,0.40), inset 0 1px 0 rgba(251,191,36,0.06)',
+                background: 'linear-gradient(135deg, rgba(80,40,0,0.18) 0%, rgba(5,13,7,0.97) 45%, rgba(8,20,12,0.97) 100%)',
+                border: `1px solid rgba(212,175,55,0.22)`,
+                boxShadow: `0 12px 40px rgba(0,0,0,0.45), inset 0 1px 0 rgba(212,175,55,0.06)`,
               }}
             >
-              <div className="absolute inset-x-0 top-0 h-px" style={{ background: 'linear-gradient(90deg, transparent, rgba(251,191,36,0.65), transparent)' }} />
-              <div className="absolute -top-10 right-10 w-40 h-40 rounded-full pointer-events-none"
-                style={{ background: 'radial-gradient(circle, rgba(251,191,36,0.10) 0%, transparent 70%)', filter: 'blur(30px)' }} />
+              <div className="absolute inset-x-0 top-0 h-px"
+                style={{ background: `linear-gradient(90deg, transparent, ${C.gold}80, transparent)` }} />
+              <div className="absolute -top-12 right-8 w-48 h-48 rounded-full pointer-events-none"
+                style={{ background: `radial-gradient(circle, rgba(212,175,55,0.08) 0%, transparent 70%)`, filter: 'blur(32px)' }} />
 
-              <div className="relative flex flex-col sm:flex-row items-center gap-4 px-5 py-4">
-                <div className="flex items-center gap-2 shrink-0">
-                  <motion.div
-                    className="w-2 h-2 rounded-full bg-amber-400"
-                    animate={{ opacity: [1, 0.3, 1] }} transition={{ duration: 1.3, repeat: Infinity }} />
+              <div className="relative flex flex-col sm:flex-row items-center gap-4 px-5 sm:px-6 py-4 sm:py-5">
+                {/* Label */}
+                <div className="flex items-center gap-2.5 shrink-0">
+                  <div className="w-10 h-10 rounded-xl flex items-center justify-center shrink-0"
+                    style={{
+                      background: 'linear-gradient(145deg, rgba(212,175,55,0.18), rgba(0,0,0,0.55))',
+                      border: `1px solid rgba(212,175,55,0.28)`,
+                    }}>
+                    <span className="text-xl leading-none">⏱</span>
+                  </div>
                   <div>
-                    <p className="text-[8px] font-black tracking-[0.32em] text-amber-400/60 uppercase">{t('home.worldCupStart')}</p>
-                    <p className="text-sm font-black text-amber-200 leading-none">{t('common.worldCup')}</p>
+                    <p className="text-[8px] font-black tracking-[0.34em] uppercase leading-none mb-0.5"
+                      style={{ color: `${C.gold}66` }}>{t('home.worldCupStart')}</p>
+                    <p className="text-sm font-black leading-none" style={{ color: C.goldLight }}>{t('common.worldCup')}</p>
                   </div>
                 </div>
 
-                <div className="hidden sm:block w-px h-8 self-center" style={{ background: 'rgba(251,191,36,0.12)' }} />
+                <div className="hidden sm:block w-px h-10 self-center shrink-0"
+                  style={{ background: `rgba(212,175,55,0.14)` }} />
 
-                <div className="flex items-center gap-2 sm:gap-3 flex-1 justify-center sm:justify-start">
+                {/* Countdown digits */}
+                <div className="flex items-center gap-1 sm:gap-2 flex-1 justify-center sm:justify-start">
                   {cdUnits.map(({ val, label }, i) => (
                     <React.Fragment key={label}>
-                      {i > 0 && <span className="text-amber-600/40 font-black text-lg">:</span>}
-                      <div className="text-center">
+                      {i > 0 && <span className="font-black text-xl sm:text-2xl" style={{ color: `rgba(212,175,55,0.30)` }}>:</span>}
+                      <div className="flex flex-col items-center px-1.5 py-1 rounded-lg min-w-[44px]"
+                        style={{
+                          background: 'rgba(212,175,55,0.05)',
+                          border: `1px solid rgba(212,175,55,0.12)`,
+                        }}>
                         <motion.p
                           key={val}
-                          className="text-2xl sm:text-3xl font-black tabular-nums leading-none text-amber-200"
-                          style={{ textShadow: '0 0 20px rgba(251,191,36,0.70)' }}
-                          initial={{ y: -6, opacity: 0 }}
+                          className="text-2xl sm:text-3xl font-black tabular-nums leading-none"
+                          style={{ color: '#fde68a', textShadow: `0 0 22px rgba(212,175,55,0.60)` }}
+                          initial={{ y: -8, opacity: 0 }}
                           animate={{ y: 0, opacity: 1 }}
-                          transition={{ duration: 0.2 }}
-                        >
-                          {val}
-                        </motion.p>
-                        <p className="text-[7px] font-bold tracking-[0.22em] text-amber-500/50 uppercase mt-0.5">{label}</p>
+                          transition={{ duration: 0.18 }}
+                        >{val}</motion.p>
+                        <p className="text-[6.5px] font-bold tracking-[0.22em] uppercase mt-0.5"
+                          style={{ color: `${C.gold}50` }}>{label}</p>
                       </div>
                     </React.Fragment>
                   ))}
                 </div>
 
-                <div className="hidden md:flex items-end gap-2 shrink-0">
-                  <EQBars color="rgba(251,191,36,0.55)" count={12} maxH={24} />
+                {/* Host nations (right side) */}
+                <div className="hidden md:flex flex-col items-end gap-1.5 shrink-0">
+                  <p className="text-[7px] font-black tracking-[0.30em] uppercase" style={{ color: 'rgba(255,255,255,0.20)' }}>SEDE</p>
+                  <div className="flex items-center gap-2">
+                    {[
+                      { flag: '🇺🇸', code: 'USA', color: '#B31942' },
+                      { flag: '🇲🇽', code: 'MEX', color: '#006847' },
+                      { flag: '🇨🇦', code: 'CAN', color: '#D80621' },
+                    ].map((n, i) => (
+                      <React.Fragment key={n.code}>
+                        {i > 0 && <span className="text-white/10 text-xs">·</span>}
+                        <div className="flex items-center gap-1">
+                          <span className="text-base leading-none">{n.flag}</span>
+                          <span className="text-[7px] font-black tracking-[0.18em]" style={{ color: n.color }}>{n.code}</span>
+                        </div>
+                      </React.Fragment>
+                    ))}
+                  </div>
                 </div>
               </div>
             </motion.div>
@@ -664,212 +645,238 @@ export default function HomePage() {
           {/* ── LEFT COLUMN ── */}
           <div className="flex flex-col gap-4">
 
-            {/* ─── NEXT MATCH ─── */}
+            {/* ─── PRÓXIMOS PARTIDOS ─── */}
             <motion.div
               data-tour="matches"
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.6, delay: 0.38, ease: [0.22, 1, 0.36, 1] }}
+              transition={{ duration: 0.6, delay: 0.36, ease: [0.22, 1, 0.36, 1] }}
               className="relative overflow-hidden rounded-3xl"
-              style={{
-                background: 'linear-gradient(145deg, rgba(2,8,24,0.98), rgba(4,14,36,0.97))',
-                border: '1px solid rgba(34,211,238,0.18)',
-                backdropFilter: 'blur(32px)',
-                boxShadow: '0 24px 64px rgba(0,0,0,0.55), 0 0 0 1px rgba(34,211,238,0.04), inset 0 1px 0 rgba(255,255,255,0.03)',
-              }}
+              style={card('rgba(76,175,80,0.18)')}
             >
-              {/* Top glow line */}
-              <div className="absolute inset-x-0 top-0 h-px" style={{ background: 'linear-gradient(90deg, transparent, rgba(34,211,238,0.70), transparent)' }} />
-              {/* Corner orb */}
-              <div className="absolute -top-16 -left-16 w-48 h-48 rounded-full pointer-events-none"
-                style={{ background: 'radial-gradient(circle, rgba(34,211,238,0.10) 0%, transparent 65%)', filter: 'blur(28px)' }} />
-              <div className="absolute -bottom-12 -right-12 w-36 h-36 rounded-full pointer-events-none"
-                style={{ background: 'radial-gradient(circle, rgba(16,185,129,0.08) 0%, transparent 65%)', filter: 'blur(22px)' }} />
+              <div className="absolute inset-x-0 top-0 h-[2px]"
+                style={{ background: `linear-gradient(90deg, transparent, ${C.green}aa, transparent)` }} />
+              <div className="absolute -top-20 -left-20 w-56 h-56 rounded-full pointer-events-none"
+                style={{ background: `radial-gradient(circle, rgba(76,175,80,0.09) 0%, transparent 65%)`, filter: 'blur(30px)' }} />
 
               <div className="relative p-5 sm:p-6">
-                {/* Header row */}
-                <div className="flex items-center justify-between mb-4">
-                  <div className="flex items-center gap-2">
-                    <div className="w-[3px] h-5 rounded-full" style={{ background: 'linear-gradient(180deg, #22d3ee, #06b6d4)' }} />
-                    <span className="text-[10px] font-black text-slate-400 tracking-[0.24em] uppercase">
-                      {todayUpcoming.length > 1 ? 'PRÓXIMOS PARTIDOS' : t('home.nextMatch')}
-                    </span>
-                    {todayUpcoming.length > 0 && (
-                      <span className="text-[8px] font-black px-1.5 py-0.5 rounded-full"
-                        style={{ background: 'rgba(34,211,238,0.10)', color: '#22d3ee', border: '1px solid rgba(34,211,238,0.20)' }}>
-                        {todayUpcoming.length}
-                      </span>
-                    )}
-                  </div>
-                  <motion.div
-                    className="flex items-center gap-1.5 px-2.5 py-1 rounded-full"
-                    style={{ border: '1px solid rgba(34,211,238,0.28)', background: 'rgba(34,211,238,0.08)' }}
-                    animate={{ boxShadow: ['0 0 6px rgba(34,211,238,0.08)', '0 0 18px rgba(34,211,238,0.25)', '0 0 6px rgba(34,211,238,0.08)'] }}
-                    transition={{ duration: 2, repeat: Infinity }}
-                  >
-                    <motion.span className="w-1.5 h-1.5 rounded-full bg-cyan-400"
-                      animate={{ opacity: [1, 0.2, 1] }} transition={{ duration: 1.3, repeat: Infinity }} />
-                    <span className="text-[8px] font-black text-cyan-300 tracking-widest">{t('home.pending')}</span>
-                  </motion.div>
-                </div>
+                <SectionHeader
+                  label={todayUpcoming.length > 1 ? 'PRÓXIMOS PARTIDOS' : t('home.nextMatch')}
+                  accent={C.green}
+                  right={
+                    <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-full"
+                      style={{ border: `1px solid rgba(76,175,80,0.28)`, background: 'rgba(76,175,80,0.08)' }}>
+                      {todayUpcoming.length > 0 && (
+                        <span className="text-[8px] font-black px-1 py-0.5 rounded-full tabular-nums"
+                          style={{ background: 'rgba(76,175,80,0.15)', color: C.green }}>
+                          {todayUpcoming.length}
+                        </span>
+                      )}
+                      <span className="text-[8px] font-black tracking-widest text-orionix-green-soft">{t('home.pending')}</span>
+                    </div>
+                  }
+                />
 
                 {todayUpcoming.length > 0 ? (
                   todayUpcoming.length === 1 ? (
-                    /* ── Single match: big layout ── */
+                    /* ── Single match — broadcast card ── */
                     <>
-                      <div className="flex items-center justify-around py-4">
-                        <div className="flex flex-col items-center gap-2 flex-1">
-                          <motion.div whileHover={{ scale: 1.08 }}>
-                            <Flag url={todayUpcoming[0].homeTeam.flagUrl} name={todayUpcoming[0].homeTeam.name} size="lg" glow="rgba(34,211,238,0.18)" />
-                          </motion.div>
-                          <div className="text-center">
-                            <p className="text-sm font-black text-slate-200 tracking-wider">{todayUpcoming[0].homeTeam.shortName}</p>
-                            <p className="text-[9px] text-slate-600 font-medium mt-0.5 hidden sm:block truncate max-w-[80px]">{todayUpcoming[0].homeTeam.name}</p>
-                          </div>
+                      {/* Stadium / date bar */}
+                      <div className="flex items-center justify-center gap-2 mb-5">
+                        <div className="h-px flex-1" style={{ background: `linear-gradient(90deg, transparent, rgba(76,175,80,0.20))` }} />
+                        <div className="flex items-center gap-2 px-3 py-1 rounded-full"
+                          style={{ background: 'rgba(76,175,80,0.06)', border: '1px solid rgba(76,175,80,0.18)' }}>
+                          <span className="text-sm">🏟️</span>
+                          <span className="text-[9px] font-semibold text-orionix-text-muted">{fmtDate(todayUpcoming[0].kickoffAt)}</span>
                         </div>
-                        <div className="flex flex-col items-center px-3 flex-shrink-0">
-                          <motion.div className="text-lg font-black tabular-nums"
-                            style={{ color: 'rgba(34,211,238,0.30)', letterSpacing: '0.1em' }}
-                            animate={{ opacity: [0.25, 0.55, 0.25] }} transition={{ duration: 2.2, repeat: Infinity }}>
-                            VS
-                          </motion.div>
-                          <p className="text-[9px] text-slate-600 text-center leading-relaxed mt-1 max-w-[90px]">{fmtDate(todayUpcoming[0].kickoffAt)}</p>
-                          <motion.div className="mt-2 text-lg" animate={{ y: [0, -3, 0] }} transition={{ duration: 2, repeat: Infinity, ease: 'easeInOut' }}>🏟️</motion.div>
-                        </div>
-                        <div className="flex flex-col items-center gap-2 flex-1">
-                          <motion.div whileHover={{ scale: 1.08 }}>
-                            <Flag url={todayUpcoming[0].awayTeam.flagUrl} name={todayUpcoming[0].awayTeam.name} size="lg" glow="rgba(34,211,238,0.18)" />
-                          </motion.div>
-                          <div className="text-center">
-                            <p className="text-sm font-black text-slate-200 tracking-wider">{todayUpcoming[0].awayTeam.shortName}</p>
-                            <p className="text-[9px] text-slate-600 font-medium mt-0.5 hidden sm:block truncate max-w-[80px]">{todayUpcoming[0].awayTeam.name}</p>
-                          </div>
-                        </div>
+                        <div className="h-px flex-1" style={{ background: `linear-gradient(90deg, rgba(76,175,80,0.20), transparent)` }} />
                       </div>
-                      <div className="h-px w-full mb-4" style={{ background: 'linear-gradient(90deg, transparent, rgba(34,211,238,0.12), transparent)' }} />
+
+                      {/* Teams */}
+                      <div className="flex items-center justify-around pb-5">
+                        {/* Home */}
+                        <motion.div className="flex flex-col items-center gap-3 flex-1" whileHover={{ scale: 1.04 }}>
+                          <Flag url={todayUpcoming[0].homeTeam.flagUrl} name={todayUpcoming[0].homeTeam.name} size="lg"
+                            glow={`rgba(76,175,80,0.20)`} />
+                          <div className="text-center">
+                            <p className="text-base font-black tracking-wider uppercase" style={{ color: '#e2e8f0' }}>
+                              {todayUpcoming[0].homeTeam.shortName}
+                            </p>
+                            <p className="text-[9px] font-medium mt-0.5 hidden sm:block truncate max-w-[90px] text-orionix-text-muted">
+                              {todayUpcoming[0].homeTeam.name}
+                            </p>
+                          </div>
+                        </motion.div>
+
+                        {/* VS center */}
+                        <div className="flex flex-col items-center px-4 shrink-0">
+                          <div className="w-16 h-16 rounded-2xl flex items-center justify-center"
+                            style={{
+                              background: 'linear-gradient(145deg, rgba(76,175,80,0.10), rgba(0,0,0,0.60))',
+                              border: `1px solid rgba(76,175,80,0.22)`,
+                              boxShadow: `0 0 30px rgba(76,175,80,0.10)`,
+                            }}>
+                            <span className="text-[13px] font-black tracking-[0.12em]"
+                              style={{ color: 'rgba(76,175,80,0.60)' }}>VS</span>
+                          </div>
+                          <div className="mt-2 px-2 py-0.5 rounded-full text-center"
+                            style={{ background: 'rgba(212,175,55,0.08)', border: '1px solid rgba(212,175,55,0.18)' }}>
+                            <span className="text-[8px] font-black tracking-widest"
+                              style={{ color: `${C.gold}80` }}>GRUPO A</span>
+                          </div>
+                        </div>
+
+                        {/* Away */}
+                        <motion.div className="flex flex-col items-center gap-3 flex-1" whileHover={{ scale: 1.04 }}>
+                          <Flag url={todayUpcoming[0].awayTeam.flagUrl} name={todayUpcoming[0].awayTeam.name} size="lg"
+                            glow={`rgba(76,175,80,0.20)`} />
+                          <div className="text-center">
+                            <p className="text-base font-black tracking-wider uppercase" style={{ color: '#e2e8f0' }}>
+                              {todayUpcoming[0].awayTeam.shortName}
+                            </p>
+                            <p className="text-[9px] font-medium mt-0.5 hidden sm:block truncate max-w-[90px] text-orionix-text-muted">
+                              {todayUpcoming[0].awayTeam.name}
+                            </p>
+                          </div>
+                        </motion.div>
+                      </div>
+
+                      <div className="h-px w-full mb-4"
+                        style={{ background: `linear-gradient(90deg, transparent, rgba(76,175,80,0.15), transparent)` }} />
+
                       <Link href={`/fixtures/${todayUpcoming[0].id}`}>
                         <motion.button
-                          whileHover={{ scale: 1.03, boxShadow: '0 12px 40px rgba(0,210,185,0.50)' }}
+                          whileHover={{ scale: 1.02, boxShadow: '0 14px 44px rgba(56,142,60,0.55)' }}
                           whileTap={{ scale: 0.97 }}
-                          className="relative w-full py-3 rounded-xl text-sm font-black text-white tracking-wide overflow-hidden"
-                          style={{ background: 'linear-gradient(135deg, #0d9488, #06b6d4, #0ea5e9)', boxShadow: '0 6px 24px rgba(0,210,185,0.30)' }}
+                          className="relative w-full py-3.5 rounded-xl font-black text-white tracking-wide overflow-hidden flex items-center justify-center gap-2"
+                          style={{
+                            background: `linear-gradient(135deg, ${C.greenDeep}, #2E7D32, ${C.greenDark})`,
+                            boxShadow: `0 6px 24px rgba(56,142,60,0.32)`,
+                            fontSize: '13px',
+                          }}
                         >
                           <motion.div className="absolute inset-0"
-                            style={{ background: 'linear-gradient(108deg, transparent 28%, rgba(255,255,255,0.20) 50%, transparent 72%)' }}
-                            animate={{ x: ['-120%', '120%'] }}
-                            transition={{ duration: 2.5, repeat: Infinity, ease: 'linear', repeatDelay: 2 }} />
+                            style={{ background: 'linear-gradient(105deg, transparent 30%, rgba(255,255,255,0.18) 50%, transparent 70%)' }}
+                            animate={{ x: ['-130%', '130%'] }}
+                            transition={{ duration: 2.4, repeat: Infinity, ease: 'linear', repeatDelay: 2.5 }} />
+                          <span className="relative">⚡</span>
                           <span className="relative">{t('home.makePrediction')}</span>
+                          <FiChevronRight className="relative" size={14} />
                         </motion.button>
                       </Link>
                     </>
                   ) : (
-                    /* ── Multiple matches: interactive card list ── */
+                    /* ── Multiple matches — list ── */
                     <div className="flex flex-col gap-2">
-                      {todayUpcoming.map((fixture, i) => {
-                        const kickoff = new Date(fixture.kickoffAt);
-                        const dayLabel = kickoff.toLocaleDateString(undefined, { weekday: 'short', day: 'numeric', month: 'short' });
-                        const timeLabel = kickoff.toLocaleTimeString(undefined, { hour: '2-digit', minute: '2-digit' });
-                        return (
-                          <motion.div
-                            key={fixture.id}
-                            initial={{ opacity: 0, x: -10 }}
-                            animate={{ opacity: 1, x: 0 }}
-                            transition={{ delay: 0.08 * i, duration: 0.35, ease: [0.22, 1, 0.36, 1] }}
-                            whileHover={{ scale: 1.01 }}
-                            className="relative overflow-hidden rounded-xl group"
-                            style={{
-                              background: 'rgba(34,211,238,0.03)',
-                              border: '1px solid rgba(34,211,238,0.10)',
-                              transition: 'border-color 0.2s ease, background 0.2s ease',
-                            }}
-                          >
-                            {/* Hover top accent line */}
-                            <div className="absolute inset-x-0 top-0 h-px opacity-0 group-hover:opacity-100 transition-opacity duration-200"
-                              style={{ background: 'linear-gradient(90deg, transparent, rgba(34,211,238,0.60), transparent)' }} />
-                            <div className="flex items-center gap-2 px-3 py-2.5">
-                              {/* Home team */}
-                              <div className="flex items-center gap-2 flex-1 min-w-0">
-                                <Flag url={fixture.homeTeam.flagUrl} name={fixture.homeTeam.name} size="sm" />
-                                <span className="text-xs font-black text-slate-200 tracking-wide truncate">{fixture.homeTeam.shortName}</span>
-                              </div>
-                              {/* Date + Time — bigger & prominent */}
-                              <div className="text-center shrink-0 px-2 min-w-[72px]">
-                                <span className="text-[10px] font-semibold text-slate-500 block leading-none whitespace-nowrap mb-0.5">{dayLabel}</span>
-                                <span className="text-sm font-black text-cyan-400 whitespace-nowrap leading-none" style={{ textShadow: '0 0 10px rgba(34,211,238,0.45)' }}>{timeLabel}</span>
-                              </div>
-                              {/* Away team */}
-                              <div className="flex items-center gap-2 flex-1 min-w-0 justify-end">
-                                <span className="text-xs font-black text-slate-200 tracking-wide truncate">{fixture.awayTeam.shortName}</span>
-                                <Flag url={fixture.awayTeam.flagUrl} name={fixture.awayTeam.name} size="sm" />
-                              </div>
-                              {/* CTA — clear text button */}
-                              <Link href={`/fixtures/${fixture.id}`} className="shrink-0 ml-1">
-                                <motion.button
-                                  whileHover={{ scale: 1.06, boxShadow: '0 4px 20px rgba(0,210,185,0.50)' }}
-                                  whileTap={{ scale: 0.93 }}
-                                  className="flex items-center gap-1 px-2.5 py-1.5 rounded-lg font-black text-white whitespace-nowrap"
-                                  style={{ background: 'linear-gradient(135deg, #0d9488, #06b6d4)', boxShadow: '0 3px 10px rgba(0,210,185,0.25)', fontSize: '10px' }}
-                                >
-                                  ⚡ Porra
-                                </motion.button>
-                              </Link>
+                      {todayUpcoming.map((fixture, i) => (
+                        <motion.div
+                          key={fixture.id}
+                          initial={{ opacity: 0, x: -12 }}
+                          animate={{ opacity: 1, x: 0 }}
+                          transition={{ delay: 0.08 * i, duration: 0.35, ease: [0.22, 1, 0.36, 1] }}
+                          whileHover={{ scale: 1.01 }}
+                          className="relative overflow-hidden rounded-2xl group"
+                          style={{
+                            background: 'rgba(76,175,80,0.03)',
+                            border: '1px solid rgba(76,175,80,0.10)',
+                            transition: 'border-color 0.2s ease',
+                          }}
+                        >
+                          <div className="absolute inset-x-0 top-0 h-px opacity-0 group-hover:opacity-100 transition-opacity"
+                            style={{ background: `linear-gradient(90deg, transparent, ${C.green}80, transparent)` }} />
+
+                          <div className="flex items-center gap-2 px-3 py-3">
+                            <div className="flex items-center gap-2 flex-1 min-w-0">
+                              <Flag url={fixture.homeTeam.flagUrl} name={fixture.homeTeam.name} size="sm" />
+                              <span className="text-xs font-black tracking-wide truncate uppercase text-orionix-text-secondary">
+                                {fixture.homeTeam.shortName}
+                              </span>
                             </div>
-                          </motion.div>
-                        );
-                      })}
+
+                            <div className="text-center shrink-0 px-2 min-w-[76px]">
+                              <span className="text-[9.5px] font-semibold block leading-none mb-0.5 text-orionix-text-muted">
+                                {fmtDay(fixture.kickoffAt)}
+                              </span>
+                              <span className="text-sm font-black leading-none"
+                                style={{ color: C.green, textShadow: `0 0 12px rgba(76,175,80,0.40)` }}>
+                                {fmtTime(fixture.kickoffAt)}
+                              </span>
+                            </div>
+
+                            <div className="flex items-center gap-2 flex-1 min-w-0 justify-end">
+                              <span className="text-xs font-black tracking-wide truncate uppercase text-orionix-text-secondary">
+                                {fixture.awayTeam.shortName}
+                              </span>
+                              <Flag url={fixture.awayTeam.flagUrl} name={fixture.awayTeam.name} size="sm" />
+                            </div>
+
+                            <Link href={`/fixtures/${fixture.id}`} className="shrink-0 ml-2">
+                              <motion.button
+                                whileHover={{ scale: 1.07, boxShadow: `0 4px 20px rgba(56,142,60,0.50)` }}
+                                whileTap={{ scale: 0.93 }}
+                                className="flex items-center gap-1 px-3 py-1.5 rounded-xl font-black text-white whitespace-nowrap"
+                                style={{
+                                  background: `linear-gradient(135deg, ${C.greenDeep}, #2E7D32)`,
+                                  boxShadow: '0 3px 12px rgba(56,142,60,0.28)',
+                                  fontSize: '10px',
+                                }}
+                              >
+                                ⚡ Porra
+                              </motion.button>
+                            </Link>
+                          </div>
+                        </motion.div>
+                      ))}
                     </div>
                   )
                 ) : (
-                  <div className="flex flex-col items-center justify-center py-10">
-                    <motion.span className="text-5xl" animate={{ y: [0, -6, 0] }} transition={{ duration: 2.5, repeat: Infinity }}>⚽</motion.span>
-                    <p className="text-sm font-semibold text-slate-600 mt-3">{t('home.noFixtures')}</p>
+                  <div className="flex flex-col items-center justify-center py-12">
+                    <div className="w-16 h-16 rounded-2xl flex items-center justify-center mb-3"
+                      style={{ background: 'rgba(76,175,80,0.07)', border: '1px solid rgba(76,175,80,0.15)' }}>
+                      <span className="text-3xl">⚽</span>
+                    </div>
+                    <p className="text-sm font-semibold text-orionix-text-muted">{t('home.noFixtures')}</p>
                   </div>
                 )}
               </div>
             </motion.div>
 
-            {/* ─── LAST RESULT ─── */}
+            {/* ─── ÚLTIMOS RESULTADOS ─── */}
             <motion.div
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.6, delay: 0.46, ease: [0.22, 1, 0.36, 1] }}
+              transition={{ duration: 0.6, delay: 0.44, ease: [0.22, 1, 0.36, 1] }}
               className="relative overflow-hidden rounded-3xl"
-              style={{
-                background: 'linear-gradient(145deg, rgba(2,8,22,0.98), rgba(14,9,2,0.97))',
-                border: '1px solid rgba(251,191,36,0.16)',
-                backdropFilter: 'blur(32px)',
-                boxShadow: '0 24px 64px rgba(0,0,0,0.55), inset 0 1px 0 rgba(255,255,255,0.02)',
-              }}
+              style={card('rgba(212,175,55,0.18)')}
             >
-              <div className="absolute inset-x-0 top-0 h-px" style={{ background: 'linear-gradient(90deg, transparent, rgba(251,191,36,0.70), transparent)' }} />
-              <div className="absolute -top-16 -right-16 w-44 h-44 rounded-full pointer-events-none"
-                style={{ background: 'radial-gradient(circle, rgba(251,191,36,0.10) 0%, transparent 65%)', filter: 'blur(28px)' }} />
+              <div className="absolute inset-x-0 top-0 h-[2px]"
+                style={{ background: `linear-gradient(90deg, transparent, ${C.gold}aa, transparent)` }} />
+              <div className="absolute -top-20 -right-20 w-52 h-52 rounded-full pointer-events-none"
+                style={{ background: `radial-gradient(circle, rgba(212,175,55,0.09) 0%, transparent 65%)`, filter: 'blur(30px)' }} />
 
               <div className="relative p-5 sm:p-6">
-                <div className="flex items-center justify-between mb-4">
-                  <div className="flex items-center gap-2">
-                    <div className="w-[3px] h-5 rounded-full" style={{ background: 'linear-gradient(180deg, #fbbf24, #f59e0b)' }} />
-                    <span className="text-[10px] font-black text-slate-400 tracking-[0.24em] uppercase">
-                      {recentResults.length > 1 ? 'ÚLTIMOS RESULTADOS' : t('home.lastResult')}
-                    </span>
-                    {recentResults.length > 1 && (
-                      <span className="text-[8px] font-black px-1.5 py-0.5 rounded-full"
-                        style={{ background: 'rgba(251,191,36,0.10)', color: '#fbbf24', border: '1px solid rgba(251,191,36,0.20)' }}>
-                        {recentResults.length}
-                      </span>
-                    )}
-                  </div>
-                  <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-full"
-                    style={{ border: '1px solid rgba(251,191,36,0.28)', background: 'rgba(251,191,36,0.08)' }}>
-                    <span className="text-[8px] font-black text-amber-300 tracking-widest">{t('home.finished')}</span>
-                  </div>
-                </div>
+                <SectionHeader
+                  label={recentResults.length > 1 ? 'ÚLTIMOS RESULTADOS' : t('home.lastResult')}
+                  accent={C.gold}
+                  right={
+                    <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-full"
+                      style={{ border: `1px solid rgba(212,175,55,0.28)`, background: 'rgba(212,175,55,0.08)' }}>
+                      {recentResults.length > 1 && (
+                        <span className="text-[8px] font-black tabular-nums px-1 py-0.5 rounded-full"
+                          style={{ background: 'rgba(212,175,55,0.15)', color: C.gold }}>
+                          {recentResults.length}
+                        </span>
+                      )}
+                      <span className="text-[8px] font-black tracking-widest text-amber-300">{t('home.finished')}</span>
+                    </div>
+                  }
+                />
 
                 {recentResults.length > 0 ? (
                   <div className="flex flex-col gap-3">
                     {recentResults.map((fixture, i) => {
                       const pred = myPredictions[fixture.id];
-                      const pr = getPredResult(fixture, pred);
+                      const pr   = getPredResult(fixture, pred);
                       const isSingle = recentResults.length === 1;
                       return (
                         <motion.div
@@ -877,69 +884,86 @@ export default function HomePage() {
                           initial={{ opacity: 0, y: 10 }}
                           animate={{ opacity: 1, y: 0 }}
                           transition={{ delay: 0.1 * i, duration: 0.4, ease: [0.22, 1, 0.36, 1] }}
-                          className="relative overflow-hidden rounded-xl"
+                          className="relative overflow-hidden rounded-2xl"
                           style={{
                             background: pr
-                              ? `linear-gradient(135deg, ${pr.glow}06 0%, rgba(0,0,0,0) 100%)`
+                              ? `linear-gradient(135deg, ${pr.glow}07 0%, rgba(0,0,0,0) 100%)`
                               : 'rgba(255,255,255,0.02)',
                             border: `1px solid ${pr?.border ?? 'rgba(255,255,255,0.06)'}`,
                           }}
                         >
-                          {pr && <div className="absolute inset-x-0 top-0 h-px"
-                            style={{ background: `linear-gradient(90deg, transparent, ${pr.glow}70, transparent)` }} />}
-                          <div className="p-3">
-                            {/* Score row */}
-                            <div className="flex items-center justify-around py-1">
+                          {pr && (
+                            <div className="absolute inset-x-0 top-0 h-px"
+                              style={{ background: `linear-gradient(90deg, transparent, ${pr.glow}70, transparent)` }} />
+                          )}
+
+                          <div className="p-3.5">
+                            {/* Teams + Score */}
+                            <div className="flex items-center justify-around">
                               <div className="flex flex-col items-center gap-1.5 flex-1">
-                                <motion.div whileHover={{ scale: 1.1 }}>
-                                  <Flag url={fixture.homeTeam.flagUrl} name={fixture.homeTeam.name} size={isSingle ? 'md' : 'sm'} glow="rgba(251,191,36,0.18)" />
-                                </motion.div>
-                                <p className={`font-black text-slate-300 tracking-wider ${isSingle ? 'text-sm' : 'text-xs'}`}>{fixture.homeTeam.shortName}</p>
+                                <Flag url={fixture.homeTeam.flagUrl} name={fixture.homeTeam.name}
+                                  size={isSingle ? 'md' : 'sm'} glow="rgba(212,175,55,0.16)" />
+                                <p className={`font-black tracking-wider uppercase ${isSingle ? 'text-sm' : 'text-xs'}`}
+                                  style={{ color: '#e2e8f0' }}>
+                                  {fixture.homeTeam.shortName}
+                                </p>
                               </div>
-                              <div className="text-center px-2 flex-shrink-0">
-                                <motion.p
-                                  className="font-black text-white leading-none"
-                                  style={{ fontSize: isSingle ? 'clamp(2rem,5vw,3rem)' : '1.5rem', textShadow: '0 0 30px rgba(255,255,255,0.18)' }}
-                                  initial={{ scale: 0.6, opacity: 0 }}
+
+                              {/* Scoreline */}
+                              <div className="text-center px-3 flex-shrink-0">
+                                <motion.div
+                                  className="flex items-center gap-2"
+                                  initial={{ scale: 0.5, opacity: 0 }}
                                   animate={{ scale: 1, opacity: 1 }}
                                   transition={{ delay: 0.45 + i * 0.1, duration: 0.4, ease: [0.22, 1, 0.36, 1] }}
                                 >
-                                  {fixture.homeScore}<span className="mx-2 text-slate-700">–</span>{fixture.awayScore}
-                                </motion.p>
-                                <p className="text-[9px] text-slate-600 mt-1">{fmtDate(fixture.kickoffAt)}</p>
-                              </div>
-                              <div className="flex flex-col items-center gap-1.5 flex-1">
-                                <motion.div whileHover={{ scale: 1.1 }}>
-                                  <Flag url={fixture.awayTeam.flagUrl} name={fixture.awayTeam.name} size={isSingle ? 'md' : 'sm'} glow="rgba(251,191,36,0.18)" />
+                                  <span className="font-black tabular-nums leading-none"
+                                    style={{ fontSize: isSingle ? 'clamp(2.2rem,6vw,3.2rem)' : '1.7rem', color: '#f1f5f9', textShadow: '0 0 28px rgba(255,255,255,0.14)' }}>
+                                    {fixture.homeScore}
+                                  </span>
+                                  <span style={{ color: 'rgba(255,255,255,0.16)', fontSize: isSingle ? '1.4rem' : '1rem', fontWeight: 900 }}>–</span>
+                                  <span className="font-black tabular-nums leading-none"
+                                    style={{ fontSize: isSingle ? 'clamp(2.2rem,6vw,3.2rem)' : '1.7rem', color: '#f1f5f9', textShadow: '0 0 28px rgba(255,255,255,0.14)' }}>
+                                    {fixture.awayScore}
+                                  </span>
                                 </motion.div>
-                                <p className={`font-black text-slate-300 tracking-wider ${isSingle ? 'text-sm' : 'text-xs'}`}>{fixture.awayTeam.shortName}</p>
+                                <p className="text-[8.5px] mt-1 text-orionix-text-muted">{fmtDate(fixture.kickoffAt)}</p>
+                              </div>
+
+                              <div className="flex flex-col items-center gap-1.5 flex-1">
+                                <Flag url={fixture.awayTeam.flagUrl} name={fixture.awayTeam.name}
+                                  size={isSingle ? 'md' : 'sm'} glow="rgba(212,175,55,0.16)" />
+                                <p className={`font-black tracking-wider uppercase ${isSingle ? 'text-sm' : 'text-xs'}`}
+                                  style={{ color: '#e2e8f0' }}>
+                                  {fixture.awayTeam.shortName}
+                                </p>
                               </div>
                             </div>
-                            {/* Goleadores — dos columnas local | visitante */}
+
+                            {/* Scorers */}
                             {fixture.scorers && fixture.scorers.length > 0 && (
-                              <div className="mt-2 pt-2" style={{ borderTop: '1px solid rgba(255,255,255,0.05)' }}>
-                                <div className="flex gap-2">
-                                  {/* Local — cyan */}
+                              <div className="mt-2.5 pt-2.5" style={{ borderTop: '1px solid rgba(255,255,255,0.06)' }}>
+                                <div className="flex gap-3">
                                   <div className="flex-1 space-y-0.5 min-w-0">
                                     {fixture.scorers
                                       .filter((s: any) => s.teamId === fixture.homeTeam.id)
                                       .map((s: any) => (
-                                        <div key={s.id} className="flex items-center gap-1 text-[9px]" style={{ color: '#22d3ee' }}>
+                                        <div key={s.id} className="flex items-center gap-1 text-[9px]"
+                                          style={{ color: '#6ee7b7' }}>
                                           <span className="shrink-0">⚽</span>
                                           <span className="font-bold truncate">{s.playerName}</span>
-                                          {s.minute && <span className="shrink-0 opacity-50">{s.minute}&apos;</span>}
+                                          {s.minute && <span className="shrink-0 opacity-45">{s.minute}&apos;</span>}
                                         </div>
                                     ))}
                                   </div>
-                                  {/* Divisor */}
                                   <div className="w-px shrink-0" style={{ background: 'rgba(255,255,255,0.07)' }} />
-                                  {/* Visitante — rose */}
                                   <div className="flex-1 space-y-0.5 min-w-0">
                                     {fixture.scorers
                                       .filter((s: any) => s.teamId === fixture.awayTeam.id)
                                       .map((s: any) => (
-                                        <div key={s.id} className="flex items-center justify-end gap-1 text-[9px]" style={{ color: '#fb7185' }}>
-                                          {s.minute && <span className="shrink-0 opacity-50">{s.minute}&apos;</span>}
+                                        <div key={s.id} className="flex items-center justify-end gap-1 text-[9px]"
+                                          style={{ color: C.goldLight }}>
+                                          {s.minute && <span className="shrink-0 opacity-45">{s.minute}&apos;</span>}
                                           <span className="font-bold truncate">{s.playerName}</span>
                                           <span className="shrink-0">⚽</span>
                                         </div>
@@ -948,25 +972,42 @@ export default function HomePage() {
                                 </div>
                               </div>
                             )}
-                            {/* Prediction row */}
+
+                            {/* Prediction */}
                             {pred ? (
-                              <div className="flex items-center justify-between mt-2 pt-2 border-t" style={{ borderColor: 'rgba(255,255,255,0.05)' }}>
+                              <div className="flex items-center justify-between mt-2.5 pt-2.5 border-t"
+                                style={{ borderColor: 'rgba(255,255,255,0.05)' }}>
                                 <div>
-                                  <p className="text-[8px] text-slate-600 uppercase tracking-[0.22em]">{t('home.myPrediction')}</p>
-                                  <p className={`font-black text-slate-200 mt-0.5 ${isSingle ? 'text-2xl' : 'text-lg'}`}>
-                                    {pred.predictedHomeScore}<span className="text-slate-700 mx-1 text-sm">–</span>{pred.predictedAwayScore}
+                                  <p className="text-[7.5px] uppercase tracking-[0.24em] text-orionix-text-muted mb-0.5">
+                                    {t('home.myPrediction')}
+                                  </p>
+                                  <p className={`font-black text-orionix-text-secondary ${isSingle ? 'text-2xl' : 'text-lg'}`}>
+                                    {pred.predictedHomeScore}
+                                    <span className="mx-1 text-sm" style={{ color: 'rgba(255,255,255,0.18)' }}>–</span>
+                                    {pred.predictedAwayScore}
                                   </p>
                                 </div>
                                 {pr && (
                                   <div className="text-right">
-                                    <p className={`text-[10px] font-bold ${pr.color}`}>{pr.label}</p>
-                                    <p className={`font-black mt-0.5 ${pr.color} ${isSingle ? 'text-xl' : 'text-lg'}`}
-                                      style={{ textShadow: `0 0 18px ${pr.glow}` }}>{pr.pts}</p>
+                                    <div className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg mb-0.5"
+                                      style={{
+                                        background: `${pr.color}14`,
+                                        border: `1px solid ${pr.color}30`,
+                                      }}>
+                                      <span className="text-[9px] font-black" style={{ color: pr.color }}>{pr.label}</span>
+                                    </div>
+                                    <p className={`font-black mt-0.5 ${isSingle ? 'text-xl' : 'text-base'}`}
+                                      style={{ color: pr.color, textShadow: `0 0 18px ${pr.glow}` }}>
+                                      {pr.pts}
+                                    </p>
                                   </div>
                                 )}
                               </div>
                             ) : (
-                              <p className="text-center text-[10px] text-slate-700 mt-2 pt-2 border-t" style={{ borderColor: 'rgba(255,255,255,0.05)' }}>{t('home.noPrediction')}</p>
+                              <p className="text-center text-[9.5px] mt-2.5 pt-2.5 border-t"
+                                style={{ borderColor: 'rgba(255,255,255,0.05)', color: '#6E7C72' }}>
+                                {t('home.noPrediction')}
+                              </p>
                             )}
                           </div>
                         </motion.div>
@@ -974,9 +1015,12 @@ export default function HomePage() {
                     })}
                   </div>
                 ) : (
-                  <div className="flex flex-col items-center justify-center py-10">
-                    <motion.span className="text-5xl" animate={{ y: [0, -6, 0] }} transition={{ duration: 2.8, repeat: Infinity }}>🏆</motion.span>
-                    <p className="text-sm font-semibold text-slate-600 mt-3">{t('home.noResults')}</p>
+                  <div className="flex flex-col items-center justify-center py-12">
+                    <div className="w-16 h-16 rounded-2xl flex items-center justify-center mb-3"
+                      style={{ background: 'rgba(212,175,55,0.07)', border: '1px solid rgba(212,175,55,0.15)' }}>
+                      <span className="text-3xl">🏆</span>
+                    </div>
+                    <p className="text-sm font-semibold text-orionix-text-muted">{t('home.noResults')}</p>
                   </div>
                 )}
               </div>
@@ -986,51 +1030,46 @@ export default function HomePage() {
           {/* ── RIGHT COLUMN ── */}
           <div className="flex flex-col gap-4">
 
-            {/* ─── ACCURACY RING + STATS ─── */}
+            {/* ─── RENDIMIENTO ─── */}
             <motion.div
               initial={{ opacity: 0, x: 20 }}
               animate={{ opacity: 1, x: 0 }}
-              transition={{ duration: 0.55, delay: 0.44, ease: [0.22, 1, 0.36, 1] }}
+              transition={{ duration: 0.55, delay: 0.42, ease: [0.22, 1, 0.36, 1] }}
               className="relative overflow-hidden rounded-3xl"
-              style={{
-                background: 'linear-gradient(145deg, rgba(2,8,22,0.98), rgba(4,14,30,0.97))',
-                border: '1px solid rgba(52,211,153,0.15)',
-                backdropFilter: 'blur(28px)',
-                boxShadow: '0 24px 60px rgba(0,0,0,0.50), inset 0 1px 0 rgba(255,255,255,0.02)',
-              }}
+              style={card('rgba(56,142,60,0.18)')}
             >
-              <div className="absolute inset-x-0 top-0 h-px" style={{ background: 'linear-gradient(90deg, transparent, rgba(52,211,153,0.55), transparent)' }} />
-              <div className="absolute -top-14 -left-14 w-40 h-40 rounded-full pointer-events-none"
-                style={{ background: 'radial-gradient(circle, rgba(52,211,153,0.08) 0%, transparent 65%)', filter: 'blur(24px)' }} />
+              <div className="absolute inset-x-0 top-0 h-[2px]"
+                style={{ background: `linear-gradient(90deg, transparent, ${C.greenDark}bb, transparent)` }} />
+              <div className="absolute -top-16 -left-16 w-44 h-44 rounded-full pointer-events-none"
+                style={{ background: `radial-gradient(circle, rgba(56,142,60,0.09) 0%, transparent 65%)`, filter: 'blur(26px)' }} />
 
               <div className="relative p-5">
-                <div className="flex items-center gap-2 mb-4">
-                  <div className="w-[3px] h-5 rounded-full" style={{ background: 'linear-gradient(180deg, #34d399, #10b981)' }} />
-                  <span className="text-[10px] font-black text-slate-400 tracking-[0.24em] uppercase">{t('home.performance')}</span>
-                </div>
+                <SectionHeader label={t('home.performance')} accent={C.greenDark} />
 
-                {/* Ring + stats side by side */}
-                <div className="flex items-center gap-4">
-                  <div className="relative flex-shrink-0">
-                    <Ring value={accuracyPct} max={100} size={80} stroke={6} color="#34d399" />
-                    <div className="absolute inset-0 flex flex-col items-center justify-center">
-                      <p className="text-lg font-black text-emerald-300 leading-none tabular-nums"
-                        style={{ textShadow: '0 0 14px rgba(52,211,153,0.8)' }}>
+                {/* Ring + bars */}
+                <div className="flex items-center gap-5">
+                  {/* Ring */}
+                  <div className="relative shrink-0">
+                    <Ring value={accuracyPct} max={100} size={84} stroke={7} color={C.greenDark} />
+                    <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none">
+                      <p className="text-xl font-black leading-none tabular-nums"
+                        style={{ color: '#A5D6A7', textShadow: `0 0 16px rgba(56,142,60,0.80)` }}>
                         {accuracyPct}%
                       </p>
-                      <p className="text-[6px] font-black text-slate-600 tracking-[0.2em] uppercase mt-0.5">Exactas</p>
+                      <p className="text-[6px] font-black tracking-[0.2em] uppercase mt-0.5 text-orionix-text-muted">Exactas</p>
                     </div>
                   </div>
 
-                  <div className="flex-1 space-y-2.5">
+                  {/* Stat bars */}
+                  <div className="flex-1 space-y-3">
                     {[
-                      { label: t('home.stats.predictionsLabel'), value: stats.predictions, max: 64,   color: '#22d3ee' },
-                      { label: t('home.stats.exact'),            value: stats.exactas,     max: stats.predictions || 1, color: '#34d399' },
-                      { label: t('home.stats.points'),           value: stats.puntos,      max: 192,  color: '#fbbf24' },
+                      { label: t('home.stats.predictionsLabel'), value: stats.predictions, max: 64,  color: C.green    },
+                      { label: t('home.stats.exact'),            value: stats.exactas,     max: stats.predictions || 1, color: C.greenDark },
+                      { label: t('home.stats.points'),           value: stats.puntos,      max: 192, color: C.gold     },
                     ].map(({ label, value, max, color }) => (
                       <div key={label}>
-                        <div className="flex justify-between items-center mb-1">
-                          <span className="text-[9px] font-bold text-slate-500 tracking-wide">{label}</span>
+                        <div className="flex justify-between items-baseline mb-1">
+                          <span className="text-[8.5px] font-bold tracking-wide text-orionix-text-muted">{label}</span>
                           <span className="text-[10px] font-black tabular-nums" style={{ color }}>{value}</span>
                         </div>
                         <GlowBar value={value} max={max} color={color} height={3} />
@@ -1038,94 +1077,106 @@ export default function HomePage() {
                     ))}
                   </div>
                 </div>
+
+                {/* Form strip */}
+                <FormStrip results={recentResults} predictions={myPredictions} />
               </div>
             </motion.div>
 
-            {/* ─── RANKING CARD ─── */}
+            {/* ─── CLASIFICACIÓN GLOBAL ─── */}
             <motion.div
               data-tour="ranking"
               initial={{ opacity: 0, x: 20 }}
               animate={{ opacity: 1, x: 0 }}
-              transition={{ duration: 0.55, delay: 0.52, ease: [0.22, 1, 0.36, 1] }}
+              transition={{ duration: 0.55, delay: 0.50, ease: [0.22, 1, 0.36, 1] }}
               className="relative overflow-hidden rounded-3xl flex-1"
-              style={{
-                background: 'linear-gradient(145deg, rgba(2,8,22,0.98), rgba(6,12,30,0.97))',
-                border: '1px solid rgba(255,255,255,0.06)',
-                backdropFilter: 'blur(28px)',
-                boxShadow: '0 24px 60px rgba(0,0,0,0.50), inset 0 1px 0 rgba(255,255,255,0.02)',
-              }}
+              style={card('rgba(255,255,255,0.07)')}
             >
-              <div className="absolute inset-x-0 top-0 h-px" style={{ background: 'linear-gradient(90deg, transparent, rgba(251,191,36,0.40), transparent)' }} />
-              <div className="absolute -top-12 -right-12 w-36 h-36 rounded-full pointer-events-none"
-                style={{ background: 'radial-gradient(circle, rgba(251,191,36,0.07) 0%, transparent 65%)', filter: 'blur(22px)' }} />
+              <div className="absolute inset-x-0 top-0 h-[2px]"
+                style={{ background: `linear-gradient(90deg, transparent, ${C.gold}60, transparent)` }} />
+              <div className="absolute -top-14 -right-14 w-40 h-40 rounded-full pointer-events-none"
+                style={{ background: `radial-gradient(circle, rgba(212,175,55,0.08) 0%, transparent 65%)`, filter: 'blur(24px)' }} />
 
               <div className="relative p-5">
-                <div className="flex items-center justify-between mb-4">
-                  <div className="flex items-center gap-2">
-                    <div className="w-[3px] h-5 rounded-full" style={{ background: 'linear-gradient(180deg, #fbbf24, #f59e0b)' }} />
-                    <span className="text-[10px] font-black text-slate-400 tracking-[0.24em] uppercase">{t('home.globalRanking')}</span>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <EQBars color="rgba(251,191,36,0.45)" count={6} maxH={14} />
-                    {stats.rank > 0 && (
-                      <ShareButton
-                        title="⚽ Orionix Gol — Mundial 2026"
-                        text={`🏆 Estoy en el puesto #${stats.rank} del ranking con ${stats.puntos} pts en el Mundial 2026\n¿Puedes superarme? 👇`}
-                        label="Compartir"
-                        size="sm"
-                        variant="icon"
-                      />
-                    )}
-                  </div>
-                </div>
+                <SectionHeader
+                  label={t('home.globalRanking')}
+                  accent={C.gold}
+                  right={
+                    <div className="flex items-center gap-2">
+                      <span className="text-sm" style={{ filter: `drop-shadow(0 0 5px ${C.gold}55)` }}>⚽</span>
+                      {stats.rank > 0 && (
+                        <ShareButton
+                          title="⚽ Orionix Gol — Mundial 2026"
+                          text={`🏆 Estoy en el puesto #${stats.rank} del ranking con ${stats.puntos} pts en el Mundial 2026\n¿Puedes superarme? 👇`}
+                          label="Compartir"
+                          size="sm"
+                          variant="icon"
+                        />
+                      )}
+                    </div>
+                  }
+                />
 
-                <div className="space-y-1.5">
+                <div className="space-y-2">
                   {topRanking.length > 0 ? topRanking.map((p, i) => {
-                    const rankColors = ['#fbbf24', '#94a3b8', '#cd7c3e'];
-                    const barColor = p.isMe ? '#22d3ee' : (rankColors[i] ?? 'rgba(255,255,255,0.20)');
+                    const rankColors = [C.gold, '#94a3b8', '#cd7c3e'];
+                    const barColor   = p.isMe ? C.green : (rankColors[i] ?? 'rgba(255,255,255,0.18)');
                     return (
                       <motion.div
                         key={i}
-                        initial={{ opacity: 0, x: 12 }}
+                        initial={{ opacity: 0, x: 14 }}
                         animate={{ opacity: 1, x: 0 }}
-                        transition={{ delay: 0.58 + i * 0.06 }}
-                        className="relative overflow-hidden rounded-xl p-2.5"
+                        transition={{ delay: 0.56 + i * 0.06 }}
+                        className="relative overflow-hidden rounded-2xl p-2.5"
                         style={{
-                          background: p.isMe ? 'rgba(34,211,238,0.07)' : 'rgba(255,255,255,0.02)',
-                          border: p.isMe ? '1px solid rgba(34,211,238,0.22)' : '1px solid rgba(255,255,255,0.04)',
+                          background: p.isMe ? 'rgba(76,175,80,0.08)' : (i < 3 ? 'rgba(255,255,255,0.03)' : 'rgba(255,255,255,0.02)'),
+                          border: p.isMe
+                            ? '1px solid rgba(76,175,80,0.24)'
+                            : (i < 3 ? `1px solid ${barColor}20` : '1px solid rgba(255,255,255,0.04)'),
                         }}
                       >
                         {p.isMe && (
-                          <div className="absolute inset-x-0 top-0 h-px" style={{ background: 'linear-gradient(90deg, transparent, rgba(34,211,238,0.50), transparent)' }} />
+                          <div className="absolute inset-x-0 top-0 h-px"
+                            style={{ background: `linear-gradient(90deg, transparent, ${C.green}60, transparent)` }} />
                         )}
+                        {i < 3 && !p.isMe && (
+                          <div className="absolute inset-x-0 top-0 h-px"
+                            style={{ background: `linear-gradient(90deg, transparent, ${barColor}40, transparent)` }} />
+                        )}
+
                         <div className="flex items-center gap-2 mb-1.5">
-                          <span className="text-sm w-5 text-center shrink-0">
-                            {i < 3 ? MEDAL[i] : <span className="text-slate-600 text-xs font-bold">{p.rank}</span>}
+                          <span className="text-sm w-5 text-center shrink-0 leading-none">
+                            {i < 3 ? MEDAL[i] : (
+                              <span className="text-[10px] font-black text-orionix-text-muted">{p.rank}</span>
+                            )}
                           </span>
-                          <span className={`flex-1 text-xs font-bold truncate ${p.isMe ? 'text-cyan-300' : 'text-slate-400'}`}>
-                            {p.isMe && <span className="text-cyan-500 mr-0.5">›</span>}{p.name}
+                          <span className="flex-1 text-xs font-bold truncate"
+                            style={{ color: p.isMe ? '#A5D6A7' : '#C0CBD4' }}>
+                            {p.isMe && <span className="mr-0.5" style={{ color: C.green }}>›</span>}
+                            {p.name}
                           </span>
-                          <span
-                            className="text-xs font-black tabular-nums shrink-0"
-                            style={{ color: barColor, textShadow: `0 0 10px ${barColor}80` }}
-                          >
+                          <span className="text-xs font-black tabular-nums shrink-0"
+                            style={{ color: barColor, textShadow: `0 0 10px ${barColor}80` }}>
                             {p.points}
                           </span>
+                          <span className="text-[7.5px] text-orionix-text-muted shrink-0">pts</span>
                         </div>
                         <GlowBar value={p.points} max={maxRankPts} color={barColor} height={2} />
                       </motion.div>
                     );
                   }) : (
-                    <p className="text-slate-700 text-xs text-center py-6">{t('home.noRankingData')}</p>
+                    <p className="text-xs text-center py-8 text-orionix-text-muted">{t('home.noRankingData')}</p>
                   )}
                 </div>
 
                 <Link href="/predictions">
                   <motion.button
-                    whileHover={{ borderColor: 'rgba(34,211,238,0.35)', color: '#22d3ee' }}
-                    className="w-full mt-4 py-2 rounded-xl text-[9px] font-black text-slate-600 border border-white/[0.05] transition-all tracking-[0.22em] uppercase"
+                    whileHover={{ borderColor: 'rgba(76,175,80,0.35)', color: C.green }}
+                    className="w-full mt-4 py-2.5 rounded-xl text-[9px] font-black border transition-all tracking-[0.24em] uppercase text-orionix-text-muted flex items-center justify-center gap-1"
+                    style={{ borderColor: 'rgba(255,255,255,0.06)' }}
                   >
                     {t('home.viewFullRanking')}
+                    <FiChevronRight size={11} />
                   </motion.button>
                 </Link>
               </div>
@@ -1139,48 +1190,85 @@ export default function HomePage() {
         <motion.div
           initial={{ opacity: 0, y: 16 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.55, delay: 0.62, ease: [0.22, 1, 0.36, 1] }}
+          transition={{ duration: 0.5, delay: 0.60, ease: [0.22, 1, 0.36, 1] }}
           className="grid grid-cols-3 gap-3 mt-4"
         >
           {[
-            { href: '/fixtures',    icon: <FiCalendar />,   label: t('home.quick.matches'),     accent: '#22d3ee', glow: 'rgba(34,211,238,0.45)', bg: 'rgba(34,211,238,0.07)',  eqColor: 'rgba(34,211,238,0.50)' },
-            { href: '/groups',      icon: <FiLayers />,     label: t('home.quick.groups'),       accent: '#34d399', glow: 'rgba(52,211,153,0.45)', bg: 'rgba(52,211,153,0.07)',  eqColor: 'rgba(52,211,153,0.50)' },
-            { href: '/predictions', icon: <FiTrendingUp />, label: t('home.quick.predictions'),  accent: '#fbbf24', glow: 'rgba(251,191,36,0.45)', bg: 'rgba(251,191,36,0.07)', eqColor: 'rgba(251,191,36,0.50)' },
-          ].map(({ href, icon, label, accent, glow, bg, eqColor }, i) => (
+            {
+              href: '/fixtures',
+              icon: <FiCalendar />,
+              label: t('home.quick.matches'),
+              desc: 'Consulta el calendario',
+              accent: C.green,
+              glow:   'rgba(76,175,80,0.45)',
+              bg:     'rgba(76,175,80,0.07)',
+            },
+            {
+              href: '/groups',
+              icon: <FiLayers />,
+              label: t('home.quick.groups'),
+              desc: 'Fase de grupos',
+              accent: C.greenDark,
+              glow:   'rgba(56,142,60,0.45)',
+              bg:     'rgba(56,142,60,0.07)',
+            },
+            {
+              href: '/predictions',
+              icon: <FiTrendingUp />,
+              label: t('home.quick.predictions'),
+              desc: 'Tus porras',
+              accent: C.gold,
+              glow:   'rgba(212,175,55,0.45)',
+              bg:     'rgba(212,175,55,0.07)',
+            },
+          ].map(({ href, icon, label, desc, accent, glow, bg }, i) => (
             <Link key={href} href={href}>
               <motion.div
-                whileHover={{ scale: 1.04, y: -4, boxShadow: `0 16px 40px ${glow}30` }}
+                whileHover={{ scale: 1.04, y: -5, boxShadow: `0 20px 48px ${glow}35` }}
                 whileTap={{ scale: 0.96 }}
-                className="relative overflow-hidden rounded-2xl p-4 text-center cursor-pointer"
+                className="relative overflow-hidden rounded-2xl p-4 text-center cursor-pointer h-full"
                 style={{
-                  background: `linear-gradient(145deg, ${bg}, rgba(2,8,20,0.95))`,
-                  border: `1px solid ${accent}25`,
-                  backdropFilter: 'blur(20px)',
-                  boxShadow: `inset 0 1px 0 rgba(255,255,255,0.03), 0 8px 24px rgba(0,0,0,0.35)`,
+                  background: `linear-gradient(155deg, ${bg} 0%, rgba(3,9,5,0.97) 100%)`,
+                  border: `1px solid ${accent}22`,
+                  boxShadow: `inset 0 1px 0 rgba(255,255,255,0.04), 0 8px 28px rgba(0,0,0,0.40)`,
                 }}
-                initial={{ opacity: 0, y: 12 }}
+                initial={{ opacity: 0, y: 14 }}
                 animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: 0.66 + i * 0.07 }}
+                transition={{ delay: 0.64 + i * 0.08 }}
               >
-                <div className="absolute inset-x-0 top-0 h-px" style={{ background: `linear-gradient(90deg, transparent, ${glow}, transparent)` }} />
-                <div className="absolute -top-4 -right-4 w-16 h-16 rounded-full pointer-events-none"
-                  style={{ background: `radial-gradient(circle, ${accent}20 0%, transparent 70%)`, filter: 'blur(10px)' }} />
+                {/* Top accent */}
+                <div className="absolute inset-x-0 top-0 h-[2px]"
+                  style={{ background: `linear-gradient(90deg, transparent, ${accent}90, transparent)` }} />
+                {/* Corner ambient */}
+                <div className="absolute -top-5 -right-5 w-18 h-18 rounded-full pointer-events-none"
+                  style={{ background: `radial-gradient(circle, ${accent}22 0%, transparent 70%)`, filter: 'blur(12px)', width: 64, height: 64 }} />
 
-                <div className="flex justify-center mb-3">
-                  <PremiumIcon icon={icon} color={accent} glow={glow} bg={bg} size="lg" delay={i * 0.3} />
+                {/* Icon */}
+                <div className="flex justify-center mb-3.5">
+                  <IconBox icon={icon} color={accent} size="lg" />
                 </div>
-                <p className="text-[10px] font-black tracking-[0.20em] uppercase mb-2"
-                  style={{ color: accent, textShadow: `0 0 10px ${glow}` }}>
+
+                {/* Label */}
+                <p className="text-[10.5px] font-black tracking-[0.18em] uppercase mb-1"
+                  style={{ color: accent, textShadow: `0 0 12px ${glow}` }}>
                   {label}
                 </p>
+
+                {/* Description */}
+                <p className="text-[8px] font-medium mb-3" style={{ color: 'rgba(255,255,255,0.25)' }}>
+                  {desc}
+                </p>
+
+                {/* Football pitch mini */}
                 <div className="flex justify-center">
-                  <EQBars color={eqColor} count={7} maxH={12} />
+                  <PitchMini color={accent} />
                 </div>
               </motion.div>
             </Link>
           ))}
         </motion.div>
       </div>
+
       <TourButton steps={getTourSteps(locale, 'dashboard')} />
     </div>
   );

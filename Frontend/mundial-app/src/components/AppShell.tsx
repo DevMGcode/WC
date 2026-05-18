@@ -31,7 +31,7 @@ export function AppShell({ children }: { children: ReactNode }) {
         paddingLeft: pl,
         transition: 'padding-left 0.38s cubic-bezier(0.22,1,0.36,1)',
         minHeight: '100dvh',
-        backgroundColor: isAuth ? undefined : '#010508',
+        backgroundColor: isAuth ? undefined : '#06110A',
       }}
     >
       {children}
