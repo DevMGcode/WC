@@ -110,14 +110,14 @@ export default function JoinLeaguePage() {
                     transition={{ duration: 3, repeat: Infinity, ease: 'easeOut' }}
                   />
                 </div>
-                <p className="text-xs text-slate-500 leading-relaxed">
+                <p className="text-xs text-orionix-text-muted leading-relaxed">
                   Pídele el código a quien creó la liga para poder unirte
                 </p>
               </div>
 
               <form onSubmit={handleSubmit} className="space-y-4">
                 <div>
-                  <label className="block text-[9px] font-black tracking-[0.28em] uppercase text-slate-500 mb-2">
+                  <label className="block text-[9px] font-black tracking-[0.28em] uppercase text-orionix-text-muted mb-2">
                     Código de Liga
                   </label>
                   <input
@@ -161,7 +161,7 @@ export default function JoinLeaguePage() {
                     type="button"
                     onClick={() => router.back()}
                     whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.97 }}
-                    className="flex-1 py-3 rounded-xl text-sm font-black text-slate-400 flex items-center justify-center gap-2"
+                    className="flex-1 py-3 rounded-xl text-sm font-black text-orionix-text-secondary flex items-center justify-center gap-2"
                     style={{ border: '1px solid rgba(255,255,255,0.07)', background: 'rgba(255,255,255,0.02)' }}
                   >
                     <FiArrowLeft size={13} /> Cancelar
@@ -171,7 +171,7 @@ export default function JoinLeaguePage() {
                     disabled={loading || !!success}
                     whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.97 }}
                     className="flex-1 py-3 rounded-xl text-sm font-black text-white flex items-center justify-center gap-2 disabled:opacity-50"
-                    style={{ background: 'linear-gradient(135deg, #0d9488, #06b6d4)', boxShadow: '0 6px 24px rgba(0,210,185,0.30)' }}
+                    style={{ background: 'linear-gradient(135deg, #1B5E20, #388E3C)', boxShadow: '0 6px 24px rgba(76,175,80,0.30)' }}
                   >
                     <FiLogIn size={13} />
                     {loading ? 'Uniéndote…' : 'Unirse'}
@@ -208,7 +208,7 @@ export default function JoinLeaguePage() {
               </div>
               <div>
                 <p className="text-[9px] font-black tracking-[0.25em] uppercase text-amber-400/60 mb-1">Tip</p>
-                <p className="text-xs text-slate-500 leading-relaxed">
+                <p className="text-xs text-orionix-text-muted leading-relaxed">
                   El código de una liga está disponible en la página de detalle de la liga.
                   Comparte el código con tus amigos para que se unan.
                 </p>

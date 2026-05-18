@@ -253,8 +253,8 @@ export default function OnboardingPage() {
                 key={i}
                 className="h-1 rounded-full flex-1"
                 style={{
-                  background: done ? 'linear-gradient(90deg, #22d3ee, #06b6d4)' : 'rgba(255,255,255,0.07)',
-                  boxShadow: done ? '0 0 8px rgba(34,211,238,0.50)' : 'none',
+                  background: done ? 'linear-gradient(90deg, #4CAF50, #388E3C)' : 'rgba(255,255,255,0.07)',
+                  boxShadow: done ? '0 0 8px rgba(76,175,80,0.50)' : 'none',
                   transition: 'box-shadow 0.4s, background 0.4s',
                 }}
                 animate={{ opacity: 1 }}
@@ -262,7 +262,7 @@ export default function OnboardingPage() {
               />
             );
           })}
-          <span className="text-[9px] font-black text-slate-600 tracking-widest shrink-0 ml-1">
+          <span className="text-[9px] font-black text-orionix-text-muted tracking-widest shrink-0 ml-1">
             {step}/{TOTAL_STEPS}
           </span>
         </motion.div>
@@ -285,7 +285,7 @@ export default function OnboardingPage() {
                     {/* Step label */}
                     <div className="flex items-center gap-2 mb-5">
                       <div className="w-[3px] h-5 rounded-full" style={{ background: 'linear-gradient(180deg, #22d3ee, #10b981)' }} />
-                      <span className="text-[10px] font-black text-slate-400 tracking-[0.24em] uppercase">Bienvenido</span>
+                      <span className="text-[10px] font-black text-orionix-text-secondary tracking-[0.24em] uppercase">Bienvenido</span>
                       <div className="flex-1" />
                       <EQBars color="rgba(34,211,238,0.40)" count={5} maxH={12} />
                     </div>
@@ -293,7 +293,7 @@ export default function OnboardingPage() {
                     <h1 className="text-2xl font-black text-white mb-1 leading-tight">
                       {language === 'es' ? 'Selecciona tu idioma' : 'Select your language'}
                     </h1>
-                    <p className="text-[11px] text-slate-500 mb-6 tracking-wide">
+                    <p className="text-[11px] text-orionix-text-muted mb-6 tracking-wide">
                       {language === 'es' ? 'Puedes cambiarlo después en tu perfil' : 'You can change it later in your profile'}
                     </p>
 
@@ -352,7 +352,7 @@ export default function OnboardingPage() {
                   <div className="p-6">
                     <div className="flex items-center gap-2 mb-5">
                       <div className="w-[3px] h-5 rounded-full" style={{ background: 'linear-gradient(180deg, #f472b6, #ec4899)' }} />
-                      <span className="text-[10px] font-black text-slate-400 tracking-[0.24em] uppercase">
+                      <span className="text-[10px] font-black text-orionix-text-secondary tracking-[0.24em] uppercase">
                         {language === 'es' ? 'Equipos' : 'Teams'}
                       </span>
                       {selectedTeams.length > 0 && (
@@ -369,7 +369,7 @@ export default function OnboardingPage() {
                     <h2 className="text-xl font-black text-white mb-1">
                       {language === 'es' ? 'Equipos favoritos' : 'Favorite teams'}
                     </h2>
-                    <p className="text-[11px] text-slate-500 mb-5 tracking-wide">
+                    <p className="text-[11px] text-orionix-text-muted mb-5 tracking-wide">
                       {language === 'es'
                         ? 'Selecciona los equipos que quieres seguir'
                         : 'Select the teams you want to follow'}
@@ -441,7 +441,7 @@ export default function OnboardingPage() {
                   <div className="p-6">
                     <div className="flex items-center gap-2 mb-5">
                       <div className="w-[3px] h-5 rounded-full" style={{ background: 'linear-gradient(180deg, #fbbf24, #f59e0b)' }} />
-                      <span className="text-[10px] font-black text-slate-400 tracking-[0.24em] uppercase">
+                      <span className="text-[10px] font-black text-orionix-text-secondary tracking-[0.24em] uppercase">
                         {language === 'es' ? 'Notificaciones' : 'Notifications'}
                       </span>
                       <div className="flex-1" />
@@ -451,7 +451,7 @@ export default function OnboardingPage() {
                     <h2 className="text-xl font-black text-white mb-1">
                       {language === 'es' ? 'Mantente al día' : 'Stay up to date'}
                     </h2>
-                    <p className="text-[11px] text-slate-500 mb-5 tracking-wide">
+                    <p className="text-[11px] text-orionix-text-muted mb-5 tracking-wide">
                       {language === 'es'
                         ? 'Configura qué alertas quieres recibir'
                         : 'Configure which alerts you want to receive'}
@@ -525,7 +525,7 @@ export default function OnboardingPage() {
                         {language === 'es' ? '¡Todo listo!' : 'All set!'}
                       </h2>
                     </div>
-                    <p className="text-[11px] text-slate-500 mb-6 tracking-wide">
+                    <p className="text-[11px] text-orionix-text-muted mb-6 tracking-wide">
                       {language === 'es' ? 'Tu cuenta está configurada y lista' : 'Your account is set up and ready'}
                     </p>
 
@@ -560,7 +560,7 @@ export default function OnboardingPage() {
                         >
                           <div className="flex items-center gap-2">
                             <span style={{ color: `${item.color}80` }}>{item.icon}</span>
-                            <span className="text-[10px] font-bold text-slate-500">{item.label}</span>
+                            <span className="text-[10px] font-bold text-orionix-text-muted">{item.label}</span>
                           </div>
                           <span className="text-[11px] font-black" style={{ color: item.color }}>{item.value}</span>
                         </div>
@@ -587,7 +587,7 @@ export default function OnboardingPage() {
               onClick={() => setStep(s => s - 1)}
               whileHover={{ borderColor: 'rgba(255,255,255,0.18)' }}
               whileTap={{ scale: 0.97 }}
-              className="flex items-center justify-center gap-1.5 px-5 py-3 rounded-2xl text-sm font-bold text-slate-400 transition-all shrink-0"
+              className="flex items-center justify-center gap-1.5 px-5 py-3 rounded-2xl text-sm font-bold text-orionix-text-secondary transition-all shrink-0"
               style={{ border: '1px solid rgba(255,255,255,0.08)', background: 'rgba(255,255,255,0.03)' }}
             >
               <FiArrowLeft size={14} />
@@ -602,7 +602,7 @@ export default function OnboardingPage() {
               whileHover={{ scale: 1.02, boxShadow: '0 12px 40px rgba(0,210,185,0.45)' }}
               whileTap={{ scale: 0.97 }}
               className="relative flex-1 flex items-center justify-center gap-2 py-3 rounded-2xl text-sm font-black text-white overflow-hidden"
-              style={{ background: 'linear-gradient(135deg, #0d9488, #06b6d4, #0ea5e9)', boxShadow: '0 6px 24px rgba(0,210,185,0.28)' }}
+              style={{ background: 'linear-gradient(135deg, #1B5E20, #388E3C, #2E7D32)', boxShadow: '0 6px 24px rgba(76,175,80,0.28)' }}
             >
               <motion.div
                 className="absolute inset-0"
@@ -639,7 +639,7 @@ export default function OnboardingPage() {
           animate={{ opacity: 1 }}
           transition={{ delay: 0.4 }}
           onClick={handleFinish}
-          className="text-[10px] font-bold text-slate-700 hover:text-slate-500 transition-colors tracking-[0.18em] uppercase"
+          className="text-[10px] font-bold text-orionix-text-muted hover:text-orionix-text-secondary transition-colors tracking-[0.18em] uppercase"
         >
           {language === 'es' ? 'Omitir configuración' : 'Skip setup'}
         </motion.button>

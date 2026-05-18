@@ -4,25 +4,75 @@
 @tailwind components;
 @tailwind utilities;
 
-/* Variables de color global */
+/* ═══════════════════════════════════════════════════════════
+   ORIONIX GOL — Fuente única de verdad para colores
+   Cambia aquí → se actualiza en TODA la aplicación
+═══════════════════════════════════════════════════════════ */
 :root {
-  --color-grass: #1e7e34;
-  --color-grass-light: #2ecc71;
-  --color-gold: #f39c12;
-  --color-dark: #1a1a2e;
-  --color-usa-blue: #0A3161;
-  --color-usa-red: #B31942;
-  --color-mex-green: #006847;
-  --color-mex-red: #CE1126;
-  --color-can-red: #D80621;
-  --color-can-ice: #F5F7FA;
-  --color-stadium-night: #0D1B2A;
-  --font-ui: 'Space Grotesk', 'Segoe UI', sans-serif;
+  /* ── Fondos ── */
+  --orionix-bg-primary:   #050D07;
+  --orionix-bg-secondary: #08170D;
+  --orionix-bg-elevated:  #0E2214;
+  --orionix-bg-soft:      #14311C;
+  --orionix-bg-glass:     rgba(8, 23, 13, 0.72);
+
+  /* ── Verdes ── */
+  --orionix-green-dark:    #1B5E20;
+  --orionix-green:         #2E7D32;
+  --orionix-green-hover:   #388E3C;
+  --orionix-green-bright:  #4CAF50;
+  --orionix-green-soft:    #A5D6A7;
+  --orionix-green-muted:   #7CBF7F;
+
+  /* ── Oros ── */
+  --orionix-gold-dark:    #8C6A16;
+  --orionix-gold-muted:   #C9A227;
+  --orionix-gold:         #D4AF37;
+  --orionix-gold-bright:  #E2C760;
+  --orionix-gold-soft:    #F1DB91;
+
+  /* ── Texto ── */
+  --orionix-text-primary:   #F5F7FA;
+  --orionix-text-secondary: #B8C4BC;
+  --orionix-text-muted:     #6E7C72;
+
+  /* ── Estados ── */
+  --orionix-success:  #4CAF50;
+  --orionix-warning:  #E2C760;
+  --orionix-danger:   #D32F2F;
+  --orionix-info:     #0288D1;
+
+  /* ── Sedes 2026 ── */
+  --orionix-usa-blue:  #0A3161;
+  --orionix-usa-red:   #B31942;
+  --orionix-mex-green: #006847;
+  --orionix-mex-red:   #CE1126;
+  --orionix-can-red:   #D80621;
+
+  /* ── Tipografía ── */
+  --font-ui:      'Space Grotesk', 'Segoe UI', sans-serif;
   --font-display: 'Rajdhani', 'Trebuchet MS', sans-serif;
+
+  /* ── Aliases compatibles (no eliminar) ── */
+  --bg-primary:           var(--orionix-bg-primary);
+  --bg-secondary:         var(--orionix-bg-secondary);
+  --bg-elevated:          var(--orionix-bg-elevated);
+  --color-primary:        var(--orionix-green);
+  --color-primary-hover:  var(--orionix-green-hover);
+  --color-accent:         var(--orionix-green-bright);
+  --color-dark-green:     var(--orionix-green-dark);
+  --color-gold:           var(--orionix-gold);
+  --color-text-primary:   var(--orionix-text-primary);
+  --color-text-secondary: var(--orionix-text-secondary);
+  --color-text-muted:     var(--orionix-text-muted);
+  --color-success:        var(--orionix-success);
+  --color-danger:         var(--orionix-danger);
+  --color-dark:           var(--orionix-bg-primary);
+  --color-stadium-night:  var(--orionix-bg-secondary);
 }
 
 html {
-  background-color: #010508;
+  background-color: #06110A;
   overflow-x: hidden;
 }
 
@@ -42,14 +92,14 @@ h6 {
 }
 
 .tech-app-bg {
-  background-color: #e8edf4;
+  background-color: #06110A;
   background-image:
-    linear-gradient(120deg, rgba(34, 211, 238, 0.04) 0%, transparent 45%),
-    linear-gradient(300deg, rgba(16, 185, 129, 0.04) 0%, transparent 40%),
-    linear-gradient(to right, rgba(15, 23, 42, 0.05) 1px, transparent 1px),
-    linear-gradient(to bottom, rgba(15, 23, 42, 0.05) 1px, transparent 1px),
-    linear-gradient(180deg, #edf2f8 0%, #e3e9f2 100%);
-  background-size: auto, auto, 26px 26px, 26px 26px, auto;
+    linear-gradient(120deg, rgba(76, 175, 80, 0.06) 0%, transparent 45%),
+    linear-gradient(300deg, rgba(46, 125, 50, 0.05) 0%, transparent 40%),
+    linear-gradient(to right, rgba(76, 175, 80, 0.04) 1px, transparent 1px),
+    linear-gradient(to bottom, rgba(76, 175, 80, 0.04) 1px, transparent 1px),
+    linear-gradient(180deg, #06110A 0%, #0B1B12 100%);
+  background-size: auto, auto, 28px 28px, 28px 28px, auto;
 }
 
 .tech-app-bg::before {
@@ -58,17 +108,17 @@ h6 {
   inset: 0;
   pointer-events: none;
   background-image:
-    radial-gradient(circle at 12% 78%, rgba(148, 163, 184, 0.12) 0 1px, transparent 2px),
-    radial-gradient(circle at 78% 22%, rgba(148, 163, 184, 0.12) 0 1px, transparent 2px),
-    radial-gradient(circle at 82% 86%, rgba(148, 163, 184, 0.1) 0 1px, transparent 2px),
-    linear-gradient(110deg, transparent 0%, rgba(56, 189, 248, 0.04) 35%, transparent 65%);
+    radial-gradient(circle at 12% 78%, rgba(76, 175, 80, 0.08) 0 1px, transparent 2px),
+    radial-gradient(circle at 78% 22%, rgba(76, 175, 80, 0.08) 0 1px, transparent 2px),
+    radial-gradient(circle at 82% 86%, rgba(46, 125, 50, 0.07) 0 1px, transparent 2px),
+    linear-gradient(110deg, transparent 0%, rgba(76, 175, 80, 0.05) 35%, transparent 65%);
   background-size: 180px 180px, 220px 220px, 160px 160px, 100% 100%;
-  opacity: 0.32;
+  opacity: 0.35;
   z-index: 0;
 }
 
 body.login-route {
-  background: radial-gradient(ellipse at 25% 60%, #080f22 0%, #010810 45%, #000509 100%);
+  background: radial-gradient(ellipse at 25% 60%, #06110A 0%, #0B1B12 45%, #06110A 100%);
 }
 
 body.login-route .app-shell {
@@ -77,14 +127,14 @@ body.login-route .app-shell {
 }
 
 .tech-panel {
-  background: linear-gradient(145deg, rgba(8, 18, 36, 0.96), rgba(12, 25, 48, 0.94));
-  border: 1px solid rgba(56, 189, 248, 0.24);
-  box-shadow: 0 10px 30px rgba(2, 6, 23, 0.35), inset 0 0 0 1px rgba(255, 255, 255, 0.02);
-  color: #e2e8f0;
+  background: linear-gradient(145deg, rgba(6,17,10,0.96), rgba(11,27,18,0.94));
+  border: 1px solid rgba(76,175,80,0.18);
+  box-shadow: 0 10px 30px rgba(2, 8, 4, 0.35), inset 0 0 0 1px rgba(255, 255, 255, 0.02);
+  color: #B8C4BC;
 }
 
 .tech-text-glow {
-  text-shadow: 0 0 16px rgba(34, 211, 238, 0.25);
+  text-shadow: 0 0 16px rgba(76, 175, 80, 0.25);
 }
 
 .glass-premium {
@@ -95,10 +145,10 @@ body.login-route .app-shell {
 }
 
 .glass-premium-dark {
-  background: linear-gradient(145deg, rgba(9, 20, 38, 0.88), rgba(14, 30, 56, 0.85));
+  background: linear-gradient(145deg, rgba(6,17,10,0.88), rgba(11,27,18,0.85));
   backdrop-filter: blur(14px);
-  border: 1px solid rgba(56, 189, 248, 0.24);
-  box-shadow: 0 14px 34px rgba(2, 6, 23, 0.35), inset 0 1px 0 rgba(148, 163, 184, 0.15);
+  border: 1px solid rgba(76,175,80,0.18);
+  box-shadow: 0 14px 34px rgba(2, 8, 4, 0.35), inset 0 1px 0 rgba(184, 196, 188, 0.10);
 }
 
 .hover-lift-premium {
@@ -107,12 +157,12 @@ body.login-route .app-shell {
 
 .hover-lift-premium:hover {
   transform: translateY(-4px);
-  box-shadow: 0 18px 38px rgba(2, 6, 23, 0.22);
+  box-shadow: 0 18px 38px rgba(2, 8, 4, 0.22);
 }
 
 .neon-outline-cyan {
-  border: 1px solid rgba(34, 211, 238, 0.35);
-  box-shadow: 0 0 0 1px rgba(34, 211, 238, 0.08), 0 0 20px rgba(34, 211, 238, 0.16);
+  border: 1px solid rgba(76, 175, 80, 0.35);
+  box-shadow: 0 0 0 1px rgba(76, 175, 80, 0.08), 0 0 20px rgba(76, 175, 80, 0.12);
 }
 
 /* Scrollbar personalizada */
@@ -122,21 +172,21 @@ body.login-route .app-shell {
 }
 
 ::-webkit-scrollbar-track {
-  background: linear-gradient(180deg, #071426 0%, #0a223b 100%);
+  background: linear-gradient(180deg, #06110A 0%, #0B1B12 100%);
 }
 
 ::-webkit-scrollbar-thumb {
-  background: linear-gradient(180deg, #1f8a8c 0%, #1f7f98 55%, #216e91 100%);
+  background: linear-gradient(180deg, #2E7D32 0%, #1B5E20 55%, #1a5620 100%);
   border-radius: 9999px;
-  border: 2px solid #081426;
+  border: 2px solid #06110A;
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  background: linear-gradient(180deg, #2a9ba0 0%, #2a8ea8 55%, #2b7f9f 100%);
+  background: linear-gradient(180deg, #388E3C 0%, #2E7D32 55%, #276b2c 100%);
 }
 
 html {
-  scrollbar-color: #1f7f98 #071426;
+  scrollbar-color: #2E7D32 #06110A;
   scrollbar-width: thin;
 }
 
@@ -196,9 +246,9 @@ html {
   background: linear-gradient(
     90deg,
     transparent 0%,
-    rgba(34, 211, 238, 0.04) 20%,
-    rgba(125, 211, 252, 0.24) 50%,
-    rgba(16, 185, 129, 0.14) 70%,
+    rgba(76, 175, 80, 0.04) 20%,
+    rgba(102, 187, 106, 0.20) 50%,
+    rgba(46, 125, 50, 0.10) 70%,
     transparent 100%
   );
   animation: dockSweep 8s linear infinite;
@@ -206,11 +256,11 @@ html {
 
 /* Utilidades */
 .gradient-football {
-  background: linear-gradient(135deg, #1e7e34 0%, #2ecc71 100%);
+  background: linear-gradient(135deg, #1B5E20 0%, #4CAF50 100%);
 }
 
 .gradient-football-dark {
-  background: linear-gradient(135deg, #1a1a2e 0%, #0d5a2a 100%);
+  background: linear-gradient(135deg, #06110A 0%, #0d5a2a 100%);
 }
 
 .gradient-host-2026 {
@@ -315,9 +365,9 @@ html {
 }
 
 .glass-dark {
-  background: rgba(26, 26, 46, 0.8);
+  background: rgba(6, 17, 10, 0.8);
   backdrop-filter: blur(10px);
-  border: 1px solid rgba(255, 255, 255, 0.1);
+  border: 1px solid rgba(255, 255, 255, 0.08);
 }
 
 /* Responsivo seguro — iOS safe-area insets only (0px fallback on non-notch devices) */
@@ -333,15 +383,13 @@ html {
   }
 }
 
-/* Scroll suave */
-
 /* Input focus custom */
 input:focus,
 textarea:focus,
 select:focus {
   outline: none;
-  border-color: var(--color-grass);
-  box-shadow: 0 0 0 3px rgba(30, 126, 52, 0.1);
+  border-color: var(--color-primary);
+  box-shadow: 0 0 0 3px rgba(46, 125, 50, 0.18);
 }
 
 /* Hover effects */
@@ -349,11 +397,14 @@ select:focus {
   transition: transform 0.2s ease;
 }
 
+.hover-scale:hover {
+  transform: scale(1.05);
+}
+
 /* ══════════════════════════════════════════
    REACT-JOYRIDE — DARK THEME OVERRIDE
 ══════════════════════════════════════════ */
 
-/* Beacon: invisible pero en el DOM (opacity:0 ≠ display:none), posicionado sobre el botón ? */
 .react-joyride__beacon {
   position: fixed !important;
   bottom: 6rem !important;
@@ -381,10 +432,10 @@ select:focus {
 }
 
 .react-joyride__tooltip {
-  background: linear-gradient(145deg, #0a1628, #0d1f3a) !important;
-  border: 1px solid rgba(34,211,238,0.22) !important;
+  background: linear-gradient(145deg, #0B1B12, #102417) !important;
+  border: 1px solid rgba(76,175,80,0.22) !important;
   border-radius: 18px !important;
-  box-shadow: 0 24px 64px rgba(0,0,0,0.65), 0 0 0 1px rgba(34,211,238,0.08) !important;
+  box-shadow: 0 24px 64px rgba(0,0,0,0.65), 0 0 0 1px rgba(76,175,80,0.08) !important;
   padding: 0 !important;
   max-width: 340px !important;
 }
@@ -395,10 +446,9 @@ select:focus {
   overflow: hidden !important;
 }
 
-/* Header del tooltip */
 .react-joyride__tooltip__header {
-  background: linear-gradient(90deg, rgba(34,211,238,0.08), transparent) !important;
-  border-bottom: 1px solid rgba(34,211,238,0.12) !important;
+  background: linear-gradient(90deg, rgba(76,175,80,0.10), transparent) !important;
+  border-bottom: 1px solid rgba(76,175,80,0.12) !important;
   padding: 16px 20px 12px !important;
   color: #ffffff !important;
   font-size: 14px !important;
@@ -406,15 +456,13 @@ select:focus {
   letter-spacing: 0.02em !important;
 }
 
-/* Cuerpo del tooltip */
 .react-joyride__tooltip__body {
-  color: rgba(148,163,184,0.92) !important;
+  color: rgba(184,196,188,0.92) !important;
   font-size: 13px !important;
   line-height: 1.65 !important;
   padding: 14px 20px !important;
 }
 
-/* Footer (botones) */
 .react-joyride__tooltip__footer {
   padding: 10px 20px 16px !important;
   border-top: 1px solid rgba(255,255,255,0.04) !important;
@@ -423,9 +471,8 @@ select:focus {
   gap: 8px !important;
 }
 
-/* Botón Siguiente / Entendido */
 .react-joyride__tooltip button[data-action="primary"] {
-  background: linear-gradient(135deg, #0d9488, #06b6d4) !important;
+  background: linear-gradient(135deg, #1B5E20, #2E7D32) !important;
   border-radius: 10px !important;
   border: none !important;
   color: #fff !important;
@@ -433,7 +480,7 @@ select:focus {
   font-weight: 800 !important;
   padding: 8px 20px !important;
   cursor: pointer !important;
-  box-shadow: 0 4px 14px rgba(6,182,212,0.35) !important;
+  box-shadow: 0 4px 14px rgba(46,125,50,0.35) !important;
   letter-spacing: 0.02em !important;
   transition: opacity 0.15s !important;
 }
@@ -441,56 +488,60 @@ select:focus {
   opacity: 0.88 !important;
 }
 
-/* Botón Anterior */
 .react-joyride__tooltip button[data-action="back"] {
   background: transparent !important;
   border: none !important;
-  color: rgba(34,211,238,0.75) !important;
+  color: rgba(76,175,80,0.75) !important;
   font-size: 12px !important;
   font-weight: 700 !important;
   cursor: pointer !important;
   padding: 8px 4px !important;
 }
 
-/* Botón Omitir */
 .react-joyride__tooltip button[data-action="skip"] {
   background: transparent !important;
   border: none !important;
-  color: rgba(148,163,184,0.45) !important;
+  color: rgba(110,124,114,0.65) !important;
   font-size: 11px !important;
   cursor: pointer !important;
   padding: 6px 4px !important;
 }
 
-/* Flecha del tooltip */
 .__floater__arrow polygon,
 .__floater__arrow svg {
-  fill: #0a1628 !important;
+  fill: #0B1B12 !important;
 }
 
-/* Progreso (X/N) */
 .react-joyride__tooltip__footer span {
-  color: rgba(100,116,139,0.70) !important;
+  color: rgba(110,124,114,0.70) !important;
   font-size: 11px !important;
-}
-
-.hover-scale:hover {
-  transform: scale(1.05);
 }
 
 /* Badge styles */
 .badge-success {
-  @apply bg-green-100 text-green-800 px-3 py-1 rounded-full text-sm font-semibold;
+  background: rgba(76,175,80,0.12);
+  border: 1px solid rgba(76,175,80,0.28);
+  color: #4CAF50;
+  @apply px-3 py-1 rounded-full text-sm font-semibold;
 }
 
 .badge-warning {
-  @apply bg-yellow-100 text-yellow-800 px-3 py-1 rounded-full text-sm font-semibold;
+  background: rgba(212,175,55,0.12);
+  border: 1px solid rgba(212,175,55,0.28);
+  color: #D4AF37;
+  @apply px-3 py-1 rounded-full text-sm font-semibold;
 }
 
 .badge-danger {
-  @apply bg-red-100 text-red-800 px-3 py-1 rounded-full text-sm font-semibold;
+  background: rgba(211,47,47,0.12);
+  border: 1px solid rgba(211,47,47,0.28);
+  color: #D32F2F;
+  @apply px-3 py-1 rounded-full text-sm font-semibold;
 }
 
 .badge-info {
-  @apply bg-blue-100 text-blue-800 px-3 py-1 rounded-full text-sm font-semibold;
+  background: rgba(46,125,50,0.12);
+  border: 1px solid rgba(46,125,50,0.28);
+  color: #2E7D32;
+  @apply px-3 py-1 rounded-full text-sm font-semibold;
 }

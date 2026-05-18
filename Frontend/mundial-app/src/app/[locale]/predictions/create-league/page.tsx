@@ -119,7 +119,7 @@ export default function CreateLeaguePage() {
                     transition={{ duration: 2.2, repeat: Infinity, ease: 'easeInOut' }}
                   >🎉</motion.div>
                   <h2 className="text-xl font-black text-white">{createdLeague.name}</h2>
-                  <p className="text-xs text-slate-500 mt-1">Tu liga fue creada exitosamente</p>
+                  <p className="text-xs text-orionix-text-muted mt-1">Tu liga fue creada exitosamente</p>
                 </div>
 
                 {/* Code display */}
@@ -158,9 +158,9 @@ export default function CreateLeaguePage() {
 
                 {/* Instructions */}
                 <div className="rounded-xl p-4 mb-5"
-                  style={{ background: 'rgba(34,211,238,0.04)', border: '1px solid rgba(34,211,238,0.10)' }}>
+                  style={{ background: 'rgba(76,175,80,0.04)', border: '1px solid rgba(76,175,80,0.10)' }}>
                   <div className="absolute inset-x-0 top-0 h-px" />
-                  <p className="text-[9px] font-black tracking-[0.25em] uppercase text-cyan-400/50 mb-3">¿Cómo invitar amigos?</p>
+                  <p className="text-[9px] font-black tracking-[0.25em] uppercase text-green-400/50 mb-3">¿Cómo invitar amigos?</p>
                   {[
                     `Comparte el código ${createdLeague.code} con ellos`,
                     'Ellos van a Porras → Ligas → Unirse a Liga',
@@ -171,7 +171,7 @@ export default function CreateLeaguePage() {
                         style={{ background: 'rgba(34,211,238,0.10)', border: '1px solid rgba(34,211,238,0.20)', color: '#22d3ee' }}>
                         {i + 1}
                       </span>
-                      <p className="text-xs text-slate-500 leading-relaxed">{step}</p>
+                      <p className="text-xs text-orionix-text-muted leading-relaxed">{step}</p>
                     </div>
                   ))}
                 </div>
@@ -181,7 +181,7 @@ export default function CreateLeaguePage() {
                   <motion.button
                     onClick={() => router.push('/predictions')}
                     whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.97 }}
-                    className="flex-1 py-3 rounded-xl text-sm font-black text-slate-400 flex items-center justify-center gap-2"
+                    className="flex-1 py-3 rounded-xl text-sm font-black text-orionix-text-secondary flex items-center justify-center gap-2"
                     style={{ border: '1px solid rgba(255,255,255,0.07)', background: 'rgba(255,255,255,0.02)' }}
                   >
                     <FiArrowLeft size={13} /> Ir a Porras
@@ -276,7 +276,7 @@ export default function CreateLeaguePage() {
                   />
                 </div>
                 <div>
-                  <p className="text-[9px] font-black tracking-[0.28em] uppercase text-cyan-400/50 mb-0.5">Nueva competencia</p>
+                  <p className="text-[9px] font-black tracking-[0.28em] uppercase text-green-400/50 mb-0.5">Nueva competencia</p>
                   <h2 className="text-base font-black text-white leading-none">Crear Liga Privada</h2>
                 </div>
               </div>
@@ -301,7 +301,7 @@ export default function CreateLeaguePage() {
                 <div>
                   <label className="block text-[9px] font-black tracking-[0.28em] uppercase mb-2"
                     style={{ color: focusedField === 'description' ? '#22d3ee' : 'rgba(100,116,139,0.80)' }}>
-                    Descripción <span className="normal-case font-normal text-slate-600">(opcional)</span>
+                    Descripción <span className="normal-case font-normal text-orionix-text-muted">(opcional)</span>
                   </label>
                   <textarea
                     name="description" value={formData.description} onChange={handleChange}
@@ -328,7 +328,7 @@ export default function CreateLeaguePage() {
                     style={inputStyle}
                     {...focusProps('maxMembers')}
                   />
-                  <p className="text-[9px] text-slate-600 mt-1.5 ml-1">Mínimo 2 · Máximo 100 participantes</p>
+                  <p className="text-[9px] text-orionix-text-muted mt-1.5 ml-1">Mínimo 2 · Máximo 100 participantes</p>
                 </div>
 
                 {/* Error */}
@@ -346,7 +346,7 @@ export default function CreateLeaguePage() {
                   <motion.button
                     type="button" onClick={() => router.back()}
                     whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.97 }}
-                    className="flex-1 py-3 rounded-xl text-sm font-black text-slate-400 flex items-center justify-center gap-2"
+                    className="flex-1 py-3 rounded-xl text-sm font-black text-orionix-text-secondary flex items-center justify-center gap-2"
                     style={{ border: '1px solid rgba(255,255,255,0.07)', background: 'rgba(255,255,255,0.02)' }}
                   >
                     <FiArrowLeft size={13} /> Cancelar
@@ -356,7 +356,7 @@ export default function CreateLeaguePage() {
                     whileHover={{ scale: 1.02, boxShadow: '0 12px 36px rgba(0,210,185,0.40)' }}
                     whileTap={{ scale: 0.97 }}
                     className="flex-1 py-3 rounded-xl text-sm font-black text-white flex items-center justify-center gap-2 disabled:opacity-50 relative overflow-hidden"
-                    style={{ background: 'linear-gradient(135deg, #0d9488, #06b6d4)', boxShadow: '0 6px 24px rgba(0,210,185,0.30)' }}
+                    style={{ background: 'linear-gradient(135deg, #1B5E20, #388E3C)', boxShadow: '0 6px 24px rgba(76,175,80,0.30)' }}
                   >
                     <motion.div className="absolute inset-0 pointer-events-none"
                       style={{ background: 'linear-gradient(108deg, transparent 28%, rgba(255,255,255,0.18) 50%, transparent 72%)' }}

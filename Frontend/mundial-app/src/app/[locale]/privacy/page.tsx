@@ -58,13 +58,13 @@ export default function PrivacyPage() {
             <h1 className="text-2xl font-black text-white mt-3" style={{ fontFamily: 'var(--font-display)' }}>
               Política de Privacidad
             </h1>
-            <p className="text-xs text-slate-500 mt-2">Última actualización: mayo de 2026 · Orionix Gol</p>
+            <p className="text-xs text-orionix-text-muted mt-2">Última actualización: mayo de 2026 · Orionix Gol</p>
           </div>
 
           <div className="space-y-8 text-sm leading-relaxed" style={{ color: 'rgba(148,163,184,0.85)' }}>
 
             <section>
-              <h2 className="text-base font-bold text-slate-200 mb-3">1. Quiénes somos</h2>
+              <h2 className="text-base font-bold text-orionix-text-secondary mb-3">1. Quiénes somos</h2>
               <p>
                 Orionix Gol es una aplicación de predicciones deportivas para el Mundial de Fútbol 2026.
                 El responsable del tratamiento de tus datos es el equipo de Orionix Gol, contactable en{' '}
@@ -75,7 +75,7 @@ export default function PrivacyPage() {
             </section>
 
             <section>
-              <h2 className="text-base font-bold text-slate-200 mb-3">2. Datos que recopilamos</h2>
+              <h2 className="text-base font-bold text-orionix-text-secondary mb-3">2. Datos que recopilamos</h2>
               <p className="mb-3">Al crear una cuenta recopilamos los siguientes datos:</p>
               <ul className="space-y-1.5 pl-4">
                 {[
@@ -99,7 +99,7 @@ export default function PrivacyPage() {
             </section>
 
             <section>
-              <h2 className="text-base font-bold text-slate-200 mb-3">3. Para qué usamos tus datos</h2>
+              <h2 className="text-base font-bold text-orionix-text-secondary mb-3">3. Para qué usamos tus datos</h2>
               <ul className="space-y-1.5 pl-4">
                 {[
                   'Gestionar tu cuenta y autenticación (JWT)',
@@ -117,7 +117,7 @@ export default function PrivacyPage() {
             </section>
 
             <section>
-              <h2 className="text-base font-bold text-slate-200 mb-3">4. Compartición de datos</h2>
+              <h2 className="text-base font-bold text-orionix-text-secondary mb-3">4. Compartición de datos</h2>
               <p>
                 No vendemos, alquilamos ni compartimos tus datos personales con terceros con fines comerciales.
                 Tu nombre de usuario y puntuación pueden ser visibles públicamente en el ranking global de la aplicación.
@@ -126,7 +126,7 @@ export default function PrivacyPage() {
             </section>
 
             <section>
-              <h2 className="text-base font-bold text-slate-200 mb-3">5. Seguridad</h2>
+              <h2 className="text-base font-bold text-orionix-text-secondary mb-3">5. Seguridad</h2>
               <p>
                 Tus datos se transmiten siempre mediante conexiones cifradas (HTTPS/TLS).
                 Las contraseñas se almacenan con hash bcrypt. Utilizamos tokens JWT con caducidad para gestionar las sesiones.
@@ -135,7 +135,7 @@ export default function PrivacyPage() {
             </section>
 
             <section>
-              <h2 className="text-base font-bold text-slate-200 mb-3">6. Conservación de datos</h2>
+              <h2 className="text-base font-bold text-orionix-text-secondary mb-3">6. Conservación de datos</h2>
               <p>
                 Conservamos tus datos mientras tu cuenta esté activa. Si solicitas la eliminación de tu cuenta,
                 borraremos tus datos personales en un plazo razonable, salvo que la ley nos obligue a conservarlos.
@@ -143,7 +143,7 @@ export default function PrivacyPage() {
             </section>
 
             <section>
-              <h2 className="text-base font-bold text-slate-200 mb-3">7. Tus derechos</h2>
+              <h2 className="text-base font-bold text-orionix-text-secondary mb-3">7. Tus derechos</h2>
               <p className="mb-3">Tienes derecho a:</p>
               <ul className="space-y-1.5 pl-4">
                 {[
@@ -167,7 +167,7 @@ export default function PrivacyPage() {
             </section>
 
             <section>
-              <h2 className="text-base font-bold text-slate-200 mb-3">8. Cookies y almacenamiento local</h2>
+              <h2 className="text-base font-bold text-orionix-text-secondary mb-3">8. Cookies y almacenamiento local</h2>
               <p>
                 Usamos almacenamiento local del navegador (localStorage) para mantener tu sesión activa y recordar tus preferencias de interfaz.
                 No utilizamos cookies de rastreo de terceros.
@@ -175,7 +175,7 @@ export default function PrivacyPage() {
             </section>
 
             <section>
-              <h2 className="text-base font-bold text-slate-200 mb-3">9. Cambios en esta política</h2>
+              <h2 className="text-base font-bold text-orionix-text-secondary mb-3">9. Cambios en esta política</h2>
               <p>
                 Podemos actualizar esta política ocasionalmente. En caso de cambios relevantes, te notificaremos
                 mediante un aviso en la aplicación. El uso continuado de la app tras los cambios implica aceptación de la nueva versión.
@@ -185,7 +185,7 @@ export default function PrivacyPage() {
           </div>
 
           <div className="mt-10 pt-6 text-center" style={{ borderTop: '1px solid rgba(255,255,255,0.06)' }}>
-            <p className="text-[10px] text-slate-600 tracking-widest uppercase">
+            <p className="text-[10px] text-orionix-text-muted tracking-widest uppercase">
               © 2026 ORIONIX GOL — TODOS LOS DERECHOS RESERVADOS
             </p>
           </div>
