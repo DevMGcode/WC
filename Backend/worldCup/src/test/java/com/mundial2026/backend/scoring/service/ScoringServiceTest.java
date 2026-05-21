@@ -1,8 +1,13 @@
 package com.mundial2026.backend.scoring.service;
 
+import com.mundial2026.backend.common.exception.ResourceNotFoundException;
+import com.mundial2026.backend.common.response.PaginatedResponse;
+import com.mundial2026.backend.league.api.dto.LeagueRankingResponse;
 import com.mundial2026.backend.prediction.domain.UserPrediction;
 import com.mundial2026.backend.prediction.repository.UserPredictionRepository;
 import com.mundial2026.backend.scoring.api.dto.PredictionScoreResponse;
+import com.mundial2026.backend.scoring.api.dto.UserRankPositionResponse;
+import com.mundial2026.backend.scoring.api.dto.UserTournamentScoreResponse;
 import com.mundial2026.backend.tournament.domain.Fixture;
 import com.mundial2026.backend.tournament.domain.FixtureStatus;
 import com.mundial2026.backend.tournament.domain.Tournament;
@@ -17,8 +22,10 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import java.lang.reflect.Method;
 import java.time.OffsetDateTime;
 import java.util.List;
+import java.util.Optional;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
@@ -146,6 +153,154 @@ class ScoringServiceTest {
                 .thenReturn(List.of());
 
         assertThat(scoringService.getPredictionScoreHistory(1L, 1L)).isEmpty();
+    }
+
+    // ── getUserScore ──────────────────────────────────────────────────────────
+
+    @Test
+    void getUserScore_userHasPredictions_returnsAccumulatedScore() {
+        AppUser user = buildUser(1L);
+        Tournament tournament = buildTournament(1L);
+        Fixture fixture = buildFinishedFixture(10L, tournament, 2, 1);
+        UserPrediction prediction = buildPrediction(user, fixture, 2, 1);
+
+        when(userPredictionRepository.findByFixtureTournamentIdOrderBySubmittedAtDesc(1L))
+                .thenReturn(List.of(prediction));
+
+        UserTournamentScoreResponse score = scoringService.getUserScore(1L, 1L);
+
+        assertThat(score.userId()).isEqualTo(1L);
+        assertThat(score.totalPoints()).isEqualTo(3);
+        assertThat(score.exactScores()).isEqualTo(1);
+    }
+
+    @Test
+    void getUserScore_userNotInRanking_returnsEmptyScore() {
+        AppUser user = buildUser(99L);
+        when(userPredictionRepository.findByFixtureTournamentIdOrderBySubmittedAtDesc(1L))
+                .thenReturn(List.of());
+        when(appUserRepository.findById(99L)).thenReturn(Optional.of(user));
+
+        UserTournamentScoreResponse score = scoringService.getUserScore(1L, 99L);
+
+        assertThat(score.userId()).isEqualTo(99L);
+        assertThat(score.totalPoints()).isEqualTo(0);
+    }
+
+    @Test
+    void getUserScore_userNotFound_throwsException() {
+        when(userPredictionRepository.findByFixtureTournamentIdOrderBySubmittedAtDesc(1L))
+                .thenReturn(List.of());
+        when(appUserRepository.findById(999L)).thenReturn(Optional.empty());
+
+        assertThatThrownBy(() -> scoringService.getUserScore(1L, 999L))
+                .isInstanceOf(ResourceNotFoundException.class);
+    }
+
+    // ── getGlobalRanking ──────────────────────────────────────────────────────
+
+    @Test
+    void getGlobalRanking_firstPage_returnsCorrectSlice() {
+        AppUser user = buildUser(1L);
+        Tournament tournament = buildTournament(1L);
+        Fixture fixture = buildFinishedFixture(10L, tournament, 1, 0);
+        UserPrediction prediction = buildPrediction(user, fixture, 1, 0);
+
+        when(userPredictionRepository.findByFixtureTournamentIdOrderBySubmittedAtDesc(1L))
+                .thenReturn(List.of(prediction));
+
+        PaginatedResponse<UserTournamentScoreResponse> result = scoringService.getGlobalRanking(1L, 0, 10);
+
+        assertThat(result.data()).hasSize(1);
+        assertThat(result.pagination().total()).isEqualTo(1);
+        assertThat(result.pagination().page()).isEqualTo(0);
+    }
+
+    @Test
+    void getGlobalRanking_emptyRanking_returnsEmptyPage() {
+        when(userPredictionRepository.findByFixtureTournamentIdOrderBySubmittedAtDesc(1L))
+                .thenReturn(List.of());
+
+        PaginatedResponse<UserTournamentScoreResponse> result = scoringService.getGlobalRanking(1L, 0, 10);
+
+        assertThat(result.data()).isEmpty();
+        assertThat(result.pagination().total()).isEqualTo(0);
+        assertThat(result.pagination().totalPages()).isEqualTo(0);
+    }
+
+    @Test
+    void getGlobalRanking_pageSizeZero_safelyHandled() {
+        when(userPredictionRepository.findByFixtureTournamentIdOrderBySubmittedAtDesc(1L))
+                .thenReturn(List.of());
+
+        PaginatedResponse<UserTournamentScoreResponse> result = scoringService.getGlobalRanking(1L, 0, 0);
+
+        assertThat(result.data()).isEmpty();
+    }
+
+    // ── getUserRankPosition ───────────────────────────────────────────────────
+
+    @Test
+    void getUserRankPosition_userInRanking_returnsCorrectPosition() {
+        AppUser user1 = buildUser(1L);
+        AppUser user2 = buildUser(2L);
+        Tournament tournament = buildTournament(1L);
+        Fixture fixture = buildFinishedFixture(10L, tournament, 2, 1);
+        UserPrediction p1 = buildPrediction(user1, fixture, 2, 1); // exact → 3pts
+        UserPrediction p2 = buildPrediction(user2, fixture, 1, 0); // winner → 1pt
+
+        when(userPredictionRepository.findByFixtureTournamentIdOrderBySubmittedAtDesc(1L))
+                .thenReturn(List.of(p1, p2));
+
+        UserRankPositionResponse pos2 = scoringService.getUserRankPosition(1L, 2L);
+        assertThat(pos2.rank()).isEqualTo(2);
+        assertThat(pos2.totalUsers()).isEqualTo(2);
+    }
+
+    @Test
+    void getUserRankPosition_userNotInRanking_returnsLastPlus1() {
+        when(userPredictionRepository.findByFixtureTournamentIdOrderBySubmittedAtDesc(1L))
+                .thenReturn(List.of());
+
+        UserRankPositionResponse pos = scoringService.getUserRankPosition(1L, 999L);
+
+        assertThat(pos.rank()).isEqualTo(1); // ranking.size()+1 = 0+1
+        assertThat(pos.totalUsers()).isEqualTo(0);
+    }
+
+    // ── getLeagueRanking ──────────────────────────────────────────────────────
+
+    @Test
+    void getLeagueRanking_memberWithPredictions_returnsRankedList() {
+        AppUser user = buildUser(1L);
+        Tournament tournament = buildTournament(1L);
+        Fixture fixture = buildFinishedFixture(10L, tournament, 2, 0);
+        UserPrediction prediction = buildPrediction(user, fixture, 2, 0);
+
+        when(userPredictionRepository.findByFixtureTournamentIdOrderBySubmittedAtDesc(1L))
+                .thenReturn(List.of(prediction));
+        // getOrDefault evaluates the default eagerly, so buildEmptyScore is always called
+        when(appUserRepository.findById(1L)).thenReturn(Optional.of(user));
+
+        List<LeagueRankingResponse> ranking = scoringService.getLeagueRanking(1L, 1L, List.of(1L));
+
+        assertThat(ranking).hasSize(1);
+        assertThat(ranking.get(0).userId()).isEqualTo(1L);
+        assertThat(ranking.get(0).rankPosition()).isEqualTo(1);
+        assertThat(ranking.get(0).totalPoints()).isEqualTo(3);
+    }
+
+    @Test
+    void getLeagueRanking_memberWithoutPredictions_returnsEmptyScore() {
+        AppUser user = buildUser(5L);
+        when(userPredictionRepository.findByFixtureTournamentIdOrderBySubmittedAtDesc(1L))
+                .thenReturn(List.of());
+        when(appUserRepository.findById(5L)).thenReturn(Optional.of(user));
+
+        List<LeagueRankingResponse> ranking = scoringService.getLeagueRanking(1L, 1L, List.of(5L));
+
+        assertThat(ranking).hasSize(1);
+        assertThat(ranking.get(0).totalPoints()).isEqualTo(0);
     }
 
     // ── helpers ───────────────────────────────────────────────────────────────
