@@ -16,14 +16,16 @@ export interface AuthContextType {
 export const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export function AuthProvider({ children }: { children: ReactNode }) {
+  // null / true on both server and client first render → no hydration mismatch
   const [user, setUser] = useState<AuthUser | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
+  // Runs only on client after hydration completes
   useEffect(() => {
     const token = authService.getToken();
-    const savedUser = authService.getUser();
-    if (token && savedUser) setUser(savedUser);
+    const saved  = authService.getUser();
+    if (token && saved) setUser(saved);
     setLoading(false);
   }, []);
 

@@ -18,13 +18,13 @@ import {
 /* ── Scoring rules config ── */
 const SCORE_RULES = [
   { pts: 3, label: 'Marcador exacto',   sublabel: 'Resultado y goles exactos', color: '#34d399', icon: <FiZap  size={14} /> },
-  { pts: 1, label: 'Resultado correcto', sublabel: 'Ganador o empate correcto', color: '#22d3ee', icon: <FiCheck size={14} /> },
+  { pts: 1, label: 'Resultado correcto', sublabel: 'Ganador o empate correcto', color: '#4CAF50', icon: <FiCheck size={14} /> },
   { pts: 0, label: 'Fallaste',           sublabel: 'No acertaste el resultado', color: '#64748b', icon: <FiX    size={14} /> },
 ];
 
 /* ── Shared dark card wrapper ── */
 const DarkCard = ({
-  children, accent = '#22d3ee', className = '', delay = 0,
+  children, accent = '#4CAF50', className = '', delay = 0,
 }: { children: React.ReactNode; accent?: string; className?: string; delay?: number }) => (
   <motion.div
     initial={{ opacity: 0, y: 14 }}
@@ -32,7 +32,7 @@ const DarkCard = ({
     transition={{ duration: 0.5, delay, ease: [0.22, 1, 0.36, 1] }}
     className={`relative overflow-hidden rounded-2xl ${className}`}
     style={{
-      background: 'linear-gradient(145deg, rgba(2,8,24,0.98), rgba(4,14,36,0.97))',
+      background: 'linear-gradient(145deg, rgba(6,17,10,0.98), rgba(11,27,18,0.97))',
       border: `1px solid ${accent}18`,
       boxShadow: '0 20px 60px rgba(0,0,0,0.50)',
     }}
@@ -101,11 +101,11 @@ export default function FixtureDetailPage({ params }: { params: { id: string } }
   if (loading) {
     return (
       <div className="flex items-center justify-center h-screen"
-        style={{ background: 'radial-gradient(ellipse at 30% 50%, #060f1e 0%, #030a14 42%, #010408 100%)' }}>
+        style={{ background: 'radial-gradient(ellipse at 30% 50%, #060f1e 0%, #08170D 42%, #06110A 100%)' }}>
         <div className="flex flex-col items-center gap-4">
-          <motion.div className="w-12 h-12 rounded-full border-2 border-cyan-400/20 border-t-cyan-400"
+          <motion.div className="w-12 h-12 rounded-full border-2 border-green-500/20 border-t-green-500"
             animate={{ rotate: 360 }} transition={{ duration: 0.9, repeat: Infinity, ease: 'linear' }} />
-          <p className="text-[10px] text-cyan-400/60 tracking-[0.3em] uppercase font-bold">Cargando</p>
+          <p className="text-[10px] text-green-500/60 tracking-[0.3em] uppercase font-bold">Cargando</p>
         </div>
       </div>
     );
@@ -114,8 +114,8 @@ export default function FixtureDetailPage({ params }: { params: { id: string } }
   if (!fixture) {
     return (
       <div className="flex items-center justify-center h-screen"
-        style={{ background: 'radial-gradient(ellipse at 30% 50%, #060f1e 0%, #030a14 42%, #010408 100%)' }}>
-        <p className="text-slate-400 font-semibold">Partido no encontrado</p>
+        style={{ background: 'radial-gradient(ellipse at 30% 50%, #060f1e 0%, #08170D 42%, #06110A 100%)' }}>
+        <p className="text-orionix-text-muted font-semibold">Partido no encontrado</p>
       </div>
     );
   }
@@ -138,22 +138,22 @@ export default function FixtureDetailPage({ params }: { params: { id: string } }
   const resultCfg = predCorrect
     ? { color: '#34d399', border: 'rgba(52,211,153,0.25)', bg: 'rgba(52,211,153,0.06)', label: '¡Marcador exacto!', icon: '🎯', pts: '+3 pts' }
     : predResultCorrect
-      ? { color: '#22d3ee', border: 'rgba(34,211,238,0.22)', bg: 'rgba(34,211,238,0.05)', label: 'Resultado correcto', icon: '✅', pts: '+1 pt' }
+      ? { color: '#4CAF50', border: 'rgba(76,175,80,0.22)', bg: 'rgba(76,175,80,0.05)', label: 'Resultado correcto', icon: '✅', pts: '+1 pt' }
       : { color: '#f87171', border: 'rgba(248,113,113,0.22)', bg: 'rgba(239,68,68,0.05)', label: 'No acertaste esta vez', icon: '❌', pts: '0 pts' };
 
   return (
     <div className="w-full relative min-h-screen"
-      style={{ background: 'radial-gradient(ellipse at 22% 35%, #060f1e 0%, #030a14 48%, #010508 100%)' }}>
+      style={{ background: 'radial-gradient(ellipse at 22% 35%, #050D07 0%, #08170D 48%, #06110A 100%)' }}>
 
       {/* Ambient blobs */}
       <motion.div className="fixed rounded-full pointer-events-none"
         style={{ width: 600, height: 600, top: -150, left: -120,
-          background: 'radial-gradient(circle, rgba(0,210,185,0.07) 0%, transparent 65%)', filter: 'blur(70px)', zIndex: 0 }}
+          background: 'radial-gradient(circle, rgba(76,175,80,0.07) 0%, transparent 65%)', filter: 'blur(70px)', zIndex: 0 }}
         animate={{ scale: [1, 1.15, 1], opacity: [0.5, 0.8, 0.5] }}
         transition={{ duration: 12, repeat: Infinity }} />
       <motion.div className="fixed rounded-full pointer-events-none"
         style={{ width: 450, height: 450, bottom: -80, right: -80,
-          background: 'radial-gradient(circle, rgba(34,211,238,0.06) 0%, transparent 65%)', filter: 'blur(60px)', zIndex: 0 }}
+          background: 'radial-gradient(circle, rgba(76,175,80,0.06) 0%, transparent 65%)', filter: 'blur(60px)', zIndex: 0 }}
         animate={{ scale: [1, 1.2, 1], opacity: [0.4, 0.7, 0.4] }}
         transition={{ duration: 14, repeat: Infinity, delay: 5 }} />
 
@@ -180,26 +180,26 @@ export default function FixtureDetailPage({ params }: { params: { id: string } }
 
           {/* Not logged in */}
           {!isAuthenticated && (
-            <DarkCard accent="#22d3ee" delay={0.08}>
+            <DarkCard accent="#4CAF50" delay={0.08}>
               <div className="p-6 text-center">
                 <div className="relative inline-block mb-4">
                   <div className="absolute inset-0 rounded-2xl pointer-events-none"
-                    style={{ background: 'rgba(34,211,238,0.35)', filter: 'blur(14px)', opacity: 0.25, transform: 'scale(1.15)' }} />
+                    style={{ background: 'rgba(76,175,80,0.35)', filter: 'blur(14px)', opacity: 0.25, transform: 'scale(1.15)' }} />
                   <motion.div className="relative w-16 h-16 rounded-2xl flex items-center justify-center mx-auto"
-                    style={{ background: 'linear-gradient(145deg, rgba(34,211,238,0.10), rgba(1,4,14,0.85))', border: '1px solid rgba(34,211,238,0.22)' }}
-                    animate={{ boxShadow: ['0 0 12px rgba(34,211,238,0.10)', '0 0 28px rgba(34,211,238,0.30)', '0 0 12px rgba(34,211,238,0.10)'] }}
+                    style={{ background: 'linear-gradient(145deg, rgba(76,175,80,0.10), rgba(1,4,14,0.85))', border: '1px solid rgba(76,175,80,0.22)' }}
+                    animate={{ boxShadow: ['0 0 12px rgba(76,175,80,0.10)', '0 0 28px rgba(76,175,80,0.30)', '0 0 12px rgba(76,175,80,0.10)'] }}
                     transition={{ duration: 2.5, repeat: Infinity }}
                   >
-                    <FiTarget size={28} style={{ color: '#22d3ee', filter: 'drop-shadow(0 0 6px rgba(34,211,238,0.7))' }} />
+                    <FiTarget size={28} style={{ color: '#4CAF50', filter: 'drop-shadow(0 0 6px rgba(76,175,80,0.7))' }} />
                   </motion.div>
                 </div>
                 <p className="text-white font-black text-lg mb-1">¿Cuál será el marcador?</p>
-                <p className="text-slate-500 text-sm mb-5">Inicia sesión para hacer tu porra</p>
+                <p className="text-orionix-text-muted text-sm mb-5">Inicia sesión para hacer tu porra</p>
                 <motion.button
                   onClick={() => router.push('/onboarding')}
                   whileHover={{ scale: 1.03 }} whileTap={{ scale: 0.97 }}
                   className="px-8 py-3 rounded-xl text-sm font-black text-white"
-                  style={{ background: 'linear-gradient(135deg, #0d9488, #06b6d4)', boxShadow: '0 6px 24px rgba(0,210,185,0.30)' }}
+                  style={{ background: 'linear-gradient(135deg, #1B5E20, #388E3C)', boxShadow: '0 6px 24px rgba(76,175,80,0.30)' }}
                 >
                   Iniciar sesión
                 </motion.button>
@@ -220,11 +220,11 @@ export default function FixtureDetailPage({ params }: { params: { id: string } }
                   <span style={{ fontSize: 28 }}>🔒</span>
                 </motion.div>
                 <p className="text-white font-black text-base mb-1">Porras cerradas</p>
-                <p className="text-slate-500 text-sm">Este partido ya comenzó. No se pueden registrar predicciones.</p>
+                <p className="text-orionix-text-muted text-sm">Este partido ya comenzó. No se pueden registrar predicciones.</p>
                 {prediction && (
                   <div className="mt-4 inline-flex items-center gap-3 px-5 py-3 rounded-xl"
                     style={{ background: 'rgba(239,68,68,0.06)', border: '1px solid rgba(239,68,68,0.15)' }}>
-                    <span className="text-slate-400 text-sm font-bold">Tu porra:</span>
+                    <span className="text-orionix-text-muted text-sm font-bold">Tu porra:</span>
                     <span className="text-white font-black text-lg tabular-nums">
                       {prediction.predictedHomeScore} – {prediction.predictedAwayScore}
                     </span>
@@ -236,14 +236,14 @@ export default function FixtureDetailPage({ params }: { params: { id: string } }
 
           {/* Logged in — scheduled match */}
           {isAuthenticated && isScheduled && (
-            <DarkCard accent="#22d3ee" delay={0.08}>
+            <DarkCard accent="#4CAF50" delay={0.08}>
               <div className="p-5">
 
                 {/* Scoring rules */}
                 <div className="grid grid-cols-3 gap-2 mb-5">
                   {SCORE_RULES.map(({ pts, label, sublabel, color, icon }) => (
                     <div key={pts} className="relative overflow-hidden rounded-xl p-3 text-center"
-                      style={{ background: 'rgba(4,12,28,0.80)', border: `1px solid ${color}18` }}>
+                      style={{ background: 'rgba(6,17,10,0.80)', border: `1px solid ${color}18` }}>
                       <div className="absolute inset-x-0 top-0 h-px"
                         style={{ background: `linear-gradient(90deg, transparent, ${color}50, transparent)` }} />
                       <div className="flex justify-center mb-1.5"
@@ -254,7 +254,7 @@ export default function FixtureDetailPage({ params }: { params: { id: string } }
                         {pts}<span className="text-xs font-bold ml-0.5">pts</span>
                       </p>
                       <p className="text-[8px] font-black tracking-wide mt-0.5 leading-tight" style={{ color: `${color}80` }}>{label}</p>
-                      <p className="text-[7px] text-slate-600 mt-0.5 leading-tight hidden sm:block">{sublabel}</p>
+                      <p className="text-[7px] text-orionix-text-muted mt-0.5 leading-tight hidden sm:block">{sublabel}</p>
                     </div>
                   ))}
                 </div>
@@ -263,14 +263,14 @@ export default function FixtureDetailPage({ params }: { params: { id: string } }
                 <div className="flex items-center justify-between mb-4">
                   <div className="flex items-center gap-2">
                     <div className="w-[3px] h-5 rounded-full"
-                      style={{ background: 'linear-gradient(180deg, #22d3ee, #06b6d4)' }} />
-                    <span className="text-[10px] font-black text-slate-400 tracking-[0.24em] uppercase">Tu Porra</span>
+                      style={{ background: 'linear-gradient(180deg, #4CAF50, #388E3C)' }} />
+                    <span className="text-[10px] font-black text-orionix-text-muted tracking-[0.24em] uppercase">Tu Porra</span>
                   </div>
                   {prediction && !editing && (
                     <motion.button
                       onClick={() => setEditing(true)}
                       whileHover={{ scale: 1.05 }}
-                      className="flex items-center gap-1 text-[10px] font-black text-cyan-400/70 hover:text-cyan-300 transition-colors"
+                      className="flex items-center gap-1 text-[10px] font-black text-green-400/70 hover:text-green-300 transition-colors"
                     >
                       <FiEdit2 size={11} /> Editar
                     </motion.button>
@@ -290,13 +290,13 @@ export default function FixtureDetailPage({ params }: { params: { id: string } }
                               <Image src={fixture.homeTeam.flagUrl} alt="" fill sizes="28px" className="object-cover" unoptimized />
                             </div>
                           )}
-                          <span className="text-slate-400 text-xs font-bold">{fixture.homeTeam?.shortName}</span>
+                          <span className="text-orionix-text-muted text-xs font-bold">{fixture.homeTeam?.shortName}</span>
                         </div>
-                        <p className="text-white font-black text-4xl" style={{ textShadow: '0 0 20px rgba(34,211,238,0.30)' }}>
+                        <p className="text-white font-black text-4xl" style={{ textShadow: '0 0 20px rgba(76,175,80,0.30)' }}>
                           {prediction.predictedHomeScore}
                         </p>
                       </div>
-                      <span className="text-slate-700 font-black text-2xl">–</span>
+                      <span className="text-orionix-text-muted font-black text-2xl">–</span>
                       {/* Away */}
                       <div className="text-center">
                         <div className="flex items-center gap-2 justify-center mb-2">
@@ -305,9 +305,9 @@ export default function FixtureDetailPage({ params }: { params: { id: string } }
                               <Image src={fixture.awayTeam.flagUrl} alt="" fill sizes="28px" className="object-cover" unoptimized />
                             </div>
                           )}
-                          <span className="text-slate-400 text-xs font-bold">{fixture.awayTeam?.shortName}</span>
+                          <span className="text-orionix-text-muted text-xs font-bold">{fixture.awayTeam?.shortName}</span>
                         </div>
-                        <p className="text-white font-black text-4xl" style={{ textShadow: '0 0 20px rgba(34,211,238,0.30)' }}>
+                        <p className="text-white font-black text-4xl" style={{ textShadow: '0 0 20px rgba(76,175,80,0.30)' }}>
                           {prediction.predictedAwayScore}
                         </p>
                       </div>
@@ -324,21 +324,21 @@ export default function FixtureDetailPage({ params }: { params: { id: string } }
                                 <Image src={fixture.homeTeam.flagUrl} alt="" fill sizes="28px" className="object-cover" unoptimized />
                               </div>
                             )}
-                            <span className="text-slate-400 text-xs font-bold">{fixture.homeTeam?.shortName}</span>
+                            <span className="text-orionix-text-muted text-xs font-bold">{fixture.homeTeam?.shortName}</span>
                           </div>
                           <div className="flex items-center gap-2">
                             <motion.button onClick={() => setPredHome(Math.max(0, predHome - 1))} whileHover={{ scale: 1.08 }} whileTap={{ scale: 0.92 }}
                               className="w-9 h-9 rounded-xl font-black text-lg text-white"
                               style={{ background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.10)' }}>−</motion.button>
                             <span className="text-white font-black text-4xl w-12 text-center tabular-nums"
-                              style={{ textShadow: '0 0 18px rgba(34,211,238,0.50)' }}>{predHome}</span>
+                              style={{ textShadow: '0 0 18px rgba(76,175,80,0.50)' }}>{predHome}</span>
                             <motion.button onClick={() => setPredHome(predHome + 1)} whileHover={{ scale: 1.08 }} whileTap={{ scale: 0.92 }}
                               className="w-9 h-9 rounded-xl font-black text-lg text-white"
-                              style={{ background: 'rgba(34,211,238,0.15)', border: '1px solid rgba(34,211,238,0.30)' }}>+</motion.button>
+                              style={{ background: 'rgba(76,175,80,0.15)', border: '1px solid rgba(76,175,80,0.30)' }}>+</motion.button>
                           </div>
                         </div>
 
-                        <span className="text-slate-600 font-black text-2xl">–</span>
+                        <span className="text-orionix-text-muted font-black text-2xl">–</span>
 
                         {/* Away score */}
                         <div className="text-center">
@@ -348,17 +348,17 @@ export default function FixtureDetailPage({ params }: { params: { id: string } }
                                 <Image src={fixture.awayTeam.flagUrl} alt="" fill sizes="28px" className="object-cover" unoptimized />
                               </div>
                             )}
-                            <span className="text-slate-400 text-xs font-bold">{fixture.awayTeam?.shortName}</span>
+                            <span className="text-orionix-text-muted text-xs font-bold">{fixture.awayTeam?.shortName}</span>
                           </div>
                           <div className="flex items-center gap-2">
                             <motion.button onClick={() => setPredAway(Math.max(0, predAway - 1))} whileHover={{ scale: 1.08 }} whileTap={{ scale: 0.92 }}
                               className="w-9 h-9 rounded-xl font-black text-lg text-white"
                               style={{ background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.10)' }}>−</motion.button>
                             <span className="text-white font-black text-4xl w-12 text-center tabular-nums"
-                              style={{ textShadow: '0 0 18px rgba(34,211,238,0.50)' }}>{predAway}</span>
+                              style={{ textShadow: '0 0 18px rgba(76,175,80,0.50)' }}>{predAway}</span>
                             <motion.button onClick={() => setPredAway(predAway + 1)} whileHover={{ scale: 1.08 }} whileTap={{ scale: 0.92 }}
                               className="w-9 h-9 rounded-xl font-black text-lg text-white"
-                              style={{ background: 'rgba(34,211,238,0.15)', border: '1px solid rgba(34,211,238,0.30)' }}>+</motion.button>
+                              style={{ background: 'rgba(76,175,80,0.15)', border: '1px solid rgba(76,175,80,0.30)' }}>+</motion.button>
                           </div>
                         </div>
                       </div>
@@ -375,7 +375,7 @@ export default function FixtureDetailPage({ params }: { params: { id: string } }
                           <motion.button
                             onClick={() => { setEditing(false); setPredError(''); }}
                             whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.97 }}
-                            className="flex-1 py-3 rounded-xl text-sm font-black text-slate-400"
+                            className="flex-1 py-3 rounded-xl text-sm font-black text-orionix-text-muted"
                             style={{ border: '1px solid rgba(255,255,255,0.07)', background: 'rgba(255,255,255,0.02)' }}
                           >Cancelar</motion.button>
                         )}
@@ -384,7 +384,7 @@ export default function FixtureDetailPage({ params }: { params: { id: string } }
                           disabled={submitting}
                           whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.97 }}
                           className="flex-1 py-3 rounded-xl text-sm font-black text-white disabled:opacity-50 relative overflow-hidden"
-                          style={{ background: 'linear-gradient(135deg, #0d9488, #06b6d4)', boxShadow: '0 6px 24px rgba(0,210,185,0.30)' }}
+                          style={{ background: 'linear-gradient(135deg, #1B5E20, #388E3C)', boxShadow: '0 6px 24px rgba(76,175,80,0.30)' }}
                         >
                           <motion.div className="absolute inset-0 pointer-events-none"
                             style={{ background: 'linear-gradient(108deg, transparent 28%, rgba(255,255,255,0.18) 50%, transparent 72%)' }}
@@ -422,23 +422,23 @@ export default function FixtureDetailPage({ params }: { params: { id: string } }
                 </div>
                 <div className="flex items-stretch gap-4">
                   <div className="flex-1 text-center rounded-xl p-4"
-                    style={{ background: 'rgba(4,12,28,0.60)', border: '1px solid rgba(255,255,255,0.06)' }}>
-                    <p className="text-[8px] font-black text-slate-600 tracking-[0.25em] uppercase mb-2">Tu Porra</p>
+                    style={{ background: 'rgba(6,17,10,0.60)', border: '1px solid rgba(255,255,255,0.06)' }}>
+                    <p className="text-[8px] font-black text-orionix-text-muted tracking-[0.25em] uppercase mb-2">Tu Porra</p>
                     <p className="text-3xl font-black text-white tabular-nums">
                       {prediction.predictedHomeScore}
-                      <span className="text-slate-700 mx-1 text-xl">–</span>
+                      <span className="text-orionix-text-muted mx-1 text-xl">–</span>
                       {prediction.predictedAwayScore}
                     </p>
                   </div>
                   <div className="flex items-center">
-                    <span className="text-slate-700 font-black text-sm">vs</span>
+                    <span className="text-orionix-text-muted font-black text-sm">vs</span>
                   </div>
                   <div className="flex-1 text-center rounded-xl p-4"
-                    style={{ background: 'rgba(4,12,28,0.60)', border: '1px solid rgba(255,255,255,0.06)' }}>
-                    <p className="text-[8px] font-black text-slate-600 tracking-[0.25em] uppercase mb-2">Resultado</p>
+                    style={{ background: 'rgba(6,17,10,0.60)', border: '1px solid rgba(255,255,255,0.06)' }}>
+                    <p className="text-[8px] font-black text-orionix-text-muted tracking-[0.25em] uppercase mb-2">Resultado</p>
                     <p className="text-3xl font-black text-white tabular-nums">
                       {fixture.homeScore}
-                      <span className="text-slate-700 mx-1 text-xl">–</span>
+                      <span className="text-orionix-text-muted mx-1 text-xl">–</span>
                       {fixture.awayScore}
                     </p>
                   </div>
@@ -455,7 +455,7 @@ export default function FixtureDetailPage({ params }: { params: { id: string } }
           {/* Logged in — no prediction for finished */}
           {isAuthenticated && isFinished && !prediction && (
             <DarkCard accent="#475569" delay={0.08}>
-              <p className="text-slate-600 text-sm text-center py-5">No hiciste una porra para este partido</p>
+              <p className="text-orionix-text-muted text-sm text-center py-5">No hiciste una porra para este partido</p>
             </DarkCard>
           )}
         </div>
@@ -467,20 +467,20 @@ export default function FixtureDetailPage({ params }: { params: { id: string } }
               <div className="flex items-center gap-2 mb-4">
                 <div className="w-[3px] h-5 rounded-full"
                   style={{ background: 'linear-gradient(180deg, #34d399, #10b981)' }} />
-                <span className="text-[10px] font-black text-slate-400 tracking-[0.24em] uppercase">Información del Partido</span>
+                <span className="text-[10px] font-black text-orionix-text-muted tracking-[0.24em] uppercase">Información del Partido</span>
                 <FiMapPin size={12} style={{ color: '#34d399', marginLeft: 2 }} />
               </div>
               <div className="grid grid-cols-2 gap-4">
                 {fixture.stadiumName && (
                   <div>
-                    <p className="text-[9px] font-black text-slate-600 tracking-[0.22em] uppercase mb-1">Estadio</p>
-                    <p className="text-sm font-bold text-slate-300">{fixture.stadiumName}</p>
+                    <p className="text-[9px] font-black text-orionix-text-muted tracking-[0.22em] uppercase mb-1">Estadio</p>
+                    <p className="text-sm font-bold text-orionix-text-secondary">{fixture.stadiumName}</p>
                   </div>
                 )}
                 {fixture.hostCity && (
                   <div>
-                    <p className="text-[9px] font-black text-slate-600 tracking-[0.22em] uppercase mb-1">Ciudad</p>
-                    <p className="text-sm font-bold text-slate-300">{fixture.hostCity}{fixture.hostCountry ? `, ${fixture.hostCountry}` : ''}</p>
+                    <p className="text-[9px] font-black text-orionix-text-muted tracking-[0.22em] uppercase mb-1">Ciudad</p>
+                    <p className="text-sm font-bold text-orionix-text-secondary">{fixture.hostCity}{fixture.hostCountry ? `, ${fixture.hostCountry}` : ''}</p>
                   </div>
                 )}
               </div>
@@ -496,7 +496,7 @@ export default function FixtureDetailPage({ params }: { params: { id: string } }
                 <div className="flex items-center gap-2">
                   <div className="w-[3px] h-5 rounded-full"
                     style={{ background: 'linear-gradient(180deg, #fbbf24, #f59e0b)' }} />
-                  <span className="text-[10px] font-black text-slate-400 tracking-[0.24em] uppercase">Goleadores</span>
+                  <span className="text-[10px] font-black text-orionix-text-muted tracking-[0.24em] uppercase">Goleadores</span>
                   <span className="text-[8px] font-black px-1.5 py-0.5 rounded-full"
                     style={{ background: 'rgba(251,191,36,0.10)', color: '#fbbf24', border: '1px solid rgba(251,191,36,0.20)' }}>
                     {fixture.scorers.length}
@@ -511,7 +511,7 @@ export default function FixtureDetailPage({ params }: { params: { id: string } }
               <div className="space-y-2">
                 {fixture.scorers.map((scorer: any) => {
                   const isHome = scorer.teamId === fixture.homeTeam.id;
-                  const accentColor = isHome ? '#06b6d4' : '#f43f5e';
+                  const accentColor = isHome ? '#4CAF50' : '#f43f5e';
                   return (
                     <motion.div
                       key={scorer.id}
@@ -527,9 +527,9 @@ export default function FixtureDetailPage({ params }: { params: { id: string } }
                     >
                       <span className="text-lg">⚽</span>
                       <div className="flex-1 min-w-0">
-                        <p className="font-bold text-slate-200 text-sm truncate">{scorer.playerName}</p>
+                        <p className="font-bold text-orionix-text-secondary text-sm truncate">{scorer.playerName}</p>
                         {scorer.teamName && (
-                          <p className="text-[10px] text-slate-600">{scorer.teamFifaCode ?? scorer.teamName}</p>
+                          <p className="text-[10px] text-orionix-text-muted">{scorer.teamFifaCode ?? scorer.teamName}</p>
                         )}
                         {scorer.mismatch && scorer.apiPlayerName && (
                           <p className="text-[9px] text-amber-500/70 mt-0.5">
@@ -539,7 +539,7 @@ export default function FixtureDetailPage({ params }: { params: { id: string } }
                       </div>
                       <div className="flex items-center gap-2 shrink-0">
                         {scorer.minute && (
-                          <span className="text-[10px] font-black text-slate-500 px-2 py-1 rounded-lg"
+                          <span className="text-[10px] font-black text-orionix-text-muted px-2 py-1 rounded-lg"
                             style={{ background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.06)' }}>
                             {scorer.minute}&apos;
                           </span>
@@ -561,7 +561,7 @@ export default function FixtureDetailPage({ params }: { params: { id: string } }
           <Link href="/fixtures" className="flex-1">
             <motion.div
               whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.97 }}
-              className="w-full py-3 rounded-xl text-sm font-black text-slate-400 flex items-center justify-center gap-2 cursor-pointer"
+              className="w-full py-3 rounded-xl text-sm font-black text-orionix-text-muted flex items-center justify-center gap-2 cursor-pointer"
               style={{ border: '1px solid rgba(255,255,255,0.07)', background: 'rgba(255,255,255,0.02)' }}
             >
               <FiArrowLeft size={14} /> Volver
@@ -569,10 +569,10 @@ export default function FixtureDetailPage({ params }: { params: { id: string } }
           </Link>
           <Link href="/predictions" className="flex-1">
             <motion.div
-              whileHover={{ scale: 1.02, boxShadow: '0 12px 36px rgba(0,210,185,0.40)' }}
+              whileHover={{ scale: 1.02, boxShadow: '0 12px 36px rgba(76,175,80,0.40)' }}
               whileTap={{ scale: 0.97 }}
               className="w-full py-3 rounded-xl text-sm font-black text-white flex items-center justify-center gap-2 cursor-pointer relative overflow-hidden"
-              style={{ background: 'linear-gradient(135deg, #0d9488, #06b6d4)', boxShadow: '0 6px 24px rgba(0,210,185,0.28)' }}
+              style={{ background: 'linear-gradient(135deg, #1B5E20, #388E3C)', boxShadow: '0 6px 24px rgba(76,175,80,0.28)' }}
             >
               <motion.div className="absolute inset-0 pointer-events-none"
                 style={{ background: 'linear-gradient(108deg, transparent 28%, rgba(255,255,255,0.18) 50%, transparent 72%)' }}

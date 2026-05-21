@@ -13,9 +13,9 @@ const Particle = ({ index }: { index: number }) => {
   const delay = (index * 0.28) % 6;
   const duration = 8 + (index % 6);
   const cols: [string, string][] = [
-    ['rgba(0,240,195,0.9)', '0 0 10px rgba(0,240,195,1),0 0 24px rgba(0,240,195,0.5)'],
-    ['rgba(0,195,255,0.9)', '0 0 10px rgba(0,195,255,1),0 0 24px rgba(0,195,255,0.5)'],
-    ['rgba(80,180,255,0.8)', '0 0 8px rgba(80,180,255,1),0 0 20px rgba(80,180,255,0.4)'],
+    ['rgba(76,175,80,0.9)',  '0 0 10px rgba(76,175,80,1),0 0 24px rgba(76,175,80,0.5)'],
+    ['rgba(56,142,60,0.9)',  '0 0 10px rgba(56,142,60,1),0 0 24px rgba(56,142,60,0.5)'],
+    ['rgba(102,187,106,0.8)','0 0 8px rgba(102,187,106,1),0 0 20px rgba(102,187,106,0.4)'],
   ];
   const [bg, shadow] = cols[index % cols.length];
   return (
@@ -181,7 +181,7 @@ export default function RegisterPage() {
   return (
     <div
       className="min-h-screen w-full flex items-center justify-center relative overflow-hidden"
-      style={{ background: 'radial-gradient(ellipse at 25% 60%, #080f22 0%, #010810 45%, #000509 100%)' }}
+      style={{ background: 'radial-gradient(ellipse at 25% 60%, #06110A 0%, #0B1B12 45%, #06110A 100%)' }}
     >
       {/* Particles */}
       <div className="absolute inset-0 overflow-hidden pointer-events-none">
@@ -190,16 +190,16 @@ export default function RegisterPage() {
 
       {/* Ambient orbs */}
       <div className="absolute top-[-15%] right-[-5%] w-[38vw] h-[38vw] rounded-full pointer-events-none"
-        style={{ background: 'radial-gradient(circle, rgba(0,180,155,0.09) 0%, transparent 70%)', filter: 'blur(55px)' }} />
+        style={{ background: 'radial-gradient(circle, rgba(56,142,60,0.09) 0%, transparent 70%)', filter: 'blur(55px)' }} />
       <div className="absolute bottom-[-10%] left-[-5%] w-[32vw] h-[32vw] rounded-full pointer-events-none"
-        style={{ background: 'radial-gradient(circle, rgba(0,130,210,0.07) 0%, transparent 70%)', filter: 'blur(50px)' }} />
+        style={{ background: 'radial-gradient(circle, rgba(46,125,50,0.07) 0%, transparent 70%)', filter: 'blur(50px)' }} />
 
       {/* Aurora slash 1 */}
       <motion.div
         className="absolute pointer-events-none"
         style={{
           top: '-40%', left: '-20%', width: '65%', height: '200%',
-          background: 'linear-gradient(105deg, transparent 0%, rgba(0,200,175,0.03) 40%, rgba(0,175,255,0.055) 55%, transparent 100%)',
+          background: 'linear-gradient(105deg, transparent 0%, rgba(56,142,60,0.03) 40%, rgba(76,175,80,0.055) 55%, transparent 100%)',
           transform: 'skewX(-18deg)',
         }}
         animate={{ x: ['-10%', '110%'], opacity: [0, 1, 1, 0] }}
@@ -209,7 +209,7 @@ export default function RegisterPage() {
         className="absolute pointer-events-none"
         style={{
           top: '-40%', left: '-20%', width: '55%', height: '200%',
-          background: 'linear-gradient(105deg, transparent 0%, rgba(80,100,255,0.025) 40%, rgba(0,220,190,0.04) 55%, transparent 100%)',
+          background: 'linear-gradient(105deg, transparent 0%, rgba(46,125,50,0.025) 40%, rgba(56,142,60,0.04) 55%, transparent 100%)',
           transform: 'skewX(-18deg)',
         }}
         animate={{ x: ['-10%', '120%'], opacity: [0, 1, 1, 0] }}
@@ -229,37 +229,37 @@ export default function RegisterPage() {
           <motion.div
             className="absolute inset-0"
             style={{
-              background: 'conic-gradient(from 0deg, transparent 0%, rgba(0,210,185,0.5) 20%, transparent 40%, rgba(0,170,255,0.4) 60%, transparent 80%)',
+              background: 'conic-gradient(from 0deg, transparent 0%, rgba(76,175,80,0.5) 20%, transparent 40%, rgba(56,142,60,0.4) 60%, transparent 80%)',
             }}
             animate={{ rotate: [0, 360] }}
             transition={{ duration: 8, repeat: Infinity, ease: 'linear' }}
           />
           <div className="absolute inset-[1px] rounded-2xl"
-            style={{ background: 'linear-gradient(145deg, #090e1f, #0b1628)' }} />
+            style={{ background: 'linear-gradient(145deg, #06110A, #0B1B12)' }} />
         </div>
 
         <div
           className="relative rounded-2xl p-8"
           style={{
-            background: 'linear-gradient(145deg, rgba(9,14,31,0.97), rgba(11,22,40,0.95))',
-            border: '1px solid rgba(56,189,248,0.14)',
+            background: 'linear-gradient(145deg, rgba(6,17,10,0.97), rgba(11,27,18,0.95))',
+            border: '1px solid rgba(76,175,80,0.14)',
             boxShadow: '0 24px 64px rgba(0,0,0,0.55), inset 0 1px 0 rgba(255,255,255,0.04)',
           }}
         >
           {/* Header */}
           <div className="flex items-center gap-4 mb-7">
             <div className="w-12 h-12 rounded-xl overflow-hidden flex-shrink-0"
-              style={{ background: 'linear-gradient(135deg,#0f2a4a,#1a3f6f)', border: '1px solid rgba(56,189,248,0.2)' }}>
+              style={{ background: 'linear-gradient(135deg,#0B1B12,#162D1D)', border: '1px solid rgba(76,175,80,0.2)' }}>
               <Image src="/logotipo_Orionix_Gol_transparente.png" alt="Orionix" width={48} height={48} className="w-full h-full object-contain" />
             </div>
             <div className="flex-1 min-w-0">
               <h1 className="text-xl font-bold text-white" style={{ fontFamily: 'var(--font-display)', letterSpacing: '0.01em' }}>
                 Crear cuenta
               </h1>
-              <p className="text-xs text-slate-400 mt-0.5">Únete y comienza a predecir</p>
+              <p className="text-xs mt-0.5 text-orionix-text-muted">Únete y comienza a predecir</p>
             </div>
             <span className="text-[10px] font-bold px-2 py-0.5 rounded-full flex-shrink-0"
-              style={{ background: 'rgba(0,210,185,0.12)', color: '#00d2b9', border: '1px solid rgba(0,210,185,0.25)' }}>
+              style={{ background: 'rgba(212,175,55,0.10)', color: '#D4AF37', border: '1px solid rgba(212,175,55,0.25)' }}>
               BETA
             </span>
           </div>
@@ -288,7 +288,7 @@ export default function RegisterPage() {
                 initial={{ opacity: 0, scale: 0.94 }}
                 animate={{ opacity: 1, scale: 1 }}
                 className="mb-4 px-4 py-3 rounded-xl text-xs font-medium flex items-center gap-2"
-                style={{ background: 'rgba(0,210,185,0.1)', border: '1px solid rgba(0,210,185,0.25)', color: '#00d2b9' }}
+                style={{ background: 'rgba(56,142,60,0.1)', border: '1px solid rgba(56,142,60,0.25)', color: '#4CAF50' }}
               >
                 <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
                   <polyline points="20 6 9 17 4 12" />
@@ -305,12 +305,12 @@ export default function RegisterPage() {
               {fields.slice(0, 2).map(f => (
                 <div key={f.id}>
                   <label className="block text-[10px] font-semibold tracking-widest uppercase mb-1.5"
-                    style={{ color: focused === f.id ? 'rgba(0,210,185,0.9)' : 'rgba(148,163,184,0.7)' }}>
+                    style={{ color: focused === f.id ? 'rgba(76,175,80,0.9)' : 'rgba(148,163,184,0.7)' }}>
                     {f.label}
                   </label>
                   <div className="relative">
                     <span className="absolute left-3 top-1/2 -translate-y-1/2"
-                      style={{ color: focused === f.id ? 'rgba(0,210,185,0.8)' : 'rgba(100,116,139,0.7)' }}>
+                      style={{ color: focused === f.id ? 'rgba(76,175,80,0.8)' : 'rgba(100,116,139,0.7)' }}>
                       {f.icon}
                     </span>
                     <input
@@ -323,12 +323,12 @@ export default function RegisterPage() {
                       placeholder={f.placeholder}
                       required
                       autoComplete="off"
-                      className="w-full pl-8 pr-3 py-2.5 rounded-xl text-sm text-slate-100 placeholder-slate-600 transition-all duration-200"
+                      className="w-full pl-8 pr-3 py-2.5 rounded-xl text-sm text-white placeholder-orionix-text-muted transition-all duration-200"
                       style={{
-                        background: focused === f.id ? 'rgba(0,210,185,0.06)' : 'rgba(255,255,255,0.04)',
-                        border: `1px solid ${focused === f.id ? 'rgba(0,210,185,0.45)' : 'rgba(255,255,255,0.08)'}`,
+                        background: focused === f.id ? 'rgba(76,175,80,0.06)' : 'rgba(255,255,255,0.04)',
+                        border: `1px solid ${focused === f.id ? 'rgba(76,175,80,0.45)' : 'rgba(255,255,255,0.08)'}`,
                         outline: 'none',
-                        boxShadow: focused === f.id ? '0 0 0 3px rgba(0,210,185,0.08)' : 'none',
+                        boxShadow: focused === f.id ? '0 0 0 3px rgba(76,175,80,0.08)' : 'none',
                       }}
                     />
                   </div>
@@ -340,12 +340,12 @@ export default function RegisterPage() {
             {fields.slice(2).map(f => (
               <div key={f.id} className="mb-3">
                 <label className="block text-[10px] font-semibold tracking-widest uppercase mb-1.5"
-                  style={{ color: focused === f.id ? 'rgba(0,210,185,0.9)' : 'rgba(148,163,184,0.7)' }}>
+                  style={{ color: focused === f.id ? 'rgba(76,175,80,0.9)' : 'rgba(148,163,184,0.7)' }}>
                   {f.label}
                 </label>
                 <div className="relative">
                   <span className="absolute left-3 top-1/2 -translate-y-1/2"
-                    style={{ color: focused === f.id ? 'rgba(0,210,185,0.8)' : 'rgba(100,116,139,0.7)' }}>
+                    style={{ color: focused === f.id ? 'rgba(76,175,80,0.8)' : 'rgba(110,124,114,0.7)' }}>
                     {f.icon}
                   </span>
                   <input
@@ -358,12 +358,12 @@ export default function RegisterPage() {
                     placeholder={f.placeholder}
                     required
                     autoComplete={f.type === 'password' ? 'new-password' : 'off'}
-                    className="w-full pl-8 pr-3 py-2.5 rounded-xl text-sm text-slate-100 placeholder-slate-600 transition-all duration-200"
+                    className="w-full pl-8 pr-3 py-2.5 rounded-xl text-sm text-white placeholder-orionix-text-muted transition-all duration-200"
                     style={{
-                      background: focused === f.id ? 'rgba(0,210,185,0.06)' : 'rgba(255,255,255,0.04)',
-                      border: `1px solid ${focused === f.id ? 'rgba(0,210,185,0.45)' : 'rgba(255,255,255,0.08)'}`,
+                      background: focused === f.id ? 'rgba(76,175,80,0.06)' : 'rgba(255,255,255,0.04)',
+                      border: `1px solid ${focused === f.id ? 'rgba(76,175,80,0.45)' : 'rgba(255,255,255,0.08)'}`,
                       outline: 'none',
-                      boxShadow: focused === f.id ? '0 0 0 3px rgba(0,210,185,0.08)' : 'none',
+                      boxShadow: focused === f.id ? '0 0 0 3px rgba(76,175,80,0.08)' : 'none',
                     }}
                   />
                 </div>
@@ -377,12 +377,12 @@ export default function RegisterPage() {
               className="w-full mt-2 py-3 rounded-xl font-bold text-sm tracking-widest uppercase relative overflow-hidden"
               style={{
                 background: isLoading || success
-                  ? 'rgba(0,210,185,0.3)'
-                  : 'linear-gradient(90deg, #00c8a8 0%, #00b4d8 100%)',
+                  ? 'rgba(76,175,80,0.3)'
+                  : 'linear-gradient(90deg, #1B5E20 0%, #388E3C 100%)',
                 color: '#ffffff',
                 border: 'none',
                 cursor: isLoading || success ? 'not-allowed' : 'pointer',
-                boxShadow: isLoading || success ? 'none' : '0 6px 28px rgba(0,200,175,0.35)',
+                boxShadow: isLoading || success ? 'none' : '0 6px 28px rgba(76,175,80,0.35)',
                 letterSpacing: '0.15em',
               }}
               whileHover={!isLoading && !success ? { scale: 1.015 } : {}}
@@ -417,11 +417,11 @@ export default function RegisterPage() {
           {/* Footer */}
           <div className="mt-5 pt-4 flex items-center justify-center"
             style={{ borderTop: '1px solid rgba(255,255,255,0.06)' }}>
-            <span className="text-xs text-slate-500">¿Ya tienes cuenta?</span>
+            <span className="text-xs text-orionix-text-muted">¿Ya tienes cuenta?</span>
             <button
               onClick={() => router.push('/login')}
               className="ml-1.5 text-xs font-semibold transition-colors duration-200 flex items-center gap-1"
-              style={{ color: 'rgba(0,210,185,0.8)' }}
+              style={{ color: 'rgba(76,175,80,0.85)' }}
             >
               Inicia sesión
               <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
@@ -430,7 +430,7 @@ export default function RegisterPage() {
             </button>
           </div>
 
-          <p className="text-center text-[10px] text-slate-600 mt-4">
+          <p className="text-center text-[10px] mt-4 text-orionix-text-muted">
             © 2026 MUNDIAL APP — TODOS LOS DERECHOS RESERVADOS
           </p>
         </div>

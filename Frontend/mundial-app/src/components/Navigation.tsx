@@ -25,19 +25,17 @@ interface NavItem {
 }
 
 const baseNavConfig = [
-  { key: 'home',        href: '/',            icon: <FiHome size={15} />,       accentHex: '#22d3ee', glowRgba: 'rgba(34,211,238,0.55)',  bgRgba: 'rgba(34,211,238,0.10)' },
-  { key: 'calendar',    href: '/fixtures',    icon: <FiCalendar size={15} />,   accentHex: '#38bdf8', glowRgba: 'rgba(56,189,248,0.55)',  bgRgba: 'rgba(56,189,248,0.10)' },
-  { key: 'groups',      href: '/groups',      icon: <FiTarget size={15} />,     accentHex: '#34d399', glowRgba: 'rgba(52,211,153,0.55)',  bgRgba: 'rgba(52,211,153,0.10)' },
-  { key: 'predictions', href: '/predictions', icon: <FiTrendingUp size={15} />, accentHex: '#fbbf24', glowRgba: 'rgba(251,191,36,0.55)',  bgRgba: 'rgba(251,191,36,0.10)' },
+  { key: 'home',        href: '/',            icon: <FiHome size={15} />,       accentHex: '#4CAF50', glowRgba: 'rgba(76,175,80,0.55)',   bgRgba: 'rgba(76,175,80,0.10)' },
+  { key: 'calendar',    href: '/fixtures',    icon: <FiCalendar size={15} />,   accentHex: '#66BB6A', glowRgba: 'rgba(102,187,106,0.55)', bgRgba: 'rgba(102,187,106,0.10)' },
+  { key: 'groups',      href: '/groups',      icon: <FiTarget size={15} />,     accentHex: '#388E3C', glowRgba: 'rgba(56,142,60,0.55)',   bgRgba: 'rgba(56,142,60,0.10)' },
+  { key: 'predictions', href: '/predictions', icon: <FiTrendingUp size={15} />, accentHex: '#D4A72C', glowRgba: 'rgba(212,167,44,0.55)',  bgRgba: 'rgba(212,167,44,0.10)' },
 ];
 
 /* ── Active orb glow behind selected item ── */
 const ActiveOrb = ({ color }: { color: string }) => (
-  <motion.div
+  <div
     className="absolute inset-0 pointer-events-none rounded-xl"
-    style={{ background: `radial-gradient(ellipse at 25% 50%, ${color} 0%, transparent 68%)` }}
-    animate={{ opacity: [0.7, 1, 0.7] }}
-    transition={{ duration: 2.8, repeat: Infinity, ease: 'easeInOut' }}
+    style={{ background: `radial-gradient(ellipse at 25% 50%, ${color} 0%, transparent 68%)`, opacity: 0.8 }}
   />
 );
 
@@ -54,7 +52,7 @@ const NavTooltip = ({ label, accentHex, glowRgba }: { label: string; accentHex: 
     <div
       className="relative flex items-center gap-2 px-3 py-2 rounded-xl"
       style={{
-        background: 'linear-gradient(135deg, rgba(4,12,28,0.98), rgba(6,18,42,0.98))',
+        background: 'linear-gradient(135deg, rgba(6,17,10,0.98), rgba(11,27,18,0.98))',
         border: `1px solid ${accentHex}35`,
         boxShadow: `0 10px 32px rgba(0,0,0,0.65), 0 0 18px ${glowRgba}15`,
         backdropFilter: 'blur(18px)',
@@ -112,7 +110,7 @@ export const Navigation: React.FC = () => {
   const isAdmin  = user?.email === 'admin@example.com';
   const navItems: NavItem[] = [
     ...baseNavConfig.map(c => ({ ...c, label: t(`nav.${c.key}`), href: toLocalHref(c.href), originalHref: c.href })),
-    ...(isAdmin ? [{ key: 'admin', label: t('nav.admin'), href: toLocalHref('/admin'), originalHref: '/admin', icon: <FiSettings size={15} />, accentHex: '#c084fc', glowRgba: 'rgba(192,132,252,0.55)', bgRgba: 'rgba(192,132,252,0.10)' }] : []),
+    ...(isAdmin ? [{ key: 'admin', label: t('nav.admin'), href: toLocalHref('/admin'), originalHref: '/admin', icon: <FiSettings size={15} />, accentHex: '#D32F2F', glowRgba: 'rgba(211,47,47,0.55)', bgRgba: 'rgba(211,47,47,0.10)' }] : []),
   ];
 
   const activeItem = navItems.find(n => n.href === pathname || (n.originalHref === '/' && pathname === `/${locale}`));
@@ -136,17 +134,15 @@ export const Navigation: React.FC = () => {
         <div
           className="absolute inset-0 overflow-hidden"
           style={{
-            background: 'linear-gradient(180deg, rgba(3,9,24,0.99) 0%, rgba(5,15,34,0.98) 50%, rgba(3,9,22,0.99) 100%)',
-            borderRight: '1px solid rgba(34,211,238,0.08)',
+            background: 'linear-gradient(180deg, rgba(4,10,6,0.99) 0%, rgba(6,17,10,0.98) 50%, rgba(4,10,6,0.99) 100%)',
+            borderRight: '1px solid rgba(76,175,80,0.08)',
             boxShadow: '4px 0 40px rgba(0,0,0,0.65), inset -1px 0 0 rgba(255,255,255,0.015)',
           }}
         >
-          {/* Animated right-edge neon stripe */}
-          <motion.div
+          {/* Right-edge neon stripe */}
+          <div
             className="absolute right-0 top-0 bottom-0"
-            style={{ width: 1, background: `linear-gradient(180deg, transparent, ${activeItem?.accentHex ?? '#22d3ee'}55, transparent)` }}
-            animate={{ opacity: [0.35, 1, 0.35] }}
-            transition={{ duration: 3.5, repeat: Infinity, ease: 'easeInOut' }}
+            style={{ width: 1, background: `linear-gradient(180deg, transparent, ${activeItem?.accentHex ?? '#4CAF50'}45, transparent)`, opacity: 0.6 }}
           />
           {/* Subtle dot-grid texture */}
           <svg className="absolute inset-0 w-full h-full pointer-events-none opacity-[0.016]" xmlns="http://www.w3.org/2000/svg">
@@ -159,7 +155,7 @@ export const Navigation: React.FC = () => {
           </svg>
           {/* Ambient top-left orb */}
           <div className="absolute -top-24 -left-12 w-48 h-48 rounded-full pointer-events-none"
-            style={{ background: 'radial-gradient(circle, rgba(34,211,238,0.07) 0%, transparent 70%)', filter: 'blur(40px)' }} />
+            style={{ background: 'radial-gradient(circle, rgba(76,175,80,0.07) 0%, transparent 70%)', filter: 'blur(40px)' }} />
         </div>
 
         {/* ─── Toggle pill button on the right edge ─── */}
@@ -170,33 +166,25 @@ export const Navigation: React.FC = () => {
           style={{
             right: -14, top: '50%', transform: 'translateY(-50%)',
             width: 28, height: 56, borderRadius: 14,
-            background: 'linear-gradient(160deg, rgba(5,14,30,0.98), rgba(7,20,42,0.98))',
-            border: '1px solid rgba(34,211,238,0.20)',
-            boxShadow: '4px 0 18px rgba(0,0,0,0.55), 0 0 0 1px rgba(255,255,255,0.01)',
+            background: 'linear-gradient(160deg, rgba(4,10,6,0.98), rgba(6,17,10,0.98))',
+            border: '1px solid rgba(76,175,80,0.20)',
+            boxShadow: '4px 0 18px rgba(0,0,0,0.55)',
             cursor: 'pointer',
             outline: 'none',
           }}
           whileHover={{
-            scale: 1.12,
-            borderColor: 'rgba(34,211,238,0.50)',
-            boxShadow: '4px 0 26px rgba(34,211,238,0.22), 0 0 0 1px rgba(34,211,238,0.08)',
+            scale: 1.08,
+            borderColor: 'rgba(76,175,80,0.45)',
           }}
-          whileTap={{ scale: 0.88 }}
-          transition={{ duration: 0.18 }}
+          whileTap={{ scale: 0.92 }}
+          transition={{ duration: 0.15 }}
         >
           <motion.div
             animate={{ rotate: collapsed ? 0 : 180 }}
             transition={{ type: 'spring', stiffness: 320, damping: 28 }}
           >
-            <FiChevronRight size={13} style={{ color: 'rgba(34,211,238,0.75)' }} />
+            <FiChevronRight size={13} style={{ color: 'rgba(76,175,80,0.75)' }} />
           </motion.div>
-          {/* Pulse ring on button */}
-          <motion.div
-            className="absolute inset-0 rounded-[14px] pointer-events-none"
-            style={{ border: '1px solid rgba(34,211,238,0.15)' }}
-            animate={{ opacity: [0, 0.7, 0], scale: [1, 1.35, 1] }}
-            transition={{ duration: 2.8, repeat: Infinity, ease: 'easeOut' }}
-          />
         </motion.button>
 
         {/* ─── Content layer (overflow:visible for tooltips) ─── */}
@@ -212,10 +200,8 @@ export const Navigation: React.FC = () => {
                 >
                   <Link href={toLocalHref('/profile')}>
                     <div className="relative cursor-pointer">
-                      <motion.div className="absolute inset-0 rounded-full"
-                        style={{ background: 'rgba(34,211,238,0.30)', filter: 'blur(10px)' }}
-                        animate={{ scale: [0.8, 1.4, 0.8], opacity: [0.3, 0.7, 0.3] }}
-                        transition={{ duration: 3.2, repeat: Infinity }} />
+                      <div className="absolute inset-0 rounded-full"
+                        style={{ background: 'rgba(76,175,80,0.20)', filter: 'blur(10px)', opacity: 0.5 }} />
                       <Image src="/Logo_Pestaña.png" alt="Orionix Gol" width={36} height={36} className="relative z-10 w-9 h-9 object-contain" />
                     </div>
                   </Link>
@@ -229,32 +215,30 @@ export const Navigation: React.FC = () => {
                     <div className="flex items-center gap-2.5 cursor-pointer">
                       <div className="relative shrink-0">
                         <motion.div className="absolute inset-0 rounded-full"
-                          style={{ background: 'rgba(34,211,238,0.30)', filter: 'blur(10px)' }}
+                          style={{ background: 'rgba(76,175,80,0.25)', filter: 'blur(10px)' }}
                           animate={{ scale: [0.8, 1.4, 0.8], opacity: [0.3, 0.7, 0.3] }}
                           transition={{ duration: 3.2, repeat: Infinity }} />
                         <Image src="/Logo_Pestaña.png" alt="Orionix Gol" width={36} height={36} className="relative z-10 w-9 h-9 object-contain" />
                       </div>
                       <div className="flex flex-col min-w-0 overflow-hidden">
                         <Image src="/texto_logo_pestaña.png" alt="Orionix Gol" width={110} height={26} className="h-[20px] w-auto object-contain"
-                          style={{ mixBlendMode: 'screen', filter: 'drop-shadow(0 0 8px rgba(34,211,238,0.55)) brightness(1.25)' }} />
+                          style={{ mixBlendMode: 'screen', filter: 'drop-shadow(0 0 8px rgba(76,175,80,0.45)) brightness(1.2)' }} />
                       </div>
                     </div>
                   </Link>
 
                   {/* Mundial 2026 badge */}
-                  <motion.div className="mt-3 flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg cursor-default overflow-hidden"
-                    style={{ background: 'linear-gradient(135deg, rgba(217,119,6,0.14), rgba(120,53,15,0.08))', border: '1px solid rgba(217,119,6,0.20)', boxShadow: '0 0 6px rgba(217,119,6,0.06)' }}
-                    animate={{ boxShadow: ['0 0 6px rgba(217,119,6,0.06)', '0 0 16px rgba(217,119,6,0.18)', '0 0 6px rgba(217,119,6,0.06)'] }}
-                    transition={{ duration: 2.8, repeat: Infinity }}
+                  <div className="mt-3 flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg cursor-default overflow-hidden"
+                    style={{ background: 'linear-gradient(135deg, rgba(217,119,6,0.14), rgba(120,53,15,0.08))', border: '1px solid rgba(217,119,6,0.20)' }}
                   >
-                    <FiZap size={9} className="text-amber-400 shrink-0" />
-                    <span className="text-[7.5px] font-black tracking-[0.22em] text-amber-300/75 uppercase flex-1 truncate">{t('common.worldCup')}</span>
+                    <FiZap size={9} className="shrink-0" style={{ color: '#D4AF37' } as any} />
+                    <span className="text-[7.5px] font-black tracking-[0.22em] uppercase flex-1 truncate" style={{ color: 'rgba(212,175,55,0.80)' }}>{t('common.worldCup')}</span>
                     <div className="flex gap-0.5 shrink-0">
                       {['#B31942', '#FFFFFF', '#002868'].map((c, i) => (
                         <div key={i} className="w-1.5 h-1.5 rounded-full" style={{ background: c, opacity: i === 1 ? 0.5 : 1 }} />
                       ))}
                     </div>
-                  </motion.div>
+                  </div>
                 </motion.div>
               )}
             </AnimatePresence>
@@ -268,7 +252,7 @@ export const Navigation: React.FC = () => {
                 <motion.p key="nav-label"
                   initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
                   transition={{ duration: 0.18 }}
-                  className="text-[6.5px] font-black tracking-[0.38em] text-slate-700 uppercase px-2 mb-2 mt-1 whitespace-nowrap"
+                  className="text-[6.5px] font-black tracking-[0.38em] uppercase px-2 mb-2 mt-1 whitespace-nowrap text-orionix-text-muted"
                 >
                   {t('nav.section')}
                 </motion.p>
@@ -317,21 +301,18 @@ export const Navigation: React.FC = () => {
                     )}
 
                     {/* Icon box */}
-                    <motion.div
+                    <div
                       className="relative z-10 flex items-center justify-center w-7 h-7 rounded-lg shrink-0"
                       style={{
                         background: isActive ? item.bgRgba : 'rgba(255,255,255,0.04)',
                         border: `1px solid ${isActive ? item.accentHex + '30' : 'rgba(255,255,255,0.05)'}`,
                         color: isActive ? item.accentHex : isHov ? 'rgba(255,255,255,0.55)' : 'rgba(255,255,255,0.22)',
+                        boxShadow: isActive ? `0 0 10px ${item.glowRgba}` : 'none',
                         transition: 'all 0.22s ease',
                       }}
-                      animate={isActive
-                        ? { boxShadow: [`0 0 5px ${item.glowRgba}`, `0 0 14px ${item.glowRgba}`, `0 0 5px ${item.glowRgba}`] }
-                        : { boxShadow: '0 0 0px rgba(0,0,0,0)' }}
-                      transition={{ duration: 2.2, repeat: Infinity }}
                     >
                       {item.icon}
-                    </motion.div>
+                    </div>
 
                     {/* Label — fade/slide in expanded mode */}
                     <AnimatePresence initial={false}>
@@ -389,7 +370,7 @@ export const Navigation: React.FC = () => {
                 <motion.p key="user-label"
                   initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
                   transition={{ duration: 0.18 }}
-                  className="text-[6.5px] font-black tracking-[0.38em] text-slate-700 uppercase px-2 mb-2 whitespace-nowrap"
+                  className="text-[6.5px] font-black tracking-[0.38em] uppercase px-2 mb-2 whitespace-nowrap text-orionix-text-muted"
                 >
                   {t('nav.profile')}
                 </motion.p>
@@ -414,14 +395,12 @@ export const Navigation: React.FC = () => {
               >
                 {/* Avatar */}
                 <div className="relative shrink-0">
-                  <div className="w-7 h-7 rounded-full bg-gradient-to-br from-cyan-400 to-emerald-500 flex items-center justify-center text-white font-black text-xs"
-                    style={{ boxShadow: '0 0 12px rgba(34,211,238,0.38)' }}>
+                  <div className="w-7 h-7 rounded-full flex items-center justify-center text-white font-black text-xs"
+                    style={{ background: 'linear-gradient(135deg, #1B5E20, #2E7D32)', boxShadow: '0 0 12px rgba(76,175,80,0.30)' }}>
                     {user?.displayName?.charAt(0).toUpperCase() ?? '?'}
                   </div>
-                  <motion.div className="absolute -bottom-0.5 -right-0.5 w-2 h-2 rounded-full bg-emerald-400"
-                    style={{ border: '1.5px solid rgba(3,9,24,1)', boxShadow: '0 0 3px rgba(52,211,153,0.5)' }}
-                    animate={{ boxShadow: ['0 0 3px rgba(52,211,153,0.5)', '0 0 8px rgba(52,211,153,0.9)', '0 0 3px rgba(52,211,153,0.5)'] }}
-                    transition={{ duration: 2.2, repeat: Infinity }} />
+                  <div className="absolute -bottom-0.5 -right-0.5 w-2 h-2 rounded-full"
+                    style={{ background: '#4CAF50', border: '1.5px solid rgba(4,10,6,1)', boxShadow: '0 0 4px rgba(76,175,80,0.6)' }} />
                 </div>
 
                 {/* Name + status — expanded only */}
@@ -431,8 +410,8 @@ export const Navigation: React.FC = () => {
                       initial={{ opacity: 0, x: -10 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -10 }}
                       transition={{ duration: 0.18 }}
                     >
-                      <p className="text-[11px] font-bold text-slate-300 truncate leading-none">{user?.displayName ?? 'Usuario'}</p>
-                      <p className="text-[7.5px] text-emerald-400/50 font-bold tracking-[0.18em] uppercase mt-0.5">{t('nav.online')}</p>
+                      <p className="text-[11px] font-bold truncate leading-none text-orionix-text-secondary">{user?.displayName ?? 'Usuario'}</p>
+                      <p className="text-[7.5px] font-bold tracking-[0.18em] uppercase mt-0.5" style={{ color: 'rgba(76,175,80,0.55)' }}>{t('nav.online')}</p>
                     </motion.div>
                   )}
                 </AnimatePresence>
@@ -440,7 +419,7 @@ export const Navigation: React.FC = () => {
                 <AnimatePresence initial={false}>
                   {!collapsed && (
                     <motion.span initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} transition={{ duration: 0.15 }}>
-                      <FiUser size={10} className="text-slate-700 shrink-0" />
+                      <FiUser size={10} className="shrink-0" style={{ color: '#6E7C72' } as any} />
                     </motion.span>
                   )}
                 </AnimatePresence>
@@ -448,7 +427,7 @@ export const Navigation: React.FC = () => {
                 {/* Tooltip for user when collapsed */}
                 <AnimatePresence>
                   {collapsed && hovered === '__user__' && (
-                    <NavTooltip label={user?.displayName ?? 'Perfil'} accentHex="#22d3ee" glowRgba="rgba(34,211,238,0.55)" />
+                    <NavTooltip label={user?.displayName ?? 'Perfil'} accentHex="#4CAF50" glowRgba="rgba(76,175,80,0.55)" />
                   )}
                 </AnimatePresence>
               </motion.div>
@@ -466,7 +445,7 @@ export const Navigation: React.FC = () => {
         transition={{ type: 'spring', stiffness: 340, damping: 32 }}
       >
         <div style={{
-          background: 'linear-gradient(180deg, rgba(2,6,18,0.88) 0%, rgba(3,9,24,0.98) 100%)',
+          background: 'linear-gradient(180deg, rgba(6,17,10,0.88) 0%, rgba(6,17,10,0.98) 100%)',
           borderTop: '1px solid rgba(255,255,255,0.05)',
           backdropFilter: 'blur(28px)',
           WebkitBackdropFilter: 'blur(28px)',
@@ -474,7 +453,7 @@ export const Navigation: React.FC = () => {
         }}>
           {/* Dynamic top glow per active route */}
           <div className="absolute inset-x-0 top-0 h-px"
-            style={{ background: `linear-gradient(90deg, transparent 5%, ${activeItem?.accentHex ?? '#22d3ee'}55 50%, transparent 95%)` }} />
+            style={{ background: `linear-gradient(90deg, transparent 5%, ${activeItem?.accentHex ?? '#4CAF50'}55 50%, transparent 95%)` }} />
 
           <div className="grid grid-cols-4 px-2 pt-2 pb-[max(0.6rem,env(safe-area-inset-bottom))]">
             {navItems.map((item) => {
@@ -499,16 +478,15 @@ export const Navigation: React.FC = () => {
                         transition={{ type: 'spring', stiffness: 380, damping: 30 }}
                       />
                     )}
-                    <motion.span
+                    <span
                       className="text-[18px] leading-none"
-                      style={{ color: isActive ? item.accentHex : 'rgba(255,255,255,0.20)' }}
-                      animate={isActive
-                        ? { filter: [`drop-shadow(0 0 3px ${item.accentHex})`, `drop-shadow(0 0 9px ${item.accentHex})`, `drop-shadow(0 0 3px ${item.accentHex})`] }
-                        : { filter: 'drop-shadow(0 0 0px rgba(0,0,0,0))' }}
-                      transition={{ duration: 2.2, repeat: Infinity }}
+                      style={{
+                        color: isActive ? item.accentHex : 'rgba(255,255,255,0.20)',
+                        filter: isActive ? `drop-shadow(0 0 6px ${item.accentHex})` : 'none',
+                      }}
                     >
                       {item.icon}
-                    </motion.span>
+                    </span>
                     <span className="text-[9px] font-black tracking-[0.05em] leading-none"
                       style={{
                         color: isActive ? item.accentHex : 'rgba(255,255,255,0.18)',
@@ -536,11 +514,11 @@ export const Navigation: React.FC = () => {
               bottom: 18,
               left: '50%',
               x: '-50%',
-              background: 'linear-gradient(135deg, rgba(4,12,28,0.96), rgba(5,16,36,0.98))',
-              border: '1px solid rgba(34,211,238,0.32)',
+              background: 'linear-gradient(135deg, rgba(6,17,10,0.96), rgba(11,27,18,0.98))',
+              border: '1px solid rgba(76,175,80,0.32)',
               backdropFilter: 'blur(22px)',
               WebkitBackdropFilter: 'blur(22px)',
-              boxShadow: '0 8px 36px rgba(34,211,238,0.20), 0 2px 10px rgba(0,0,0,0.55)',
+              boxShadow: '0 8px 36px rgba(76,175,80,0.20), 0 2px 10px rgba(0,0,0,0.55)',
               cursor: 'pointer',
               outline: 'none',
             }}
@@ -549,18 +527,11 @@ export const Navigation: React.FC = () => {
             animate={{ y: 0, opacity: 1, scale: 1 }}
             exit={{ y: 22, opacity: 0, scale: 0.84 }}
             transition={{ type: 'spring', stiffness: 420, damping: 28 }}
-            whileHover={{ boxShadow: '0 12px 44px rgba(34,211,238,0.30)', scale: 1.06 }}
+            whileHover={{ boxShadow: '0 12px 44px rgba(76,175,80,0.30)', scale: 1.06 }}
             whileTap={{ scale: 0.94 }}
           >
-            {/* Pulse ring */}
-            <motion.div
-              className="absolute inset-0 rounded-full pointer-events-none"
-              style={{ border: '1px solid rgba(34,211,238,0.22)' }}
-              animate={{ opacity: [0.2, 0.8, 0.2], scale: [1, 1.25, 1] }}
-              transition={{ duration: 2, repeat: Infinity, ease: 'easeOut' }}
-            />
-            <FiChevronUp size={14} style={{ color: '#22d3ee' }} />
-            <span className="text-[10px] font-black text-cyan-300 tracking-[0.24em] uppercase">{t('nav.section')}</span>
+            <FiChevronUp size={14} className="text-orionix-green-bright" />
+            <span className="text-[10px] font-black tracking-[0.24em] uppercase text-orionix-green-muted">{t('nav.section')}</span>
           </motion.button>
         )}
       </AnimatePresence>
@@ -579,8 +550,8 @@ export const Header: React.FC<{
 }> = ({ title, subtitle, centerContent, centered = false }) => {
   if (centered && !centerContent) {
     return (
-      <header className="relative overflow-hidden bg-gradient-to-r from-[#08111f] via-[#0d1b2a] to-[#101a2f] text-white py-4 px-3 sm:px-4 rounded-b-2xl shadow-2xl border-b border-cyan-400/30">
-        <div className="pointer-events-none absolute inset-x-0 bottom-0 h-px bg-gradient-to-r from-transparent via-cyan-400/80 to-transparent" />
+      <header className="relative overflow-hidden text-white py-4 px-3 sm:px-4 rounded-b-2xl shadow-2xl" style={{ background: 'linear-gradient(135deg, #06110A 0%, #0B1B12 50%, #102417 100%)', borderBottom: '1px solid rgba(27,94,32,0.40)' }}>
+        <div className="pointer-events-none absolute inset-x-0 bottom-0 h-px" style={{ background: 'linear-gradient(90deg, transparent, rgba(76,175,80,0.60), transparent)' }} />
         <div className="relative z-10 mx-auto flex w-full max-w-4xl items-center justify-center">
           <div className="text-center">
             <div className="inline-flex flex-col items-center">
@@ -588,10 +559,10 @@ export const Header: React.FC<{
                 <div className="mb-1 flex items-center justify-center gap-1.5">
                   <Image src="/Logo_Pestaña.png" alt="Logo" width={64} height={64} className="h-8 sm:h-10 w-auto object-contain flex-shrink-0" />
                   <Image src="/texto_logo_pestaña.png" alt="Orionix Gol" width={280} height={60} priority
-                    className="h-8 sm:h-10 w-auto max-w-[70vw] sm:max-w-none object-contain drop-shadow-[0_0_10px_rgba(34,211,238,0.2)] flex-shrink-0" />
+                    className="h-8 sm:h-10 w-auto max-w-[70vw] sm:max-w-none object-contain drop-shadow-[0_0_10px_rgba(76,175,80,0.2)] flex-shrink-0" />
                 </div>
               )}
-              {subtitle && <p className="text-[11px] sm:text-xs text-cyan-200/85 font-medium mt-1">{subtitle}</p>}
+              {subtitle && <p className="text-[11px] sm:text-xs font-medium mt-1" style={{ color: 'rgba(165,214,167,0.85)' }}>{subtitle}</p>}
             </div>
           </div>
         </div>
@@ -600,14 +571,14 @@ export const Header: React.FC<{
   }
 
   return (
-    <header className="relative overflow-hidden bg-gradient-to-r from-[#08111f] via-[#0d1b2a] to-[#101a2f] text-white py-4 sm:py-5 lg:py-6 px-3 sm:px-4 rounded-b-2xl shadow-2xl border-b border-cyan-400/30">
-      <div className="pointer-events-none absolute inset-x-0 bottom-0 h-px bg-gradient-to-r from-transparent via-cyan-400/80 to-transparent" />
+    <header className="relative overflow-hidden bg-gradient-to-r from-[#04090A] via-[#0B1B12] to-[#102417] text-white py-4 sm:py-5 lg:py-6 px-3 sm:px-4 rounded-b-2xl shadow-2xl border-b border-green-800/40">
+      <div className="pointer-events-none absolute inset-x-0 bottom-0 h-px bg-gradient-to-r from-transparent via-green-500/60 to-transparent" />
       <div className="relative z-10 mx-auto w-full max-w-6xl px-1 sm:px-2">
         <div className="flex flex-col gap-3 lg:min-h-[80px] lg:flex-row lg:items-center lg:justify-between">
           {centerContent && (
             <Link href="/profile" className="order-2 lg:order-1 w-full lg:w-auto">
               <motion.div whileHover={{ scale: 1.02, y: -2 }}
-                className="w-full lg:w-[19rem] rounded-xl border border-cyan-300/40 bg-gradient-to-br from-cyan-400/12 via-emerald-400/8 to-cyan-400/10 px-3 sm:px-4 py-3 shadow-[0_8px_32px_rgba(6,182,212,0.15)] backdrop-blur-sm hover:border-cyan-300/60 hover:shadow-[0_12px_40px_rgba(6,182,212,0.2)] transition-all duration-300 cursor-pointer">
+                className="w-full lg:w-[19rem] rounded-xl px-3 sm:px-4 py-3 backdrop-blur-sm transition-all duration-300 cursor-pointer" style={{ border: '1px solid rgba(27,94,32,0.30)', background: 'linear-gradient(135deg, rgba(46,125,50,0.10), rgba(27,94,32,0.06), rgba(46,125,50,0.08))', boxShadow: '0 8px 32px rgba(46,125,50,0.15)' }}>
                 {centerContent}
               </motion.div>
             </Link>
@@ -618,10 +589,10 @@ export const Header: React.FC<{
                 <div className="mb-1 sm:mb-2 flex items-center justify-center gap-2">
                   <Image src="/Logo_Pestaña.png" alt="Logo" width={64} height={64} className="h-9 sm:h-10 lg:h-12 w-auto object-contain flex-shrink-0" />
                   <Image src="/texto_logo_pestaña.png" alt="Orionix Gol" width={280} height={60} priority
-                    className="h-9 sm:h-10 lg:h-12 w-auto max-w-[72vw] sm:max-w-[65vw] lg:max-w-none object-contain drop-shadow-[0_0_10px_rgba(34,211,238,0.2)] flex-shrink-0" />
+                    className="h-9 sm:h-10 lg:h-12 w-auto max-w-[72vw] sm:max-w-[65vw] lg:max-w-none object-contain drop-shadow-[0_0_10px_rgba(76,175,80,0.2)] flex-shrink-0" />
                 </div>
               )}
-              {subtitle && <p className="text-[11px] sm:text-xs text-cyan-200/85 font-medium">{subtitle}</p>}
+              {subtitle && <p className="text-[11px] sm:text-xs text-green-200/85 font-medium">{subtitle}</p>}
             </div>
           </div>
           <div className="hidden lg:block order-3 w-[19rem]" />
