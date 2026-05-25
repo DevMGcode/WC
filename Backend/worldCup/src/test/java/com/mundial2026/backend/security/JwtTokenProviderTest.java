@@ -8,71 +8,65 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 class JwtTokenProviderTest {
 
-    private JwtTokenProvider provider;
+    // 64-char secret (≥32 bytes for HS256 — Keys.hmacShaKeyFor requirement)
+    private static final String SECRET = "test-jwt-secret-test-jwt-secret-test-jwt-secret-test-jwt-secret!";
+
+    private JwtTokenProvider subject;
 
     @BeforeEach
     void setUp() {
-        provider = new JwtTokenProvider();
-        ReflectionTestUtils.setField(provider, "jwtSecret",
-                "test-secret-key-long-enough-for-hmac-sha256-signing-algorithm-32bytes");
-        ReflectionTestUtils.setField(provider, "jwtExpirationMs", 3_600_000L);
-        ReflectionTestUtils.setField(provider, "jwtRefreshExpirationMs", 604_800_000L);
+        subject = new JwtTokenProvider();
+        ReflectionTestUtils.setField(subject, "jwtSecret", SECRET);
+        ReflectionTestUtils.setField(subject, "jwtExpirationMs", 60_000L);
     }
 
     @Test
-    void generateAccessToken_producesValidToken() {
-        String token = provider.generateAccessToken("alice");
+    void generateToken_producesThreeSegmentJwt() {
+        String token = subject.generateToken("admin");
 
         assertThat(token).isNotBlank();
-        assertThat(provider.validateToken(token)).isTrue();
+        assertThat(token.split("\\.")).hasSize(3);
     }
 
     @Test
-    void generateRefreshToken_isDetectedAsRefresh() {
-        String token = provider.generateRefreshToken("alice");
+    void getUsernameFromToken_roundtripsSubject() {
+        String token = subject.generateToken("juan.perez");
 
-        assertThat(provider.isRefreshToken(token)).isTrue();
+        assertThat(subject.getUsernameFromToken(token)).isEqualTo("juan.perez");
     }
 
     @Test
-    void accessToken_isNotRefreshToken() {
-        String token = provider.generateAccessToken("alice");
+    void validateToken_acceptsValidToken() {
+        String token = subject.generateToken("admin");
 
-        assertThat(provider.isRefreshToken(token)).isFalse();
+        assertThat(subject.validateToken(token)).isTrue();
     }
 
     @Test
-    void getUsernameFromToken_returnsCorrectSubject() {
-        String token = provider.generateAccessToken("player99");
+    void validateToken_rejectsTamperedSignature() {
+        String token = subject.generateToken("admin");
+        String tampered = token.substring(0, token.length() - 4) + "AAAA";
 
-        assertThat(provider.getUsernameFromToken(token)).isEqualTo("player99");
+        assertThat(subject.validateToken(tampered)).isFalse();
     }
 
     @Test
-    void generateToken_delegatesToAccessToken() {
-        String via1 = provider.generateToken("u1");
-        assertThat(provider.validateToken(via1)).isTrue();
-        assertThat(provider.isRefreshToken(via1)).isFalse();
+    void validateToken_rejectsGarbage() {
+        assertThat(subject.validateToken("not.a.real.jwt")).isFalse();
+        assertThat(subject.validateToken("")).isFalse();
     }
 
     @Test
-    void validateToken_withTamperedSignature_returnsFalse() {
-        String token = provider.generateAccessToken("alice");
-        String tampered = token.substring(0, token.length() - 6) + "XXXXXX";
-
-        assertThat(provider.validateToken(tampered)).isFalse();
+    void getUsernameFromToken_returnsNullForGarbage() {
+        assertThat(subject.getUsernameFromToken("garbage")).isNull();
     }
 
     @Test
-    void validateToken_withExpiredToken_returnsFalse() {
-        ReflectionTestUtils.setField(provider, "jwtExpirationMs", 1L);
-        String token = provider.generateAccessToken("alice");
+    void validateToken_rejectsExpiredToken() throws Exception {
+        ReflectionTestUtils.setField(subject, "jwtExpirationMs", 1L);
+        String token = subject.generateToken("admin");
+        Thread.sleep(50);
 
-        assertThat(provider.validateToken(token)).isFalse();
-    }
-
-    @Test
-    void getUsernameFromToken_withGarbageInput_returnsNull() {
-        assertThat(provider.getUsernameFromToken("not.a.jwt")).isNull();
+        assertThat(subject.validateToken(token)).isFalse();
     }
 }

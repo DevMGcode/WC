@@ -1,0 +1,36 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(python3 *)",
+      "Bash(./mvnw test *)",
+      "Bash(mvn -q -DskipTests compile)",
+      "WebSearch",
+      "Bash(curl -sL -A \"Mozilla/5.0 \\(Macintosh; Intel Mac OS X 10_15_7\\) AppleWebKit/537.36 \\(KHTML, like Gecko\\) Chrome/124.0 Safari/537.36\" \"https://www.api-football.com/news/post/fifa-world-cup-2026-guide-to-using-data-with-api-sports\" -o /tmp/wc26.html -w \"HTTP:%{http_code} BYTES:%{size_download}\\\\n\")",
+      "Bash(mvn -Dtest=ApiFootballMapperTest test)",
+      "Bash(mvn -Dtest=ApiFootballClientTest test)",
+      "Bash(mvn -Dtest=TeamSyncServiceTest test)",
+      "Bash(mvn -Dtest=FixtureSyncServiceTest test)",
+      "Bash(mvn -Dtest=FixtureSyncServiceTest#persist_skipsWhenTeamMissing test)",
+      "Bash(mvn test *)",
+      "Bash(mvn -Dtest='StandingsServiceTest,LineupServiceTest,FixturePredictionServiceTest,SyncSchedulerTest' test)",
+      "Bash(mvn -Dtest='StandingsControllerTest,GlobalExceptionHandlerTest' test)",
+      "Bash(mvn -Dtest='GlobalExceptionHandlerTest' test)",
+      "Bash(mvn -Dtest='JwtTokenProviderTest,QuotaMonitorJobTest' test)",
+      "Bash(curl -s -o /dev/null -w \"Backend health: HTTP %{http_code}\\\\n\" http://localhost:8080/actuator/health)",
+      "Bash(curl -s -o /dev/null -w \"Docker postgres: %{http_code}\\\\n\" http://localhost:5434)",
+      "Bash(mvn -Dtest=ApiFootballClientTest#fetchAccountStatus_parsesSingleObjectResponse test)",
+      "Bash(lsof -ti:8080)",
+      "Bash(xargs kill -9)",
+      "Bash(curl -s -o /dev/null -w \"%{http_code}\" http://localhost:8080/actuator/health)",
+      "Bash(curl -s http://localhost:8080/api/v1/admin/apifootball/status)",
+      "Bash(curl -s http://localhost:8080/api/v1/admin/apifootball/coverage)",
+      "Bash(curl -s http://localhost:8080/api/v1/admin/apifootball/standings)",
+      "Bash(PGPASSWORD=postgres psql -h localhost -p 5434 -U postgres -d worldcup2026_db -c \"SELECT id, external_provider_id, name, fifa_code FROM team ORDER BY id;\")",
+      "Bash(docker compose *)",
+      "Bash(docker exec *)",
+      "Bash(curl -s -X POST http://localhost:8080/api/v1/admin/apifootball/sync/teams)",
+      "Bash(curl -s -X POST http://localhost:8080/api/v1/admin/apifootball/sync/fixtures)",
+      "Bash(PGPASSWORD=postgres psql *)"
+    ]
+  }
+}
