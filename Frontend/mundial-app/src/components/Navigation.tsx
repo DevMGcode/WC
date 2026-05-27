@@ -12,6 +12,8 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { useAuth } from '@/contexts/AuthContext';
 import { useSidebar } from '@/contexts/SidebarContext';
 import { useT } from '@/hooks/useT';
+import { hex } from '@/lib/design/tokens';
+import { alpha, alphaOf } from '@/lib/design/effects';
 
 interface NavItem {
   label: string;
@@ -25,10 +27,10 @@ interface NavItem {
 }
 
 const baseNavConfig = [
-  { key: 'home',        href: '/',            icon: <FiHome size={15} />,       accentHex: '#4CAF50', glowRgba: 'rgba(76,175,80,0.55)',   bgRgba: 'rgba(76,175,80,0.10)' },
-  { key: 'calendar',    href: '/fixtures',    icon: <FiCalendar size={15} />,   accentHex: '#66BB6A', glowRgba: 'rgba(102,187,106,0.55)', bgRgba: 'rgba(102,187,106,0.10)' },
-  { key: 'groups',      href: '/groups',      icon: <FiTarget size={15} />,     accentHex: '#388E3C', glowRgba: 'rgba(56,142,60,0.55)',   bgRgba: 'rgba(56,142,60,0.10)' },
-  { key: 'predictions', href: '/predictions', icon: <FiTrendingUp size={15} />, accentHex: '#D4A72C', glowRgba: 'rgba(212,167,44,0.55)',  bgRgba: 'rgba(212,167,44,0.10)' },
+  { key: 'home',        href: '/',            icon: <FiHome size={15} />,       accentHex: hex.green.bright, glowRgba: alphaOf('green', 0.55),         bgRgba: alphaOf('green', 0.10) },
+  { key: 'calendar',    href: '/fixtures',    icon: <FiCalendar size={15} />,   accentHex: hex.green.soft,   glowRgba: alpha(hex.green.soft, 0.55),    bgRgba: alpha(hex.green.soft, 0.10) },
+  { key: 'groups',      href: '/groups',      icon: <FiTarget size={15} />,     accentHex: hex.green.hover,  glowRgba: alpha(hex.green.hover, 0.55),   bgRgba: alpha(hex.green.hover, 0.10) },
+  { key: 'predictions', href: '/predictions', icon: <FiTrendingUp size={15} />, accentHex: hex.gold.base,    glowRgba: alpha(hex.gold.base, 0.55),     bgRgba: alphaOf('gold', 0.10) },
 ];
 
 /* ── Active orb glow behind selected item ── */
@@ -52,9 +54,9 @@ const NavTooltip = ({ label, accentHex, glowRgba }: { label: string; accentHex: 
     <div
       className="relative flex items-center gap-2 px-3 py-2 rounded-xl"
       style={{
-        background: 'linear-gradient(135deg, rgba(6,17,10,0.98), rgba(11,27,18,0.98))',
+        background: `linear-gradient(135deg, ${alpha(hex.bg.primary, 0.98)}, ${alpha(hex.bg.secondary, 0.98)})`,
         border: `1px solid ${accentHex}35`,
-        boxShadow: `0 10px 32px rgba(0,0,0,0.65), 0 0 18px ${glowRgba}15`,
+        boxShadow: `0 10px 32px ${alpha(hex.neutral.black, 0.65)}, 0 0 18px ${glowRgba}15`,
         backdropFilter: 'blur(18px)',
       }}
     >
@@ -110,7 +112,7 @@ export const Navigation: React.FC = () => {
   const isAdmin  = user?.email === 'admin@example.com';
   const navItems: NavItem[] = [
     ...baseNavConfig.map(c => ({ ...c, label: t(`nav.${c.key}`), href: toLocalHref(c.href), originalHref: c.href })),
-    ...(isAdmin ? [{ key: 'admin', label: t('nav.admin'), href: toLocalHref('/admin'), originalHref: '/admin', icon: <FiSettings size={15} />, accentHex: '#D32F2F', glowRgba: 'rgba(211,47,47,0.55)', bgRgba: 'rgba(211,47,47,0.10)' }] : []),
+    ...(isAdmin ? [{ key: 'admin', label: t('nav.admin'), href: toLocalHref('/admin'), originalHref: '/admin', icon: <FiSettings size={15} />, accentHex: hex.status.danger, glowRgba: alphaOf('danger', 0.55), bgRgba: alphaOf('danger', 0.10) }] : []),
   ];
 
   const activeItem = navItems.find(n => n.href === pathname || (n.originalHref === '/' && pathname === `/${locale}`));
@@ -134,15 +136,15 @@ export const Navigation: React.FC = () => {
         <div
           className="absolute inset-0 overflow-hidden"
           style={{
-            background: 'linear-gradient(180deg, rgba(4,10,6,0.99) 0%, rgba(6,17,10,0.98) 50%, rgba(4,10,6,0.99) 100%)',
-            borderRight: '1px solid rgba(76,175,80,0.08)',
-            boxShadow: '4px 0 40px rgba(0,0,0,0.65), inset -1px 0 0 rgba(255,255,255,0.015)',
+            background: `linear-gradient(180deg, rgba(4,10,6,0.99) 0%, ${alpha(hex.bg.primary, 0.98)} 50%, rgba(4,10,6,0.99) 100%)`,
+            borderRight: `1px solid ${alphaOf('green', 0.08)}`,
+            boxShadow: `4px 0 40px ${alpha(hex.neutral.black, 0.65)}, inset -1px 0 0 ${alpha(hex.neutral.white, 0.015)}`,
           }}
         >
           {/* Right-edge neon stripe */}
           <div
             className="absolute right-0 top-0 bottom-0"
-            style={{ width: 1, background: `linear-gradient(180deg, transparent, ${activeItem?.accentHex ?? '#4CAF50'}45, transparent)`, opacity: 0.6 }}
+            style={{ width: 1, background: `linear-gradient(180deg, transparent, ${activeItem?.accentHex ?? hex.green.bright}45, transparent)`, opacity: 0.6 }}
           />
           {/* Subtle dot-grid texture */}
           <svg className="absolute inset-0 w-full h-full pointer-events-none opacity-[0.016]" xmlns="http://www.w3.org/2000/svg">
@@ -155,7 +157,7 @@ export const Navigation: React.FC = () => {
           </svg>
           {/* Ambient top-left orb */}
           <div className="absolute -top-24 -left-12 w-48 h-48 rounded-full pointer-events-none"
-            style={{ background: 'radial-gradient(circle, rgba(76,175,80,0.07) 0%, transparent 70%)', filter: 'blur(40px)' }} />
+            style={{ background: `radial-gradient(circle, ${alphaOf('green', 0.07)} 0%, transparent 70%)`, filter: 'blur(40px)' }} />
         </div>
 
         {/* ─── Toggle pill button on the right edge ─── */}
@@ -166,15 +168,15 @@ export const Navigation: React.FC = () => {
           style={{
             right: -14, top: '50%', transform: 'translateY(-50%)',
             width: 28, height: 56, borderRadius: 14,
-            background: 'linear-gradient(160deg, rgba(4,10,6,0.98), rgba(6,17,10,0.98))',
-            border: '1px solid rgba(76,175,80,0.20)',
-            boxShadow: '4px 0 18px rgba(0,0,0,0.55)',
+            background: `linear-gradient(160deg, rgba(4,10,6,0.98), ${alpha(hex.bg.primary, 0.98)})`,
+            border: `1px solid ${alphaOf('green', 0.20)}`,
+            boxShadow: `4px 0 18px ${alpha(hex.neutral.black, 0.55)}`,
             cursor: 'pointer',
             outline: 'none',
           }}
           whileHover={{
             scale: 1.08,
-            borderColor: 'rgba(76,175,80,0.45)',
+            borderColor: alphaOf('green', 0.45),
           }}
           whileTap={{ scale: 0.92 }}
           transition={{ duration: 0.15 }}
@@ -183,7 +185,7 @@ export const Navigation: React.FC = () => {
             animate={{ rotate: collapsed ? 0 : 180 }}
             transition={{ type: 'spring', stiffness: 320, damping: 28 }}
           >
-            <FiChevronRight size={13} style={{ color: 'rgba(76,175,80,0.75)' }} />
+            <FiChevronRight size={13} style={{ color: alphaOf('green', 0.75) }} />
           </motion.div>
         </motion.button>
 
@@ -201,7 +203,7 @@ export const Navigation: React.FC = () => {
                   <Link href={toLocalHref('/profile')}>
                     <div className="relative cursor-pointer">
                       <div className="absolute inset-0 rounded-full"
-                        style={{ background: 'rgba(76,175,80,0.20)', filter: 'blur(10px)', opacity: 0.5 }} />
+                        style={{ background: alphaOf('green', 0.20), filter: 'blur(10px)', opacity: 0.5 }} />
                       <Image src="/Logo_Pestaña.png" alt="Orionix Gol" width={36} height={36} className="relative z-10 w-9 h-9 object-contain" />
                     </div>
                   </Link>
@@ -215,14 +217,14 @@ export const Navigation: React.FC = () => {
                     <div className="flex items-center gap-2.5 cursor-pointer">
                       <div className="relative shrink-0">
                         <motion.div className="absolute inset-0 rounded-full"
-                          style={{ background: 'rgba(76,175,80,0.25)', filter: 'blur(10px)' }}
+                          style={{ background: alphaOf('green', 0.25), filter: 'blur(10px)' }}
                           animate={{ scale: [0.8, 1.4, 0.8], opacity: [0.3, 0.7, 0.3] }}
                           transition={{ duration: 3.2, repeat: Infinity }} />
                         <Image src="/Logo_Pestaña.png" alt="Orionix Gol" width={36} height={36} className="relative z-10 w-9 h-9 object-contain" />
                       </div>
                       <div className="flex flex-col min-w-0 overflow-hidden">
                         <Image src="/texto_logo_pestaña.png" alt="Orionix Gol" width={110} height={26} className="h-[20px] w-auto object-contain"
-                          style={{ mixBlendMode: 'screen', filter: 'drop-shadow(0 0 8px rgba(76,175,80,0.45)) brightness(1.2)' }} />
+                          style={{ mixBlendMode: 'screen', filter: `drop-shadow(0 0 8px ${alphaOf('green', 0.45)}) brightness(1.2)` }} />
                       </div>
                     </div>
                   </Link>
@@ -231,8 +233,8 @@ export const Navigation: React.FC = () => {
                   <div className="mt-3 flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg cursor-default overflow-hidden"
                     style={{ background: 'linear-gradient(135deg, rgba(217,119,6,0.14), rgba(120,53,15,0.08))', border: '1px solid rgba(217,119,6,0.20)' }}
                   >
-                    <FiZap size={9} className="shrink-0" style={{ color: '#D4AF37' } as any} />
-                    <span className="text-[7.5px] font-black tracking-[0.22em] uppercase flex-1 truncate" style={{ color: 'rgba(212,175,55,0.80)' }}>{t('common.worldCup')}</span>
+                    <FiZap size={9} className="shrink-0" style={{ color: hex.gold.base } as any} />
+                    <span className="text-[7.5px] font-black tracking-[0.22em] uppercase flex-1 truncate" style={{ color: alpha(hex.gold.base, 0.80) }}>{t('common.worldCup')}</span>
                     <div className="flex gap-0.5 shrink-0">
                       {['#B31942', '#FFFFFF', '#002868'].map((c, i) => (
                         <div key={i} className="w-1.5 h-1.5 rounded-full" style={{ background: c, opacity: i === 1 ? 0.5 : 1 }} />
@@ -242,7 +244,7 @@ export const Navigation: React.FC = () => {
                 </motion.div>
               )}
             </AnimatePresence>
-            <div className="mt-4 h-px" style={{ background: 'linear-gradient(90deg, transparent, rgba(255,255,255,0.05), transparent)' }} />
+            <div className="mt-4 h-px" style={{ background: `linear-gradient(90deg, transparent, ${alpha(hex.neutral.white, 0.05)}, transparent)` }} />
           </div>
 
           {/* ── NAV ITEMS ── */}
@@ -277,7 +279,7 @@ export const Navigation: React.FC = () => {
                       padding: '10px',
                       gap: collapsed ? 0 : 10,
                       justifyContent: collapsed ? 'center' : 'flex-start',
-                      background: isActive ? item.bgRgba : isHov ? 'rgba(255,255,255,0.04)' : 'transparent',
+                      background: isActive ? item.bgRgba : isHov ? alpha(hex.neutral.white, 0.04) : 'transparent',
                       border: `1px solid ${isActive ? item.accentHex + '28' : 'transparent'}`,
                       boxShadow: isActive ? `inset 0 0 18px ${item.glowRgba}12` : 'none',
                       transition: 'background 0.22s, border-color 0.22s, box-shadow 0.22s',
@@ -304,9 +306,9 @@ export const Navigation: React.FC = () => {
                     <div
                       className="relative z-10 flex items-center justify-center w-7 h-7 rounded-lg shrink-0"
                       style={{
-                        background: isActive ? item.bgRgba : 'rgba(255,255,255,0.04)',
-                        border: `1px solid ${isActive ? item.accentHex + '30' : 'rgba(255,255,255,0.05)'}`,
-                        color: isActive ? item.accentHex : isHov ? 'rgba(255,255,255,0.55)' : 'rgba(255,255,255,0.22)',
+                        background: isActive ? item.bgRgba : alpha(hex.neutral.white, 0.04),
+                        border: `1px solid ${isActive ? item.accentHex + '30' : alpha(hex.neutral.white, 0.05)}`,
+                        color: isActive ? item.accentHex : isHov ? alpha(hex.neutral.white, 0.55) : alpha(hex.neutral.white, 0.22),
                         boxShadow: isActive ? `0 0 10px ${item.glowRgba}` : 'none',
                         transition: 'all 0.22s ease',
                       }}
@@ -320,7 +322,7 @@ export const Navigation: React.FC = () => {
                         <motion.span
                           className="relative z-10 text-[13px] font-bold flex-1 leading-none whitespace-nowrap"
                           style={{
-                            color: isActive ? item.accentHex : isHov ? 'rgba(255,255,255,0.55)' : 'rgba(255,255,255,0.22)',
+                            color: isActive ? item.accentHex : isHov ? alpha(hex.neutral.white, 0.55) : alpha(hex.neutral.white, 0.22),
                             textShadow: isActive ? `0 0 14px ${item.glowRgba}` : 'none',
                             transition: 'color 0.22s, text-shadow 0.22s',
                           }}
@@ -361,7 +363,7 @@ export const Navigation: React.FC = () => {
           </nav>
 
           {/* Separator */}
-          <div className="mx-3 h-px mb-1 flex-shrink-0" style={{ background: 'linear-gradient(90deg, transparent, rgba(255,255,255,0.05), transparent)' }} />
+          <div className="mx-3 h-px mb-1 flex-shrink-0" style={{ background: `linear-gradient(90deg, transparent, ${alpha(hex.neutral.white, 0.05)}, transparent)` }} />
 
           {/* ── USER PROFILE ── */}
           <div className="px-2 pb-5 flex-shrink-0">
@@ -384,23 +386,23 @@ export const Navigation: React.FC = () => {
                   padding: '10px',
                   gap: collapsed ? 0 : 10,
                   justifyContent: collapsed ? 'center' : 'flex-start',
-                  border: '1px solid rgba(255,255,255,0.05)',
+                  border: `1px solid ${alpha(hex.neutral.white, 0.05)}`,
                   overflow: 'visible',
                   transition: 'background 0.2s',
                 }}
                 onMouseEnter={() => setHovered('__user__')}
                 onMouseLeave={() => setHovered(null)}
-                whileHover={{ backgroundColor: 'rgba(255,255,255,0.05)', x: collapsed ? 0 : 2 }}
+                whileHover={{ backgroundColor: alpha(hex.neutral.white, 0.05), x: collapsed ? 0 : 2 }}
                 whileTap={{ scale: 0.97 }}
               >
                 {/* Avatar */}
                 <div className="relative shrink-0">
                   <div className="w-7 h-7 rounded-full flex items-center justify-center text-white font-black text-xs"
-                    style={{ background: 'linear-gradient(135deg, #1B5E20, #2E7D32)', boxShadow: '0 0 12px rgba(76,175,80,0.30)' }}>
+                    style={{ background: `linear-gradient(135deg, ${hex.green.dark}, ${hex.green.base})`, boxShadow: `0 0 12px ${alphaOf('green', 0.30)}` }}>
                     {user?.displayName?.charAt(0).toUpperCase() ?? '?'}
                   </div>
                   <div className="absolute -bottom-0.5 -right-0.5 w-2 h-2 rounded-full"
-                    style={{ background: '#4CAF50', border: '1.5px solid rgba(4,10,6,1)', boxShadow: '0 0 4px rgba(76,175,80,0.6)' }} />
+                    style={{ background: hex.green.bright, border: '1.5px solid rgba(4,10,6,1)', boxShadow: `0 0 4px ${alphaOf('green', 0.6)}` }} />
                 </div>
 
                 {/* Name + status — expanded only */}
@@ -411,7 +413,7 @@ export const Navigation: React.FC = () => {
                       transition={{ duration: 0.18 }}
                     >
                       <p className="text-[11px] font-bold truncate leading-none text-orionix-text-secondary">{user?.displayName ?? 'Usuario'}</p>
-                      <p className="text-[7.5px] font-bold tracking-[0.18em] uppercase mt-0.5" style={{ color: 'rgba(76,175,80,0.55)' }}>{t('nav.online')}</p>
+                      <p className="text-[7.5px] font-bold tracking-[0.18em] uppercase mt-0.5" style={{ color: alphaOf('green', 0.55) }}>{t('nav.online')}</p>
                     </motion.div>
                   )}
                 </AnimatePresence>
@@ -419,7 +421,7 @@ export const Navigation: React.FC = () => {
                 <AnimatePresence initial={false}>
                   {!collapsed && (
                     <motion.span initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} transition={{ duration: 0.15 }}>
-                      <FiUser size={10} className="shrink-0" style={{ color: '#6E7C72' } as any} />
+                      <FiUser size={10} className="shrink-0" style={{ color: hex.text.muted } as any} />
                     </motion.span>
                   )}
                 </AnimatePresence>
@@ -427,7 +429,7 @@ export const Navigation: React.FC = () => {
                 {/* Tooltip for user when collapsed */}
                 <AnimatePresence>
                   {collapsed && hovered === '__user__' && (
-                    <NavTooltip label={user?.displayName ?? 'Perfil'} accentHex="#4CAF50" glowRgba="rgba(76,175,80,0.55)" />
+                    <NavTooltip label={user?.displayName ?? 'Perfil'} accentHex={hex.green.bright} glowRgba={alphaOf('green', 0.55)} />
                   )}
                 </AnimatePresence>
               </motion.div>
@@ -445,15 +447,15 @@ export const Navigation: React.FC = () => {
         transition={{ type: 'spring', stiffness: 340, damping: 32 }}
       >
         <div style={{
-          background: 'linear-gradient(180deg, rgba(6,17,10,0.88) 0%, rgba(6,17,10,0.98) 100%)',
-          borderTop: '1px solid rgba(255,255,255,0.05)',
+          background: `linear-gradient(180deg, ${alpha(hex.bg.primary, 0.88)} 0%, ${alpha(hex.bg.primary, 0.98)} 100%)`,
+          borderTop: `1px solid ${alpha(hex.neutral.white, 0.05)}`,
           backdropFilter: 'blur(28px)',
           WebkitBackdropFilter: 'blur(28px)',
-          boxShadow: '0 -10px 48px rgba(0,0,0,0.65)',
+          boxShadow: `0 -10px 48px ${alpha(hex.neutral.black, 0.65)}`,
         }}>
           {/* Dynamic top glow per active route */}
           <div className="absolute inset-x-0 top-0 h-px"
-            style={{ background: `linear-gradient(90deg, transparent 5%, ${activeItem?.accentHex ?? '#4CAF50'}55 50%, transparent 95%)` }} />
+            style={{ background: `linear-gradient(90deg, transparent 5%, ${activeItem?.accentHex ?? hex.green.bright}55 50%, transparent 95%)` }} />
 
           <div className="grid grid-cols-4 px-2 pt-2 pb-[max(0.6rem,env(safe-area-inset-bottom))]">
             {navItems.map((item) => {
@@ -481,7 +483,7 @@ export const Navigation: React.FC = () => {
                     <span
                       className="text-[18px] leading-none"
                       style={{
-                        color: isActive ? item.accentHex : 'rgba(255,255,255,0.20)',
+                        color: isActive ? item.accentHex : alpha(hex.neutral.white, 0.20),
                         filter: isActive ? `drop-shadow(0 0 6px ${item.accentHex})` : 'none',
                       }}
                     >
@@ -489,7 +491,7 @@ export const Navigation: React.FC = () => {
                     </span>
                     <span className="text-[9px] font-black tracking-[0.05em] leading-none"
                       style={{
-                        color: isActive ? item.accentHex : 'rgba(255,255,255,0.18)',
+                        color: isActive ? item.accentHex : alpha(hex.neutral.white, 0.18),
                         textShadow: isActive ? `0 0 8px ${item.glowRgba}` : 'none',
                         transition: 'all 0.25s',
                       }}>
@@ -514,11 +516,11 @@ export const Navigation: React.FC = () => {
               bottom: 18,
               left: '50%',
               x: '-50%',
-              background: 'linear-gradient(135deg, rgba(6,17,10,0.96), rgba(11,27,18,0.98))',
-              border: '1px solid rgba(76,175,80,0.32)',
+              background: `linear-gradient(135deg, ${alpha(hex.bg.primary, 0.96)}, ${alpha(hex.bg.secondary, 0.98)})`,
+              border: `1px solid ${alphaOf('green', 0.32)}`,
               backdropFilter: 'blur(22px)',
               WebkitBackdropFilter: 'blur(22px)',
-              boxShadow: '0 8px 36px rgba(76,175,80,0.20), 0 2px 10px rgba(0,0,0,0.55)',
+              boxShadow: `0 8px 36px ${alphaOf('green', 0.20)}, 0 2px 10px ${alpha(hex.neutral.black, 0.55)}`,
               cursor: 'pointer',
               outline: 'none',
             }}
@@ -527,7 +529,7 @@ export const Navigation: React.FC = () => {
             animate={{ y: 0, opacity: 1, scale: 1 }}
             exit={{ y: 22, opacity: 0, scale: 0.84 }}
             transition={{ type: 'spring', stiffness: 420, damping: 28 }}
-            whileHover={{ boxShadow: '0 12px 44px rgba(76,175,80,0.30)', scale: 1.06 }}
+            whileHover={{ boxShadow: `0 12px 44px ${alphaOf('green', 0.30)}`, scale: 1.06 }}
             whileTap={{ scale: 0.94 }}
           >
             <FiChevronUp size={14} className="text-orionix-green-bright" />
@@ -550,8 +552,8 @@ export const Header: React.FC<{
 }> = ({ title, subtitle, centerContent, centered = false }) => {
   if (centered && !centerContent) {
     return (
-      <header className="relative overflow-hidden text-white py-4 px-3 sm:px-4 rounded-b-2xl shadow-2xl" style={{ background: 'linear-gradient(135deg, #06110A 0%, #0B1B12 50%, #102417 100%)', borderBottom: '1px solid rgba(27,94,32,0.40)' }}>
-        <div className="pointer-events-none absolute inset-x-0 bottom-0 h-px" style={{ background: 'linear-gradient(90deg, transparent, rgba(76,175,80,0.60), transparent)' }} />
+      <header className="relative overflow-hidden text-white py-4 px-3 sm:px-4 rounded-b-2xl shadow-2xl" style={{ background: `linear-gradient(135deg, ${hex.bg.primary} 0%, ${hex.bg.secondary} 50%, ${hex.bg.elevated} 100%)`, borderBottom: `1px solid ${alpha(hex.green.dark, 0.40)}` }}>
+        <div className="pointer-events-none absolute inset-x-0 bottom-0 h-px" style={{ background: `linear-gradient(90deg, transparent, ${alphaOf('green', 0.60)}, transparent)` }} />
         <div className="relative z-10 mx-auto flex w-full max-w-4xl items-center justify-center">
           <div className="text-center">
             <div className="inline-flex flex-col items-center">
@@ -559,10 +561,11 @@ export const Header: React.FC<{
                 <div className="mb-1 flex items-center justify-center gap-1.5">
                   <Image src="/Logo_Pestaña.png" alt="Logo" width={64} height={64} className="h-8 sm:h-10 w-auto object-contain flex-shrink-0" />
                   <Image src="/texto_logo_pestaña.png" alt="Orionix Gol" width={280} height={60} priority
-                    className="h-8 sm:h-10 w-auto max-w-[70vw] sm:max-w-none object-contain drop-shadow-[0_0_10px_rgba(76,175,80,0.2)] flex-shrink-0" />
+                    className="h-8 sm:h-10 w-auto max-w-[70vw] sm:max-w-none object-contain flex-shrink-0"
+                    style={{ filter: `drop-shadow(0 0 10px ${alphaOf('green', 0.2)})` }} />
                 </div>
               )}
-              {subtitle && <p className="text-[11px] sm:text-xs font-medium mt-1" style={{ color: 'rgba(165,214,167,0.85)' }}>{subtitle}</p>}
+              {subtitle && <p className="text-[11px] sm:text-xs font-medium mt-1" style={{ color: alpha(hex.green.soft, 0.85) }}>{subtitle}</p>}
             </div>
           </div>
         </div>
@@ -578,7 +581,7 @@ export const Header: React.FC<{
           {centerContent && (
             <Link href="/profile" className="order-2 lg:order-1 w-full lg:w-auto">
               <motion.div whileHover={{ scale: 1.02, y: -2 }}
-                className="w-full lg:w-[19rem] rounded-xl px-3 sm:px-4 py-3 backdrop-blur-sm transition-all duration-300 cursor-pointer" style={{ border: '1px solid rgba(27,94,32,0.30)', background: 'linear-gradient(135deg, rgba(46,125,50,0.10), rgba(27,94,32,0.06), rgba(46,125,50,0.08))', boxShadow: '0 8px 32px rgba(46,125,50,0.15)' }}>
+                className="w-full lg:w-[19rem] rounded-xl px-3 sm:px-4 py-3 backdrop-blur-sm transition-all duration-300 cursor-pointer" style={{ border: `1px solid ${alpha(hex.green.dark, 0.30)}`, background: `linear-gradient(135deg, ${alpha(hex.green.base, 0.10)}, ${alpha(hex.green.dark, 0.06)}, ${alpha(hex.green.base, 0.08)})`, boxShadow: `0 8px 32px ${alpha(hex.green.base, 0.15)}` }}>
                 {centerContent}
               </motion.div>
             </Link>
@@ -589,7 +592,8 @@ export const Header: React.FC<{
                 <div className="mb-1 sm:mb-2 flex items-center justify-center gap-2">
                   <Image src="/Logo_Pestaña.png" alt="Logo" width={64} height={64} className="h-9 sm:h-10 lg:h-12 w-auto object-contain flex-shrink-0" />
                   <Image src="/texto_logo_pestaña.png" alt="Orionix Gol" width={280} height={60} priority
-                    className="h-9 sm:h-10 lg:h-12 w-auto max-w-[72vw] sm:max-w-[65vw] lg:max-w-none object-contain drop-shadow-[0_0_10px_rgba(76,175,80,0.2)] flex-shrink-0" />
+                    className="h-9 sm:h-10 lg:h-12 w-auto max-w-[72vw] sm:max-w-[65vw] lg:max-w-none object-contain flex-shrink-0"
+                    style={{ filter: `drop-shadow(0 0 10px ${alphaOf('green', 0.2)})` }} />
                 </div>
               )}
               {subtitle && <p className="text-[11px] sm:text-xs text-green-200/85 font-medium">{subtitle}</p>}

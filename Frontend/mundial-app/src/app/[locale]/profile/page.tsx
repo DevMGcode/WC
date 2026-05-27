@@ -15,6 +15,8 @@ import { useAuth } from '@/contexts/AuthContext';
 import { Header } from '@/components/Navigation';
 import { getCurrentTournament } from '@/services/publicTournament';
 import { useT } from '@/hooks/useT';
+import { hex } from '@/lib/design/tokens';
+import { alpha, alphaOf, surfaces } from '@/lib/design/effects';
 
 /* ══════════════════════════════════════════
    MICRO COMPONENTS
@@ -43,7 +45,8 @@ const EQBars = ({ color, count = 9, maxH = 20 }: { color: string; count?: number
 };
 
 const Ring = ({
-  value, max = 100, size = 68, stroke = 5, color, trail = 'rgba(255,255,255,0.05)',
+  value, max = 100, size = 68, stroke = 5, color,
+  trail = alpha(hex.neutral.white, 0.05),
 }: { value: number; max?: number; size?: number; stroke?: number; color: string; trail?: string }) => {
   const r    = (size - stroke * 2) / 2;
   const circ = 2 * Math.PI * r;
@@ -68,7 +71,7 @@ const Ring = ({
 const GlowBar = ({ value, max = 100, color, height = 4 }: { value: number; max?: number; color: string; height?: number }) => {
   const pct = Math.min(100, (value / Math.max(max, 1)) * 100);
   return (
-    <div className="relative w-full rounded-full overflow-hidden" style={{ height, background: 'rgba(255,255,255,0.05)' }}>
+    <div className="relative w-full rounded-full overflow-hidden" style={{ height, background: alpha(hex.neutral.white, 0.05) }}>
       <motion.div
         className="h-full rounded-full"
         style={{ background: `linear-gradient(90deg, ${color}80, ${color})`, boxShadow: `0 0 8px ${color}80` }}
@@ -78,7 +81,7 @@ const GlowBar = ({ value, max = 100, color, height = 4 }: { value: number; max?:
       />
       <motion.div
         className="absolute inset-0"
-        style={{ background: 'linear-gradient(90deg, transparent, rgba(255,255,255,0.18), transparent)' }}
+        style={{ background: `linear-gradient(90deg, transparent, ${alpha(hex.neutral.white, 0.18)}, transparent)` }}
         animate={{ x: ['-100%', '200%'] }}
         transition={{ duration: 2.2, repeat: Infinity, ease: 'linear', repeatDelay: 1.5 }}
       />
@@ -92,10 +95,10 @@ const Particle = ({ index }: { index: number }) => {
   const delay = (index * 0.28) % 7;
   const duration = 9 + (index % 7);
   const cols: [string, string][] = [
-    ['rgba(76,175,80,0.60)', '0 0 8px rgba(76,175,80,0.75)'],
-    ['rgba(56,142,60,0.50)', '0 0 7px rgba(56,142,60,0.65)'],
-    ['rgba(212,167,44,0.45)', '0 0 7px rgba(212,167,44,0.60)'],
-    ['rgba(102,187,106,0.55)', '0 0 7px rgba(102,187,106,0.65)'],
+    [alphaOf('green', 0.60),              `0 0 8px ${alphaOf('green', 0.75)}`],
+    [alpha(hex.green.hover, 0.50),        `0 0 7px ${alpha(hex.green.hover, 0.65)}`],
+    [alpha(hex.gold.base, 0.45),          `0 0 7px ${alpha(hex.gold.base, 0.60)}`],
+    [alpha(hex.green.soft, 0.55),         `0 0 7px ${alpha(hex.green.soft, 0.65)}`],
   ];
   const [bg, shadow] = cols[index % cols.length];
   return (
@@ -108,16 +111,16 @@ const Particle = ({ index }: { index: number }) => {
   );
 };
 
-const SectionLabel = ({ children, color = '#4CAF50' }: { children: React.ReactNode; color?: string }) => (
+const SectionLabel = ({ children, color = hex.green.bright }: { children: React.ReactNode; color?: string }) => (
   <div className="flex items-center gap-2 mb-4">
     <div className="w-[3px] h-5 rounded-full" style={{ background: `linear-gradient(180deg, ${color}, ${color}80)` }} />
-    <span className="text-[10px] font-black tracking-[0.24em] uppercase" style={{ color: '#B8C4BC' }}>{children}</span>
+    <span className="text-[10px] font-black tracking-[0.24em] uppercase" style={{ color: hex.text.secondary }}>{children}</span>
   </div>
 );
 
 const DarkInput = ({
   id, label, type = 'text', value, onChange, placeholder, icon, autoComplete,
-  showToggle, show, onToggle, focusColor = 'rgba(76,175,80,0.55)',
+  showToggle, show, onToggle, focusColor = alphaOf('green', 0.55),
 }: {
   id: string; label: string; type?: string; value: string;
   onChange: (v: string) => void; placeholder?: string;
@@ -132,14 +135,14 @@ const DarkInput = ({
       <label
         htmlFor={id}
         className="block mb-1.5 text-[10px] font-semibold tracking-widest uppercase"
-        style={{ color: 'rgba(148,163,184,0.7)' }}
+        style={{ color: alpha(hex.accent.slate, 0.7) }}
       >
         {label}
       </label>
       <div className="relative">
         <span
           className="absolute left-3.5 top-1/2 -translate-y-1/2 pointer-events-none"
-          style={{ color: focused ? focusColor : 'rgba(100,116,139,0.7)', transition: 'color 200ms' }}
+          style={{ color: focused ? focusColor : alpha(hex.accent.slateDeep, 0.7), transition: 'color 200ms' }}
         >
           {icon}
         </span>
@@ -154,8 +157,8 @@ const DarkInput = ({
           placeholder={placeholder}
           className="w-full pl-10 pr-4 py-2.5 rounded-xl text-sm font-medium transition-all text-orionix-text-secondary"
           style={{
-            background: 'rgba(255,255,255,0.04)',
-            border: `1px solid ${focused ? focusColor : 'rgba(255,255,255,0.08)'}`,
+            background: alpha(hex.neutral.white, 0.04),
+            border: `1px solid ${focused ? focusColor : alpha(hex.neutral.white, 0.08)}`,
             boxShadow: focused ? `0 0 0 3px ${focusColor}20` : 'none',
             outline: 'none',
           }}
@@ -166,7 +169,7 @@ const DarkInput = ({
             tabIndex={-1}
             onClick={onToggle}
             className="absolute right-3 top-1/2 -translate-y-1/2 opacity-50 hover:opacity-90 transition-opacity cursor-pointer"
-            style={{ color: 'rgba(148,163,184,0.8)' }}
+            style={{ color: alpha(hex.accent.slate, 0.8) }}
           >
             {show ? <FiEyeOff size={15} /> : <FiEye size={15} />}
           </button>
@@ -177,7 +180,7 @@ const DarkInput = ({
 };
 
 const Toggle = ({
-  checked, onChange, color = '#4CAF50',
+  checked, onChange, color = hex.green.bright,
 }: { checked: boolean; onChange: (v: boolean) => void; color?: string }) => (
   <motion.button
     type="button"
@@ -188,8 +191,8 @@ const Toggle = ({
     style={{
       background: checked
         ? `linear-gradient(90deg, ${color}90, ${color})`
-        : 'rgba(255,255,255,0.07)',
-      border: `1px solid ${checked ? color + '55' : 'rgba(255,255,255,0.10)'}`,
+        : alpha(hex.neutral.white, 0.07),
+      border: `1px solid ${checked ? color + '55' : alpha(hex.neutral.white, 0.10)}`,
       boxShadow: checked ? `0 0 12px ${color}40` : 'none',
       transition: 'background 250ms, border-color 250ms, box-shadow 250ms',
     }}
@@ -221,14 +224,14 @@ const DarkModal = ({
       exit={{ opacity: 0, scale: 0.92, y: 12 }}
       transition={{ type: 'spring', stiffness: 420, damping: 32 }}
       style={{
-        background: 'linear-gradient(145deg, rgba(6,17,10,0.99), rgba(11,27,18,0.98))',
-        border: '1px solid rgba(76,175,80,0.22)',
+        background: surfaces.card(),
+        border: `1px solid ${alphaOf('green', 0.22)}`,
         borderRadius: '1.25rem',
-        boxShadow: '0 32px 80px rgba(0,0,0,0.70), 0 0 0 1px rgba(255,255,255,0.03), inset 0 1px 0 rgba(255,255,255,0.04)',
+        boxShadow: `0 32px 80px ${alpha(hex.neutral.black, 0.70)}, 0 0 0 1px ${alpha(hex.neutral.white, 0.03)}, inset 0 1px 0 ${alpha(hex.neutral.white, 0.04)}`,
       }}
     >
       <div className="absolute inset-x-0 top-0 h-px rounded-t-[1.25rem]"
-        style={{ background: 'linear-gradient(90deg, transparent, rgba(76,175,80,0.60), transparent)' }} />
+        style={{ background: `linear-gradient(90deg, transparent, ${alphaOf('green', 0.60)}, transparent)` }} />
       {children}
     </motion.div>
   </>
@@ -242,15 +245,15 @@ const ModalAlert = ({ message, type }: { message: string; type: 'error' | 'succe
     className="flex items-center gap-2.5 px-3.5 py-2.5 rounded-xl mb-4"
     style={
       type === 'error'
-        ? { background: 'rgba(239,68,68,0.10)', border: '1px solid rgba(239,68,68,0.22)' }
-        : { background: 'rgba(56,142,60,0.10)', border: '1px solid rgba(56,142,60,0.22)' }
+        ? { background: alpha(hex.accent.red, 0.10), border: `1px solid ${alpha(hex.accent.red, 0.22)}` }
+        : { background: alpha(hex.green.hover, 0.10), border: `1px solid ${alpha(hex.green.hover, 0.22)}` }
     }
   >
     {type === 'error'
-      ? <FiAlertTriangle size={13} style={{ color: '#f87171', flexShrink: 0 }} />
-      : <FiCheck size={13} style={{ color: '#388E3C', flexShrink: 0 }} />
+      ? <FiAlertTriangle size={13} style={{ color: hex.accent.redSoft, flexShrink: 0 }} />
+      : <FiCheck size={13} style={{ color: hex.green.hover, flexShrink: 0 }} />
     }
-    <p className="text-xs font-medium" style={{ color: type === 'error' ? '#fca5a5' : '#6ee7b7' }}>
+    <p className="text-xs font-medium" style={{ color: type === 'error' ? hex.accent.redSubtle : hex.accent.emeraldSoft }}>
       {message}
     </p>
   </motion.div>
@@ -464,30 +467,30 @@ export default function ProfilePage() {
   ];
 
   const tabs = [
-    { key: 'PROFILE',   label: t('profile.tabs.profile'),   icon: <FiUser size={14} />,     color: '#4CAF50' },
-    { key: 'FAVORITES', label: t('profile.tabs.favorites'), icon: <FiHeart size={14} />,    color: '#f472b6' },
-    { key: 'SETTINGS',  label: t('profile.tabs.settings'),  icon: <FiSettings size={14} />, color: '#388E3C' },
+    { key: 'PROFILE',   label: t('profile.tabs.profile'),   icon: <FiUser size={14} />,     color: hex.green.bright },
+    { key: 'FAVORITES', label: t('profile.tabs.favorites'), icon: <FiHeart size={14} />,    color: hex.accent.pink },
+    { key: 'SETTINGS',  label: t('profile.tabs.settings'),  icon: <FiSettings size={14} />, color: hex.green.hover },
   ] as const;
 
   return (
     <div
       className="w-full relative min-h-screen"
-      style={{ background: 'radial-gradient(ellipse at 22% 35%, #06110A 0%, #0B1B12 48%, #06110A 100%)' }}
+      style={{ background: `radial-gradient(ellipse at 22% 35%, ${hex.bg.primary} 0%, ${hex.bg.secondary} 48%, ${hex.bg.primary} 100%)` }}
     >
       {/* BACKGROUND ORBS */}
       <motion.div className="fixed rounded-full pointer-events-none"
-        style={{ width: 600, height: 600, top: -180, left: -120, background: 'radial-gradient(circle, rgba(56,142,60,0.07) 0%, transparent 65%)', filter: 'blur(80px)', zIndex: 0 }}
+        style={{ width: 600, height: 600, top: -180, left: -120, background: `radial-gradient(circle, ${alpha(hex.green.hover, 0.07)} 0%, transparent 65%)`, filter: 'blur(80px)', zIndex: 0 }}
         animate={{ scale: [1, 1.18, 1], opacity: [0.5, 0.9, 0.5] }}
         transition={{ duration: 12, repeat: Infinity }} />
       <motion.div className="fixed rounded-full pointer-events-none"
-        style={{ width: 480, height: 480, bottom: -80, right: -80, background: 'radial-gradient(circle, rgba(244,114,182,0.06) 0%, transparent 65%)', filter: 'blur(70px)', zIndex: 0 }}
+        style={{ width: 480, height: 480, bottom: -80, right: -80, background: `radial-gradient(circle, ${alpha(hex.accent.pink, 0.06)} 0%, transparent 65%)`, filter: 'blur(70px)', zIndex: 0 }}
         animate={{ scale: [1, 1.22, 1], opacity: [0.4, 0.8, 0.4] }}
         transition={{ duration: 14, repeat: Infinity, delay: 4 }} />
 
       <svg className="fixed inset-0 w-full h-full pointer-events-none opacity-[0.026]" style={{ zIndex: 0 }} xmlns="http://www.w3.org/2000/svg">
         <defs>
           <pattern id="pgrid" width="48" height="48" patternUnits="userSpaceOnUse">
-            <path d="M 48 0 L 0 0 0 48" fill="none" stroke="rgba(76,175,80,1)" strokeWidth="0.4" />
+            <path d="M 48 0 L 0 0 0 48" fill="none" stroke={hex.green.bright} strokeWidth="0.4" />
           </pattern>
           <radialGradient id="pgfade" cx="50%" cy="30%" r="60%">
             <stop offset="0%" stopColor="white" stopOpacity="1" />
@@ -517,19 +520,19 @@ export default function ProfilePage() {
           transition={{ duration: 0.45, ease: [0.22, 1, 0.36, 1] }}
           className="relative flex gap-1 mb-6 p-1 rounded-2xl"
           style={{
-            background: 'linear-gradient(145deg, rgba(6,17,10,0.92), rgba(11,27,18,0.90))',
-            border: '1px solid rgba(255,255,255,0.07)',
+            background: `linear-gradient(145deg, ${alpha(hex.bg.primary, 0.92)}, ${alpha(hex.bg.secondary, 0.90)})`,
+            border: `1px solid ${alpha(hex.neutral.white, 0.07)}`,
             backdropFilter: 'blur(24px)',
           }}
         >
           <div className="absolute inset-x-0 top-0 h-px rounded-t-2xl"
-            style={{ background: 'linear-gradient(90deg, transparent, rgba(76,175,80,0.30), transparent)' }} />
+            style={{ background: `linear-gradient(90deg, transparent, ${alphaOf('green', 0.30)}, transparent)` }} />
           {tabs.map(tab => (
             <button
               key={tab.key}
               onClick={() => { setActiveTab(tab.key); sessionStorage.removeItem('profile-tab'); }}
               className="relative flex-1 flex items-center justify-center gap-1.5 py-2.5 px-2 rounded-xl text-xs font-black tracking-wide transition-colors z-10"
-              style={{ color: activeTab === tab.key ? tab.color : 'rgba(100,116,139,0.7)' }}
+              style={{ color: activeTab === tab.key ? tab.color : alpha(hex.accent.slateDeep, 0.7) }}
             >
               {activeTab === tab.key && (
                 <motion.span
@@ -566,31 +569,31 @@ export default function ProfilePage() {
               <div
                 className="relative overflow-hidden rounded-3xl p-5 sm:p-6"
                 style={{
-                  background: 'linear-gradient(145deg, rgba(6,17,10,0.98), rgba(11,27,18,0.97))',
-                  border: '1px solid rgba(76,175,80,0.18)',
+                  background: surfaces.card(),
+                  border: `1px solid ${alphaOf('green', 0.18)}`,
                   backdropFilter: 'blur(32px)',
-                  boxShadow: '0 24px 64px rgba(0,0,0,0.55), inset 0 1px 0 rgba(255,255,255,0.03)',
+                  boxShadow: `0 24px 64px ${alpha(hex.neutral.black, 0.55)}, inset 0 1px 0 ${alpha(hex.neutral.white, 0.03)}`,
                 }}
               >
                 <div className="absolute inset-x-0 top-0 h-px"
-                  style={{ background: 'linear-gradient(90deg, transparent, rgba(76,175,80,0.65), transparent)' }} />
+                  style={{ background: `linear-gradient(90deg, transparent, ${alphaOf('green', 0.65)}, transparent)` }} />
                 <div className="absolute -top-20 -left-20 w-56 h-56 rounded-full pointer-events-none"
-                  style={{ background: 'radial-gradient(circle, rgba(76,175,80,0.09) 0%, transparent 65%)', filter: 'blur(28px)' }} />
+                  style={{ background: `radial-gradient(circle, ${alphaOf('green', 0.09)} 0%, transparent 65%)`, filter: 'blur(28px)' }} />
 
                 <div className="relative flex items-center gap-5">
                   <div className="relative shrink-0">
                     <motion.div
                       className="absolute inset-0 rounded-full"
-                      style={{ border: '1.5px solid rgba(76,175,80,0.35)' }}
+                      style={{ border: `1.5px solid ${alphaOf('green', 0.35)}` }}
                       animate={{ scale: [1, 1.45, 1], opacity: [0.7, 0, 0.7] }}
                       transition={{ duration: 2.4, repeat: Infinity, ease: 'easeOut' }}
                     />
                     <div
                       className="w-16 h-16 sm:w-20 sm:h-20 rounded-full flex items-center justify-center font-black text-white"
                       style={{
-                        background: 'linear-gradient(145deg, rgba(76,175,80,0.22), rgba(56,142,60,0.18))',
-                        border: '1px solid rgba(76,175,80,0.30)',
-                        boxShadow: '0 0 24px rgba(76,175,80,0.22)',
+                        background: `linear-gradient(145deg, ${alphaOf('green', 0.22)}, ${alpha(hex.green.hover, 0.18)})`,
+                        border: `1px solid ${alphaOf('green', 0.30)}`,
+                        boxShadow: `0 0 24px ${alphaOf('green', 0.22)}`,
                         fontSize: 'clamp(1.5rem, 4vw, 2rem)',
                       }}
                     >
@@ -601,14 +604,14 @@ export default function ProfilePage() {
                   <div className="flex-1 min-w-0">
                     <p
                       className="font-black text-xl sm:text-2xl leading-tight text-transparent bg-clip-text"
-                      style={{ backgroundImage: 'linear-gradient(90deg, #e2e8f0, #94a3b8)' }}
+                      style={{ backgroundImage: `linear-gradient(90deg, ${hex.accent.slateLight}, ${hex.accent.slate})` }}
                     >
                       {user.displayName}
                     </p>
                     <p className="text-xs mt-0.5 truncate text-orionix-text-muted">{user.email}</p>
                     <div className="flex items-center gap-1.5 mt-2">
-                      <FiCalendar size={10} style={{ color: 'rgba(76,175,80,0.60)' }} />
-                      <p className="text-[10px] font-semibold" style={{ color: 'rgba(76,175,80,0.60)' }}>
+                      <FiCalendar size={10} style={{ color: alphaOf('green', 0.60) }} />
+                      <p className="text-[10px] font-semibold" style={{ color: alphaOf('green', 0.60) }}>
                         {t('profile.memberSince')} {new Date(user.joinedAt).toLocaleDateString(undefined, { month: 'long', year: 'numeric' })}
                       </p>
                     </div>
@@ -616,13 +619,13 @@ export default function ProfilePage() {
 
                   <motion.button
                     onClick={handleOpenEdit}
-                    whileHover={{ scale: 1.06, boxShadow: '0 0 20px rgba(76,175,80,0.30)' }}
+                    whileHover={{ scale: 1.06, boxShadow: `0 0 20px ${alphaOf('green', 0.30)}` }}
                     whileTap={{ scale: 0.95 }}
                     className="shrink-0 flex items-center gap-1.5 px-3.5 py-2 rounded-xl text-xs font-black tracking-wide"
                     style={{
-                      background: 'rgba(76,175,80,0.10)',
-                      border: '1px solid rgba(76,175,80,0.28)',
-                      color: '#4CAF50',
+                      background: alphaOf('green', 0.10),
+                      border: `1px solid ${alphaOf('green', 0.28)}`,
+                      color: hex.green.bright,
                       boxShadow: '0 0 0px transparent',
                     }}
                   >
@@ -635,10 +638,10 @@ export default function ProfilePage() {
               {/* KPI grid */}
               <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
                 {[
-                  { icon: <FiActivity />,  value: stats.predictions, label: t('profile.stats.predictions'), color: '#4CAF50', glow: '#4CAF50', bg: 'rgba(76,175,80,0.07)',  delay: 0.05 },
-                  { icon: <FiCrosshair />, value: stats.acertadas,   label: t('profile.stats.exact'),       color: '#388E3C', glow: '#388E3C', bg: 'rgba(56,142,60,0.07)',  delay: 0.10 },
-                  { icon: <FiAward />,     value: stats.puntos,      label: t('profile.stats.points'),      color: '#D4A72C', glow: '#D4A72C', bg: 'rgba(212,167,44,0.07)',  delay: 0.15 },
-                  { icon: <FiBarChart2 />, value: stats.rankGlobal > 0 ? `#${stats.rankGlobal}` : '—', label: t('profile.stats.ranking'), color: '#66BB6A', glow: '#66BB6A', bg: 'rgba(102,187,106,0.07)', delay: 0.20 },
+                  { icon: <FiActivity />,  value: stats.predictions, label: t('profile.stats.predictions'), color: hex.green.bright, glow: hex.green.bright, bg: alphaOf('green', 0.07),          delay: 0.05 },
+                  { icon: <FiCrosshair />, value: stats.acertadas,   label: t('profile.stats.exact'),       color: hex.green.hover,  glow: hex.green.hover,  bg: alpha(hex.green.hover, 0.07),    delay: 0.10 },
+                  { icon: <FiAward />,     value: stats.puntos,      label: t('profile.stats.points'),      color: hex.gold.base,    glow: hex.gold.base,    bg: alpha(hex.gold.base, 0.07),      delay: 0.15 },
+                  { icon: <FiBarChart2 />, value: stats.rankGlobal > 0 ? `#${stats.rankGlobal}` : '—', label: t('profile.stats.ranking'), color: hex.green.soft, glow: hex.green.soft, bg: alpha(hex.green.soft, 0.07), delay: 0.20 },
                 ].map(({ icon, value, label, color, glow, bg, delay }) => (
                   <motion.div
                     key={label}
@@ -648,10 +651,10 @@ export default function ProfilePage() {
                     whileHover={{ y: -3, scale: 1.03 }}
                     className="relative overflow-hidden rounded-2xl p-4 cursor-default"
                     style={{
-                      background: `linear-gradient(145deg, ${bg}, rgba(2,8,20,0.96))`,
+                      background: `linear-gradient(145deg, ${bg}, ${alpha(hex.bg.primary, 0.96)})`,
                       border: `1px solid ${glow}30`,
                       backdropFilter: 'blur(20px)',
-                      boxShadow: `0 8px 28px ${glow}14, inset 0 1px 0 rgba(255,255,255,0.03)`,
+                      boxShadow: `0 8px 28px ${glow}14, inset 0 1px 0 ${alpha(hex.neutral.white, 0.03)}`,
                     }}
                   >
                     <div className="absolute inset-x-0 top-0 h-px"
@@ -679,21 +682,21 @@ export default function ProfilePage() {
               <div
                 className="relative overflow-hidden rounded-3xl p-5"
                 style={{
-                  background: 'linear-gradient(145deg, rgba(6,17,10,0.98), rgba(11,27,18,0.97))',
-                  border: '1px solid rgba(56,142,60,0.15)',
+                  background: surfaces.card(),
+                  border: `1px solid ${alpha(hex.green.hover, 0.15)}`,
                   backdropFilter: 'blur(28px)',
-                  boxShadow: '0 24px 60px rgba(0,0,0,0.50), inset 0 1px 0 rgba(255,255,255,0.02)',
+                  boxShadow: `0 24px 60px ${alpha(hex.neutral.black, 0.50)}, inset 0 1px 0 ${alpha(hex.neutral.white, 0.02)}`,
                 }}
               >
                 <div className="absolute inset-x-0 top-0 h-px"
-                  style={{ background: 'linear-gradient(90deg, transparent, rgba(56,142,60,0.55), transparent)' }} />
-                <SectionLabel color="#388E3C">{t('profile.performance')}</SectionLabel>
+                  style={{ background: `linear-gradient(90deg, transparent, ${alpha(hex.green.hover, 0.55)}, transparent)` }} />
+                <SectionLabel color={hex.green.hover}>{t('profile.performance')}</SectionLabel>
                 <div className="flex items-center gap-5">
                   <div className="relative shrink-0">
-                    <Ring value={accuracyPct} max={100} size={80} stroke={6} color="#388E3C" />
+                    <Ring value={accuracyPct} max={100} size={80} stroke={6} color={hex.green.hover} />
                     <div className="absolute inset-0 flex flex-col items-center justify-center">
                       <p className="text-lg font-black leading-none tabular-nums text-orionix-green-soft"
-                        style={{ textShadow: '0 0 14px rgba(56,142,60,0.8)' }}>
+                        style={{ textShadow: `0 0 14px ${alpha(hex.green.hover, 0.8)}` }}>
                         {accuracyPct}%
                       </p>
                       <p className="text-[6px] font-black tracking-[0.2em] uppercase mt-0.5 text-orionix-text-muted">{t('profile.stats.exact')}</p>
@@ -701,9 +704,9 @@ export default function ProfilePage() {
                   </div>
                   <div className="flex-1 space-y-2.5">
                     {[
-                      { label: t('profile.stats.predictions'), value: stats.predictions, max: 64,                     color: '#4CAF50' },
-                      { label: t('profile.stats.exact'),       value: stats.acertadas,   max: stats.predictions || 1, color: '#388E3C' },
-                      { label: t('profile.stats.points'),      value: stats.puntos,      max: 192,                    color: '#D4A72C' },
+                      { label: t('profile.stats.predictions'), value: stats.predictions, max: 64,                     color: hex.green.bright },
+                      { label: t('profile.stats.exact'),       value: stats.acertadas,   max: stats.predictions || 1, color: hex.green.hover  },
+                      { label: t('profile.stats.points'),      value: stats.puntos,      max: 192,                    color: hex.gold.base    },
                     ].map(({ label, value, max, color }) => (
                       <div key={label}>
                         <div className="flex justify-between items-center mb-1">
@@ -721,19 +724,19 @@ export default function ProfilePage() {
               <div
                 className="relative overflow-hidden rounded-3xl p-5"
                 style={{
-                  background: 'linear-gradient(145deg, rgba(6,17,10,0.98), rgba(14,4,4,0.96))',
-                  border: '1px solid rgba(239,68,68,0.12)',
+                  background: `linear-gradient(145deg, ${alpha(hex.bg.primary, 0.98)}, rgba(14,4,4,0.96))`,
+                  border: `1px solid ${alpha(hex.accent.red, 0.12)}`,
                   backdropFilter: 'blur(28px)',
-                  boxShadow: '0 24px 60px rgba(0,0,0,0.50), inset 0 1px 0 rgba(255,255,255,0.02)',
+                  boxShadow: `0 24px 60px ${alpha(hex.neutral.black, 0.50)}, inset 0 1px 0 ${alpha(hex.neutral.white, 0.02)}`,
                 }}
               >
                 <div className="absolute inset-x-0 top-0 h-px"
-                  style={{ background: 'linear-gradient(90deg, transparent, rgba(239,68,68,0.35), transparent)' }} />
-                <SectionLabel color="#f87171">{t('profile.accountActions')}</SectionLabel>
+                  style={{ background: `linear-gradient(90deg, transparent, ${alpha(hex.accent.red, 0.35)}, transparent)` }} />
+                <SectionLabel color={hex.accent.redSoft}>{t('profile.accountActions')}</SectionLabel>
                 <div className="space-y-2">
                   {[
-                    { label: t('profile.changePassword'), icon: <FiLock size={15} />,   color: '#4CAF50', border: 'rgba(76,175,80,0.20)', bg: 'rgba(76,175,80,0.06)', action: handleOpenPassword },
-                    { label: t('profile.logout'),         icon: <FiLogOut size={15} />, color: '#f87171', border: 'rgba(239,68,68,0.20)',  bg: 'rgba(239,68,68,0.06)',  action: () => setShowLogout(true) },
+                    { label: t('profile.changePassword'), icon: <FiLock size={15} />,   color: hex.green.bright, border: alphaOf('green', 0.20),        bg: alphaOf('green', 0.06),        action: handleOpenPassword },
+                    { label: t('profile.logout'),         icon: <FiLogOut size={15} />, color: hex.accent.redSoft, border: alpha(hex.accent.red, 0.20), bg: alpha(hex.accent.red, 0.06), action: () => setShowLogout(true) },
                   ].map(({ label, icon, color, border, bg, action }) => (
                     <motion.button
                       key={label}
@@ -769,38 +772,38 @@ export default function ProfilePage() {
                 <div
                   className="relative overflow-hidden rounded-3xl p-5"
                   style={{
-                    background: 'linear-gradient(145deg, rgba(6,17,10,0.98), rgba(11,27,18,0.97))',
-                    border: '1px solid rgba(244,114,182,0.18)',
+                    background: surfaces.card(),
+                    border: `1px solid ${alpha(hex.accent.pink, 0.18)}`,
                     backdropFilter: 'blur(32px)',
-                    boxShadow: '0 24px 64px rgba(0,0,0,0.55), inset 0 1px 0 rgba(255,255,255,0.02)',
+                    boxShadow: `0 24px 64px ${alpha(hex.neutral.black, 0.55)}, inset 0 1px 0 ${alpha(hex.neutral.white, 0.02)}`,
                   }}
                 >
                   <div className="absolute inset-x-0 top-0 h-px"
-                    style={{ background: 'linear-gradient(90deg, transparent, rgba(244,114,182,0.55), transparent)' }} />
-                  <SectionLabel color="#f472b6">{t('profile.myTeams')}</SectionLabel>
+                    style={{ background: `linear-gradient(90deg, transparent, ${alpha(hex.accent.pink, 0.55)}, transparent)` }} />
+                  <SectionLabel color={hex.accent.pink}>{t('profile.myTeams')}</SectionLabel>
                   <div className="grid grid-cols-3 sm:grid-cols-4 gap-3">
                     {favoriteTeams.map(team => (
                       <motion.div
                         key={team.id}
                         whileHover={{ scale: 1.04 }}
                         className="relative group cursor-pointer rounded-2xl overflow-hidden"
-                        style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.07)' }}
+                        style={{ background: alpha(hex.neutral.white, 0.03), border: `1px solid ${alpha(hex.neutral.white, 0.07)}` }}
                       >
                         <div className="aspect-square p-2 flex items-center justify-center">
                           <img src={team.flagUrl} alt={team.name} className="w-full h-full object-cover rounded-lg" />
                         </div>
                         <motion.div
                           className="absolute inset-0 flex flex-col items-center justify-center gap-1.5 rounded-2xl"
-                          style={{ background: 'rgba(0,0,0,0.72)', backdropFilter: 'blur(4px)' }}
+                          style={{ background: alpha(hex.neutral.black, 0.72), backdropFilter: 'blur(4px)' }}
                           initial={{ opacity: 0 }}
                           whileHover={{ opacity: 1 }}
                           transition={{ duration: 0.18 }}
                           onClick={() => setFavoriteTeams(p => p.filter(t => t.id !== team.id))}
                         >
-                          <FiTrash2 size={16} style={{ color: '#f87171' }} />
+                          <FiTrash2 size={16} style={{ color: hex.accent.redSoft }} />
                           <span className="text-[9px] font-black text-red-300 tracking-wide">{t('common.delete')}</span>
                         </motion.div>
-                        <p className="text-[10px] font-black text-center py-1.5 tracking-wide" style={{ color: '#B8C4BC' }}>{team.shortName}</p>
+                        <p className="text-[10px] font-black text-center py-1.5 tracking-wide" style={{ color: hex.text.secondary }}>{team.shortName}</p>
                       </motion.div>
                     ))}
                   </div>
@@ -811,15 +814,15 @@ export default function ProfilePage() {
                 <div
                   className="relative overflow-hidden rounded-3xl p-5"
                   style={{
-                    background: 'linear-gradient(145deg, rgba(6,17,10,0.98), rgba(11,27,18,0.97))',
-                    border: '1px solid rgba(76,175,80,0.14)',
+                    background: surfaces.card(),
+                    border: `1px solid ${alphaOf('green', 0.14)}`,
                     backdropFilter: 'blur(32px)',
-                    boxShadow: '0 24px 64px rgba(0,0,0,0.50), inset 0 1px 0 rgba(255,255,255,0.02)',
+                    boxShadow: `0 24px 64px ${alpha(hex.neutral.black, 0.50)}, inset 0 1px 0 ${alpha(hex.neutral.white, 0.02)}`,
                   }}
                 >
                   <div className="absolute inset-x-0 top-0 h-px"
-                    style={{ background: 'linear-gradient(90deg, transparent, rgba(76,175,80,0.40), transparent)' }} />
-                  <SectionLabel color="#4CAF50">{t('profile.addTeams')}</SectionLabel>
+                    style={{ background: `linear-gradient(90deg, transparent, ${alphaOf('green', 0.40)}, transparent)` }} />
+                  <SectionLabel color={hex.green.bright}>{t('profile.addTeams')}</SectionLabel>
                   <div className="grid grid-cols-3 sm:grid-cols-4 gap-3">
                     {allTeams
                       .filter(tm => !favoriteTeams.find(f => f.id === tm.id))
@@ -833,14 +836,14 @@ export default function ProfilePage() {
                               setFavoriteTeams(p => [...p, team]);
                           }}
                           className="relative group cursor-pointer rounded-2xl overflow-hidden"
-                          style={{ background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.06)' }}
+                          style={{ background: alpha(hex.neutral.white, 0.02), border: `1px solid ${alpha(hex.neutral.white, 0.06)}` }}
                         >
                           <div className="aspect-square p-2 flex items-center justify-center">
                             <img src={team.flagUrl} alt={team.name} className="w-full h-full object-cover rounded-lg opacity-70 group-hover:opacity-100 transition-opacity" />
                           </div>
                           <motion.div
                             className="absolute inset-0 flex flex-col items-center justify-center gap-1.5 rounded-2xl"
-                            style={{ background: 'rgba(76,175,80,0.12)', backdropFilter: 'blur(4px)' }}
+                            style={{ background: alphaOf('green', 0.12), backdropFilter: 'blur(4px)' }}
                             initial={{ opacity: 0 }}
                             whileHover={{ opacity: 1 }}
                             transition={{ duration: 0.18 }}
@@ -878,24 +881,24 @@ export default function ProfilePage() {
               <div
                 className="relative rounded-3xl p-5"
                 style={{
-                  background: 'linear-gradient(145deg, rgba(6,17,10,0.98), rgba(11,27,18,0.97))',
-                  border: '1px solid rgba(76,175,80,0.14)',
+                  background: surfaces.card(),
+                  border: `1px solid ${alphaOf('green', 0.14)}`,
                   backdropFilter: 'blur(32px)',
-                  boxShadow: '0 24px 60px rgba(0,0,0,0.50), inset 0 1px 0 rgba(255,255,255,0.02)',
+                  boxShadow: `0 24px 60px ${alpha(hex.neutral.black, 0.50)}, inset 0 1px 0 ${alpha(hex.neutral.white, 0.02)}`,
                   zIndex: langOpen ? 100 : 'auto',
                 }}
               >
-                {/* Top accent line — rendered inline since no overflow-hidden */}
+                {/* Top accent line */}
                 <div className="absolute inset-x-0 top-0 h-px rounded-t-3xl"
-                  style={{ background: 'linear-gradient(90deg, transparent, rgba(76,175,80,0.40), transparent)' }} />
-                <SectionLabel color="#4CAF50">{t('profile.settings.language')}</SectionLabel>
+                  style={{ background: `linear-gradient(90deg, transparent, ${alphaOf('green', 0.40)}, transparent)` }} />
+                <SectionLabel color={hex.green.bright}>{t('profile.settings.language')}</SectionLabel>
 
                 {/* ── Custom language dropdown ── */}
                 {(() => {
-                  const activeCfg = localeConfig[language as keyof typeof localeConfig];
-                  const GOLD        = '#D4AF37';
-                  const GOLD_BG     = 'rgba(212,175,55,0.12)';
-                  const GOLD_BORDER = 'rgba(212,175,55,0.28)';
+                  const activeCfg  = localeConfig[language as keyof typeof localeConfig];
+                  const GOLD        = hex.gold.base;
+                  const GOLD_BG     = alpha(hex.gold.base, 0.12);
+                  const GOLD_BORDER = alpha(hex.gold.base, 0.28);
                   return (
                     <div ref={langRef} className="relative">
 
@@ -905,8 +908,8 @@ export default function ProfilePage() {
                         onClick={() => setLangOpen(o => !o)}
                         className="w-full flex items-center justify-between px-4 py-3 rounded-2xl transition-all duration-200"
                         style={{
-                          background: langOpen ? 'rgba(76,175,80,0.08)' : 'rgba(255,255,255,0.03)',
-                          border: `1px solid ${langOpen ? 'rgba(76,175,80,0.35)' : 'rgba(255,255,255,0.08)'}`,
+                          background: langOpen ? alphaOf('green', 0.08) : alpha(hex.neutral.white, 0.03),
+                          border: `1px solid ${langOpen ? alphaOf('green', 0.35) : alpha(hex.neutral.white, 0.08)}`,
                           outline: 'none',
                           cursor: 'pointer',
                         }}
@@ -921,13 +924,13 @@ export default function ProfilePage() {
                           </span>
                           <div className="text-left">
                             <p className="text-sm font-bold text-white leading-none">{activeCfg?.label}</p>
-                            <p className="text-[9px] uppercase tracking-widest mt-0.5" style={{ color: 'rgba(76,175,80,0.50)' }}>
+                            <p className="text-[9px] uppercase tracking-widest mt-0.5" style={{ color: alphaOf('green', 0.50) }}>
                               {t('profile.settings.language')}
                             </p>
                           </div>
                         </div>
                         <motion.div animate={{ rotate: langOpen ? 180 : 0 }} transition={{ duration: 0.2 }}>
-                          <FiChevronDown size={15} style={{ color: langOpen ? '#4CAF50' : 'rgba(255,255,255,0.25)' }} />
+                          <FiChevronDown size={15} style={{ color: langOpen ? hex.green.bright : alpha(hex.neutral.white, 0.25) }} />
                         </motion.div>
                       </button>
 
@@ -941,15 +944,15 @@ export default function ProfilePage() {
                             transition={{ duration: 0.16, ease: [0.22, 1, 0.36, 1] }}
                             className="absolute left-0 right-0 mt-2 rounded-2xl z-[200]"
                             style={{
-                              background: 'linear-gradient(160deg, rgba(7,18,10,0.99) 0%, rgba(10,24,15,0.99) 100%)',
-                              border: '1px solid rgba(76,175,80,0.20)',
-                              boxShadow: '0 20px 56px rgba(0,0,0,0.70), 0 0 0 1px rgba(76,175,80,0.05)',
+                              background: `linear-gradient(160deg, ${alpha(hex.bg.primary, 0.99)} 0%, ${alpha(hex.bg.secondary, 0.99)} 100%)`,
+                              border: `1px solid ${alphaOf('green', 0.20)}`,
+                              boxShadow: `0 20px 56px ${alpha(hex.neutral.black, 0.70)}, 0 0 0 1px ${alphaOf('green', 0.05)}`,
                               backdropFilter: 'blur(28px)',
                               overflow: 'hidden',
                             }}
                           >
                             {/* Top accent */}
-                            <div className="h-px w-full" style={{ background: 'linear-gradient(90deg, transparent, rgba(212,175,55,0.45), rgba(76,175,80,0.45), transparent)' }} />
+                            <div className="h-px w-full" style={{ background: `linear-gradient(90deg, transparent, ${alpha(hex.gold.base, 0.45)}, ${alphaOf('green', 0.45)}, transparent)` }} />
 
                             <div className="py-1">
                               {locales.map((code, idx) => {
@@ -963,34 +966,34 @@ export default function ProfilePage() {
                                     onClick={() => { handleSelectLanguage(code); setLangOpen(false); }}
                                     className="w-full flex items-center justify-between px-4 py-2.5 transition-colors duration-150"
                                     style={{
-                                      background: isActive ? 'rgba(76,175,80,0.09)' : 'transparent',
-                                      borderBottom: isLast ? 'none' : '1px solid rgba(255,255,255,0.04)',
+                                      background: isActive ? alphaOf('green', 0.09) : 'transparent',
+                                      borderBottom: isLast ? 'none' : `1px solid ${alpha(hex.neutral.white, 0.04)}`,
                                       cursor: 'pointer',
                                       outline: 'none',
                                     }}
-                                    onMouseEnter={e => { if (!isActive) (e.currentTarget as HTMLButtonElement).style.background = 'rgba(255,255,255,0.04)'; }}
-                                    onMouseLeave={e => { if (!isActive) (e.currentTarget as HTMLButtonElement).style.background = isActive ? 'rgba(76,175,80,0.09)' : 'transparent'; }}
+                                    onMouseEnter={e => { if (!isActive) (e.currentTarget as HTMLButtonElement).style.background = alpha(hex.neutral.white, 0.04); }}
+                                    onMouseLeave={e => { if (!isActive) (e.currentTarget as HTMLButtonElement).style.background = isActive ? alphaOf('green', 0.09) : 'transparent'; }}
                                   >
                                     <div className="flex items-center gap-3">
                                       {/* Gold code badge */}
                                       <span
                                         className="text-[9px] font-black tracking-widest uppercase w-9 text-center py-1 rounded-lg shrink-0"
                                         style={{
-                                          background: isActive ? GOLD_BG : 'rgba(255,255,255,0.04)',
-                                          border: `1px solid ${isActive ? GOLD_BORDER : 'rgba(255,255,255,0.07)'}`,
-                                          color: isActive ? GOLD : 'rgba(212,175,55,0.45)',
+                                          background: isActive ? GOLD_BG : alpha(hex.neutral.white, 0.04),
+                                          border: `1px solid ${isActive ? GOLD_BORDER : alpha(hex.neutral.white, 0.07)}`,
+                                          color: isActive ? GOLD : alpha(hex.gold.base, 0.45),
                                         }}
                                       >
                                         {code.toUpperCase()}
                                       </span>
                                       <p
                                         className="text-sm font-semibold leading-none"
-                                        style={{ color: isActive ? '#e2e8f0' : 'rgba(255,255,255,0.50)' }}
+                                        style={{ color: isActive ? hex.accent.slateLight : alpha(hex.neutral.white, 0.50) }}
                                       >
                                         {cfg.label}
                                       </p>
                                     </div>
-                                    {isActive && <FiCheck size={13} style={{ color: '#4CAF50', flexShrink: 0 }} />}
+                                    {isActive && <FiCheck size={13} style={{ color: hex.green.bright, flexShrink: 0 }} />}
                                   </button>
                                 );
                               })}
@@ -1007,21 +1010,21 @@ export default function ProfilePage() {
               <div
                 className="relative overflow-hidden rounded-3xl p-5"
                 style={{
-                  background: 'linear-gradient(145deg, rgba(6,17,10,0.98), rgba(11,27,18,0.97))',
-                  border: '1px solid rgba(212,167,44,0.12)',
+                  background: surfaces.card(),
+                  border: `1px solid ${alpha(hex.gold.base, 0.12)}`,
                   backdropFilter: 'blur(32px)',
-                  boxShadow: '0 24px 60px rgba(0,0,0,0.50), inset 0 1px 0 rgba(255,255,255,0.02)',
+                  boxShadow: `0 24px 60px ${alpha(hex.neutral.black, 0.50)}, inset 0 1px 0 ${alpha(hex.neutral.white, 0.02)}`,
                 }}
               >
                 <div className="absolute inset-x-0 top-0 h-px"
-                  style={{ background: 'linear-gradient(90deg, transparent, rgba(212,167,44,0.40), transparent)' }} />
-                <SectionLabel color="#D4A72C">{t('profile.settings.notifications')}</SectionLabel>
+                  style={{ background: `linear-gradient(90deg, transparent, ${alpha(hex.gold.base, 0.40)}, transparent)` }} />
+                <SectionLabel color={hex.gold.base}>{t('profile.settings.notifications')}</SectionLabel>
                 <div className="space-y-2">
                   {[
-                    { key: 'fixtureReminders',    label: t('profile.settings.fixtureReminders'),    icon: <FiCalendar size={14} />,  color: '#4CAF50' },
-                    { key: 'resultNotifications', label: t('profile.settings.resultNotifications'), icon: <FiZap size={14} />,       color: '#D4A72C' },
-                    { key: 'leagueUpdates',       label: t('profile.settings.leagueUpdates'),       icon: <FiBarChart2 size={14} />, color: '#388E3C' },
-                    { key: 'newsUpdates',         label: t('profile.settings.newsUpdates'),         icon: <FiBell size={14} />,      color: '#f472b6' },
+                    { key: 'fixtureReminders',    label: t('profile.settings.fixtureReminders'),    icon: <FiCalendar size={14} />,  color: hex.green.bright },
+                    { key: 'resultNotifications', label: t('profile.settings.resultNotifications'), icon: <FiZap size={14} />,       color: hex.gold.base    },
+                    { key: 'leagueUpdates',       label: t('profile.settings.leagueUpdates'),       icon: <FiBarChart2 size={14} />, color: hex.green.hover  },
+                    { key: 'newsUpdates',         label: t('profile.settings.newsUpdates'),         icon: <FiBell size={14} />,      color: hex.accent.pink  },
                   ].map(notif => {
                     const on = notifications[notif.key as keyof typeof notifications];
                     return (
@@ -1029,13 +1032,13 @@ export default function ProfilePage() {
                         key={notif.key}
                         className="flex items-center justify-between px-4 py-3.5 rounded-2xl transition-all"
                         style={{
-                          background: on ? 'rgba(255,255,255,0.03)' : 'rgba(255,255,255,0.01)',
-                          border: `1px solid ${on ? 'rgba(255,255,255,0.07)' : 'rgba(255,255,255,0.04)'}`,
+                          background: on ? alpha(hex.neutral.white, 0.03) : alpha(hex.neutral.white, 0.01),
+                          border: `1px solid ${on ? alpha(hex.neutral.white, 0.07) : alpha(hex.neutral.white, 0.04)}`,
                         }}
                       >
                         <div className="flex items-center gap-3">
-                          <span style={{ color: on ? notif.color : 'rgba(100,116,139,0.4)' }}>{notif.icon}</span>
-                          <p className="text-sm font-semibold" style={{ color: on ? '#94a3b8' : '#475569' }}>{notif.label}</p>
+                          <span style={{ color: on ? notif.color : alpha(hex.accent.slateDeep, 0.4) }}>{notif.icon}</span>
+                          <p className="text-sm font-semibold" style={{ color: on ? hex.accent.slate : hex.accent.slateDark }}>{notif.label}</p>
                         </div>
                         <Toggle
                           checked={on}
@@ -1051,14 +1054,14 @@ export default function ProfilePage() {
               {/* Save button */}
               <motion.button
                 onClick={handleSaveSettings}
-                whileHover={{ scale: 1.02, boxShadow: '0 12px 40px rgba(76,175,80,0.45)' }}
+                whileHover={{ scale: 1.02, boxShadow: `0 12px 40px ${alphaOf('green', 0.45)}` }}
                 whileTap={{ scale: 0.97 }}
                 className="relative w-full py-3.5 rounded-2xl font-black text-sm text-white tracking-wide overflow-hidden"
-                style={{ background: 'linear-gradient(135deg, #1B5E20, #2E7D32, #388E3C)', boxShadow: '0 6px 24px rgba(76,175,80,0.28)' }}
+                style={{ background: `linear-gradient(135deg, ${hex.green.dark}, ${hex.green.base}, ${hex.green.hover})`, boxShadow: `0 6px 24px ${alphaOf('green', 0.28)}` }}
               >
                 <motion.div
                   className="absolute inset-0"
-                  style={{ background: 'linear-gradient(108deg, transparent 28%, rgba(255,255,255,0.18) 50%, transparent 72%)' }}
+                  style={{ background: `linear-gradient(108deg, transparent 28%, ${alpha(hex.neutral.white, 0.18)} 50%, transparent 72%)` }}
                   animate={{ x: ['-120%', '120%'] }}
                   transition={{ duration: 2.5, repeat: Infinity, ease: 'linear', repeatDelay: 2 }}
                 />
@@ -1100,13 +1103,13 @@ export default function ProfilePage() {
               <div className="flex items-center justify-between mb-5">
                 <div className="flex items-center gap-2.5">
                   <div className="w-8 h-8 rounded-xl flex items-center justify-center"
-                    style={{ background: 'rgba(76,175,80,0.12)', border: '1px solid rgba(76,175,80,0.25)' }}>
+                    style={{ background: alphaOf('green', 0.12), border: `1px solid ${alphaOf('green', 0.25)}` }}>
                     <FiEdit3 size={14} className="text-orionix-green-bright" />
                   </div>
                   <h2 className="text-base font-black tracking-wide text-orionix-text-primary">{t('profile.edit.title')}</h2>
                 </div>
                 <button onClick={() => setShowEdit(false)} className="opacity-40 hover:opacity-80 transition-opacity">
-                  <FiX size={16} style={{ color: '#94a3b8' }} />
+                  <FiX size={16} style={{ color: hex.accent.slate }} />
                 </button>
               </div>
 
@@ -1140,20 +1143,20 @@ export default function ProfilePage() {
               <div className="flex gap-2.5 mt-6">
                 <motion.button
                   onClick={() => setShowEdit(false)}
-                  whileHover={{ borderColor: 'rgba(255,255,255,0.18)' }}
+                  whileHover={{ borderColor: alpha(hex.neutral.white, 0.18) }}
                   whileTap={{ scale: 0.97 }}
                   className="flex-1 py-2.5 rounded-xl text-sm font-bold transition-all text-orionix-text-muted"
-                  style={{ border: '1px solid rgba(255,255,255,0.08)', background: 'rgba(255,255,255,0.03)' }}
+                  style={{ border: `1px solid ${alpha(hex.neutral.white, 0.08)}`, background: alpha(hex.neutral.white, 0.03) }}
                 >
                   {t('common.cancel')}
                 </motion.button>
                 <motion.button
                   onClick={handleSaveProfile}
                   disabled={editLoading}
-                  whileHover={{ scale: 1.02, boxShadow: '0 8px 28px rgba(76,175,80,0.38)' }}
+                  whileHover={{ scale: 1.02, boxShadow: `0 8px 28px ${alphaOf('green', 0.38)}` }}
                   whileTap={{ scale: 0.97 }}
                   className="flex-1 py-2.5 rounded-xl text-sm font-black text-white relative overflow-hidden"
-                  style={{ background: 'linear-gradient(135deg, #1B5E20, #2E7D32)', boxShadow: '0 4px 16px rgba(76,175,80,0.22)' }}
+                  style={{ background: `linear-gradient(135deg, ${hex.green.dark}, ${hex.green.base})`, boxShadow: `0 4px 16px ${alphaOf('green', 0.22)}` }}
                 >
                   {editLoading ? (
                     <motion.div className="w-4 h-4 rounded-full border-2 border-white/20 border-t-white mx-auto"
@@ -1176,13 +1179,13 @@ export default function ProfilePage() {
               <div className="flex items-center justify-between mb-5">
                 <div className="flex items-center gap-2.5">
                   <div className="w-8 h-8 rounded-xl flex items-center justify-center"
-                    style={{ background: 'rgba(76,175,80,0.12)', border: '1px solid rgba(76,175,80,0.25)' }}>
+                    style={{ background: alphaOf('green', 0.12), border: `1px solid ${alphaOf('green', 0.25)}` }}>
                     <FiShield size={14} className="text-orionix-green-bright" />
                   </div>
                   <h2 className="text-base font-black tracking-wide text-orionix-text-primary">{t('profile.password.title')}</h2>
                 </div>
                 <button onClick={() => setShowPassword(false)} className="opacity-40 hover:opacity-80 transition-opacity">
-                  <FiX size={16} style={{ color: '#94a3b8' }} />
+                  <FiX size={16} style={{ color: hex.accent.slate }} />
                 </button>
               </div>
 
@@ -1233,20 +1236,20 @@ export default function ProfilePage() {
               <div className="flex gap-2.5 mt-6">
                 <motion.button
                   onClick={() => setShowPassword(false)}
-                  whileHover={{ borderColor: 'rgba(255,255,255,0.18)' }}
+                  whileHover={{ borderColor: alpha(hex.neutral.white, 0.18) }}
                   whileTap={{ scale: 0.97 }}
                   className="flex-1 py-2.5 rounded-xl text-sm font-bold transition-all text-orionix-text-muted"
-                  style={{ border: '1px solid rgba(255,255,255,0.08)', background: 'rgba(255,255,255,0.03)' }}
+                  style={{ border: `1px solid ${alpha(hex.neutral.white, 0.08)}`, background: alpha(hex.neutral.white, 0.03) }}
                 >
                   {t('common.cancel')}
                 </motion.button>
                 <motion.button
                   onClick={handleSavePassword}
                   disabled={pwdLoading}
-                  whileHover={{ scale: 1.02, boxShadow: '0 8px 28px rgba(76,175,80,0.38)' }}
+                  whileHover={{ scale: 1.02, boxShadow: `0 8px 28px ${alphaOf('green', 0.38)}` }}
                   whileTap={{ scale: 0.97 }}
                   className="flex-1 py-2.5 rounded-xl text-sm font-black text-white relative overflow-hidden"
-                  style={{ background: 'linear-gradient(135deg, #1B5E20, #2E7D32)', boxShadow: '0 4px 16px rgba(76,175,80,0.22)' }}
+                  style={{ background: `linear-gradient(135deg, ${hex.green.dark}, ${hex.green.base})`, boxShadow: `0 4px 16px ${alphaOf('green', 0.22)}` }}
                 >
                   {pwdLoading ? (
                     <motion.div className="w-4 h-4 rounded-full border-2 border-white/20 border-t-white mx-auto"
@@ -1269,9 +1272,9 @@ export default function ProfilePage() {
               <div className="flex justify-center mb-4">
                 <div
                   className="w-14 h-14 rounded-full flex items-center justify-center"
-                  style={{ background: 'rgba(239,68,68,0.10)', border: '1px solid rgba(239,68,68,0.25)' }}
+                  style={{ background: alpha(hex.accent.red, 0.10), border: `1px solid ${alpha(hex.accent.red, 0.25)}` }}
                 >
-                  <FiLogOut size={22} style={{ color: '#f87171' }} />
+                  <FiLogOut size={22} style={{ color: hex.accent.redSoft }} />
                 </div>
               </div>
               <h2 className="text-base font-black mb-1.5 text-orionix-text-primary">{t('profile.logout')}</h2>
@@ -1281,19 +1284,19 @@ export default function ProfilePage() {
               <div className="flex gap-2.5">
                 <motion.button
                   onClick={() => setShowLogout(false)}
-                  whileHover={{ borderColor: 'rgba(255,255,255,0.18)' }}
+                  whileHover={{ borderColor: alpha(hex.neutral.white, 0.18) }}
                   whileTap={{ scale: 0.97 }}
                   className="flex-1 py-2.5 rounded-xl text-sm font-bold transition-all text-orionix-text-muted"
-                  style={{ border: '1px solid rgba(255,255,255,0.08)', background: 'rgba(255,255,255,0.03)' }}
+                  style={{ border: `1px solid ${alpha(hex.neutral.white, 0.08)}`, background: alpha(hex.neutral.white, 0.03) }}
                 >
                   {t('common.cancel')}
                 </motion.button>
                 <motion.button
                   onClick={handleLogout}
-                  whileHover={{ scale: 1.02, boxShadow: '0 8px 24px rgba(239,68,68,0.35)' }}
+                  whileHover={{ scale: 1.02, boxShadow: `0 8px 24px ${alpha(hex.accent.red, 0.35)}` }}
                   whileTap={{ scale: 0.97 }}
                   className="flex-1 py-2.5 rounded-xl text-sm font-black text-white"
-                  style={{ background: 'linear-gradient(135deg, #dc2626, #ef4444)', boxShadow: '0 4px 14px rgba(239,68,68,0.22)' }}
+                  style={{ background: `linear-gradient(135deg, ${hex.accent.redStrong}, ${hex.accent.red})`, boxShadow: `0 4px 14px ${alpha(hex.accent.red, 0.22)}` }}
                 >
                   <span className="flex items-center justify-center gap-1.5">
                     <FiLogOut size={13} /> {t('profile.logout')}

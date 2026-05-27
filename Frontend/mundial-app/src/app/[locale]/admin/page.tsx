@@ -7,10 +7,12 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { FiTarget, FiCalendar, FiBarChart2, FiSettings, FiRefreshCw, FiCheck, FiTrash2, FiWifi } from 'react-icons/fi';
 import { useAuth } from '@/contexts/AuthContext';
 import { getCurrentTournament } from '@/services/publicTournament';
+import { hex, type BrandColor } from '@/lib/design/tokens';
+import { alpha, alphaOf, borders, gradients, surfaces } from '@/lib/design/effects';
 
 const GA_ID = process.env.NEXT_PUBLIC_GA_ID;
 
-/* ─── Animated counter ──────────────────────────────────────────────────── */
+/* --- Animated counter ---------------------------------------------------- */
 function AnimatedNumber({ value }: { value: number }) {
   const [display, setDisplay] = useState(0);
   useEffect(() => {
@@ -28,7 +30,7 @@ function AnimatedNumber({ value }: { value: number }) {
   return <>{display.toLocaleString()}</>;
 }
 
-/* ─── SVG Icons ─────────────────────────────────────────────────────────── */
+/* --- SVG Icons ----------------------------------------------------------- */
 const IconUsers = () => (
   <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" className="w-5 h-5">
     <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/>
@@ -70,7 +72,7 @@ const IconShield = () => (
   </svg>
 );
 
-/* ─── Analytics Tab ─────────────────────────────────────────────────────── */
+/* --- Analytics Tab ------------------------------------------------------- */
 interface AppStats { totalUsers: number | null; totalPredictions: number | null; }
 
 function AnalyticsTab() {
@@ -90,8 +92,8 @@ function AnalyticsTab() {
   }, []);
 
   const statCards = [
-    { label: 'Usuarios registrados', sublabel: 'Total en la plataforma', value: stats.totalUsers, icon: <IconUsers />, from: '#2E7D32', to: '#4CAF50', glow: 'rgba(46,125,50,0.3)' },
-    { label: 'Predicciones totales', sublabel: 'Porras registradas', value: stats.totalPredictions, icon: <IconBall />, from: '#10b981', to: '#059669', glow: 'rgba(16,185,129,0.3)' },
+    { label: 'Usuarios registrados', sublabel: 'Total en la plataforma', value: stats.totalUsers, icon: <IconUsers />, from: hex.green.base, to: hex.green.bright, glow: alpha(hex.green.base, 0.3) },
+    { label: 'Predicciones totales', sublabel: 'Porras registradas', value: stats.totalPredictions, icon: <IconBall />, from: hex.green.hover, to: '#059669', glow: 'rgba(16,185,129,0.3)' },
   ];
 
   return (
@@ -103,7 +105,7 @@ function AnalyticsTab() {
             initial={{ opacity: 0, scale: 0.92 }} animate={{ opacity: 1, scale: 1 }}
             transition={{ delay: i * 0.1, type: 'spring', stiffness: 260, damping: 22 }}
             className="relative rounded-2xl overflow-hidden group"
-            style={{ background: `linear-gradient(145deg, rgba(6,17,10,0.95), rgba(11,27,18,0.90))`, border: `1px solid ${from}40`, boxShadow: `0 0 30px ${glow}30, 0 8px 24px rgba(2,6,23,0.5)` }}>
+            style={{ background: `linear-gradient(145deg, ${alpha(hex.bg.primary, 0.95)}, ${alpha(hex.bg.secondary, 0.90)})`, border: `1px solid ${from}40`, boxShadow: `0 0 30px ${glow}30, 0 8px 24px rgba(2,6,23,0.5)` }}>
             {/* Glow radial de fondo */}
             <div className="absolute inset-0 opacity-20 transition-opacity group-hover:opacity-30"
               style={{ background: `radial-gradient(circle at 40% 40%, ${from} 0%, transparent 65%)` }} />
@@ -116,14 +118,14 @@ function AnalyticsTab() {
               </div>
               <div>
                 {loading ? (
-                  <div className="h-10 w-16 rounded-lg animate-pulse mx-auto" style={{ background: 'rgba(148,163,184,0.12)' }} />
+                  <div className="h-10 w-16 rounded-lg animate-pulse mx-auto" style={{ background: alpha(hex.text.secondary, 0.12) }} />
                 ) : (
                   <div className="text-5xl font-black leading-none" style={{ fontFamily: 'var(--font-display)', background: `linear-gradient(135deg, ${from}, ${to})`, WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>
                     {value !== null ? <AnimatedNumber value={value} /> : '—'}
                   </div>
                 )}
-                <p className="text-xs font-bold mt-1" style={{ color: '#e2e8f0', fontFamily: 'var(--font-display)', letterSpacing: '0.05em' }}>{label}</p>
-                <p className="text-[10px] mt-0.5" style={{ color: 'rgba(148,163,184,0.5)' }}>{sublabel}</p>
+                <p className="text-xs font-bold mt-1" style={{ color: hex.text.primary, fontFamily: 'var(--font-display)', letterSpacing: '0.05em' }}>{label}</p>
+                <p className="text-[10px] mt-0.5" style={{ color: alpha(hex.text.secondary, 0.5) }}>{sublabel}</p>
               </div>
             </div>
           </motion.div>
@@ -133,7 +135,7 @@ function AnalyticsTab() {
       {/* GA4 Card: 2 columnas restantes en desktop */}
       <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.2 }}
         className="md:col-span-2 relative rounded-2xl overflow-hidden"
-        style={{ background: 'linear-gradient(145deg, rgba(6,17,10,0.95), rgba(11,27,18,0.90))', border: '1px solid rgba(249,115,22,0.35)', boxShadow: '0 0 30px rgba(249,115,22,0.1), 0 8px 24px rgba(2,6,23,0.5)' }}>
+        style={{ background: `linear-gradient(145deg, ${alpha(hex.bg.primary, 0.95)}, ${alpha(hex.bg.secondary, 0.90)})`, border: '1px solid rgba(249,115,22,0.35)', boxShadow: '0 0 30px rgba(249,115,22,0.1), 0 8px 24px rgba(2,6,23,0.5)' }}>
         <div className="absolute top-0 left-4 right-4 h-px" style={{ background: 'linear-gradient(90deg, transparent, #f97316, transparent)' }} />
         <div className="absolute inset-0 opacity-10" style={{ background: 'radial-gradient(circle at 80% 30%, #f97316 0%, transparent 60%)' }} />
 
@@ -141,17 +143,17 @@ function AnalyticsTab() {
           <div className="flex items-center gap-3 mb-4">
             <div className="w-11 h-11 rounded-2xl flex items-center justify-center text-xl shrink-0"
               style={{ background: 'linear-gradient(135deg,#f97316,#facc15)', boxShadow: '0 4px 16px rgba(249,115,22,0.4)' }}>
-              📊
+              ??
             </div>
             <div className="flex-1 min-w-0">
-              <p className="font-black text-sm" style={{ color: '#f1f5f9', fontFamily: 'var(--font-display)', letterSpacing: '0.04em' }}>GOOGLE ANALYTICS 4</p>
-              <p className="text-xs" style={{ color: 'rgba(148,163,184,0.6)' }}>Seguimiento de visitas y comportamiento</p>
+              <p className="font-black text-sm" style={{ color: hex.text.primary, fontFamily: 'var(--font-display)', letterSpacing: '0.04em' }}>GOOGLE ANALYTICS 4</p>
+              <p className="text-xs" style={{ color: alpha(hex.text.secondary, 0.6) }}>Seguimiento de visitas y comportamiento</p>
             </div>
             <div className={`shrink-0 flex items-center gap-1.5 text-[10px] font-bold px-2.5 py-1 rounded-full`}
               style={{
-                background: GA_ID ? 'rgba(56,142,60,0.1)' : 'rgba(212,167,44,0.1)',
-                border: `1px solid ${GA_ID ? 'rgba(56,142,60,0.3)' : 'rgba(212,167,44,0.3)'}`,
-                color: GA_ID ? '#388E3C' : '#D4A72C',
+                background: GA_ID ? alpha(hex.green.hover, 0.1) : alphaOf('gold', 0.1),
+                border: `1px solid ${GA_ID ? alpha(hex.green.hover, 0.3) : alpha(hex.gold.base, 0.3)}`,
+                color: GA_ID ? hex.green.hover : hex.gold.base,
               }}>
               <span className={`w-1.5 h-1.5 rounded-full ${GA_ID ? 'bg-emerald-400 animate-pulse' : 'bg-amber-400'}`} />
               {GA_ID ? 'Activo' : 'Sin configurar'}
@@ -161,8 +163,8 @@ function AnalyticsTab() {
           {GA_ID ? (
             <>
               <div className="flex items-center gap-2 rounded-xl px-3 py-2 mb-4"
-                style={{ background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.07)' }}>
-                <span className="text-[10px] uppercase tracking-widest" style={{ color: 'rgba(148,163,184,0.5)' }}>ID</span>
+                style={{ background: alpha(hex.neutral.white, 0.04), border: `1px solid ${alpha(hex.neutral.white, 0.07)}` }}>
+                <span className="text-[10px] uppercase tracking-widest" style={{ color: alpha(hex.text.secondary, 0.5) }}>ID</span>
                 <span className="font-mono text-xs font-bold text-orionix-green-bright">{GA_ID}</span>
               </div>
               <motion.a
@@ -176,7 +178,7 @@ function AnalyticsTab() {
             </>
           ) : (
             <div className="rounded-xl p-3.5 text-xs font-medium"
-              style={{ background: 'rgba(212,167,44,0.08)', border: '1px solid rgba(212,167,44,0.2)', color: 'rgba(212,167,44,0.9)' }}>
+              style={{ background: alphaOf('gold', 0.08), border: borders.brand('gold', 0.2), color: alphaOf('gold', 0.9) }}>
               Agrega <span className="font-mono">NEXT_PUBLIC_GA_ID=G-XXXXXXXXXX</span> en <span className="font-mono">.env.local</span>
             </div>
           )}
@@ -186,7 +188,7 @@ function AnalyticsTab() {
   );
 }
 
-/* ─── Types ─────────────────────────────────────────────────────────────── */
+/* --- Types --------------------------------------------------------------- */
 interface FixtureAdmin {
   id: number; name: string; status: string;
   homeTeam: { id?: number; name: string; shortName?: string; flagUrl?: string };
@@ -196,7 +198,7 @@ interface FixtureAdmin {
   externalProviderId?: number | null;
 }
 
-/* ─── Goal Scorer Panel (solo para partidos FINALIZADOS) ────────────────── */
+/* --- Goal Scorer Panel (solo para partidos FINALIZADOS) ------------------ */
 function GoalScorerPanel({ fixtureId, homeTeam, awayTeam }: {
   fixtureId: number;
   homeTeam: { id?: number; name: string; shortName?: string };
@@ -252,14 +254,14 @@ function GoalScorerPanel({ fixtureId, homeTeam, awayTeam }: {
   };
 
   return (
-    <div className="mt-3 pt-3" style={{ borderTop: '1px solid rgba(212,167,44,0.12)' }}>
+    <div className="mt-3 pt-3" style={{ borderTop: borders.brand('gold', 0.12) }}>
       {/* Header */}
       <div className="flex items-center justify-between mb-2">
         <div className="flex items-center gap-1.5">
-          <span className="text-[9px] font-black tracking-widest uppercase text-orionix-gold">⚽ Goleadores</span>
+          <span className="text-[9px] font-black tracking-widest uppercase text-orionix-gold">? Goleadores</span>
           {scorers.length > 0 && (
             <span className="text-[8px] font-black px-1.5 py-0.5 rounded-full"
-              style={{ background: 'rgba(212,167,44,0.10)', color: '#D4A72C', border: '1px solid rgba(212,167,44,0.20)' }}>
+              style={{ background: alphaOf('gold', 0.10), color: hex.gold.base, border: borders.brand('gold', 0.20) }}>
               {scorers.length}
             </span>
           )}
@@ -268,9 +270,9 @@ function GoalScorerPanel({ fixtureId, homeTeam, awayTeam }: {
           onClick={() => setShowForm(f => !f)}
           whileTap={{ scale: 0.95 }}
           className="text-[9px] font-black px-2 py-1 rounded-lg"
-          style={{ background: showForm ? 'rgba(239,68,68,0.08)' : 'rgba(212,167,44,0.08)', border: `1px solid ${showForm ? 'rgba(239,68,68,0.28)' : 'rgba(212,167,44,0.25)'}`, color: showForm ? '#f87171' : '#D4A72C' }}
+          style={{ background: showForm ? alphaOf('danger', 0.08) : alphaOf('gold', 0.08), border: `1px solid ${showForm ? 'rgba(239,68,68,0.28)' : alpha(hex.gold.base, 0.25)}`, color: showForm ? hex.status.danger : hex.gold.base }}
         >
-          {showForm ? '✕ Cancelar' : '+ Añadir gol'}
+          {showForm ? '? Cancelar' : '+ Añadir gol'}
         </motion.button>
       </div>
 
@@ -279,21 +281,21 @@ function GoalScorerPanel({ fixtureId, homeTeam, awayTeam }: {
         <div className="space-y-1.5 mb-2">
           {scorers.map((s: any) => (
             <div key={s.id} className="flex items-center gap-2 px-2.5 py-1.5 rounded-lg"
-              style={{ background: 'rgba(212,167,44,0.04)', border: '1px solid rgba(212,167,44,0.10)' }}>
-              <span className="text-sm shrink-0">⚽</span>
+              style={{ background: alphaOf('gold', 0.04), border: `1px solid ${alpha(hex.gold.base, 0.10)}` }}>
+              <span className="text-sm shrink-0">?</span>
               <span className="flex-1 text-xs font-bold text-orionix-text-secondary truncate">
                 {s.playerName}{s.minute ? ` · ${s.minute}'` : ''}
               </span>
               <div className="flex items-center gap-1.5 shrink-0">
                 {s.teamFifaCode && (
                   <span className="text-[9px] font-black px-1.5 py-0.5 rounded"
-                    style={{ background: 'rgba(255,255,255,0.05)', color: 'rgba(148,163,184,0.7)' }}>
+                    style={{ background: alpha(hex.neutral.white, 0.05), color: alpha(hex.text.secondary, 0.7) }}>
                     {s.teamFifaCode}
                   </span>
                 )}
                 {s.source === 'API' && <span className="text-[8px] text-green-500/60 font-bold">API</span>}
-                {s.mismatch   && <span className="text-[8px] text-amber-400/70 font-bold">✎ corregido</span>}
-                {s.verified   && s.source !== 'API' && <span className="text-[8px] text-emerald-500/60">✓</span>}
+                {s.mismatch   && <span className="text-[8px] text-amber-400/70 font-bold">? corregido</span>}
+                {s.verified   && s.source !== 'API' && <span className="text-[8px] text-emerald-500/60">?</span>}
                 <motion.button
                   onClick={() => deleteScorer(s.id)}
                   disabled={deleting === s.id}
@@ -309,7 +311,7 @@ function GoalScorerPanel({ fixtureId, homeTeam, awayTeam }: {
           ))}
         </div>
       ) : (
-        !showForm && <p className="text-[10px] text-orionix-text-muted mb-2 text-center">Sin goleadores aún — pulsa &quot;+ Añadir gol&quot;</p>
+        !showForm && <p className="text-[10px] text-orionix-text-muted mb-2 text-center">Sin goleadores aún · pulsa &quot;+ Añadir gol&quot;</p>
       )}
 
       {/* Formulario para agregar */}
@@ -320,7 +322,7 @@ function GoalScorerPanel({ fixtureId, homeTeam, awayTeam }: {
             exit={{ opacity: 0, height: 0 }} className="overflow-hidden"
           >
             <div className="rounded-xl p-3 space-y-2.5 mt-1"
-              style={{ background: 'rgba(212,167,44,0.04)', border: '1px solid rgba(212,167,44,0.20)' }}>
+              style={{ background: alphaOf('gold', 0.04), border: borders.brand('gold', 0.20) }}>
               {/* Nombre del jugador */}
               <input
                 value={playerName}
@@ -328,7 +330,7 @@ function GoalScorerPanel({ fixtureId, homeTeam, awayTeam }: {
                 onKeyDown={e => e.key === 'Enter' && addScorer()}
                 placeholder="Nombre del jugador que anotó..."
                 className="w-full px-3 py-2 rounded-lg text-xs font-bold outline-none"
-                style={{ background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)', color: '#e2e8f0', caretColor: '#D4A72C' }}
+                style={{ background: alpha(hex.neutral.white, 0.05), border: `1px solid ${alpha(hex.neutral.white, 0.1)}`, color: hex.text.primary, caretColor: hex.gold.base }}
                 autoFocus
               />
               {/* Equipo + minuto */}
@@ -337,7 +339,7 @@ function GoalScorerPanel({ fixtureId, homeTeam, awayTeam }: {
                   value={teamId}
                   onChange={e => setTeamId(e.target.value)}
                   className="flex-1 px-2 py-1.5 rounded-lg text-xs outline-none"
-                  style={{ background: 'rgba(6,17,10,0.95)', border: '1px solid rgba(255,255,255,0.10)', color: '#e2e8f0', appearance: 'none' }}
+                  style={{ background: alpha(hex.bg.primary, 0.95), border: `1px solid ${alpha(hex.neutral.white, 0.10)}`, color: hex.text.primary, appearance: 'none' }}
                 >
                   <option value="">¿Qué equipo anotó?</option>
                   {homeTeam.id && <option value={homeTeam.id}>{homeTeam.shortName || homeTeam.name} (local)</option>}
@@ -349,7 +351,7 @@ function GoalScorerPanel({ fixtureId, homeTeam, awayTeam }: {
                   placeholder="Min"
                   type="number" min="1" max="120"
                   className="w-16 px-2 py-1.5 rounded-lg text-xs text-center outline-none"
-                  style={{ background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)', color: '#e2e8f0' }}
+                  style={{ background: alpha(hex.neutral.white, 0.05), border: `1px solid ${alpha(hex.neutral.white, 0.1)}`, color: hex.text.primary }}
                 />
               </div>
               {/* Botón guardar */}
@@ -359,9 +361,9 @@ function GoalScorerPanel({ fixtureId, homeTeam, awayTeam }: {
                 whileHover={!saving && playerName.trim() ? { scale: 1.02 } : {}}
                 whileTap={{ scale: 0.97 }}
                 className="w-full py-2.5 rounded-lg text-xs font-black disabled:opacity-40"
-                style={{ background: 'linear-gradient(90deg, rgba(212,167,44,0.18), rgba(212,167,44,0.12))', border: '1px solid rgba(212,167,44,0.40)', color: '#D4A72C' }}
+                style={{ background: `linear-gradient(90deg, ${alpha(hex.gold.base, 0.18)}, ${alpha(hex.gold.base, 0.12)})`, border: borders.brand('gold', 0.40), color: hex.gold.base }}
               >
-                {saving ? 'Guardando...' : '⚽ Guardar goleador'}
+                {saving ? 'Guardando...' : '? Guardar goleador'}
               </motion.button>
             </div>
           </motion.div>
@@ -371,7 +373,7 @@ function GoalScorerPanel({ fixtureId, homeTeam, awayTeam }: {
   );
 }
 
-/* ─── Fixture Card ──────────────────────────────────────────────────────── */
+/* --- Fixture Card -------------------------------------------------------- */
 function FixtureCard({
   fixture, isSuccess, isEditing, homeScore, awayScore, saving, error,
   onEdit, onCancel, onSave, onHomeChange, onAwayChange, onExtend, idx,
@@ -393,39 +395,39 @@ function FixtureCard({
       className="relative rounded-2xl overflow-hidden group"
       style={{
         background: isSuccess
-          ? 'linear-gradient(145deg, rgba(6,40,30,0.95), rgba(9,50,38,0.9))'
+          ? `linear-gradient(145deg, ${alpha(hex.bg.elevated, 0.95)}, rgba(9,50,38,0.9))`
           : isFinished
-          ? 'linear-gradient(145deg, rgba(6,17,10,0.95), rgba(11,27,18,0.90))'
+          ? `linear-gradient(145deg, ${alpha(hex.bg.primary, 0.95)}, ${alpha(hex.bg.secondary, 0.90)})`
           : 'linear-gradient(145deg, rgba(20,14,6,0.95), rgba(28,18,6,0.9))',
-        border: `1px solid ${isSuccess ? 'rgba(56,142,60,0.5)' : isFinished ? 'rgba(102,187,106,0.18)' : 'rgba(212,167,44,0.3)'}`,
+        border: `1px solid ${isSuccess ? alpha(hex.green.hover, 0.5) : isFinished ? alpha(hex.green.soft, 0.18) : alpha(hex.gold.base, 0.3)}`,
         boxShadow: isSuccess
-          ? '0 0 28px rgba(56,142,60,0.15), 0 8px 24px rgba(2,6,23,0.5)'
+          ? `0 0 28px ${alpha(hex.green.hover, 0.15)}, 0 8px 24px rgba(2,6,23,0.5)`
           : isPending
-          ? '0 0 28px rgba(212,167,44,0.08), 0 8px 24px rgba(2,6,23,0.5)'
+          ? `0 0 28px ${alpha(hex.gold.base, 0.08)}, 0 8px 24px rgba(2,6,23,0.5)`
           : '0 8px 24px rgba(2,6,23,0.45)',
       }}>
       {/* Línea decorativa superior */}
       <div className="absolute top-0 left-0 right-0 h-0.5"
-        style={{ background: isSuccess ? 'linear-gradient(90deg, transparent, #388E3C, transparent)' : isFinished ? 'linear-gradient(90deg, transparent, #66BB6A, transparent)' : 'linear-gradient(90deg, transparent, #D4A72C, transparent)' }} />
+        style={{ background: isSuccess ? `linear-gradient(90deg, transparent, ${hex.green.hover}, transparent)` : isFinished ? `linear-gradient(90deg, transparent, ${hex.green.soft}, transparent)` : `linear-gradient(90deg, transparent, ${hex.gold.base}, transparent)` }} />
 
       {/* Pulso de fondo en pendientes */}
       {isPending && !isEditing && (
         <motion.div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-500"
-          style={{ background: 'radial-gradient(circle at 50% 0%, rgba(212,167,44,0.05) 0%, transparent 70%)' }} />
+          style={{ background: `radial-gradient(circle at 50% 0%, ${alpha(hex.gold.base, 0.05)} 0%, transparent 70%)` }} />
       )}
 
       <div className="relative p-4">
         {/* Top row: ID + estado */}
         <div className="flex items-center justify-between mb-4">
           <span className="text-[10px] font-mono px-2 py-0.5 rounded-md"
-            style={{ color: 'rgba(148,163,184,0.45)', background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.06)' }}>
+            style={{ color: alpha(hex.text.secondary, 0.45), background: alpha(hex.neutral.white, 0.04), border: `1px solid ${alpha(hex.neutral.white, 0.06)}` }}>
             #{fixture.id}
           </span>
           <div className="flex items-center gap-1.5 text-[10px] font-bold px-2.5 py-1 rounded-full"
             style={{
-              color: isSuccess ? '#388E3C' : isFinished ? '#66BB6A' : '#D4A72C',
-              background: isSuccess ? 'rgba(56,142,60,0.1)' : isFinished ? 'rgba(102,187,106,0.1)' : 'rgba(212,167,44,0.1)',
-              border: `1px solid ${isSuccess ? 'rgba(56,142,60,0.25)' : isFinished ? 'rgba(102,187,106,0.2)' : 'rgba(212,167,44,0.25)'}`,
+              color: isSuccess ? hex.green.hover : isFinished ? hex.green.soft : hex.gold.base,
+              background: isSuccess ? alpha(hex.green.hover, 0.1) : isFinished ? alpha(hex.green.soft, 0.1) : alphaOf('gold', 0.1),
+              border: `1px solid ${isSuccess ? alpha(hex.green.hover, 0.25) : isFinished ? alpha(hex.green.soft, 0.20) : alpha(hex.gold.base, 0.25)}`,
             }}>
             <span className={`w-1.5 h-1.5 rounded-full ${isSuccess ? 'bg-emerald-400' : isFinished ? 'bg-green-400' : 'bg-amber-400 animate-pulse'}`} />
             {isSuccess ? 'Guardado' : isFinished ? 'Finalizado' : 'Pendiente'}
@@ -435,35 +437,35 @@ function FixtureCard({
         {/* Scoreboard central */}
         <div className="flex items-center gap-3 mb-2">
           <p className="flex-1 text-right font-black leading-tight truncate"
-            style={{ color: '#f1f5f9', fontFamily: 'var(--font-display)', letterSpacing: '0.02em', fontSize: '1rem' }}>
+            style={{ color: hex.text.primary, fontFamily: 'var(--font-display)', letterSpacing: '0.02em', fontSize: '1rem' }}>
             {fixture.homeTeam.name}
           </p>
 
           {/* Score box */}
           <div className="shrink-0 flex items-center justify-center px-4 py-2.5 rounded-2xl"
             style={{
-              background: isFinished && !isEditing ? 'rgba(76,175,80,0.08)' : 'rgba(255,255,255,0.05)',
-              border: `1.5px solid ${isFinished && !isEditing ? 'rgba(76,175,80,0.3)' : 'rgba(255,255,255,0.08)'}`,
+              background: isFinished && !isEditing ? alphaOf('green', 0.08) : alpha(hex.neutral.white, 0.05),
+              border: `1.5px solid ${isFinished && !isEditing ? alphaOf('green', 0.3) : alpha(hex.neutral.white, 0.08)}`,
               minWidth: 88,
-              boxShadow: isFinished && !isEditing ? '0 0 16px rgba(76,175,80,0.1)' : 'none',
+              boxShadow: isFinished && !isEditing ? `0 0 16px ${alphaOf('green', 0.1)}` : 'none',
             }}>
             {isFinished && fixture.homeScore !== null && !isEditing ? (
-              <span className="font-black text-2xl tracking-wider" style={{ color: '#4CAF50', fontFamily: 'var(--font-display)', letterSpacing: '0.12em' }}>
-                {fixture.homeScore}<span style={{ color: 'rgba(148,163,184,0.35)', margin: '0 4px' }}>—</span>{fixture.awayScore}
+              <span className="font-black text-2xl tracking-wider" style={{ color: hex.green.bright, fontFamily: 'var(--font-display)', letterSpacing: '0.12em' }}>
+                {fixture.homeScore}<span style={{ color: alpha(hex.text.secondary, 0.35), margin: '0 4px' }}>–</span>{fixture.awayScore}
               </span>
             ) : (
-              <span className="text-sm font-black" style={{ color: 'rgba(148,163,184,0.35)', fontFamily: 'var(--font-display)' }}>VS</span>
+              <span className="text-sm font-black" style={{ color: alpha(hex.text.secondary, 0.35), fontFamily: 'var(--font-display)' }}>VS</span>
             )}
           </div>
 
           <p className="flex-1 font-black leading-tight truncate"
-            style={{ color: '#f1f5f9', fontFamily: 'var(--font-display)', letterSpacing: '0.02em', fontSize: '1rem' }}>
+            style={{ color: hex.text.primary, fontFamily: 'var(--font-display)', letterSpacing: '0.02em', fontSize: '1rem' }}>
             {fixture.awayTeam.name}
           </p>
         </div>
 
         {/* Fecha */}
-        <p className="text-center text-[11px] mb-4" style={{ color: 'rgba(148,163,184,0.38)' }}>
+        <p className="text-center text-[11px] mb-4" style={{ color: alpha(hex.text.secondary, 0.38) }}>
           {new Date(fixture.kickoffAt).toLocaleDateString('es', {
             weekday: 'short', day: '2-digit', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit',
           })}
@@ -473,8 +475,8 @@ function FixtureCard({
         {isSuccess && (
           <motion.div initial={{ opacity: 0, y: -6 }} animate={{ opacity: 1, y: 0 }}
             className="flex items-center gap-2 rounded-xl px-3 py-2 mb-3 text-xs font-bold"
-            style={{ background: 'rgba(56,142,60,0.12)', border: '1px solid rgba(56,142,60,0.25)', color: '#388E3C' }}>
-            <IconCheck /> Resultado guardado — ranking actualizado
+            style={{ background: alpha(hex.green.hover, 0.12), border: `1px solid ${alpha(hex.green.hover, 0.25)}`, color: hex.green.hover }}>
+            <IconCheck /> Resultado guardado · ranking actualizado
           </motion.div>
         )}
 
@@ -483,8 +485,8 @@ function FixtureCard({
           {isEditing && (
             <motion.div initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: 'auto' }}
               exit={{ opacity: 0, height: 0 }} className="overflow-hidden">
-              <div className="pt-4 mt-1" style={{ borderTop: '1px solid rgba(255,255,255,0.07)' }}>
-                <p className="text-[10px] font-black text-center mb-4 tracking-[0.15em]" style={{ color: 'rgba(148,163,184,0.6)', fontFamily: 'var(--font-display)' }}>
+              <div className="pt-4 mt-1" style={{ borderTop: `1px solid ${alpha(hex.neutral.white, 0.07)}` }}>
+                <p className="text-[10px] font-black text-center mb-4 tracking-[0.15em]" style={{ color: alpha(hex.text.secondary, 0.6), fontFamily: 'var(--font-display)' }}>
                   MARCADOR FINAL
                 </p>
                 <div className="flex items-center gap-3 mb-4">
@@ -493,12 +495,12 @@ function FixtureCard({
                     { label: fixture.awayTeam.name, value: awayScore, onChange: onAwayChange },
                   ].map((team, i) => (
                     <React.Fragment key={i}>
-                      {i === 1 && <span className="text-2xl font-black shrink-0" style={{ color: 'rgba(148,163,184,0.3)', marginTop: 24 }}>—</span>}
+                      {i === 1 && <span className="text-2xl font-black shrink-0" style={{ color: alpha(hex.text.secondary, 0.3), marginTop: 24 }}>–</span>}
                       <div className="flex-1">
-                        <p className="text-[10px] text-center truncate mb-1.5" style={{ color: 'rgba(148,163,184,0.5)' }}>{team.label}</p>
+                        <p className="text-[10px] text-center truncate mb-1.5" style={{ color: alpha(hex.text.secondary, 0.5) }}>{team.label}</p>
                         <input type="number" min="0" max="20" value={team.value} onChange={e => team.onChange(e.target.value)}
                           className="w-full text-center text-4xl font-black py-3 rounded-xl outline-none transition-all focus:scale-105"
-                          style={{ background: 'rgba(76,175,80,0.06)', border: '1.5px solid rgba(76,175,80,0.3)', color: '#4CAF50', fontFamily: 'var(--font-display)', boxShadow: '0 0 20px rgba(76,175,80,0.1)' }}
+                          style={{ background: alphaOf('green', 0.06), border: `1.5px solid ${alphaOf('green', 0.3)}`, color: hex.green.bright, fontFamily: 'var(--font-display)', boxShadow: `0 0 20px ${alphaOf('green', 0.1)}` }}
                           placeholder="0" />
                       </div>
                     </React.Fragment>
@@ -507,7 +509,7 @@ function FixtureCard({
 
                 {error && (
                   <motion.p initial={{ opacity: 0 }} animate={{ opacity: 1 }}
-                    className="text-xs font-medium text-center mb-3" style={{ color: '#f87171' }}>
+                    className="text-xs font-medium text-center mb-3" style={{ color: hex.status.danger }}>
                     {error}
                   </motion.p>
                 )}
@@ -515,12 +517,12 @@ function FixtureCard({
                 <div className="flex gap-2">
                   <motion.button onClick={onCancel} whileTap={{ scale: 0.97 }}
                     className="flex-1 flex items-center justify-center gap-1.5 py-2.5 rounded-xl text-sm font-bold"
-                    style={{ background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)', color: 'rgba(148,163,184,0.7)' }}>
+                    style={{ background: alpha(hex.neutral.white, 0.05), border: `1px solid ${alpha(hex.neutral.white, 0.1)}`, color: alpha(hex.text.secondary, 0.7) }}>
                     <IconX /> Cancelar
                   </motion.button>
                   <motion.button onClick={onSave} disabled={saving} whileTap={{ scale: 0.97 }}
                     className="flex-1 flex items-center justify-center gap-1.5 py-2.5 rounded-xl text-sm font-black text-white disabled:opacity-50"
-                    style={{ background: 'linear-gradient(90deg, #10b981, #2E7D32)', boxShadow: '0 4px 18px rgba(16,185,129,0.35)', fontFamily: 'var(--font-display)', letterSpacing: '0.05em' }}>
+                    style={{ background: `linear-gradient(90deg, #10b981, ${hex.green.base})`, boxShadow: '0 4px 18px rgba(16,185,129,0.35)', fontFamily: 'var(--font-display)', letterSpacing: '0.05em' }}>
                     <IconCheck /> {saving ? 'GUARDANDO…' : 'CONFIRMAR'}
                   </motion.button>
                 </div>
@@ -535,11 +537,11 @@ function FixtureCard({
             <motion.button onClick={onEdit} whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.97 }}
               className="flex-1 flex items-center justify-center gap-2 py-2.5 rounded-xl text-xs font-black transition-all"
               style={{
-                background: isFinished ? 'rgba(255,255,255,0.05)' : 'linear-gradient(90deg, rgba(76,175,80,0.12), rgba(16,185,129,0.12))',
-                border: `1px solid ${isFinished ? 'rgba(255,255,255,0.09)' : 'rgba(76,175,80,0.3)'}`,
-                color: isFinished ? 'rgba(148,163,184,0.7)' : '#4CAF50',
+                background: isFinished ? alpha(hex.neutral.white, 0.05) : `linear-gradient(90deg, ${alphaOf('green', 0.12)}, rgba(16,185,129,0.12))`,
+                border: `1px solid ${isFinished ? alpha(hex.neutral.white, 0.09) : alphaOf('green', 0.3)}`,
+                color: isFinished ? alpha(hex.text.secondary, 0.7) : hex.green.bright,
                 fontFamily: 'var(--font-display)', letterSpacing: '0.06em',
-                boxShadow: isFinished ? 'none' : '0 0 16px rgba(76,175,80,0.08)',
+                boxShadow: isFinished ? 'none' : `0 0 16px ${alphaOf('green', 0.08)}`,
               }}>
               <IconEdit />
               {isFinished ? 'EDITAR RESULTADO' : 'INGRESAR RESULTADO'}
@@ -548,11 +550,11 @@ function FixtureCard({
               <motion.button onClick={onExtend} whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.97 }}
                 className="flex-1 flex items-center justify-center gap-2 py-2 rounded-xl text-xs font-black"
                 style={{
-                  background: 'rgba(212,167,44,0.08)',
-                  border: '1px solid rgba(212,167,44,0.28)',
-                  color: '#D4A72C',
+                  background: alphaOf('gold', 0.08),
+                  border: borders.brand('gold', 0.28),
+                  color: hex.gold.base,
                 }}>
-                ⏱ EXTENDER PARTIDO
+                ? EXTENDER PARTIDO
               </motion.button>
             )}
           </div>
@@ -583,15 +585,15 @@ const IconTrash = () => (
   </svg>
 );
 
-/* ─── Schedule Tab helpers ───────────────────────────────────────────────── */
+/* --- Schedule Tab helpers ------------------------------------------------- */
 interface TeamItem   { id: number; name: string; shortName: string; flagUrl?: string; }
 interface StageItem  { id: number; code: string; name: string; sortOrder: number; }
 interface GroupItem  { id: number; code: string; name: string; }
 
 const SCHED_SELECT: React.CSSProperties = {
-  background: 'rgba(6,17,10,0.95)',
-  border: '1px solid rgba(76,175,80,0.18)',
-  color: '#e2e8f0',
+  background: alpha(hex.bg.primary, 0.95),
+  border: borders.brand('green', 0.18),
+  color: hex.text.primary,
   borderRadius: 10,
   padding: '9px 11px',
   width: '100%',
@@ -602,10 +604,10 @@ const SCHED_SELECT: React.CSSProperties = {
 };
 
 const STATUS_CFG_SCHED: Record<string, { label: string; color: string; bg: string; border: string; dot: string; cardBg: string; cardBorder: string; line: string }> = {
-  SCHEDULED: { label: 'Programado', color: '#D4A72C', bg: 'rgba(212,167,44,0.1)',  border: 'rgba(212,167,44,0.28)', dot: 'bg-amber-400 animate-pulse', cardBg: 'linear-gradient(145deg,rgba(20,14,6,0.96),rgba(28,18,6,0.92))',  cardBorder: 'rgba(212,167,44,0.28)', line: '#D4A72C55' },
-  LIVE:      { label: 'En Vivo',    color: '#f87171', bg: 'rgba(248,113,113,0.1)', border: 'rgba(248,113,113,0.32)',dot: 'bg-red-400 animate-pulse',   cardBg: 'linear-gradient(145deg,rgba(24,6,6,0.96),rgba(34,8,8,0.92))',    cardBorder: 'rgba(248,113,113,0.35)',line: '#f8717155' },
-  FINISHED:  { label: 'Finalizado', color: '#66BB6A', bg: 'rgba(102,187,106,0.1)',  border: 'rgba(102,187,106,0.22)', dot: 'bg-green-400',                  cardBg: 'linear-gradient(145deg,rgba(6,17,10,0.96),rgba(11,27,18,0.92))',  cardBorder: 'rgba(102,187,106,0.2)',  line: '#66BB6A55' },
-  POSTPONED: { label: 'Pospuesto', color: '#94a3b8',  bg: 'rgba(148,163,184,0.08)',border: 'rgba(148,163,184,0.2)', dot: 'bg-slate-400',                cardBg: 'linear-gradient(145deg,rgba(6,17,10,0.96),rgba(11,27,18,0.92))',  cardBorder: 'rgba(148,163,184,0.18)',line: '#94a3b833' },
+  SCHEDULED: { label: 'Programado', color: hex.gold.base, bg: alphaOf('gold', 0.1),  border: alpha(hex.gold.base, 0.28), dot: 'bg-amber-400 animate-pulse', cardBg: 'linear-gradient(145deg,rgba(20,14,6,0.96),rgba(28,18,6,0.92))',  cardBorder: alpha(hex.gold.base, 0.28), line: `${hex.gold.base}55` },
+  LIVE:      { label: 'En Vivo',    color: hex.status.danger, bg: alphaOf('danger', 0.1), border: 'rgba(248,113,113,0.32)',dot: 'bg-red-400 animate-pulse',   cardBg: 'linear-gradient(145deg,rgba(24,6,6,0.96),rgba(34,8,8,0.92))',    cardBorder: 'rgba(248,113,113,0.35)',line: '#f8717155' },
+  FINISHED:  { label: 'Finalizado', color: hex.green.soft, bg: alpha(hex.green.soft, 0.1),  border: alpha(hex.green.soft, 0.22), dot: 'bg-green-400',                  cardBg: `linear-gradient(145deg, ${alpha(hex.bg.primary, 0.96)}, ${alpha(hex.bg.secondary, 0.92)})`,  cardBorder: alpha(hex.green.soft, 0.20),  line: `${hex.green.soft}55` },
+  POSTPONED: { label: 'Pospuesto', color: hex.text.secondary,  bg: 'rgba(148,163,184,0.08)',border: 'rgba(148,163,184,0.2)', dot: 'bg-slate-400',                cardBg: `linear-gradient(145deg, ${alpha(hex.bg.primary, 0.96)}, ${alpha(hex.bg.secondary, 0.92)})`,  cardBorder: 'rgba(148,163,184,0.18)',line: '#94a3b833' },
 };
 
 function StatusPill({ status }: { status: string }) {
@@ -622,10 +624,10 @@ function StatusPill({ status }: { status: string }) {
 function FlagBig({ url, name }: { url?: string; name: string }) {
   if (!url) return (
     <div className="w-9 h-6 rounded-md flex items-center justify-center text-sm shrink-0"
-      style={{ background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.08)' }}>🏳</div>
+      style={{ background: alpha(hex.neutral.white, 0.06), border: `1px solid ${alpha(hex.neutral.white, 0.08)}` }}>??</div>
   );
   return <img src={url} alt={name} className="w-9 h-6 rounded-md object-cover shrink-0"
-    style={{ border: '1px solid rgba(255,255,255,0.1)' }}
+    style={{ border: `1px solid ${alpha(hex.neutral.white, 0.1)}` }}
     onError={e => { (e.target as HTMLImageElement).style.opacity = '0'; }} />;
 }
 
@@ -634,7 +636,7 @@ function toDatetimeLocal(iso: string): string {
   return new Date(d.getTime() - d.getTimezoneOffset() * 60000).toISOString().slice(0, 16);
 }
 
-/* ─── ConfigTab — football-data.org integration ─────────────────────────── */
+/* --- ConfigTab — football-data.org integration --------------------------- */
 function ConfigTab() {
   const [apiKey,       setApiKey]       = useState('');
   const [configured,   setConfigured]   = useState(false);
@@ -751,31 +753,31 @@ function ConfigTab() {
 
       {/* Status card */}
       <div className="rounded-2xl p-5 overflow-hidden relative"
-        style={{ background: 'linear-gradient(145deg, rgba(6,17,10,0.97), rgba(11,27,18,0.95))', border: `1px solid ${configured ? 'rgba(56,142,60,0.25)' : 'rgba(211,47,47,0.20)'}`, backdropFilter: 'blur(20px)' }}>
-        <div className="absolute inset-x-0 top-0 h-px" style={{ background: configured ? 'linear-gradient(90deg,transparent,rgba(56,142,60,0.6),transparent)' : 'linear-gradient(90deg,transparent,rgba(211,47,47,0.5),transparent)' }} />
+        style={{ background: surfaces.card(), border: `1px solid ${configured ? alpha(hex.green.hover, 0.25) : 'rgba(211,47,47,0.20)'}`, backdropFilter: 'blur(20px)' }}>
+        <div className="absolute inset-x-0 top-0 h-px" style={{ background: configured ? `linear-gradient(90deg,transparent,${alpha(hex.green.hover, 0.6)},transparent)` : 'linear-gradient(90deg,transparent,rgba(211,47,47,0.5),transparent)' }} />
 
         <div className="flex items-center gap-3 mb-4">
           <div className="flex items-center justify-center w-10 h-10 rounded-xl shrink-0"
-            style={{ background: configured ? 'rgba(56,142,60,0.12)' : 'rgba(211,47,47,0.10)', border: `1px solid ${configured ? 'rgba(56,142,60,0.30)' : 'rgba(211,47,47,0.25)'}` }}>
-            <FiWifi size={18} style={{ color: configured ? '#388E3C' : '#D32F2F' }} />
+            style={{ background: configured ? alpha(hex.green.hover, 0.12) : alphaOf('danger', 0.10), border: `1px solid ${configured ? alpha(hex.green.hover, 0.30) : 'rgba(211,47,47,0.25)'}` }}>
+            <FiWifi size={18} style={{ color: configured ? hex.green.hover : hex.status.danger }} />
           </div>
           <div>
             <p className="text-sm font-black text-white tracking-wide">football-data.org</p>
             <div className="flex items-center gap-1.5 mt-0.5">
               <motion.div className="w-1.5 h-1.5 rounded-full"
-                style={{ background: configured ? '#388E3C' : '#94a3b8' }}
+                style={{ background: configured ? hex.green.hover : hex.text.secondary }}
                 animate={configured ? { scale: [1, 1.5, 1], opacity: [1, 0.4, 1] } : {}}
                 transition={{ duration: 1.8, repeat: Infinity }} />
               <span className="text-[10px] font-bold tracking-widest uppercase"
-                style={{ color: configured ? '#388E3C' : 'rgba(148,163,184,0.5)' }}>
+                style={{ color: configured ? hex.green.hover : alpha(hex.text.secondary, 0.5) }}>
                 {configured ? 'Conectado · Plan Free' : 'Sin configurar'}
               </span>
             </div>
           </div>
           {configured && (
             <div className="ml-auto flex items-center gap-1.5 px-3 py-1 rounded-full"
-              style={{ background: 'rgba(56,142,60,0.08)', border: '1px solid rgba(56,142,60,0.20)' }}>
-              <FiCheck size={10} style={{ color: '#388E3C' }} />
+              style={{ background: alpha(hex.green.hover, 0.08), border: `1px solid ${alpha(hex.green.hover, 0.20)}` }}>
+              <FiCheck size={10} style={{ color: hex.green.hover }} />
               <span className="text-[9px] font-black text-green-500 tracking-widest uppercase">Activo</span>
             </div>
           )}
@@ -784,11 +786,11 @@ function ConfigTab() {
         {/* Info pills */}
         <div className="flex flex-wrap gap-2 mb-4">
           {[
-            { label: 'Fixtures ✓', color: '#388E3C' },
-            { label: 'Horarios (delay)', color: '#D4A72C' },
-            { label: 'Resultados (delay)', color: '#D4A72C' },
-            { label: '10 llamadas/min', color: '#66BB6A' },
-            { label: 'Gratis €0/mes', color: '#D32F2F' },
+            { label: 'Fixtures ?', color: hex.green.hover },
+            { label: 'Horarios (delay)', color: hex.gold.base },
+            { label: 'Resultados (delay)', color: hex.gold.base },
+            { label: '10 llamadas/min', color: hex.green.soft },
+            { label: 'Gratis €0/mes', color: hex.status.danger },
           ].map(({ label, color }) => (
             <span key={label} className="text-[9px] font-black px-2.5 py-1 rounded-full tracking-widest uppercase"
               style={{ color, background: `${color}12`, border: `1px solid ${color}28` }}>
@@ -799,11 +801,11 @@ function ConfigTab() {
 
         {configured && maskedKey && (
           <div className="flex items-center justify-between px-3 py-2 rounded-xl mb-4"
-            style={{ background: 'rgba(56,142,60,0.06)', border: '1px solid rgba(56,142,60,0.15)' }}>
+            style={{ background: alpha(hex.green.hover, 0.06), border: `1px solid ${alpha(hex.green.hover, 0.15)}` }}>
             <span className="text-[10px] text-green-500/60 font-mono">{maskedKey}</span>
             <motion.button onClick={deleteKey} disabled={saving}
               className="flex items-center gap-1 px-2 py-1 rounded-lg text-[9px] font-black tracking-widest uppercase"
-              style={{ color: '#ef4444', background: 'rgba(239,68,68,0.08)', border: '1px solid rgba(239,68,68,0.20)' }}
+              style={{ color: hex.status.danger, background: alphaOf('danger', 0.08), border: borders.brand('danger', 0.20) }}
               whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
               <FiTrash2 size={10} /> Eliminar
             </motion.button>
@@ -812,7 +814,7 @@ function ConfigTab() {
 
         {/* Input nueva key */}
         <div className="space-y-3">
-          <label className="text-[9px] font-black tracking-[0.28em] uppercase" style={{ color: 'rgba(211,47,47,0.60)' }}>
+          <label className="text-[9px] font-black tracking-[0.28em] uppercase" style={{ color: alphaOf('danger', 0.60) }}>
             {configured ? 'Reemplazar API Key' : 'API Key de football-data.org'}
           </label>
           <div className="flex gap-2">
@@ -823,11 +825,11 @@ function ConfigTab() {
               onKeyDown={e => e.key === 'Enter' && saveKey()}
               placeholder="Pega tu API key aquí..."
               className="flex-1 px-4 py-2.5 rounded-xl text-[12px] font-mono outline-none"
-              style={{ background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(211,47,47,0.22)', color: '#e2e8f0', caretColor: '#D32F2F' }}
+              style={{ background: alpha(hex.neutral.white, 0.04), border: borders.brand('danger', 0.22), color: hex.text.primary, caretColor: hex.status.danger }}
             />
             <motion.button onClick={saveKey} disabled={saving || !apiKey.trim()}
               className="px-4 py-2.5 rounded-xl text-[11px] font-black tracking-widest uppercase shrink-0"
-              style={{ background: apiKey.trim() ? 'rgba(211,47,47,0.15)' : 'rgba(255,255,255,0.04)', border: `1px solid ${apiKey.trim() ? 'rgba(211,47,47,0.40)' : 'rgba(255,255,255,0.08)'}`, color: apiKey.trim() ? '#D32F2F' : 'rgba(148,163,184,0.30)', transition: 'all 0.2s' }}
+              style={{ background: apiKey.trim() ? alphaOf('danger', 0.15) : alpha(hex.neutral.white, 0.04), border: `1px solid ${apiKey.trim() ? 'rgba(211,47,47,0.40)' : alpha(hex.neutral.white, 0.08)}`, color: apiKey.trim() ? hex.status.danger : alpha(hex.text.secondary, 0.30), transition: 'all 0.2s' }}
               whileHover={apiKey.trim() ? { scale: 1.03 } : {}} whileTap={apiKey.trim() ? { scale: 0.97 } : {}}>
               {saving ? '...' : 'Guardar'}
             </motion.button>
@@ -838,20 +840,20 @@ function ConfigTab() {
       {/* Sync card */}
       {configured && (
         <div className="rounded-2xl p-5"
-          style={{ background: 'linear-gradient(145deg, rgba(6,17,10,0.97), rgba(11,27,18,0.95))', border: '1px solid rgba(102,187,106,0.18)', backdropFilter: 'blur(20px)' }}>
-          <div className="absolute inset-x-0 top-0 h-px" style={{ background: 'linear-gradient(90deg,transparent,rgba(102,187,106,0.5),transparent)' }} />
+          style={{ background: surfaces.card(), border: `1px solid ${alpha(hex.green.soft, 0.18)}`, backdropFilter: 'blur(20px)' }}>
+          <div className="absolute inset-x-0 top-0 h-px" style={{ background: `linear-gradient(90deg, transparent, ${alpha(hex.green.soft, 0.5)}, transparent)` }} />
 
           <div className="flex items-center justify-between mb-3">
             <div>
               <p className="text-sm font-black text-white tracking-wide">Sincronizar partidos</p>
-              <p className="text-[10px] mt-0.5" style={{ color: 'rgba(148,163,184,0.45)' }}>
+              <p className="text-[10px] mt-0.5" style={{ color: alpha(hex.text.secondary, 0.45) }}>
                 Importa todos los partidos del Mundial 2026 desde football-data.org
               </p>
             </div>
             <motion.button onClick={sync} disabled={syncing}
               className="flex items-center gap-2 px-4 py-2.5 rounded-xl text-[11px] font-black tracking-widest uppercase shrink-0"
-              style={{ background: 'rgba(102,187,106,0.12)', border: '1px solid rgba(102,187,106,0.35)', color: '#66BB6A', boxShadow: syncing ? 'none' : '0 0 16px rgba(102,187,106,0.15)' }}
-              whileHover={!syncing ? { scale: 1.03, boxShadow: '0 0 24px rgba(102,187,106,0.28)' } : {}}
+              style={{ background: alpha(hex.green.soft, 0.12), border: `1px solid ${alpha(hex.green.soft, 0.35)}`, color: hex.green.soft, boxShadow: syncing ? 'none' : `0 0 16px ${alpha(hex.green.soft, 0.15)}` }}
+              whileHover={!syncing ? { scale: 1.03, boxShadow: `0 0 24px ${alpha(hex.green.soft, 0.28)}` } : {}}
               whileTap={!syncing ? { scale: 0.97 } : {}}>
               <motion.span animate={syncing ? { rotate: 360 } : {}} transition={{ duration: 1, repeat: Infinity, ease: 'linear' }}>
                 <FiRefreshCw size={13} />
@@ -863,7 +865,7 @@ function ConfigTab() {
           {syncResult && (
             <motion.div initial={{ opacity: 0, y: 6 }} animate={{ opacity: 1, y: 0 }}
               className="rounded-xl p-4 space-y-2"
-              style={{ background: 'rgba(56,142,60,0.06)', border: '1px solid rgba(56,142,60,0.18)' }}>
+              style={{ background: alpha(hex.green.hover, 0.06), border: `1px solid ${alpha(hex.green.hover, 0.18)}` }}>
               <div className="flex gap-4">
                 <div className="text-center">
                   <p className="text-2xl font-black text-green-500">{syncResult.created}</p>
@@ -894,19 +896,19 @@ function ConfigTab() {
 
       {/* Recalcular Standings */}
       <div className="relative p-4 rounded-2xl overflow-hidden"
-        style={{ background: 'linear-gradient(145deg, rgba(6,17,10,0.97), rgba(11,27,18,0.95))', border: '1px solid rgba(212,167,44,0.15)', backdropFilter: 'blur(20px)' }}>
-        <div className="absolute inset-x-0 top-0 h-px" style={{ background: 'linear-gradient(90deg,transparent,rgba(212,167,44,0.4),transparent)' }} />
+        style={{ background: surfaces.card(), border: `1px solid ${alpha(hex.gold.base, 0.15)}`, backdropFilter: 'blur(20px)' }}>
+        <div className="absolute inset-x-0 top-0 h-px" style={{ background: `linear-gradient(90deg,transparent,${alpha(hex.gold.base, 0.4)},transparent)` }} />
         <div className="flex items-start justify-between gap-4">
           <div className="min-w-0">
             <p className="text-sm font-black text-white tracking-wide">Recalcular standings</p>
-            <p className="text-[10px] mt-0.5" style={{ color: 'rgba(148,163,184,0.45)' }}>
+            <p className="text-[10px] mt-0.5" style={{ color: alpha(hex.text.secondary, 0.45) }}>
               Recalcula la tabla de posiciones de todos los grupos desde los resultados reales de los partidos
             </p>
           </div>
           <motion.button onClick={recalculateStandings} disabled={recalculating}
             whileHover={{ scale: 1.03 }} whileTap={{ scale: 0.97 }}
             className="flex items-center gap-1.5 px-3 py-2 rounded-xl text-[10px] font-black shrink-0"
-            style={{ background: 'rgba(212,167,44,0.08)', border: '1px solid rgba(212,167,44,0.22)', color: '#D4A72C' }}>
+            style={{ background: alphaOf('gold', 0.08), border: borders.brand('gold', 0.22), color: hex.gold.base }}>
             <FiRefreshCw size={11} className={recalculating ? 'animate-spin' : ''} />
             {recalculating ? 'Calculando...' : 'Recalcular'}
           </motion.button>
@@ -915,12 +917,12 @@ function ConfigTab() {
 
       {/* Restaurar datos BD */}
       <div className="relative p-4 rounded-2xl overflow-hidden"
-        style={{ background: 'linear-gradient(145deg, rgba(6,17,10,0.97), rgba(11,27,18,0.95))', border: '1px solid rgba(56,142,60,0.15)', backdropFilter: 'blur(20px)' }}>
-        <div className="absolute inset-x-0 top-0 h-px" style={{ background: 'linear-gradient(90deg,transparent,rgba(56,142,60,0.4),transparent)' }} />
+        style={{ background: surfaces.card(), border: `1px solid ${alpha(hex.green.hover, 0.15)}`, backdropFilter: 'blur(20px)' }}>
+        <div className="absolute inset-x-0 top-0 h-px" style={{ background: `linear-gradient(90deg,transparent,${alpha(hex.green.hover, 0.4)},transparent)` }} />
         <div className="flex items-start justify-between gap-4">
           <div className="min-w-0">
             <p className="text-sm font-black text-white tracking-wide">Restaurar datos BD</p>
-            <p className="text-[10px] mt-0.5" style={{ color: 'rgba(148,163,184,0.45)' }}>
+            <p className="text-[10px] mt-0.5" style={{ color: alpha(hex.text.secondary, 0.45) }}>
               Vuelve a insertar los fixtures y standings marcados como <span className="font-black text-orionix-green-hover">BD</span> (partidos demo originales)
             </p>
           </div>
@@ -930,19 +932,19 @@ function ConfigTab() {
                 className="flex items-center gap-1.5 shrink-0">
                 <motion.button onClick={() => setConfirmRestore(false)} whileTap={{ scale: 0.95 }}
                   className="px-2.5 py-1.5 rounded-lg text-[10px] font-black"
-                  style={{ background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)', color: 'rgba(148,163,184,0.6)' }}>
+                  style={{ background: alpha(hex.neutral.white, 0.05), border: `1px solid ${alpha(hex.neutral.white, 0.1)}`, color: alpha(hex.text.secondary, 0.6) }}>
                   Cancelar
                 </motion.button>
                 <motion.button onClick={restoreDemo} disabled={restoring} whileTap={{ scale: 0.95 }}
                   className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[10px] font-black"
-                  style={{ background: 'rgba(56,142,60,0.15)', border: '1px solid rgba(56,142,60,0.35)', color: '#388E3C' }}>
+                  style={{ background: alpha(hex.green.hover, 0.15), border: `1px solid ${alpha(hex.green.hover, 0.35)}`, color: hex.green.hover }}>
                   <FiRefreshCw size={11} /> {restoring ? '...' : 'Confirmar'}
                 </motion.button>
               </motion.div>
             ) : (
               <motion.button key="btn-restore" onClick={() => setConfirmRestore(true)} whileHover={{ scale: 1.03 }} whileTap={{ scale: 0.97 }}
                 className="flex items-center gap-1.5 px-3 py-2 rounded-xl text-[10px] font-black shrink-0"
-                style={{ background: 'rgba(56,142,60,0.08)', border: '1px solid rgba(56,142,60,0.22)', color: '#388E3C' }}>
+                style={{ background: alpha(hex.green.hover, 0.08), border: `1px solid ${alpha(hex.green.hover, 0.22)}`, color: hex.green.hover }}>
                 <FiRefreshCw size={11} /> Restaurar BD
               </motion.button>
             )}
@@ -952,13 +954,13 @@ function ConfigTab() {
 
       {/* Clean demo fixtures card */}
       <div className="rounded-2xl p-5 relative overflow-hidden"
-        style={{ background: 'linear-gradient(145deg, rgba(6,17,10,0.97), rgba(11,27,18,0.95))', border: '1px solid rgba(211,47,47,0.15)', backdropFilter: 'blur(20px)' }}>
-        <div className="absolute inset-x-0 top-0 h-px" style={{ background: 'linear-gradient(90deg,transparent,rgba(211,47,47,0.4),transparent)' }} />
+        style={{ background: surfaces.card(), border: borders.brand('danger', 0.15), backdropFilter: 'blur(20px)' }}>
+        <div className="absolute inset-x-0 top-0 h-px" style={{ background: gradients.divider('danger', 0.4) }} />
         <div className="flex items-start justify-between gap-4">
           <div className="min-w-0">
             <p className="text-sm font-black text-white tracking-wide">Limpiar datos demo</p>
-            <p className="text-[10px] mt-0.5" style={{ color: 'rgba(148,163,184,0.45)' }}>
-              Elimina todos los fixtures marcados como <span className="font-black" style={{ color: '#D32F2F' }}>BD</span> (creados manualmente, sin origen API)
+            <p className="text-[10px] mt-0.5" style={{ color: alpha(hex.text.secondary, 0.45) }}>
+              Elimina todos los fixtures marcados como <span className="font-black" style={{ color: hex.status.danger }}>BD</span> (creados manualmente, sin origen API)
             </p>
           </div>
           <AnimatePresence mode="wait">
@@ -967,19 +969,19 @@ function ConfigTab() {
                 className="flex items-center gap-1.5 shrink-0">
                 <motion.button onClick={() => setConfirmClean(false)} whileTap={{ scale: 0.95 }}
                   className="px-2.5 py-1.5 rounded-lg text-[10px] font-black"
-                  style={{ background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)', color: 'rgba(148,163,184,0.6)' }}>
+                  style={{ background: alpha(hex.neutral.white, 0.05), border: `1px solid ${alpha(hex.neutral.white, 0.1)}`, color: alpha(hex.text.secondary, 0.6) }}>
                   Cancelar
                 </motion.button>
                 <motion.button onClick={cleanDemo} disabled={cleaning} whileTap={{ scale: 0.95 }}
                   className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[10px] font-black"
-                  style={{ background: 'rgba(239,68,68,0.15)', border: '1px solid rgba(239,68,68,0.35)', color: '#f87171' }}>
+                  style={{ background: alphaOf('danger', 0.15), border: borders.brand('danger', 0.35), color: hex.status.danger }}>
                   <FiTrash2 size={11} /> {cleaning ? '...' : 'Confirmar'}
                 </motion.button>
               </motion.div>
             ) : (
               <motion.button key="btn" onClick={() => setConfirmClean(true)} whileHover={{ scale: 1.03 }} whileTap={{ scale: 0.97 }}
                 className="flex items-center gap-1.5 px-3 py-2 rounded-xl text-[10px] font-black shrink-0"
-                style={{ background: 'rgba(211,47,47,0.08)', border: '1px solid rgba(211,47,47,0.22)', color: '#D32F2F' }}>
+                style={{ background: alphaOf('danger', 0.08), border: borders.brand('danger', 0.22), color: hex.status.danger }}>
                 <FiTrash2 size={11} /> Limpiar BD
               </motion.button>
             )}
@@ -989,12 +991,12 @@ function ConfigTab() {
 
       {/* Limpiar datos API */}
       <div className="relative p-4 rounded-2xl overflow-hidden"
-        style={{ background: 'linear-gradient(145deg, rgba(6,17,10,0.97), rgba(11,27,18,0.95))', border: '1px solid rgba(102,187,106,0.15)', backdropFilter: 'blur(20px)' }}>
-        <div className="absolute inset-x-0 top-0 h-px" style={{ background: 'linear-gradient(90deg,transparent,rgba(102,187,106,0.4),transparent)' }} />
+        style={{ background: surfaces.card(), border: `1px solid ${alpha(hex.green.soft, 0.15)}`, backdropFilter: 'blur(20px)' }}>
+        <div className="absolute inset-x-0 top-0 h-px" style={{ background: gradients.divider('success', 0.4) }} />
         <div className="flex items-start justify-between gap-4">
           <div className="min-w-0">
             <p className="text-sm font-black text-white tracking-wide">Limpiar datos API</p>
-            <p className="text-[10px] mt-0.5" style={{ color: 'rgba(148,163,184,0.45)' }}>
+            <p className="text-[10px] mt-0.5" style={{ color: alpha(hex.text.secondary, 0.45) }}>
               Elimina todos los fixtures marcados como <span className="font-black text-orionix-green-muted">API</span> (sincronizados desde el proveedor externo)
             </p>
           </div>
@@ -1004,19 +1006,19 @@ function ConfigTab() {
                 className="flex items-center gap-1.5 shrink-0">
                 <motion.button onClick={() => setConfirmCleanApi(false)} whileTap={{ scale: 0.95 }}
                   className="px-2.5 py-1.5 rounded-lg text-[10px] font-black"
-                  style={{ background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)', color: 'rgba(148,163,184,0.6)' }}>
+                  style={{ background: alpha(hex.neutral.white, 0.05), border: `1px solid ${alpha(hex.neutral.white, 0.1)}`, color: alpha(hex.text.secondary, 0.6) }}>
                   Cancelar
                 </motion.button>
                 <motion.button onClick={cleanApi} disabled={cleaningApi} whileTap={{ scale: 0.95 }}
                   className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[10px] font-black"
-                  style={{ background: 'rgba(239,68,68,0.15)', border: '1px solid rgba(239,68,68,0.35)', color: '#f87171' }}>
+                  style={{ background: alphaOf('danger', 0.15), border: borders.brand('danger', 0.35), color: hex.status.danger }}>
                   <FiTrash2 size={11} /> {cleaningApi ? '...' : 'Confirmar'}
                 </motion.button>
               </motion.div>
             ) : (
               <motion.button key="btn-api" onClick={() => setConfirmCleanApi(true)} whileHover={{ scale: 1.03 }} whileTap={{ scale: 0.97 }}
                 className="flex items-center gap-1.5 px-3 py-2 rounded-xl text-[10px] font-black shrink-0"
-                style={{ background: 'rgba(102,187,106,0.08)', border: '1px solid rgba(102,187,106,0.22)', color: '#66BB6A' }}>
+                style={{ background: alpha(hex.green.soft, 0.08), border: `1px solid ${alpha(hex.green.soft, 0.22)}`, color: hex.green.soft }}>
                 <FiTrash2 size={11} /> Limpiar API
               </motion.button>
             )}
@@ -1158,12 +1160,12 @@ function ScheduleTab({ tournamentId, token }: { tournamentId: number; token: str
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
-          <p className="text-xs font-black tracking-[0.14em]" style={{ color: '#e2e8f0', fontFamily: 'var(--font-display)' }}>GESTIÓN DE PARTIDOS</p>
-          <p className="text-[10px] mt-0.5" style={{ color: 'rgba(148,163,184,0.4)' }}>{fixtures.length} partidos · Solo se eliminan los programados</p>
+          <p className="text-xs font-black tracking-[0.14em]" style={{ color: hex.text.primary, fontFamily: 'var(--font-display)' }}>GESTIÓN DE PARTIDOS</p>
+          <p className="text-[10px] mt-0.5" style={{ color: alpha(hex.text.secondary, 0.4) }}>{fixtures.length} partidos · Solo se eliminan los programados</p>
         </div>
         <motion.button onClick={() => { setShowForm(v => !v); setCError(''); }} whileHover={{ scale: 1.04 }} whileTap={{ scale: 0.96 }}
           className="flex items-center gap-2 px-4 py-2.5 rounded-xl text-xs font-black"
-          style={{ background: showForm ? 'rgba(255,255,255,0.06)' : 'linear-gradient(90deg,#2E7D32,#10b981)', border: showForm ? '1px solid rgba(255,255,255,0.1)' : 'none', color: showForm ? 'rgba(148,163,184,0.7)' : '#fff', fontFamily: 'var(--font-display)', letterSpacing: '0.06em', boxShadow: showForm ? 'none' : '0 4px 18px rgba(46,125,50,0.3)' }}>
+          style={{ background: showForm ? alpha(hex.neutral.white, 0.06) : `linear-gradient(90deg,${hex.green.base},#10b981)`, border: showForm ? `1px solid ${alpha(hex.neutral.white, 0.1)}` : 'none', color: showForm ? alpha(hex.text.secondary, 0.7) : hex.neutral.white, fontFamily: 'var(--font-display)', letterSpacing: '0.06em', boxShadow: showForm ? 'none' : `0 4px 18px ${alpha(hex.green.base, 0.3)}` }}>
           {showForm ? <IconX /> : <IconPlus />}{showForm ? 'CANCELAR' : 'AGREGAR PARTIDO'}
         </motion.button>
       </div>
@@ -1172,10 +1174,10 @@ function ScheduleTab({ tournamentId, token }: { tournamentId: number; token: str
       <AnimatePresence>
         {showForm && (
           <motion.div initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: 'auto' }} exit={{ opacity: 0, height: 0 }} className="overflow-hidden" transition={{ type: 'spring', stiffness: 300, damping: 32 }}>
-            <div className="relative rounded-2xl overflow-hidden" style={{ background: 'linear-gradient(145deg,rgba(6,17,10,0.96),rgba(11,27,18,0.92))', border: '1px solid rgba(76,175,80,0.25)', boxShadow: '0 8px 28px rgba(2,6,23,0.5)' }}>
-              <div className="absolute top-0 left-4 right-4 h-px" style={{ background: 'linear-gradient(90deg,transparent,#4CAF50,transparent)' }} />
+            <div className="relative rounded-2xl overflow-hidden" style={{ background: `linear-gradient(145deg, ${alpha(hex.bg.primary, 0.96)}, ${alpha(hex.bg.secondary, 0.92)})`, border: borders.brand('green', 0.25), boxShadow: '0 8px 28px rgba(2,6,23,0.5)' }}>
+              <div className="absolute top-0 left-4 right-4 h-px" style={{ background: `linear-gradient(90deg,transparent,${hex.green.bright},transparent)` }} />
               <div className="p-5">
-                <p className="text-[10px] font-black tracking-[0.2em] mb-4" style={{ color: '#4CAF50', fontFamily: 'var(--font-display)' }}>NUEVO PARTIDO</p>
+                <p className="text-[10px] font-black tracking-[0.2em] mb-4" style={{ color: hex.green.bright, fontFamily: 'var(--font-display)' }}>NUEVO PARTIDO</p>
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-3">
                   {[
                     { label: 'EQUIPO LOCAL', val: cHome, set: setCHome },
@@ -1184,7 +1186,7 @@ function ScheduleTab({ tournamentId, token }: { tournamentId: number; token: str
                     const preview = teams.find(t => t.id === Number(val));
                     return (
                       <div key={i}>
-                        <p className="text-[10px] font-bold mb-1.5 tracking-widest" style={{ color: 'rgba(148,163,184,0.6)' }}>{label}</p>
+                        <p className="text-[10px] font-bold mb-1.5 tracking-widest" style={{ color: alpha(hex.text.secondary, 0.6) }}>{label}</p>
                         <div className="flex items-center gap-2">
                           <FlagBig url={preview?.flagUrl} name={preview?.name ?? ''} />
                           <div className="flex-1 relative">
@@ -1192,22 +1194,22 @@ function ScheduleTab({ tournamentId, token }: { tournamentId: number; token: str
                               <option value="">Seleccionar...</option>
                               {teams.map(t => <option key={t.id} value={t.id}>{t.name}</option>)}
                             </select>
-                            <span className="absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none text-[10px]" style={{ color: 'rgba(148,163,184,0.4)' }}>▾</span>
+                            <span className="absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none text-[10px]" style={{ color: alpha(hex.text.secondary, 0.4) }}>?</span>
                           </div>
                         </div>
                       </div>
                     );
                   })}
                   <div>
-                    <p className="text-[10px] font-bold mb-1.5 tracking-widest" style={{ color: 'rgba(148,163,184,0.6)' }}>ETAPA</p>
-                    <div className="relative"><select value={cStage} onChange={e => setCStage(e.target.value)} style={SCHED_SELECT}><option value="">Seleccionar etapa...</option>{stages.map(s => <option key={s.id} value={s.id}>{s.name}</option>)}</select><span className="absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none text-[10px]" style={{ color: 'rgba(148,163,184,0.4)' }}>▾</span></div>
+                    <p className="text-[10px] font-bold mb-1.5 tracking-widest" style={{ color: alpha(hex.text.secondary, 0.6) }}>ETAPA</p>
+                    <div className="relative"><select value={cStage} onChange={e => setCStage(e.target.value)} style={SCHED_SELECT}><option value="">Seleccionar etapa...</option>{stages.map(s => <option key={s.id} value={s.id}>{s.name}</option>)}</select><span className="absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none text-[10px]" style={{ color: alpha(hex.text.secondary, 0.4) }}>?</span></div>
                   </div>
                   <div>
-                    <p className="text-[10px] font-bold mb-1.5 tracking-widest" style={{ color: 'rgba(148,163,184,0.6)' }}>GRUPO <span style={{ opacity: 0.4 }}>(opcional)</span></p>
-                    <div className="relative"><select value={cGroup} onChange={e => setCGroup(e.target.value)} style={SCHED_SELECT}><option value="">Sin grupo</option>{groups.map(g => <option key={g.id} value={g.id}>Grupo {g.code}</option>)}</select><span className="absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none text-[10px]" style={{ color: 'rgba(148,163,184,0.4)' }}>▾</span></div>
+                    <p className="text-[10px] font-bold mb-1.5 tracking-widest" style={{ color: alpha(hex.text.secondary, 0.6) }}>GRUPO <span style={{ opacity: 0.4 }}>(opcional)</span></p>
+                    <div className="relative"><select value={cGroup} onChange={e => setCGroup(e.target.value)} style={SCHED_SELECT}><option value="">Sin grupo</option>{groups.map(g => <option key={g.id} value={g.id}>Grupo {g.code}</option>)}</select><span className="absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none text-[10px]" style={{ color: alpha(hex.text.secondary, 0.4) }}>?</span></div>
                   </div>
                   <div className="sm:col-span-2">
-                    <p className="text-[10px] font-bold mb-1.5 tracking-widest" style={{ color: 'rgba(148,163,184,0.6)' }}>FECHA Y HORA (hora local)</p>
+                    <p className="text-[10px] font-bold mb-1.5 tracking-widest" style={{ color: alpha(hex.text.secondary, 0.6) }}>FECHA Y HORA (hora local)</p>
                     <input type="datetime-local" value={cKick} onChange={e => setCKick(e.target.value)} style={{ ...SCHED_SELECT, colorScheme: 'dark' }} />
                   </div>
                 </div>
@@ -1215,23 +1217,23 @@ function ScheduleTab({ tournamentId, token }: { tournamentId: number; token: str
                   {cHomeTeam && cAwayTeam && (
                     <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
                       className="flex items-center justify-center gap-4 py-3 px-4 rounded-xl mb-3"
-                      style={{ background: 'rgba(76,175,80,0.05)', border: '1px solid rgba(76,175,80,0.12)' }}>
+                      style={{ background: alphaOf('green', 0.05), border: borders.brand('green', 0.12) }}>
                       <div className="flex items-center gap-2 min-w-0">
                         <FlagBig url={cHomeTeam.flagUrl} name={cHomeTeam.name} />
-                        <span className="font-black text-sm truncate" style={{ color: '#e2e8f0', fontFamily: 'var(--font-display)' }}>{cHomeTeam.shortName || cHomeTeam.name}</span>
+                        <span className="font-black text-sm truncate" style={{ color: hex.text.primary, fontFamily: 'var(--font-display)' }}>{cHomeTeam.shortName || cHomeTeam.name}</span>
                       </div>
-                      <span className="font-black text-sm shrink-0" style={{ color: 'rgba(148,163,184,0.3)', fontFamily: 'var(--font-display)' }}>VS</span>
+                      <span className="font-black text-sm shrink-0" style={{ color: alpha(hex.text.secondary, 0.3), fontFamily: 'var(--font-display)' }}>VS</span>
                       <div className="flex items-center gap-2 min-w-0">
-                        <span className="font-black text-sm truncate" style={{ color: '#e2e8f0', fontFamily: 'var(--font-display)' }}>{cAwayTeam.shortName || cAwayTeam.name}</span>
+                        <span className="font-black text-sm truncate" style={{ color: hex.text.primary, fontFamily: 'var(--font-display)' }}>{cAwayTeam.shortName || cAwayTeam.name}</span>
                         <FlagBig url={cAwayTeam.flagUrl} name={cAwayTeam.name} />
                       </div>
                     </motion.div>
                   )}
                 </AnimatePresence>
-                {cError && <p className="text-xs text-center mb-3" style={{ color: '#f87171' }}>{cError}</p>}
+                {cError && <p className="text-xs text-center mb-3" style={{ color: hex.status.danger }}>{cError}</p>}
                 <motion.button onClick={handleCreate} disabled={creating} whileTap={{ scale: 0.98 }}
                   className="w-full py-3 rounded-xl text-sm font-black text-white disabled:opacity-50 flex items-center justify-center gap-2"
-                  style={{ background: 'linear-gradient(90deg,#2E7D32,#4CAF50,#10b981)', boxShadow: '0 4px 18px rgba(46,125,50,0.3)', fontFamily: 'var(--font-display)', letterSpacing: '0.06em' }}>
+                  style={{ background: `linear-gradient(90deg,${hex.green.base},${hex.green.bright},#10b981)`, boxShadow: `0 4px 18px ${alpha(hex.green.base, 0.3)}`, fontFamily: 'var(--font-display)', letterSpacing: '0.06em' }}>
                   <IconPlus />{creating ? 'CREANDO…' : 'CREAR PARTIDO'}
                 </motion.button>
               </div>
@@ -1245,21 +1247,21 @@ function ScheduleTab({ tournamentId, token }: { tournamentId: number; token: str
         {cOk && (
           <motion.div initial={{ opacity: 0, y: -6 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -6 }}
             className="flex items-center gap-2 px-4 py-3 rounded-xl text-sm font-bold"
-            style={{ background: 'rgba(56,142,60,0.1)', border: '1px solid rgba(56,142,60,0.25)', color: '#388E3C' }}>
+            style={{ background: alpha(hex.green.hover, 0.1), border: `1px solid ${alpha(hex.green.hover, 0.25)}`, color: hex.green.hover }}>
             <IconCheck /> Partido creado correctamente
           </motion.div>
         )}
       </AnimatePresence>
 
       {/* Filters */}
-      <div className="grid grid-cols-4 gap-1.5 p-1.5 rounded-xl" style={{ background: 'rgba(6,17,10,0.92)', border: '1px solid rgba(76,175,80,0.12)' }}>
+      <div className="grid grid-cols-4 gap-1.5 p-1.5 rounded-xl" style={{ background: alpha(hex.bg.primary, 0.92), border: borders.brand('green', 0.12) }}>
         {FILTERS.map(f => (
           <motion.button key={f.key} onClick={() => setFilter(f.key)} whileTap={{ scale: 0.96 }}
             className="relative py-2.5 rounded-lg text-[8px] font-black flex flex-col items-center gap-0.5"
-            style={{ color: filter === f.key ? '#fff' : 'rgba(148,163,184,0.4)', fontFamily: 'var(--font-display)' }}>
+            style={{ color: filter === f.key ? hex.neutral.white : alpha(hex.text.secondary, 0.4), fontFamily: 'var(--font-display)' }}>
             {filter === f.key && (
               <motion.span layoutId="sched-filter" className="absolute inset-0 rounded-lg"
-                style={{ background: 'linear-gradient(90deg,#2E7D32,#4CAF50,#10b981)', boxShadow: '0 2px 12px rgba(46,125,50,0.25)' }}
+                style={{ background: `linear-gradient(90deg,${hex.green.base},${hex.green.bright},#10b981)`, boxShadow: `0 2px 12px ${alpha(hex.green.base, 0.25)}` }}
                 transition={{ type: 'spring', stiffness: 360, damping: 30 }} />
             )}
             <span className="relative z-10 text-sm font-black leading-none" style={{ fontFamily: 'var(--font-display)' }}>{f.n}</span>
@@ -1273,8 +1275,8 @@ function ScheduleTab({ tournamentId, token }: { tournamentId: number; token: str
         <div className="flex justify-center py-20"><div className="w-10 h-10 rounded-full border-2 border-t-green-400 border-green-400/15 animate-spin" /></div>
       ) : filtered.length === 0 ? (
         <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="text-center py-16">
-          <p className="text-4xl opacity-20 mb-3">📅</p>
-          <p className="text-xs tracking-widest" style={{ color: 'rgba(148,163,184,0.4)', fontFamily: 'var(--font-display)' }}>NO HAY PARTIDOS EN ESTA CATEGORÍA</p>
+          <p className="text-4xl opacity-20 mb-3">??</p>
+          <p className="text-xs tracking-widest" style={{ color: alpha(hex.text.secondary, 0.4), fontFamily: 'var(--font-display)' }}>NO HAY PARTIDOS EN ESTA CATEGORÍA</p>
         </motion.div>
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
@@ -1292,7 +1294,7 @@ function ScheduleTab({ tournamentId, token }: { tournamentId: number; token: str
                   initial={{ opacity: 0, y: 14 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, scale: 0.97 }}
                   transition={{ delay: idx * 0.03, type: 'spring', stiffness: 280, damping: 26 }}
                   className={`relative rounded-2xl overflow-hidden ${isEditing ? 'md:col-span-2' : ''}`}
-                  style={{ background: isEditOk ? 'linear-gradient(145deg,rgba(6,40,30,0.96),rgba(9,50,38,0.92))' : cfg.cardBg, border: `1px solid ${isEditOk ? 'rgba(56,142,60,0.4)' : cfg.cardBorder}`, boxShadow: '0 8px 24px rgba(2,6,23,0.45)' }}>
+                  style={{ background: isEditOk ? `linear-gradient(145deg,${alpha(hex.bg.elevated, 0.96)},rgba(9,50,38,0.92))` : cfg.cardBg, border: `1px solid ${isEditOk ? alpha(hex.green.hover, 0.4) : cfg.cardBorder}`, boxShadow: '0 8px 24px rgba(2,6,23,0.45)' }}>
 
                   {/* Top accent line */}
                   <div className="absolute top-0 left-0 right-0 h-0.5" style={{ background: `linear-gradient(90deg,transparent,${cfg.line},transparent)` }} />
@@ -1301,7 +1303,7 @@ function ScheduleTab({ tournamentId, token }: { tournamentId: number; token: str
                     {/* Header */}
                     <div className="flex items-center justify-between mb-3">
                       <StatusPill status={f.status} />
-                      <span className="text-[10px] font-mono" style={{ color: 'rgba(148,163,184,0.4)' }}>
+                      <span className="text-[10px] font-mono" style={{ color: alpha(hex.text.secondary, 0.4) }}>
                         {new Date(f.kickoffAt).toLocaleDateString('es', { weekday: 'short', day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit' })}
                       </span>
                     </div>
@@ -1309,23 +1311,23 @@ function ScheduleTab({ tournamentId, token }: { tournamentId: number; token: str
                     {/* Teams */}
                     <div className="flex items-center gap-2 mb-3">
                       <div className="flex-1 flex items-center justify-end gap-2 min-w-0">
-                        <span className="font-black text-sm text-right truncate leading-none" style={{ color: '#f1f5f9', fontFamily: 'var(--font-display)' }}>
+                        <span className="font-black text-sm text-right truncate leading-none" style={{ color: hex.text.primary, fontFamily: 'var(--font-display)' }}>
                           {f.homeTeam.shortName || f.homeTeam.name}
                         </span>
                         <FlagBig url={f.homeTeam.flagUrl} name={f.homeTeam.name} />
                       </div>
                       <div className="shrink-0 flex items-center justify-center px-3 py-2 rounded-xl"
-                        style={{ background: f.status === 'FINISHED' ? 'rgba(76,175,80,0.08)' : 'rgba(255,255,255,0.04)', border: `1.5px solid ${f.status === 'FINISHED' ? 'rgba(76,175,80,0.3)' : 'rgba(255,255,255,0.08)'}`, minWidth: 70 }}>
+                        style={{ background: f.status === 'FINISHED' ? alphaOf('green', 0.08) : alpha(hex.neutral.white, 0.04), border: `1.5px solid ${f.status === 'FINISHED' ? alphaOf('green', 0.3) : alpha(hex.neutral.white, 0.08)}`, minWidth: 70 }}>
                         {f.status === 'FINISHED' && f.homeScore !== null
-                          ? <span className="font-black text-lg tracking-wider" style={{ color: '#4CAF50', fontFamily: 'var(--font-display)' }}>{f.homeScore}<span style={{ color: 'rgba(148,163,184,0.3)', margin: '0 3px' }}>-</span>{f.awayScore}</span>
+                          ? <span className="font-black text-lg tracking-wider" style={{ color: hex.green.bright, fontFamily: 'var(--font-display)' }}>{f.homeScore}<span style={{ color: alpha(hex.text.secondary, 0.3), margin: '0 3px' }}>-</span>{f.awayScore}</span>
                           : f.status === 'LIVE'
-                          ? <span className="font-black text-xs" style={{ color: '#f87171', fontFamily: 'var(--font-display)' }}>LIVE</span>
-                          : <span className="font-black text-xs" style={{ color: 'rgba(148,163,184,0.28)', fontFamily: 'var(--font-display)' }}>VS</span>
+                          ? <span className="font-black text-xs" style={{ color: hex.status.danger, fontFamily: 'var(--font-display)' }}>LIVE</span>
+                          : <span className="font-black text-xs" style={{ color: alpha(hex.text.secondary, 0.28), fontFamily: 'var(--font-display)' }}>VS</span>
                         }
                       </div>
                       <div className="flex-1 flex items-center justify-start gap-2 min-w-0">
                         <FlagBig url={f.awayTeam.flagUrl} name={f.awayTeam.name} />
-                        <span className="font-black text-sm truncate leading-none" style={{ color: '#f1f5f9', fontFamily: 'var(--font-display)' }}>
+                        <span className="font-black text-sm truncate leading-none" style={{ color: hex.text.primary, fontFamily: 'var(--font-display)' }}>
                           {f.awayTeam.shortName || f.awayTeam.name}
                         </span>
                       </div>
@@ -1338,40 +1340,40 @@ function ScheduleTab({ tournamentId, token }: { tournamentId: number; token: str
                           {/* Source badge */}
                           {f.externalProviderId != null ? (
                             <span className="text-[8px] px-1.5 py-0.5 rounded font-black tracking-widest"
-                              style={{ background: 'rgba(102,187,106,0.10)', border: '1px solid rgba(102,187,106,0.25)', color: '#66BB6A' }}>
+                              style={{ background: alpha(hex.green.soft, 0.10), border: `1px solid ${alpha(hex.green.soft, 0.25)}`, color: hex.green.soft }}>
                               API
                             </span>
                           ) : (
                             <span className="text-[8px] px-1.5 py-0.5 rounded font-black tracking-widest"
-                              style={{ background: 'rgba(211,47,47,0.10)', border: '1px solid rgba(211,47,47,0.25)', color: '#D32F2F' }}>
+                              style={{ background: alphaOf('danger', 0.10), border: borders.brand('danger', 0.25), color: hex.status.danger }}>
                               BD
                             </span>
                           )}
-                          {f.stageName && <span className="text-[9px] px-2 py-0.5 rounded-md font-bold" style={{ background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.07)', color: 'rgba(148,163,184,0.45)' }}>{f.stageName}</span>}
-                          {f.groupCode && <span className="text-[9px] px-2 py-0.5 rounded-md font-bold" style={{ background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.07)', color: 'rgba(148,163,184,0.45)' }}>Grupo {f.groupCode}</span>}
+                          {f.stageName && <span className="text-[9px] px-2 py-0.5 rounded-md font-bold" style={{ background: alpha(hex.neutral.white, 0.04), border: `1px solid ${alpha(hex.neutral.white, 0.07)}`, color: alpha(hex.text.secondary, 0.45) }}>{f.stageName}</span>}
+                          {f.groupCode && <span className="text-[9px] px-2 py-0.5 rounded-md font-bold" style={{ background: alpha(hex.neutral.white, 0.04), border: `1px solid ${alpha(hex.neutral.white, 0.07)}`, color: alpha(hex.text.secondary, 0.45) }}>Grupo {f.groupCode}</span>}
                         </div>
                         <div className="flex items-center gap-1.5 shrink-0">
                           <motion.button onClick={() => startEdit(f)} whileHover={{ scale: 1.08 }} whileTap={{ scale: 0.92 }}
                             className="flex items-center gap-1 px-2.5 py-1.5 rounded-lg text-[10px] font-black"
-                            style={{ background: 'rgba(76,175,80,0.08)', border: '1px solid rgba(76,175,80,0.18)', color: '#4CAF50', fontFamily: 'var(--font-display)' }}>
+                            style={{ background: alphaOf('green', 0.08), border: borders.brand('green', 0.18), color: hex.green.bright, fontFamily: 'var(--font-display)' }}>
                             <IconEdit /> EDITAR
                           </motion.button>
                           {canDelete && (
                             confirmId === f.id ? (
                               <div className="flex gap-1">
                                 <motion.button onClick={() => setConfirmId(null)} whileTap={{ scale: 0.95 }}
-                                  className="p-1.5 rounded-lg" style={{ background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.08)', color: 'rgba(148,163,184,0.6)' }}>
+                                  className="p-1.5 rounded-lg" style={{ background: alpha(hex.neutral.white, 0.05), border: `1px solid ${alpha(hex.neutral.white, 0.08)}`, color: alpha(hex.text.secondary, 0.6) }}>
                                   <IconX />
                                 </motion.button>
                                 <motion.button onClick={() => handleDelete(f.id)} disabled={deletingId === f.id} whileTap={{ scale: 0.95 }}
                                   className="flex items-center gap-1 px-2.5 py-1.5 rounded-lg text-[10px] font-black disabled:opacity-50"
-                                  style={{ background: 'rgba(239,68,68,0.15)', border: '1px solid rgba(239,68,68,0.3)', color: '#f87171', fontFamily: 'var(--font-display)' }}>
+                                  style={{ background: alphaOf('danger', 0.15), border: borders.brand('danger', 0.3), color: hex.status.danger, fontFamily: 'var(--font-display)' }}>
                                   {deletingId === f.id ? <span className="w-3 h-3 rounded-full border border-t-red-400 border-red-400/20 animate-spin" /> : <><IconCheck /> ¿ELIMINAR?</>}
                                 </motion.button>
                               </div>
                             ) : (
                               <motion.button onClick={() => setConfirmId(f.id)} whileHover={{ scale: 1.08 }} whileTap={{ scale: 0.92 }}
-                                className="p-1.5 rounded-lg" style={{ background: 'rgba(239,68,68,0.08)', border: '1px solid rgba(239,68,68,0.18)', color: '#f87171' }}>
+                                className="p-1.5 rounded-lg" style={{ background: alphaOf('danger', 0.08), border: '1px solid rgba(239,68,68,0.18)', color: hex.status.danger }}>
                                 <IconTrash />
                               </motion.button>
                             )
@@ -1383,7 +1385,7 @@ function ScheduleTab({ tournamentId, token }: { tournamentId: number; token: str
                     {isEditOk && (
                       <motion.div initial={{ opacity: 0, y: -4 }} animate={{ opacity: 1, y: 0 }}
                         className="flex items-center gap-2 px-3 py-2 rounded-xl text-xs font-bold mt-2"
-                        style={{ background: 'rgba(56,142,60,0.1)', border: '1px solid rgba(56,142,60,0.25)', color: '#388E3C' }}>
+                        style={{ background: alpha(hex.green.hover, 0.1), border: `1px solid ${alpha(hex.green.hover, 0.25)}`, color: hex.green.hover }}>
                         <IconCheck /> Actualizado correctamente
                       </motion.div>
                     )}
@@ -1393,15 +1395,15 @@ function ScheduleTab({ tournamentId, token }: { tournamentId: number; token: str
                   <AnimatePresence>
                     {isEditing && (
                       <motion.div initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: 'auto' }} exit={{ opacity: 0, height: 0 }} className="overflow-hidden" transition={{ type: 'spring', stiffness: 320, damping: 30 }}>
-                        <div className="px-4 pb-4 pt-1" style={{ borderTop: '1px solid rgba(255,255,255,0.07)' }}>
-                          <p className="text-[9px] font-black tracking-[0.2em] mb-3 pt-3" style={{ color: '#4CAF50', fontFamily: 'var(--font-display)' }}>EDITAR PARTIDO #{f.id}</p>
+                        <div className="px-4 pb-4 pt-1" style={{ borderTop: `1px solid ${alpha(hex.neutral.white, 0.07)}` }}>
+                          <p className="text-[9px] font-black tracking-[0.2em] mb-3 pt-3" style={{ color: hex.green.bright, fontFamily: 'var(--font-display)' }}>EDITAR PARTIDO #{f.id}</p>
                           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-3">
                             {[
                               { label: 'EQUIPO LOCAL', val: eHome, set: setEHome, preview: eHomeTeam },
                               { label: 'EQUIPO VISITANTE', val: eAway, set: setEAway, preview: eAwayTeam },
                             ].map(({ label, val, set, preview }, i) => (
                               <div key={i}>
-                                <p className="text-[9px] font-bold mb-1 tracking-widest" style={{ color: 'rgba(148,163,184,0.5)' }}>{label}</p>
+                                <p className="text-[9px] font-bold mb-1 tracking-widest" style={{ color: alpha(hex.text.secondary, 0.5) }}>{label}</p>
                                 <div className="flex items-center gap-2">
                                   <FlagBig url={preview?.flagUrl} name={preview?.name ?? ''} />
                                   <div className="flex-1 relative">
@@ -1409,34 +1411,34 @@ function ScheduleTab({ tournamentId, token }: { tournamentId: number; token: str
                                       <option value="">Seleccionar...</option>
                                       {teams.map(t => <option key={t.id} value={t.id}>{t.name}</option>)}
                                     </select>
-                                    <span className="absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none text-[10px]" style={{ color: 'rgba(148,163,184,0.4)' }}>▾</span>
+                                    <span className="absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none text-[10px]" style={{ color: alpha(hex.text.secondary, 0.4) }}>?</span>
                                   </div>
                                 </div>
                               </div>
                             ))}
                             <div>
-                              <p className="text-[9px] font-bold mb-1 tracking-widest" style={{ color: 'rgba(148,163,184,0.5)' }}>ETAPA</p>
-                              <div className="relative"><select value={eStage} onChange={e => setEStage(e.target.value)} style={SCHED_SELECT}><option value="">Seleccionar...</option>{stages.map(s => <option key={s.id} value={s.id}>{s.name}</option>)}</select><span className="absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none text-[10px]" style={{ color: 'rgba(148,163,184,0.4)' }}>▾</span></div>
+                              <p className="text-[9px] font-bold mb-1 tracking-widest" style={{ color: alpha(hex.text.secondary, 0.5) }}>ETAPA</p>
+                              <div className="relative"><select value={eStage} onChange={e => setEStage(e.target.value)} style={SCHED_SELECT}><option value="">Seleccionar...</option>{stages.map(s => <option key={s.id} value={s.id}>{s.name}</option>)}</select><span className="absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none text-[10px]" style={{ color: alpha(hex.text.secondary, 0.4) }}>?</span></div>
                             </div>
                             <div>
-                              <p className="text-[9px] font-bold mb-1 tracking-widest" style={{ color: 'rgba(148,163,184,0.5)' }}>GRUPO <span style={{ opacity: 0.4 }}>(opcional)</span></p>
-                              <div className="relative"><select value={eGroup} onChange={e => setEGroup(e.target.value)} style={SCHED_SELECT}><option value="">Sin grupo</option>{groups.map(g => <option key={g.id} value={g.id}>Grupo {g.code}</option>)}</select><span className="absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none text-[10px]" style={{ color: 'rgba(148,163,184,0.4)' }}>▾</span></div>
+                              <p className="text-[9px] font-bold mb-1 tracking-widest" style={{ color: alpha(hex.text.secondary, 0.5) }}>GRUPO <span style={{ opacity: 0.4 }}>(opcional)</span></p>
+                              <div className="relative"><select value={eGroup} onChange={e => setEGroup(e.target.value)} style={SCHED_SELECT}><option value="">Sin grupo</option>{groups.map(g => <option key={g.id} value={g.id}>Grupo {g.code}</option>)}</select><span className="absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none text-[10px]" style={{ color: alpha(hex.text.secondary, 0.4) }}>?</span></div>
                             </div>
                             <div className="sm:col-span-2">
-                              <p className="text-[9px] font-bold mb-1 tracking-widest" style={{ color: 'rgba(148,163,184,0.5)' }}>FECHA Y HORA</p>
+                              <p className="text-[9px] font-bold mb-1 tracking-widest" style={{ color: alpha(hex.text.secondary, 0.5) }}>FECHA Y HORA</p>
                               <input type="datetime-local" value={eKick} onChange={e => setEKick(e.target.value)} style={{ ...SCHED_SELECT, colorScheme: 'dark' }} />
                             </div>
                           </div>
-                          {eError && <p className="text-xs text-center mb-3" style={{ color: '#f87171' }}>{eError}</p>}
+                          {eError && <p className="text-xs text-center mb-3" style={{ color: hex.status.danger }}>{eError}</p>}
                           <div className="flex gap-2">
                             <motion.button onClick={() => { setEditId(null); setEError(''); }} whileTap={{ scale: 0.97 }}
                               className="flex-1 flex items-center justify-center gap-1.5 py-2.5 rounded-xl text-xs font-bold"
-                              style={{ background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.09)', color: 'rgba(148,163,184,0.7)' }}>
+                              style={{ background: alpha(hex.neutral.white, 0.05), border: `1px solid ${alpha(hex.neutral.white, 0.09)}`, color: alpha(hex.text.secondary, 0.7) }}>
                               <IconX /> Cancelar
                             </motion.button>
                             <motion.button onClick={() => handleSaveEdit(f.id)} disabled={saving} whileTap={{ scale: 0.97 }}
                               className="flex-1 flex items-center justify-center gap-1.5 py-2.5 rounded-xl text-xs font-black text-white disabled:opacity-50"
-                              style={{ background: 'linear-gradient(90deg,#10b981,#2E7D32)', boxShadow: '0 4px 14px rgba(16,185,129,0.3)', fontFamily: 'var(--font-display)', letterSpacing: '0.05em' }}>
+                              style={{ background: `linear-gradient(90deg,#10b981,${hex.green.base})`, boxShadow: '0 4px 14px rgba(16,185,129,0.3)', fontFamily: 'var(--font-display)', letterSpacing: '0.05em' }}>
                               <IconCheck />{saving ? 'GUARDANDO…' : 'GUARDAR CAMBIOS'}
                             </motion.button>
                           </div>
@@ -1454,7 +1456,7 @@ function ScheduleTab({ tournamentId, token }: { tournamentId: number; token: str
   );
 }
 
-/* ─── Page ──────────────────────────────────────────────────────────────── */
+/* --- Page ---------------------------------------------------------------- */
 export default function AdminPage() {
   const router = useRouter();
   const { user, isAuthenticated, loading: authLoading } = useAuth();
@@ -1543,22 +1545,22 @@ export default function AdminPage() {
   if (!isAuthenticated || !isAdmin) return null;
 
   const MAIN_TABS = [
-    { key: 'resultados' as const, icon: <FiTarget size={13} />,    label: 'Resultados', accent: '#4CAF50', glow: 'rgba(76,175,80,0.45)' },
-    { key: 'horario'    as const, icon: <FiCalendar size={13} />,  label: 'Horario',    accent: '#66BB6A', glow: 'rgba(102,187,106,0.45)' },
-    { key: 'analytics'  as const, icon: <FiBarChart2 size={13} />, label: 'Analytics',  accent: '#388E3C', glow: 'rgba(56,142,60,0.45)' },
-    { key: 'config'     as const, icon: <FiSettings size={13} />,  label: 'Config',     accent: '#D32F2F', glow: 'rgba(211,47,47,0.45)' },
+    { key: 'resultados' as const, icon: <FiTarget size={13} />,    label: 'Resultados', accent: hex.green.bright, glow: alphaOf('green', 0.45) },
+    { key: 'horario'    as const, icon: <FiCalendar size={13} />,  label: 'Horario',    accent: hex.green.soft, glow: alpha(hex.green.soft, 0.45) },
+    { key: 'analytics'  as const, icon: <FiBarChart2 size={13} />, label: 'Analytics',  accent: hex.green.hover, glow: alpha(hex.green.hover, 0.45) },
+    { key: 'config'     as const, icon: <FiSettings size={13} />,  label: 'Config',     accent: hex.status.danger, glow: alphaOf('danger', 0.45) },
   ];
   const FILTER_TABS = [
-    { key: 'SCHEDULED' as const, label: 'Pendientes',  count: pendingCount,  dot: '#D4A72C' },
-    { key: 'FINISHED'  as const, label: 'Finalizados', count: finishedCount, dot: '#388E3C' },
-    { key: 'ALL'       as const, label: 'Todos',       count: fixtures.length, dot: '#94a3b8' },
+    { key: 'SCHEDULED' as const, label: 'Pendientes',  count: pendingCount,  dot: hex.gold.base },
+    { key: 'FINISHED'  as const, label: 'Finalizados', count: finishedCount, dot: hex.green.hover },
+    { key: 'ALL'       as const, label: 'Todos',       count: fixtures.length, dot: hex.text.secondary },
   ];
 
   return (
     <div className="w-full min-h-screen relative">
       {/* Fondo oscuro completo del admin */}
       <div className="fixed inset-0 pointer-events-none" style={{ zIndex: 0,
-        background: 'radial-gradient(ellipse at 20% 0%, rgba(6,30,10,0.55) 0%, transparent 55%), radial-gradient(ellipse at 80% 100%, rgba(4,40,10,0.4) 0%, transparent 50%), linear-gradient(180deg, rgba(6,17,10,0.70) 0%, rgba(4,11,7,0.65) 100%)',
+        background: `radial-gradient(ellipse at 20% 0%, ${alpha(hex.bg.primary, 0.55)} 0%, transparent 55%), radial-gradient(ellipse at 80% 100%, rgba(4,40,10,0.4) 0%, transparent 50%), linear-gradient(180deg, ${alpha(hex.bg.primary, 0.70)} 0%, rgba(4,11,7,0.65) 100%)`,
       }} />
 
       {/* Partículas decorativas */}
@@ -1566,7 +1568,7 @@ export default function AdminPage() {
         <motion.div key={i} className="fixed rounded-full pointer-events-none" style={{ zIndex: 0,
           width: [120,80,160,100,140,90][i], height: [120,80,160,100,140,90][i],
           left: ['8%','72%','45%','15%','85%','55%'][i], top: ['15%','8%','60%','80%','40%','25%'][i],
-          background: ['rgba(46,125,50,0.04)','rgba(16,185,129,0.03)','rgba(102,187,106,0.04)','rgba(212,167,44,0.03)','rgba(46,125,50,0.03)','rgba(16,185,129,0.04)'][i],
+          background: [alpha(hex.green.base,0.04),'rgba(16,185,129,0.03)',alpha(hex.green.soft,0.04),alpha(hex.gold.base,0.03),alpha(hex.green.base,0.03),'rgba(16,185,129,0.04)'][i],
           filter: 'blur(40px)',
         }}
           animate={{ scale: [1, 1.2, 1], opacity: [0.5, 0.8, 0.5] }}
@@ -1576,27 +1578,27 @@ export default function AdminPage() {
       <div className="relative" style={{ zIndex: 1 }}>
         {/* Header admin con logo */}
         <div className="relative overflow-hidden"
-          style={{ background: 'linear-gradient(180deg, rgba(4,8,5,0.98) 0%, rgba(6,12,7,0.96) 50%, rgba(5,10,6,0.95) 100%)', borderBottom: '1px solid rgba(211,47,47,0.18)' }}>
+          style={{ background: 'linear-gradient(180deg, rgba(4,8,5,0.98) 0%, rgba(6,12,7,0.96) 50%, rgba(5,10,6,0.95) 100%)', borderBottom: borders.brand('danger', 0.18) }}>
           {/* Ambient glow layers */}
           <div className="absolute inset-0 pointer-events-none" style={{ background: 'radial-gradient(ellipse 80% 60% at 50% 0%, rgba(211,47,47,0.10) 0%, transparent 65%)' }} />
           <div className="absolute inset-0 pointer-events-none" style={{ background: 'linear-gradient(90deg, transparent 10%, rgba(211,47,47,0.04) 50%, transparent 90%)' }} />
           {/* Animated bottom border glow */}
           <motion.div className="absolute inset-x-0 bottom-0 h-px pointer-events-none"
-            style={{ background: 'linear-gradient(90deg, transparent, rgba(211,47,47,0.7), rgba(76,175,80,0.5), rgba(211,47,47,0.7), transparent)' }}
+            style={{ background: `linear-gradient(90deg, transparent, rgba(211,47,47,0.7), ${alphaOf('green', 0.5)}, rgba(211,47,47,0.7), transparent)` }}
             animate={{ opacity: [0.4, 1, 0.4] }} transition={{ duration: 2.8, repeat: Infinity, ease: 'easeInOut' }} />
           {/* Animated top corner orbs */}
           <motion.div className="absolute -top-16 -left-16 w-48 h-48 rounded-full pointer-events-none"
             style={{ background: 'radial-gradient(circle, rgba(211,47,47,0.12) 0%, transparent 65%)', filter: 'blur(32px)' }}
             animate={{ scale: [1, 1.25, 1], opacity: [0.5, 0.9, 0.5] }} transition={{ duration: 5, repeat: Infinity, ease: 'easeInOut' }} />
           <motion.div className="absolute -top-12 -right-12 w-40 h-40 rounded-full pointer-events-none"
-            style={{ background: 'radial-gradient(circle, rgba(76,175,80,0.10) 0%, transparent 65%)', filter: 'blur(28px)' }}
+            style={{ background: `radial-gradient(circle, ${alphaOf('green', 0.10)} 0%, transparent 65%)`, filter: 'blur(28px)' }}
             animate={{ scale: [1, 1.3, 1], opacity: [0.4, 0.8, 0.4] }} transition={{ duration: 6, repeat: Infinity, ease: 'easeInOut', delay: 1.5 }} />
 
           <div className="relative px-4 py-5 max-w-2xl mx-auto">
             {/* Badge */}
             <div className="flex items-center justify-center mb-3">
               <motion.div className="flex items-center gap-1.5 px-3 py-1 rounded-full text-[10px] font-black tracking-widest"
-                style={{ background: 'rgba(211,47,47,0.12)', border: '1px solid rgba(211,47,47,0.30)', color: '#D32F2F', fontFamily: 'var(--font-display)' }}
+                style={{ background: alphaOf('danger', 0.12), border: borders.brand('danger', 0.30), color: hex.status.danger, fontFamily: 'var(--font-display)' }}
                 animate={{ boxShadow: ['0 0 8px rgba(211,47,47,0.10)', '0 0 22px rgba(211,47,47,0.30)', '0 0 8px rgba(211,47,47,0.10)'] }}
                 transition={{ duration: 2.4, repeat: Infinity, ease: 'easeInOut' }}>
                 <IconShield /> ACCESO ADMIN
@@ -1608,17 +1610,17 @@ export default function AdminPage() {
               <div className="flex items-center justify-center gap-2.5 mb-2">
                 <div className="relative shrink-0">
                   <motion.div className="absolute inset-0 rounded-full pointer-events-none"
-                    style={{ background: 'rgba(211,47,47,0.45)', filter: 'blur(14px)' }}
+                    style={{ background: alphaOf('danger', 0.45), filter: 'blur(14px)' }}
                     animate={{ scale: [0.8, 1.5, 0.8], opacity: [0.3, 0.8, 0.3] }}
                     transition={{ duration: 3, repeat: Infinity }} />
                   <motion.div
-                    animate={{ filter: ['drop-shadow(0 0 8px rgba(211,47,47,0.6))', 'drop-shadow(0 0 20px rgba(211,47,47,0.9)) drop-shadow(0 0 40px rgba(76,175,80,0.4))', 'drop-shadow(0 0 8px rgba(211,47,47,0.6))'] }}
+                    animate={{ filter: ['drop-shadow(0 0 8px rgba(211,47,47,0.6))', `drop-shadow(0 0 20px rgba(211,47,47,0.9)) drop-shadow(0 0 40px ${alphaOf('green', 0.4)})`, 'drop-shadow(0 0 8px rgba(211,47,47,0.6))'] }}
                     transition={{ duration: 2.8, repeat: Infinity, ease: 'easeInOut' }}>
                     <Image src="/Logo_Pestaña.png" alt="Orionix Gol" width={52} height={52} className="relative z-10 w-12 h-12 object-contain" />
                   </motion.div>
                 </div>
                 <motion.div
-                  animate={{ filter: ['drop-shadow(0 0 6px rgba(211,47,47,0.4))', 'drop-shadow(0 0 18px rgba(211,47,47,0.75)) drop-shadow(0 0 36px rgba(76,175,80,0.30))', 'drop-shadow(0 0 6px rgba(211,47,47,0.4))'] }}
+                  animate={{ filter: ['drop-shadow(0 0 6px rgba(211,47,47,0.4))', `drop-shadow(0 0 18px rgba(211,47,47,0.75)) drop-shadow(0 0 36px ${alphaOf('green', 0.30)})`, 'drop-shadow(0 0 6px rgba(211,47,47,0.4))'] }}
                   transition={{ duration: 2.8, repeat: Infinity, ease: 'easeInOut' }}>
                   <Image src="/texto_logo_pestaña.png" alt="Orionix Gol" width={160} height={40} className="h-9 w-auto object-contain" style={{ mixBlendMode: 'screen' }} />
                 </motion.div>
@@ -1630,7 +1632,7 @@ export default function AdminPage() {
                 animate={{ textShadow: ['0 0 0px transparent', '0 0 0px transparent'] }}>
                 PANEL DE CONTROL
               </motion.h1>
-              <p className="text-center text-[10px] tracking-widest uppercase" style={{ color: 'rgba(211,47,47,0.45)', letterSpacing: '0.20em' }}>
+              <p className="text-center text-[10px] tracking-widest uppercase" style={{ color: alphaOf('danger', 0.45), letterSpacing: '0.20em' }}>
                 Mundial 2026 · Gestión de resultados
               </p>
             </div>
@@ -1639,12 +1641,12 @@ export default function AdminPage() {
 
         <div className="px-4 py-5 max-w-5xl mx-auto pb-32">
 
-          {/* ── Tabs principales ── */}
+          {/* -- Tabs principales -- */}
           <div className="flex gap-2 mb-5 p-2 rounded-2xl"
             style={{
-              background: 'linear-gradient(135deg, rgba(6,17,10,0.85) 0%, rgba(11,27,18,0.80) 100%)',
-              border: '1px solid rgba(76,175,80,0.14)',
-              boxShadow: '0 8px 32px rgba(2,6,23,0.6), inset 0 1px 0 rgba(255,255,255,0.06)',
+              background: `linear-gradient(135deg, ${alpha(hex.bg.primary, 0.85)} 0%, ${alpha(hex.bg.secondary, 0.80)} 100%)`,
+              border: `1px solid ${alphaOf('green', 0.14)}`,
+              boxShadow: `0 8px 32px rgba(2,6,23,0.6), inset 0 1px 0 ${alpha(hex.neutral.white, 0.06)}`,
               backdropFilter: 'blur(20px)',
             }}>
             {MAIN_TABS.map(tab => {
@@ -1655,7 +1657,7 @@ export default function AdminPage() {
                   whileTap={{ scale: 0.96 }}
                   className="relative flex-1 py-3 px-3 rounded-xl font-black text-[12px] flex items-center justify-center gap-2.5 overflow-hidden"
                   style={{
-                    color: isActive ? '#fff' : `${tab.accent}99`,
+                    color: isActive ? hex.neutral.white : `${tab.accent}99`,
                     fontFamily: 'var(--font-display)',
                     letterSpacing: '0.07em',
                     background: isActive
@@ -1698,7 +1700,7 @@ export default function AdminPage() {
             })}
           </div>
 
-          {/* ── Config ── */}
+          {/* -- Config -- */}
           <AnimatePresence mode="wait">
             {activeTab === 'config' && (
               <motion.div key="config" initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -8 }} transition={{ duration: 0.18 }}>
@@ -1707,7 +1709,7 @@ export default function AdminPage() {
             )}
           </AnimatePresence>
 
-          {/* ── Analytics ── */}
+          {/* -- Analytics -- */}
           <AnimatePresence mode="wait">
             {activeTab === 'analytics' && (
               <motion.div key="analytics" initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -8 }} transition={{ duration: 0.18 }}>
@@ -1716,7 +1718,7 @@ export default function AdminPage() {
             )}
           </AnimatePresence>
 
-          {/* ── Horario ── */}
+          {/* -- Horario -- */}
           <AnimatePresence mode="wait">
             {activeTab === 'horario' && tournamentId && (
               <motion.div key="horario" initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -8 }} transition={{ duration: 0.18 }}>
@@ -1731,21 +1733,21 @@ export default function AdminPage() {
             )}
           </AnimatePresence>
 
-          {/* ── Resultados ── */}
+          {/* -- Resultados -- */}
           <AnimatePresence mode="wait">
             {activeTab === 'resultados' && (
               <motion.div key="resultados" initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -8 }} transition={{ duration: 0.18 }}>
 
                 {/* Filtros con contadores */}
                 <div className="flex gap-1.5 mb-5 p-1.5 rounded-2xl"
-                  style={{ background: 'rgba(6,17,10,0.92)', border: '1px solid rgba(76,175,80,0.15)', boxShadow: '0 6px 18px rgba(2,6,23,0.45)', inset: '0 1px 0 rgba(255,255,255,0.04)' }}>
+                  style={{ background: alpha(hex.bg.primary, 0.92), border: borders.brand('green', 0.15), boxShadow: '0 6px 18px rgba(2,6,23,0.45)', inset: `0 1px 0 ${alpha(hex.neutral.white, 0.04)}` }}>
                   {FILTER_TABS.map(f => (
                     <motion.button key={f.key} onClick={() => setFilterStatus(f.key)} whileTap={{ scale: 0.97 }}
                       className="relative flex-1 py-2 px-1 rounded-xl text-[11px] font-black transition-colors flex flex-col items-center gap-0.5"
-                      style={{ color: filterStatus === f.key ? '#fff' : 'rgba(148,163,184,0.5)', fontFamily: 'var(--font-display)', letterSpacing: '0.04em' }}>
+                      style={{ color: filterStatus === f.key ? hex.neutral.white : alpha(hex.text.secondary, 0.5), fontFamily: 'var(--font-display)', letterSpacing: '0.04em' }}>
                       {filterStatus === f.key && (
                         <motion.span layoutId="admin-filter-pill" className="absolute inset-0 rounded-xl"
-                          style={{ background: 'linear-gradient(90deg, #2E7D32, #4CAF50, #10b981)', boxShadow: '0 4px 14px rgba(46,125,50,0.3)' }}
+                          style={{ background: `linear-gradient(90deg, ${hex.green.base}, ${hex.green.bright}, #10b981)`, boxShadow: `0 4px 14px ${alpha(hex.green.base, 0.3)}` }}
                           transition={{ type: 'spring', stiffness: 340, damping: 30 }} />
                       )}
                       <span className="relative z-10 flex flex-col items-center gap-0.5">
@@ -1760,7 +1762,7 @@ export default function AdminPage() {
                 {loading ? (
                   <div className="flex flex-col items-center justify-center py-24 gap-4">
                     <div className="w-12 h-12 rounded-full border-2 border-t-green-400 border-green-400/15 animate-spin" />
-                    <p className="text-xs tracking-widest" style={{ color: 'rgba(148,163,184,0.4)', fontFamily: 'var(--font-display)' }}>CARGANDO PARTIDOS</p>
+                    <p className="text-xs tracking-widest" style={{ color: alpha(hex.text.secondary, 0.4), fontFamily: 'var(--font-display)' }}>CARGANDO PARTIDOS</p>
                   </div>
                 ) : (
                   <>
@@ -1768,50 +1770,50 @@ export default function AdminPage() {
                     {extendId && (
                       <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
                         className="fixed inset-0 z-50 flex items-center justify-center p-4"
-                        style={{ background: 'rgba(0,0,0,0.75)', backdropFilter: 'blur(6px)' }}
+                        style={{ background: alpha(hex.neutral.black, 0.75), backdropFilter: 'blur(6px)' }}
                         onClick={() => { setExtendId(null); setExtraMins(null); }}>
                         <motion.div initial={{ scale: 0.9, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} exit={{ scale: 0.9, opacity: 0 }}
                           className="relative rounded-2xl p-6 w-full max-w-sm"
-                          style={{ background: 'linear-gradient(145deg, rgba(6,17,10,0.99), rgba(11,27,18,0.97))', border: '1px solid rgba(212,167,44,0.25)' }}
+                          style={{ background: `linear-gradient(145deg, ${alpha(hex.bg.primary, 0.99)}, ${alpha(hex.bg.secondary, 0.97)})`, border: borders.brand('gold', 0.25) }}
                           onClick={e => e.stopPropagation()}>
                           <div className="absolute inset-x-0 top-0 h-px rounded-t-2xl"
-                            style={{ background: 'linear-gradient(90deg,transparent,rgba(212,167,44,0.5),transparent)' }} />
-                          <p className="text-base font-black text-white mb-1">⏱ Extender partido</p>
-                          <p className="text-[11px] mb-5" style={{ color: 'rgba(148,163,184,0.5)' }}>
+                            style={{ background: gradients.divider('gold', 0.5) }} />
+                          <p className="text-base font-black text-white mb-1">? Extender partido</p>
+                          <p className="text-[11px] mb-5" style={{ color: alpha(hex.text.secondary, 0.5) }}>
                             {fixtures.find(f => f.id === extendId)?.name}
                           </p>
-                          <p className="text-[10px] font-black mb-3 tracking-widest" style={{ color: 'rgba(212,167,44,0.6)' }}>MINUTOS ADICIONALES</p>
+                          <p className="text-[10px] font-black mb-3 tracking-widest" style={{ color: alphaOf('gold', 0.6) }}>MINUTOS ADICIONALES</p>
                           <div className="grid grid-cols-3 gap-2 mb-4">
                             {[15, 30, 45].map(m => (
                               <motion.button key={m} onClick={() => setExtraMins(m)} whileTap={{ scale: 0.95 }}
                                 className="py-3 rounded-xl text-sm font-black"
                                 style={{
-                                  background: extraMins === m ? 'rgba(212,167,44,0.2)' : 'rgba(255,255,255,0.04)',
-                                  border: `1px solid ${extraMins === m ? 'rgba(212,167,44,0.5)' : 'rgba(255,255,255,0.08)'}`,
-                                  color: extraMins === m ? '#D4A72C' : 'rgba(148,163,184,0.6)',
+                                  background: extraMins === m ? alphaOf('gold', 0.2) : alpha(hex.neutral.white, 0.04),
+                                  border: `1px solid ${extraMins === m ? alpha(hex.gold.base, 0.5) : alpha(hex.neutral.white, 0.08)}`,
+                                  color: extraMins === m ? hex.gold.base : alpha(hex.text.secondary, 0.6),
                                 }}>
                                 +{m} min
                               </motion.button>
                             ))}
                           </div>
                           <div className="mb-5">
-                            <p className="text-[10px] font-black mb-2 tracking-widest" style={{ color: 'rgba(148,163,184,0.4)' }}>PERSONALIZADO</p>
+                            <p className="text-[10px] font-black mb-2 tracking-widest" style={{ color: alpha(hex.text.secondary, 0.4) }}>PERSONALIZADO</p>
                             <input type="number" min="1" max="120"
                               value={extraMins && ![15,30,45].includes(extraMins) ? extraMins : ''}
                               onChange={e => setExtraMins(parseInt(e.target.value) || null)}
                               placeholder="Ej: 20"
                               className="w-full text-center text-2xl font-black py-2.5 rounded-xl outline-none"
-                              style={{ background: 'rgba(212,167,44,0.06)', border: '1.5px solid rgba(212,167,44,0.2)', color: '#D4A72C' }} />
+                              style={{ background: alphaOf('gold', 0.06), border: `1.5px solid ${alphaOf('gold', 0.2)}`, color: hex.gold.base }} />
                           </div>
                           <div className="flex gap-2">
                             <motion.button onClick={() => { setExtendId(null); setExtraMins(null); }} whileTap={{ scale: 0.97 }}
                               className="flex-1 py-2.5 rounded-xl text-sm font-black"
-                              style={{ background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.08)', color: 'rgba(148,163,184,0.6)' }}>
+                              style={{ background: alpha(hex.neutral.white, 0.04), border: `1px solid ${alpha(hex.neutral.white, 0.08)}`, color: alpha(hex.text.secondary, 0.6) }}>
                               Cancelar
                             </motion.button>
                             <motion.button onClick={confirmExtend} disabled={!extraMins || extending} whileTap={{ scale: 0.97 }}
                               className="flex-1 py-2.5 rounded-xl text-sm font-black disabled:opacity-40"
-                              style={{ background: 'rgba(212,167,44,0.15)', border: '1px solid rgba(212,167,44,0.35)', color: '#D4A72C' }}>
+                              style={{ background: alphaOf('gold', 0.15), border: borders.brand('gold', 0.35), color: hex.gold.base }}>
                               {extending ? 'Aplicando...' : `Aplicar +${extraMins ?? 0} min`}
                             </motion.button>
                           </div>
@@ -1840,9 +1842,9 @@ export default function AdminPage() {
                       <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }}
                         className="text-center py-20 space-y-3">
                         <p className="text-5xl opacity-20">
-                          {filterStatus === 'SCHEDULED' ? '⏳' : filterStatus === 'FINISHED' ? '✅' : '📋'}
+                          {filterStatus === 'SCHEDULED' ? '?' : filterStatus === 'FINISHED' ? '?' : '??'}
                         </p>
-                        <p className="text-xs tracking-widest" style={{ color: 'rgba(148,163,184,0.4)', fontFamily: 'var(--font-display)' }}>
+                        <p className="text-xs tracking-widest" style={{ color: alpha(hex.text.secondary, 0.4), fontFamily: 'var(--font-display)' }}>
                           NO HAY PARTIDOS {filterStatus === 'SCHEDULED' ? 'PENDIENTES' : filterStatus === 'FINISHED' ? 'FINALIZADOS' : ''}
                         </p>
                       </motion.div>

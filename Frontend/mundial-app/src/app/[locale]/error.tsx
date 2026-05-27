@@ -2,6 +2,7 @@
 
 import * as Sentry from '@sentry/nextjs';
 import { useEffect } from 'react';
+import { hex } from '@/lib/design/tokens';
 
 export default function LocaleError({
   error,
@@ -19,7 +20,7 @@ export default function LocaleError({
   return (
     <div
       className="min-h-screen flex items-center justify-center"
-      style={{ background: 'radial-gradient(ellipse at 25% 60%, #050D07 0%, #06110A 45%, #030806 100%)' }}
+      style={{ background: `radial-gradient(ellipse at 25% 60%, ${hex.bg.primary} 0%, ${hex.bg.secondary} 45%, rgba(3,8,6,1) 100%)` }}
     >
       <div className="text-center px-6 py-10">
         <div className="text-5xl mb-4">⚽</div>
@@ -28,7 +29,7 @@ export default function LocaleError({
         <button
           onClick={reset}
           className="px-6 py-2.5 rounded-xl text-sm font-black text-white"
-          style={{ background: 'linear-gradient(135deg, #1B5E20, #388E3C)' }}
+          style={{ background: `linear-gradient(135deg, ${hex.green.dark}, ${hex.green.hover})` }}
         >
           Reintentar
         </button>

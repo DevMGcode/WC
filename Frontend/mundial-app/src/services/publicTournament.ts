@@ -1,5 +1,6 @@
 import { Fixture, FixtureDetail, MatchEventScorer, Team, Tournament } from '@/types';
 import { request } from './publicApi';
+import { toSpanish } from '@/lib/i18n/teamNames';
 
 type RawTeam = Partial<Team> & {
   id?: number;
@@ -39,9 +40,13 @@ function normalizeTeam(
   fallbackName = 'Equipo',
   fallbackShortName = 'EQ'
 ): Team {
+  // We always localize to Spanish here because the rest of the app is locked
+  // to `/es/...` for now. When `/en/...` is reactivated, callers will start
+  // passing the locale through and we'll plumb it down to localizeTeamName.
+  const rawName = team?.name ?? fallbackName;
   return {
     id: team?.id ?? fallbackId,
-    name: team?.name ?? fallbackName,
+    name: toSpanish(rawName),
     shortName: team?.shortName ?? team?.fifaCode ?? fallbackShortName,
     fifaCode: team?.fifaCode,
     flagUrl: team?.flagUrl,

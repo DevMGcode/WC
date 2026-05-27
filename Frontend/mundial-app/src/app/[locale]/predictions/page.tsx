@@ -17,6 +17,8 @@ import { scoringService, leagueService } from '@/services/predictions';
 import { useAuth } from '@/contexts/AuthContext';
 import TourButton from '@/components/Tour/TourButton';
 import { getTourSteps } from '@/components/Tour/tourSteps';
+import { hex } from '@/lib/design/tokens';
+import { alpha, alphaOf, surfaces } from '@/lib/design/effects';
 
 /* ══════════════════════════════════════════
    TYPES
@@ -27,7 +29,7 @@ type ResultStatus = 'EXACT' | 'CORRECT' | 'WRONG' | 'PENDING';
    SHARED MICRO-COMPONENTS
 ══════════════════════════════════════════ */
 const GlowBar = ({ value, max = 100, color }: { value: number; max?: number; color: string }) => (
-  <div className="relative h-[3px] rounded-full overflow-hidden w-full" style={{ background: 'rgba(255,255,255,0.05)' }}>
+  <div className="relative h-[3px] rounded-full overflow-hidden w-full" style={{ background: alpha(hex.neutral.white, 0.05) }}>
     <motion.div className="h-full rounded-full"
       style={{ background: `linear-gradient(90deg, ${color}80, ${color})`, boxShadow: `0 0 6px ${color}` }}
       initial={{ width: 0 }}
@@ -54,7 +56,7 @@ const EQBars = ({ color, count = 6, maxH = 12 }: { color: string; count?: number
   );
 };
 
-/* PremiumIcon — identical to dashboard version */
+/* PremiumIcon */
 const PremiumIcon = ({
   icon, color, glow, bg, size = 'md', delay = 0,
 }: {
@@ -71,7 +73,7 @@ const PremiumIcon = ({
       <motion.div
         className={`relative ${dim} ${radius} flex items-center justify-center overflow-hidden`}
         style={{
-          background: `linear-gradient(145deg, ${bg}, rgba(1,4,14,0.85))`,
+          background: `linear-gradient(145deg, ${bg}, ${alpha(hex.bg.primary, 0.85)})`,
           border: `1px solid ${color}40`,
           boxShadow: `0 0 0 1px ${color}10, inset 0 1px 0 ${color}15`,
         }}
@@ -82,7 +84,7 @@ const PremiumIcon = ({
         ]}}
         transition={{ duration: 2.6 + delay, repeat: Infinity, ease: 'easeInOut' }}>
         <div className={`absolute inset-0 ${radius} pointer-events-none`}
-          style={{ background: 'linear-gradient(130deg, rgba(255,255,255,0.08) 0%, rgba(255,255,255,0.04) 40%, transparent 65%)' }} />
+          style={{ background: `linear-gradient(130deg, ${alpha(hex.neutral.white, 0.08)} 0%, ${alpha(hex.neutral.white, 0.04)} 40%, transparent 65%)` }} />
         <div className={`absolute inset-x-0 top-0 h-px ${radius}`}
           style={{ background: `linear-gradient(90deg, transparent, ${color}60, transparent)` }} />
         <span style={{ color, filter: `drop-shadow(0 0 5px ${color}) drop-shadow(0 0 12px ${color}60)`, fontSize: iconSize }}>
@@ -101,28 +103,28 @@ const PremiumIcon = ({
    CONFIG
 ══════════════════════════════════════════ */
 const TABS = [
-  { key: 'MY_PREDICTIONS' as const, label: 'Mis Porras',  icon: <FiTarget size={13} />,  color: '#4CAF50', glow: 'rgba(76,175,80,0.55)'  },
-  { key: 'RANKING'        as const, label: 'Ranking',      icon: <FiAward size={13} />,   color: '#D4A72C', glow: 'rgba(212,167,44,0.55)'  },
-  { key: 'LEAGUES'        as const, label: 'Ligas',        icon: <FiUsers size={13} />,   color: '#388E3C', glow: 'rgba(56,142,60,0.55)'  },
+  { key: 'MY_PREDICTIONS' as const, label: 'Mis Porras',  icon: <FiTarget size={13} />,  color: hex.green.bright, glow: alphaOf('green', 0.55)          },
+  { key: 'RANKING'        as const, label: 'Ranking',      icon: <FiAward size={13} />,   color: hex.gold.base,    glow: alpha(hex.gold.base, 0.55)      },
+  { key: 'LEAGUES'        as const, label: 'Ligas',        icon: <FiUsers size={13} />,   color: hex.green.hover,  glow: alpha(hex.green.hover, 0.55)    },
 ];
 
 const STATUS_CFG: Record<ResultStatus, { label: string; labelKey: string; color: string; glow: string; bg: string }> = {
-  EXACT:   { label: 'Exacto',    labelKey: 'predictions.status.exact',   color: '#388E3C', glow: 'rgba(56,142,60,0.55)',  bg: 'rgba(56,142,60,0.10)'  },
-  CORRECT: { label: 'Correcto',  labelKey: 'predictions.status.correct', color: '#4CAF50', glow: 'rgba(76,175,80,0.55)',  bg: 'rgba(76,175,80,0.10)'  },
-  WRONG:   { label: 'Fallaste',  labelKey: 'predictions.status.wrong',   color: '#f87171', glow: 'rgba(248,113,113,0.50)', bg: 'rgba(248,113,113,0.08)' },
-  PENDING: { label: 'Pendiente', labelKey: 'common.pending',             color: '#D4A72C', glow: 'rgba(212,167,44,0.55)',  bg: 'rgba(212,167,44,0.08)'  },
+  EXACT:   { label: 'Exacto',    labelKey: 'predictions.status.exact',   color: hex.green.hover,  glow: alpha(hex.green.hover, 0.55),  bg: alpha(hex.green.hover, 0.10)  },
+  CORRECT: { label: 'Correcto',  labelKey: 'predictions.status.correct', color: hex.green.bright, glow: alphaOf('green', 0.55),         bg: alphaOf('green', 0.10)          },
+  WRONG:   { label: 'Fallaste',  labelKey: 'predictions.status.wrong',   color: '#f87171',        glow: 'rgba(248,113,113,0.50)',        bg: 'rgba(248,113,113,0.08)'         },
+  PENDING: { label: 'Pendiente', labelKey: 'common.pending',             color: hex.gold.base,    glow: alpha(hex.gold.base, 0.55),     bg: alpha(hex.gold.base, 0.08)       },
 };
 
 const SCORING_RULES_KEYS = [
-  { pts: 3, icon: <FiZap />,   color: '#388E3C', glow: 'rgba(56,142,60,0.55)',  bg: 'rgba(56,142,60,0.08)',  titleKey: 'predictions.rules.exactScore',    descKey: 'predictions.rules.exactScoreDesc'    },
-  { pts: 1, icon: <FiCheck />, color: '#4CAF50', glow: 'rgba(76,175,80,0.55)',  bg: 'rgba(76,175,80,0.08)',  titleKey: 'predictions.rules.correctResult',  descKey: 'predictions.rules.correctResultDesc' },
-  { pts: 0, icon: <FiX />,     color: '#64748b', glow: 'rgba(100,116,139,0.40)', bg: 'rgba(100,116,139,0.05)', titleKey: 'predictions.rules.wrong',          descKey: 'predictions.rules.wrongDesc'         },
+  { pts: 3, icon: <FiZap />,   color: hex.green.hover,  glow: alpha(hex.green.hover, 0.55),  bg: alpha(hex.green.hover, 0.08),  titleKey: 'predictions.rules.exactScore',    descKey: 'predictions.rules.exactScoreDesc'    },
+  { pts: 1, icon: <FiCheck />, color: hex.green.bright, glow: alphaOf('green', 0.55),         bg: alphaOf('green', 0.08),         titleKey: 'predictions.rules.correctResult',  descKey: 'predictions.rules.correctResultDesc' },
+  { pts: 0, icon: <FiX />,     color: '#64748b',        glow: 'rgba(100,116,139,0.40)',        bg: 'rgba(100,116,139,0.05)',        titleKey: 'predictions.rules.wrong',          descKey: 'predictions.rules.wrongDesc'         },
 ];
 
 const MEDAL_CFG = [
-  { color: '#D4A72C', glow: 'rgba(212,167,44,0.60)', bg: 'rgba(212,167,44,0.10)', border: 'rgba(212,167,44,0.30)', label: '1°' },
-  { color: '#94a3b8', glow: 'rgba(148,163,184,0.50)', bg: 'rgba(148,163,184,0.08)', border: 'rgba(148,163,184,0.25)', label: '2°' },
-  { color: '#C9A227', glow: 'rgba(201,162,39,0.50)', bg: 'rgba(201,162,39,0.08)', border: 'rgba(201,162,39,0.25)', label: '3°' },
+  { color: hex.gold.base,  glow: alpha(hex.gold.base, 0.60),  bg: alpha(hex.gold.base, 0.10),  border: alpha(hex.gold.base, 0.30),  label: '1°' },
+  { color: '#94a3b8',      glow: 'rgba(148,163,184,0.50)',     bg: 'rgba(148,163,184,0.08)',     border: 'rgba(148,163,184,0.25)',     label: '2°' },
+  { color: hex.gold.muted, glow: alpha(hex.gold.muted, 0.50), bg: alpha(hex.gold.muted, 0.08), border: alpha(hex.gold.muted, 0.25), label: '3°' },
 ];
 
 /* ══════════════════════════════════════════
@@ -133,7 +135,7 @@ const FlagCircle = ({ team, won, accent }: { team: any; won: boolean; accent: st
     {won && <div className="absolute inset-0 rounded-full pointer-events-none"
       style={{ background: accent + '40', filter: 'blur(6px)', transform: 'scale(1.35)' }} />}
     <div className="relative w-8 h-8 rounded-full overflow-hidden shadow-lg"
-      style={{ border: `1.5px solid ${won ? accent + '55' : 'rgba(255,255,255,0.10)'}` }}>
+      style={{ border: `1.5px solid ${won ? accent + '55' : alpha(hex.neutral.white, 0.10)}` }}>
       {team?.flagUrl && <Image src={team.flagUrl} alt={team.name ?? ''} fill sizes="32px" className="object-cover" unoptimized />}
     </div>
   </div>
@@ -157,10 +159,10 @@ const PredictionCard = ({ pred, index, t }: { pred: any; index: number; t: (key:
       whileHover={{ y: -2, scale: 1.01 }}
       className="relative overflow-hidden rounded-2xl"
       style={{
-        background: 'linear-gradient(145deg, rgba(6,17,10,0.98), rgba(11,27,18,0.97))',
+        background: surfaces.card(),
         border: `1px solid ${sCfg.color}20`,
         backdropFilter: 'blur(28px)',
-        boxShadow: `0 16px 48px rgba(0,0,0,0.60)`,
+        boxShadow: `0 16px 48px ${alpha(hex.neutral.black, 0.60)}`,
       }}>
       {/* Top neon line */}
       <div className="absolute inset-x-0 top-0 h-px"
@@ -168,10 +170,10 @@ const PredictionCard = ({ pred, index, t }: { pred: any; index: number; t: (key:
 
       {/* Header */}
       <div className="flex items-center justify-between px-4 py-2.5"
-        style={{ borderBottom: '1px solid rgba(255,255,255,0.04)', background: 'rgba(0,0,0,0.15)' }}>
+        style={{ borderBottom: `1px solid ${alpha(hex.neutral.white, 0.04)}`, background: alpha(hex.neutral.black, 0.15) }}>
         <div className="flex items-center gap-1.5">
           <FiClock size={9} style={{ color: 'rgba(100,116,139,0.55)' }} />
-          <span className="text-[9px] font-bold tracking-widest uppercase" style={{ color: '#6E7C72' }}>
+          <span className="text-[9px] font-bold tracking-widest uppercase" style={{ color: hex.text.muted }}>
             {fixture.kickoffAt
               ? new Date(fixture.kickoffAt).toLocaleDateString('es', { day: '2-digit', month: 'short' })
               : '—'}
@@ -232,7 +234,7 @@ const PredictionCard = ({ pred, index, t }: { pred: any; index: number; t: (key:
         <div className="flex items-center gap-2">
           <PremiumIcon icon={<FiTarget />} color={sCfg.color} glow={sCfg.glow} bg={sCfg.bg} size="sm" />
           <div>
-            <p className="text-[8px] font-bold tracking-[0.20em] uppercase" style={{ color: '#6E7C72' }}>{t('fixtures.yourPrediction')}</p>
+            <p className="text-[8px] font-bold tracking-[0.20em] uppercase" style={{ color: hex.text.muted }}>{t('fixtures.yourPrediction')}</p>
             <p className="text-base font-black tabular-nums leading-none"
               style={{ color: sCfg.color, textShadow: `0 0 10px ${sCfg.glow}50` }}>
               {pred.predictedHomeScore} – {pred.predictedAwayScore}
@@ -241,8 +243,8 @@ const PredictionCard = ({ pred, index, t }: { pred: any; index: number; t: (key:
         </div>
         {isFinished && typeof fixture.homeScore === 'number' && (
           <div className="text-right">
-            <p className="text-[8px] font-bold tracking-[0.20em] uppercase" style={{ color: '#6E7C72' }}>{t('fixtures.result')}</p>
-            <p className="text-base font-black tabular-nums leading-none" style={{ color: '#6E7C72' }}>
+            <p className="text-[8px] font-bold tracking-[0.20em] uppercase" style={{ color: hex.text.muted }}>{t('fixtures.result')}</p>
+            <p className="text-base font-black tabular-nums leading-none" style={{ color: hex.text.muted }}>
               {fixture.homeScore} – {fixture.awayScore}
             </p>
           </div>
@@ -371,33 +373,33 @@ export default function PredictionsPage() {
   const accuracy = stats.finished > 0 ? Math.round((stats.correct / stats.finished) * 100) : 0;
 
   const TRANSLATED_TABS = [
-    { key: 'MY_PREDICTIONS' as const, label: t('predictions.tabs.myPredictions'), icon: <FiTarget size={13} />,  color: '#4CAF50', glow: 'rgba(76,175,80,0.55)'  },
-    { key: 'RANKING'        as const, label: t('predictions.tabs.ranking'),        icon: <FiAward size={13} />,   color: '#D4A72C', glow: 'rgba(212,167,44,0.55)'  },
-    { key: 'LEAGUES'        as const, label: t('predictions.tabs.leagues'),        icon: <FiUsers size={13} />,   color: '#388E3C', glow: 'rgba(56,142,60,0.55)'  },
+    { key: 'MY_PREDICTIONS' as const, label: t('predictions.tabs.myPredictions'), icon: <FiTarget size={13} />,  color: hex.green.bright, glow: alphaOf('green', 0.55)       },
+    { key: 'RANKING'        as const, label: t('predictions.tabs.ranking'),        icon: <FiAward size={13} />,   color: hex.gold.base,    glow: alpha(hex.gold.base, 0.55)   },
+    { key: 'LEAGUES'        as const, label: t('predictions.tabs.leagues'),        icon: <FiUsers size={13} />,   color: hex.green.hover,  glow: alpha(hex.green.hover, 0.55) },
   ];
 
   const STAT_CARDS = [
-    { label: t('predictions.tabs.myPredictions'), value: stats.total,    suffix: '',  icon: <FiActivity />,    color: '#D4A72C', glow: 'rgba(212,167,44,0.55)',  bg: 'rgba(212,167,44,0.08)'  },
-    { label: t('common.finished'),                value: stats.finished, suffix: '',  icon: <FiCheck />,       color: '#4CAF50', glow: 'rgba(76,175,80,0.55)',  bg: 'rgba(76,175,80,0.08)'  },
-    { label: t('predictions.status.exact'),       value: stats.correct,  suffix: '',  icon: <FiZap />,         color: '#388E3C', glow: 'rgba(56,142,60,0.55)',  bg: 'rgba(56,142,60,0.08)'  },
-    { label: t('profile.performance'),            value: accuracy,       suffix: '%', icon: <FiTrendingUp />,  color: '#a78bfa', glow: 'rgba(167,139,250,0.55)', bg: 'rgba(167,139,250,0.08)' },
+    { label: t('predictions.tabs.myPredictions'), value: stats.total,    suffix: '',  icon: <FiActivity />,    color: hex.gold.base,    glow: alpha(hex.gold.base, 0.55),    bg: alpha(hex.gold.base, 0.08)    },
+    { label: t('common.finished'),                value: stats.finished, suffix: '',  icon: <FiCheck />,       color: hex.green.bright, glow: alphaOf('green', 0.55),         bg: alphaOf('green', 0.08)          },
+    { label: t('predictions.status.exact'),       value: stats.correct,  suffix: '',  icon: <FiZap />,         color: hex.green.hover,  glow: alpha(hex.green.hover, 0.55),  bg: alpha(hex.green.hover, 0.08)  },
+    { label: t('profile.performance'),            value: accuracy,       suffix: '%', icon: <FiTrendingUp />,  color: '#a78bfa',        glow: 'rgba(167,139,250,0.55)',        bg: 'rgba(167,139,250,0.08)'        },
   ];
 
   const maxRankPts = globalRanking[0]?.points ?? 1;
 
   return (
     <div className="w-full relative min-h-screen"
-      style={{ background: 'radial-gradient(ellipse at 22% 30%, #06110A 0%, #0B1B12 50%, #06110A 100%)' }}>
+      style={{ background: `radial-gradient(ellipse at 22% 30%, ${hex.bg.primary} 0%, ${hex.bg.secondary} 50%, ${hex.bg.primary} 100%)` }}>
 
       {/* Ambient orbs */}
       <motion.div className="fixed rounded-full pointer-events-none"
         style={{ width: 600, height: 600, top: -180, left: -100,
-          background: 'radial-gradient(circle, rgba(76,175,80,0.06) 0%, transparent 65%)',
+          background: `radial-gradient(circle, ${alphaOf('green', 0.06)} 0%, transparent 65%)`,
           filter: 'blur(70px)', zIndex: 0 }}
         animate={{ scale: [1, 1.18, 1], opacity: [0.5, 0.85, 0.5] }} transition={{ duration: 12, repeat: Infinity }} />
       <motion.div className="fixed rounded-full pointer-events-none"
         style={{ width: 480, height: 480, bottom: -60, right: -60,
-          background: 'radial-gradient(circle, rgba(212,167,44,0.05) 0%, transparent 65%)',
+          background: `radial-gradient(circle, ${alpha(hex.gold.base, 0.05)} 0%, transparent 65%)`,
           filter: 'blur(60px)', zIndex: 0 }}
         animate={{ scale: [1, 1.22, 1], opacity: [0.4, 0.75, 0.4] }} transition={{ duration: 15, repeat: Infinity, delay: 4 }} />
 
@@ -408,9 +410,14 @@ export default function PredictionsPage() {
 
       {/* ── STICKY TAB BAR ── */}
       <div data-tour="predictions-tabs" className="sticky top-0 z-40"
-        style={{ background: 'rgba(6,17,10,0.92)', borderBottom: '1px solid rgba(76,175,80,0.08)', backdropFilter: 'blur(20px)', boxShadow: '0 4px 32px rgba(0,0,0,0.55)' }}>
+        style={{
+          background: alpha(hex.bg.primary, 0.92),
+          borderBottom: `1px solid ${alphaOf('green', 0.08)}`,
+          backdropFilter: 'blur(20px)',
+          boxShadow: `0 4px 32px ${alpha(hex.neutral.black, 0.55)}`,
+        }}>
         <div className="absolute inset-x-0 bottom-0 h-px"
-          style={{ background: 'linear-gradient(90deg, transparent, rgba(76,175,80,0.22), rgba(212,167,44,0.12), transparent)' }} />
+          style={{ background: `linear-gradient(90deg, transparent, ${alphaOf('green', 0.22)}, ${alpha(hex.gold.base, 0.12)}, transparent)` }} />
         <div className="max-w-4xl mx-auto px-4 py-2 flex items-center gap-2">
           {TRANSLATED_TABS.map(({ key, label, icon, color, glow }) => {
             const isActive = activeTab === key;
@@ -418,7 +425,7 @@ export default function PredictionsPage() {
               <motion.button key={key} onClick={() => setActiveTab(key)}
                 className="relative flex items-center gap-2 px-4 py-2 rounded-xl overflow-hidden"
                 style={{
-                  background: isActive ? `linear-gradient(135deg, ${color}15, rgba(2,8,20,0.85))` : 'transparent',
+                  background: isActive ? `linear-gradient(135deg, ${color}15, ${alpha(hex.bg.primary, 0.85)})` : 'transparent',
                   border: `1px solid ${isActive ? color + '30' : 'transparent'}`,
                   outline: 'none', cursor: 'pointer',
                 }}
@@ -438,7 +445,7 @@ export default function PredictionsPage() {
             );
           })}
           <div className="flex-1" />
-          <EQBars color="rgba(76,175,80,0.30)" count={7} maxH={14} />
+          <EQBars color={alphaOf('green', 0.30)} count={7} maxH={14} />
         </div>
       </div>
 
@@ -447,7 +454,8 @@ export default function PredictionsPage() {
         {loading ? (
           <div className="flex items-center justify-center min-h-80">
             <div className="flex flex-col items-center gap-4">
-              <motion.div className="w-12 h-12 rounded-full border-2" style={{ borderColor: 'rgba(76,175,80,0.20)', borderTopColor: '#4CAF50' }}
+              <motion.div className="w-12 h-12 rounded-full border-2"
+                style={{ borderColor: alphaOf('green', 0.20), borderTopColor: hex.green.bright }}
                 animate={{ rotate: 360 }} transition={{ duration: 0.9, repeat: Infinity, ease: 'linear' }} />
               <p className="text-[10px] text-green-400/60 tracking-[0.3em] uppercase font-bold">{t('common.loading')}</p>
             </div>
@@ -463,9 +471,9 @@ export default function PredictionsPage() {
 
                 {/* Section title */}
                 <div className="flex items-center gap-3">
-                  <div className="w-[3px] h-5 rounded-full" style={{ background: 'linear-gradient(180deg, #4CAF50, #10b981)' }} />
+                  <div className="w-[3px] h-5 rounded-full" style={{ background: `linear-gradient(180deg, ${hex.green.bright}, #10b981)` }} />
                   <h2 className="text-xl font-black text-white tracking-wide">{t('predictions.myPredictions')}</h2>
-                  <div className="flex-1 h-px" style={{ background: 'linear-gradient(90deg, rgba(76,175,80,0.25), transparent)' }} />
+                  <div className="flex-1 h-px" style={{ background: `linear-gradient(90deg, ${alphaOf('green', 0.25)}, transparent)` }} />
                 </div>
 
                 {/* Stats grid */}
@@ -476,9 +484,9 @@ export default function PredictionsPage() {
                       transition={{ delay: i * 0.07 }}
                       className="relative overflow-hidden rounded-2xl p-4"
                       style={{
-                        background: 'linear-gradient(145deg, rgba(6,17,10,0.98), rgba(11,27,18,0.96))',
+                        background: surfaces.card(),
                         border: `1px solid ${s.color}15`, backdropFilter: 'blur(24px)',
-                        boxShadow: '0 12px 36px rgba(0,0,0,0.50)',
+                        boxShadow: `0 12px 36px ${alpha(hex.neutral.black, 0.50)}`,
                       }}>
                       <div className="absolute inset-x-0 top-0 h-px"
                         style={{ background: `linear-gradient(90deg, transparent, ${s.color}50, transparent)` }} />
@@ -491,7 +499,7 @@ export default function PredictionsPage() {
                         initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: i * 0.07 + 0.2 }}>
                         {s.value}{s.suffix}
                       </motion.p>
-                      <p className="text-[9px] font-bold tracking-[0.22em] uppercase mb-2" style={{ color: '#6E7C72' }}>{s.label}</p>
+                      <p className="text-[9px] font-bold tracking-[0.22em] uppercase mb-2" style={{ color: hex.text.muted }}>{s.label}</p>
                       <GlowBar value={s.value} max={Math.max(s.value, 1)} color={s.color} />
                     </motion.div>
                   ))}
@@ -503,15 +511,15 @@ export default function PredictionsPage() {
                   initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.2 }}
                   className="relative overflow-hidden rounded-2xl p-4"
                   style={{
-                    background: 'linear-gradient(145deg, rgba(6,17,10,0.98), rgba(11,27,18,0.97))',
-                    border: '1px solid rgba(76,175,80,0.10)', backdropFilter: 'blur(24px)',
-                    boxShadow: '0 12px 40px rgba(0,0,0,0.50)',
+                    background: surfaces.card(),
+                    border: `1px solid ${alphaOf('green', 0.10)}`, backdropFilter: 'blur(24px)',
+                    boxShadow: `0 12px 40px ${alpha(hex.neutral.black, 0.50)}`,
                   }}>
                   <div className="absolute inset-x-0 top-0 h-px"
-                    style={{ background: 'linear-gradient(90deg, transparent, rgba(76,175,80,0.45), rgba(56,142,60,0.30), transparent)' }} />
+                    style={{ background: `linear-gradient(90deg, transparent, ${alphaOf('green', 0.45)}, ${alpha(hex.green.hover, 0.30)}, transparent)` }} />
 
                   <div className="flex items-center gap-3 mb-4">
-                    <PremiumIcon icon={<FiShield />} color="#4CAF50" glow="rgba(76,175,80,0.55)" bg="rgba(76,175,80,0.08)" size="sm" />
+                    <PremiumIcon icon={<FiShield />} color={hex.green.bright} glow={alphaOf('green', 0.55)} bg={alphaOf('green', 0.08)} size="sm" />
                     <div>
                       <p className="text-[8px] font-black tracking-[0.28em] uppercase text-green-400/60">{t('predictions.scoringOf')}</p>
                       <p className="text-sm font-black text-white leading-none">{t('predictions.scoringTitle')}</p>
@@ -522,7 +530,7 @@ export default function PredictionsPage() {
                     {SCORING_RULES_KEYS.map((rule, i) => (
                       <div key={i} className="flex-1 relative overflow-hidden rounded-xl p-3"
                         style={{
-                          background: `linear-gradient(135deg, ${rule.bg}, rgba(1,4,14,0.60))`,
+                          background: `linear-gradient(135deg, ${rule.bg}, ${alpha(hex.bg.primary, 0.60)})`,
                           border: `1px solid ${rule.color}22`,
                         }}>
                         <div className="absolute inset-x-0 top-0 h-px"
@@ -534,11 +542,11 @@ export default function PredictionsPage() {
                               style={{ color: rule.color, textShadow: `0 0 18px ${rule.glow}` }}>
                               {rule.pts}
                             </span>
-                            <p className="text-[7px] font-black tracking-[0.2em] uppercase -mt-1" style={{ color: '#6E7C72' }}>pts</p>
+                            <p className="text-[7px] font-black tracking-[0.2em] uppercase -mt-1" style={{ color: hex.text.muted }}>pts</p>
                           </div>
                         </div>
                         <p className="text-[10px] font-black text-white leading-none mb-0.5">{t(rule.titleKey)}</p>
-                        <p className="text-[8px] leading-tight" style={{ color: '#6E7C72' }}>{t(rule.descKey)}</p>
+                        <p className="text-[8px] leading-tight" style={{ color: hex.text.muted }}>{t(rule.descKey)}</p>
                       </div>
                     ))}
                   </div>
@@ -548,7 +556,7 @@ export default function PredictionsPage() {
                 {myPredictions.length > 0 ? (
                   <div data-tour="predictions-list" className="space-y-3">
                     <div className="flex items-center gap-2">
-                      <p className="text-[9px] font-black tracking-[0.28em] uppercase" style={{ color: '#6E7C72' }}>
+                      <p className="text-[9px] font-black tracking-[0.28em] uppercase" style={{ color: hex.text.muted }}>
                         {myPredictions.length} {t('predictions.predictionsRegistered')}
                       </p>
                     </div>
@@ -561,23 +569,23 @@ export default function PredictionsPage() {
                     className="flex flex-col items-center gap-4 py-16">
                     <div className="relative">
                       <div className="absolute inset-0 rounded-2xl"
-                        style={{ background: 'rgba(76,175,80,0.08)', filter: 'blur(16px)', transform: 'scale(1.2)' }} />
+                        style={{ background: alphaOf('green', 0.08), filter: 'blur(16px)', transform: 'scale(1.2)' }} />
                       <div className="relative w-16 h-16 rounded-2xl flex items-center justify-center"
-                        style={{ background: 'rgba(76,175,80,0.06)', border: '1px solid rgba(76,175,80,0.18)' }}>
-                        <FiTarget size={28} style={{ color: 'rgba(76,175,80,0.45)' }} />
+                        style={{ background: alphaOf('green', 0.06), border: `1px solid ${alphaOf('green', 0.18)}` }}>
+                        <FiTarget size={28} style={{ color: alphaOf('green', 0.45) }} />
                       </div>
                     </div>
                     <div className="text-center">
-                      <p className="text-[10px] font-black tracking-[0.30em] uppercase mb-1" style={{ color: '#6E7C72' }}>{t('predictions.noPredictionsYet')}</p>
-                      <p className="text-[9px]" style={{ color: '#6E7C72' }}>{t('predictions.visitCalendar')}</p>
+                      <p className="text-[10px] font-black tracking-[0.30em] uppercase mb-1" style={{ color: hex.text.muted }}>{t('predictions.noPredictionsYet')}</p>
+                      <p className="text-[9px]" style={{ color: hex.text.muted }}>{t('predictions.visitCalendar')}</p>
                     </div>
                     <motion.button
                       whileTap={{ scale: 0.97 }}
                       onClick={() => router.push('/fixtures')}
                       className="flex items-center gap-2 px-5 py-2.5 rounded-xl text-[11px] font-black tracking-[0.12em] uppercase"
                       style={{
-                        background: 'linear-gradient(135deg, rgba(76,175,80,0.15), rgba(2,8,20,0.90))',
-                        border: '1px solid rgba(76,175,80,0.30)', color: '#4CAF50',
+                        background: `linear-gradient(135deg, ${alphaOf('green', 0.15)}, ${alpha(hex.bg.primary, 0.90)})`,
+                        border: `1px solid ${alphaOf('green', 0.30)}`, color: hex.green.bright,
                       }}>
                       <FiChevronRight size={12} /> {t('predictions.viewMatches')}
                     </motion.button>
@@ -595,13 +603,13 @@ export default function PredictionsPage() {
                 {/* Section title */}
                 <div className="flex items-center gap-3 mb-1">
                   <motion.div className="w-[3px] h-5 rounded-full"
-                    style={{ background: 'linear-gradient(180deg, #D4A72C, #f59e0b)' }}
-                    animate={{ boxShadow: ['0 0 6px rgba(212,167,44,0.4)', '0 0 18px rgba(212,167,44,0.9)', '0 0 6px rgba(212,167,44,0.4)'] }}
+                    style={{ background: `linear-gradient(180deg, ${hex.gold.base}, #f59e0b)` }}
+                    animate={{ boxShadow: [`0 0 6px ${alpha(hex.gold.base, 0.4)}`, `0 0 18px ${alpha(hex.gold.base, 0.9)}`, `0 0 6px ${alpha(hex.gold.base, 0.4)}`] }}
                     transition={{ duration: 2.2, repeat: Infinity }} />
                   <h2 className="text-xl font-black text-white tracking-wide">{t('predictions.ranking')}</h2>
-                  <div className="flex-1 h-px" style={{ background: 'linear-gradient(90deg, rgba(212,167,44,0.30), transparent)' }} />
+                  <div className="flex-1 h-px" style={{ background: `linear-gradient(90deg, ${alpha(hex.gold.base, 0.30)}, transparent)` }} />
                   <div className="flex items-center gap-1.5 px-3 py-1 rounded-full"
-                    style={{ background: 'rgba(212,167,44,0.07)', border: '1px solid rgba(212,167,44,0.20)' }}>
+                    style={{ background: alpha(hex.gold.base, 0.07), border: `1px solid ${alpha(hex.gold.base, 0.20)}` }}>
                     <FiAward size={10} className="text-orionix-gold" />
                     <span className="text-[8px] font-black text-amber-400 tracking-[0.2em]">{globalRanking.length} {t('predictions.players')}</span>
                   </div>
@@ -619,9 +627,9 @@ export default function PredictionsPage() {
                           transition={{ delay: idx * 0.10, ease: [0.22, 1, 0.36, 1] }}
                           className="relative overflow-hidden rounded-2xl flex flex-col items-center py-5 px-3"
                           style={{
-                            background: `linear-gradient(145deg, ${mc.bg}, rgba(1,4,14,0.90))`,
+                            background: `linear-gradient(145deg, ${mc.bg}, ${alpha(hex.bg.primary, 0.90)})`,
                             border: `1px solid ${mc.border}`, backdropFilter: 'blur(24px)',
-                            boxShadow: `0 12px 40px rgba(0,0,0,0.55), 0 0 24px ${mc.glow}20`,
+                            boxShadow: `0 12px 40px ${alpha(hex.neutral.black, 0.55)}, 0 0 24px ${mc.glow}20`,
                           }}>
                           <div className="absolute inset-x-0 top-0 h-px"
                             style={{ background: `linear-gradient(90deg, transparent, ${mc.color}65, transparent)` }} />
@@ -640,7 +648,7 @@ export default function PredictionsPage() {
                             transition={{ duration: 3, repeat: Infinity }}>
                             {player.points}
                           </motion.p>
-                          <p className="text-[7px] font-bold tracking-[0.22em] uppercase -mt-1" style={{ color: '#6E7C72' }}>pts</p>
+                          <p className="text-[7px] font-bold tracking-[0.22em] uppercase -mt-1" style={{ color: hex.text.muted }}>pts</p>
                           <div className="w-full mt-3">
                             <GlowBar value={player.points} max={maxRankPts} color={mc.color} />
                           </div>
@@ -654,11 +662,11 @@ export default function PredictionsPage() {
                 {globalRanking.length > 3 && (
                   <div className="relative overflow-hidden rounded-2xl"
                     style={{
-                      background: 'linear-gradient(145deg, rgba(6,17,10,0.98), rgba(11,27,18,0.96))',
-                      border: '1px solid rgba(255,255,255,0.05)', backdropFilter: 'blur(24px)',
+                      background: surfaces.card(),
+                      border: `1px solid ${alpha(hex.neutral.white, 0.05)}`, backdropFilter: 'blur(24px)',
                     }}>
                     <div className="absolute inset-x-0 top-0 h-px"
-                      style={{ background: 'linear-gradient(90deg, transparent, rgba(212,167,44,0.30), transparent)' }} />
+                      style={{ background: `linear-gradient(90deg, transparent, ${alpha(hex.gold.base, 0.30)}, transparent)` }} />
                     {globalRanking.slice(3).map((player, idx) => {
                       const isMe = player.user === (user as any)?.username || player.user === (user as any)?.fullName;
                       return (
@@ -667,25 +675,25 @@ export default function PredictionsPage() {
                           transition={{ delay: 0.25 + idx * 0.04 }}
                           className="flex items-center gap-3 px-4 py-3 relative"
                           style={{
-                            borderBottom: idx < globalRanking.length - 4 ? '1px solid rgba(255,255,255,0.03)' : 'none',
-                            background: isMe ? 'rgba(76,175,80,0.04)' : 'transparent',
-                            borderLeft: isMe ? '2px solid rgba(76,175,80,0.40)' : '2px solid transparent',
+                            borderBottom: idx < globalRanking.length - 4 ? `1px solid ${alpha(hex.neutral.white, 0.03)}` : 'none',
+                            background: isMe ? alphaOf('green', 0.04) : 'transparent',
+                            borderLeft: isMe ? `2px solid ${alphaOf('green', 0.40)}` : '2px solid transparent',
                           }}>
-                          <span className="w-6 text-center text-[10px] font-black tabular-nums shrink-0" style={{ color: '#6E7C72' }}>
+                          <span className="w-6 text-center text-[10px] font-black tabular-nums shrink-0" style={{ color: hex.text.muted }}>
                             {player.rank}
                           </span>
                           <div className="flex-1 min-w-0">
                             <p className="text-[11px] font-black truncate"
-                              style={{ color: isMe ? '#4CAF50' : 'rgba(148,163,184,0.80)' }}>{player.user}</p>
+                              style={{ color: isMe ? hex.green.bright : 'rgba(148,163,184,0.80)' }}>{player.user}</p>
                             <div className="mt-1">
-                              <GlowBar value={player.points} max={maxRankPts} color={isMe ? '#4CAF50' : '#475569'} />
+                              <GlowBar value={player.points} max={maxRankPts} color={isMe ? hex.green.bright : '#475569'} />
                             </div>
                           </div>
                           <span className="text-sm font-black tabular-nums shrink-0"
-                            style={{ color: isMe ? '#4CAF50' : 'rgba(100,116,139,0.60)' }}>
+                            style={{ color: isMe ? hex.green.bright : 'rgba(100,116,139,0.60)' }}>
                             {player.points}
                           </span>
-                          <span className="text-[7px] font-bold shrink-0" style={{ color: '#6E7C72' }}>pts</span>
+                          <span className="text-[7px] font-bold shrink-0" style={{ color: hex.text.muted }}>pts</span>
                         </motion.div>
                       );
                     })}
@@ -695,10 +703,10 @@ export default function PredictionsPage() {
                 {globalRanking.length === 0 && (
                   <div className="flex flex-col items-center gap-3 py-16">
                     <div className="w-14 h-14 rounded-2xl flex items-center justify-center"
-                      style={{ background: 'rgba(212,167,44,0.07)', border: '1px solid rgba(212,167,44,0.18)' }}>
-                      <FiBarChart2 size={24} style={{ color: 'rgba(212,167,44,0.40)' }} />
+                      style={{ background: alpha(hex.gold.base, 0.07), border: `1px solid ${alpha(hex.gold.base, 0.18)}` }}>
+                      <FiBarChart2 size={24} style={{ color: alpha(hex.gold.base, 0.40) }} />
                     </div>
-                    <p className="text-[10px] font-bold tracking-[0.2em] uppercase" style={{ color: '#6E7C72' }}>{t('predictions.rankingUnavailable')}</p>
+                    <p className="text-[10px] font-bold tracking-[0.2em] uppercase" style={{ color: hex.text.muted }}>{t('predictions.rankingUnavailable')}</p>
                   </div>
                 )}
               </motion.div>
@@ -712,9 +720,9 @@ export default function PredictionsPage() {
 
                 {/* Section title */}
                 <div className="flex items-center gap-3">
-                  <div className="w-[3px] h-5 rounded-full" style={{ background: 'linear-gradient(180deg, #388E3C, #10b981)' }} />
+                  <div className="w-[3px] h-5 rounded-full" style={{ background: `linear-gradient(180deg, ${hex.green.hover}, #10b981)` }} />
                   <h2 className="text-xl font-black text-white tracking-wide">{t('predictions.myLeagues')}</h2>
-                  <div className="flex-1 h-px" style={{ background: 'linear-gradient(90deg, rgba(56,142,60,0.25), transparent)' }} />
+                  <div className="flex-1 h-px" style={{ background: `linear-gradient(90deg, ${alpha(hex.green.hover, 0.25)}, transparent)` }} />
                 </div>
 
                 {myLeagues.map((league, idx) => (
@@ -723,26 +731,26 @@ export default function PredictionsPage() {
                     transition={{ delay: idx * 0.07, ease: [0.22, 1, 0.36, 1] }}
                     className="relative overflow-hidden rounded-2xl"
                     style={{
-                      background: 'linear-gradient(145deg, rgba(6,17,10,0.98), rgba(11,27,18,0.97))',
-                      border: '1px solid rgba(56,142,60,0.14)', backdropFilter: 'blur(28px)',
-                      boxShadow: '0 16px 48px rgba(0,0,0,0.60)',
+                      background: surfaces.card(),
+                      border: `1px solid ${alpha(hex.green.hover, 0.14)}`, backdropFilter: 'blur(28px)',
+                      boxShadow: `0 16px 48px ${alpha(hex.neutral.black, 0.60)}`,
                     }}>
                     <div className="absolute inset-x-0 top-0 h-px"
-                      style={{ background: 'linear-gradient(90deg, transparent, rgba(56,142,60,0.50), transparent)' }} />
+                      style={{ background: `linear-gradient(90deg, transparent, ${alpha(hex.green.hover, 0.50)}, transparent)` }} />
 
                     {/* League header */}
                     <div className="flex items-center justify-between px-4 pt-4 pb-3">
                       <div className="flex items-center gap-3">
-                        <PremiumIcon icon={<FiShield />} color="#388E3C" glow="rgba(56,142,60,0.55)" bg="rgba(56,142,60,0.08)" size="sm" delay={idx * 0.2} />
+                        <PremiumIcon icon={<FiShield />} color={hex.green.hover} glow={alpha(hex.green.hover, 0.55)} bg={alpha(hex.green.hover, 0.08)} size="sm" delay={idx * 0.2} />
                         <div>
                           <p className="text-sm font-black text-white leading-none">{league.name}</p>
-                          <p className="text-[9px] mt-0.5 tracking-wide" style={{ color: '#6E7C72' }}>
+                          <p className="text-[9px] mt-0.5 tracking-wide" style={{ color: hex.text.muted }}>
                             {league.memberCount}{league.maxMembers ? `/${league.maxMembers}` : ''} {t('predictions.members')} · #{league.code}
                           </p>
                         </div>
                       </div>
                       <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-full"
-                        style={{ background: 'rgba(56,142,60,0.08)', border: '1px solid rgba(56,142,60,0.25)' }}>
+                        style={{ background: alpha(hex.green.hover, 0.08), border: `1px solid ${alpha(hex.green.hover, 0.25)}` }}>
                         <span className="text-[8px] font-black text-orionix-green-bright">{t('predictions.position')} #{league.myRank || '—'}</span>
                       </div>
                     </div>
@@ -750,13 +758,13 @@ export default function PredictionsPage() {
                     {/* Stats row */}
                     <div className="grid grid-cols-3 gap-2 px-4 pb-4">
                       {[
-                        { label: t('predictions.myPts'),     value: league.myPoints,                        color: '#4CAF50', icon: <FiActivity size={10} /> },
-                        { label: t('predictions.leader'),    value: league.leader.name,                    color: '#D4A72C', icon: <FiStar size={10} />, isText: true },
-                        { label: t('predictions.difference'), value: `-${league.leader.points - league.myPoints}`, color: '#f87171', icon: <FiTrendingUp size={10} />, isText: true },
+                        { label: t('predictions.myPts'),      value: league.myPoints,                              color: hex.green.bright, icon: <FiActivity size={10} /> },
+                        { label: t('predictions.leader'),     value: league.leader.name,                           color: hex.gold.base,    icon: <FiStar size={10} />, isText: true },
+                        { label: t('predictions.difference'), value: `-${league.leader.points - league.myPoints}`, color: '#f87171',        icon: <FiTrendingUp size={10} />, isText: true },
                       ].map((item, i) => (
                         <div key={i} className="relative overflow-hidden rounded-xl p-3 text-center"
                           style={{
-                            background: `rgba(1,4,14,0.60)`,
+                            background: alpha(hex.bg.primary, 0.60),
                             border: `1px solid ${item.color}18`,
                           }}>
                           <div className="flex items-center justify-center gap-1 mb-1.5"
@@ -769,16 +777,16 @@ export default function PredictionsPage() {
                             {item.value}
                           </p>
                           {!(item as any).isText && (
-                            <p className="text-[7px] font-bold -mt-0.5" style={{ color: '#6E7C72' }}>pts</p>
+                            <p className="text-[7px] font-bold -mt-0.5" style={{ color: hex.text.muted }}>pts</p>
                           )}
-                          <p className="text-[8px] font-bold tracking-[0.18em] uppercase mt-1" style={{ color: '#6E7C72' }}>{item.label}</p>
+                          <p className="text-[8px] font-bold tracking-[0.18em] uppercase mt-1" style={{ color: hex.text.muted }}>{item.label}</p>
                         </div>
                       ))}
                     </div>
 
                     {/* GlowBar for my position */}
                     <div className="px-4 pb-2">
-                      <GlowBar value={league.myPoints} max={Math.max(league.leader.points, 1)} color="#388E3C" />
+                      <GlowBar value={league.myPoints} max={Math.max(league.leader.points, 1)} color={hex.green.hover} />
                     </div>
 
                     {/* CTA */}
@@ -788,8 +796,8 @@ export default function PredictionsPage() {
                         onClick={() => router.push(`/predictions/leagues/${league.id}`)}
                         className="w-full flex items-center justify-center gap-2 py-2.5 rounded-xl text-[11px] font-black tracking-[0.12em] uppercase"
                         style={{
-                          background: 'linear-gradient(135deg, rgba(56,142,60,0.14), rgba(2,8,20,0.90))',
-                          border: '1px solid rgba(56,142,60,0.28)', color: '#388E3C',
+                          background: `linear-gradient(135deg, ${alpha(hex.green.hover, 0.14)}, ${alpha(hex.bg.primary, 0.90)})`,
+                          border: `1px solid ${alpha(hex.green.hover, 0.28)}`, color: hex.green.hover,
                         }}>
                         {t('predictions.viewLeague')} <FiChevronRight size={12} />
                       </motion.button>
@@ -803,27 +811,27 @@ export default function PredictionsPage() {
                   transition={{ delay: myLeagues.length * 0.07 + 0.1 }}
                   className="relative overflow-hidden rounded-2xl p-5"
                   style={{
-                    background: 'linear-gradient(145deg, rgba(6,17,10,0.98), rgba(11,27,18,0.97))',
-                    border: '1px solid rgba(76,175,80,0.14)', backdropFilter: 'blur(28px)',
-                    boxShadow: '0 12px 40px rgba(0,0,0,0.50)',
+                    background: surfaces.card(),
+                    border: `1px solid ${alphaOf('green', 0.14)}`, backdropFilter: 'blur(28px)',
+                    boxShadow: `0 12px 40px ${alpha(hex.neutral.black, 0.50)}`,
                   }}>
                   <div className="absolute inset-x-0 top-0 h-px"
-                    style={{ background: 'linear-gradient(90deg, transparent, rgba(76,175,80,0.40), rgba(56,142,60,0.25), transparent)' }} />
+                    style={{ background: `linear-gradient(90deg, transparent, ${alphaOf('green', 0.40)}, ${alpha(hex.green.hover, 0.25)}, transparent)` }} />
                   <div className="flex items-center gap-3 mb-5">
-                    <PremiumIcon icon={<FiUsers />} color="#4CAF50" glow="rgba(76,175,80,0.55)" bg="rgba(76,175,80,0.08)" size="md" />
+                    <PremiumIcon icon={<FiUsers />} color={hex.green.bright} glow={alphaOf('green', 0.55)} bg={alphaOf('green', 0.08)} size="md" />
                     <div>
                       <p className="text-[8px] font-black tracking-[0.28em] uppercase text-green-400/60">{t('predictions.competition')}</p>
                       <p className="text-sm font-black text-white leading-none">{t('predictions.createOrJoin')}</p>
                     </div>
                   </div>
-                  <p className="text-[10px] mb-4 tracking-wide" style={{ color: '#6E7C72' }}>{t('predictions.competeFriends')}</p>
+                  <p className="text-[10px] mb-4 tracking-wide" style={{ color: hex.text.muted }}>{t('predictions.competeFriends')}</p>
                   <div className="grid grid-cols-2 gap-3">
                     <motion.button whileTap={{ scale: 0.97 }}
                       onClick={() => { setShowLeagueModal(false); router.push('/predictions/create-league'); }}
                       className="flex items-center justify-center gap-2 py-3 rounded-xl text-[11px] font-black tracking-[0.10em] uppercase"
                       style={{
-                        background: 'linear-gradient(135deg, rgba(76,175,80,0.18), rgba(2,8,20,0.90))',
-                        border: '1px solid rgba(76,175,80,0.32)', color: '#4CAF50',
+                        background: `linear-gradient(135deg, ${alphaOf('green', 0.18)}, ${alpha(hex.bg.primary, 0.90)})`,
+                        border: `1px solid ${alphaOf('green', 0.32)}`, color: hex.green.bright,
                       }}>
                       <FiPlus size={13} /> {t('predictions.createLeague')}
                     </motion.button>
@@ -831,8 +839,8 @@ export default function PredictionsPage() {
                       onClick={() => { setShowLeagueModal(false); router.push('/predictions/join-league'); }}
                       className="flex items-center justify-center gap-2 py-3 rounded-xl text-[11px] font-black tracking-[0.10em] uppercase"
                       style={{
-                        background: 'linear-gradient(135deg, rgba(56,142,60,0.12), rgba(2,8,20,0.90))',
-                        border: '1px solid rgba(56,142,60,0.28)', color: '#388E3C',
+                        background: `linear-gradient(135deg, ${alpha(hex.green.hover, 0.12)}, ${alpha(hex.bg.primary, 0.90)})`,
+                        border: `1px solid ${alpha(hex.green.hover, 0.28)}`, color: hex.green.hover,
                       }}>
                       <FiLogIn size={13} /> {t('predictions.join')}
                     </motion.button>
@@ -852,7 +860,7 @@ export default function PredictionsPage() {
         {showLeagueModal && (
           <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
             className="fixed inset-0 flex items-center justify-center z-50"
-            style={{ background: 'rgba(0,0,0,0.75)', backdropFilter: 'blur(8px)' }}
+            style={{ background: alpha(hex.neutral.black, 0.75), backdropFilter: 'blur(8px)' }}
             onClick={() => setShowLeagueModal(false)}>
             <motion.div
               initial={{ scale: 0.88, opacity: 0 }} animate={{ scale: 1, opacity: 1 }}
@@ -861,26 +869,26 @@ export default function PredictionsPage() {
               onClick={(e) => e.stopPropagation()}
               className="relative overflow-hidden rounded-2xl p-6 max-w-sm w-full mx-4"
               style={{
-                background: 'linear-gradient(145deg, rgba(6,17,10,0.99), rgba(11,27,18,0.98))',
-                border: '1px solid rgba(76,175,80,0.18)', backdropFilter: 'blur(28px)',
-                boxShadow: '0 32px 80px rgba(0,0,0,0.80)',
+                background: surfaces.card(),
+                border: `1px solid ${alphaOf('green', 0.18)}`, backdropFilter: 'blur(28px)',
+                boxShadow: `0 32px 80px ${alpha(hex.neutral.black, 0.80)}`,
               }}>
               <div className="absolute inset-x-0 top-0 h-px"
-                style={{ background: 'linear-gradient(90deg, transparent, rgba(76,175,80,0.60), transparent)' }} />
+                style={{ background: `linear-gradient(90deg, transparent, ${alphaOf('green', 0.60)}, transparent)` }} />
               <div className="flex items-center gap-3 mb-5">
-                <PremiumIcon icon={<FiUsers />} color="#4CAF50" glow="rgba(76,175,80,0.55)" bg="rgba(76,175,80,0.08)" size="md" />
+                <PremiumIcon icon={<FiUsers />} color={hex.green.bright} glow={alphaOf('green', 0.55)} bg={alphaOf('green', 0.08)} size="md" />
                 <h2 className="text-lg font-black text-white">{t('predictions.newLeague')}</h2>
               </div>
               <div className="space-y-3">
                 {[
-                  { label: t('predictions.createLeague'), icon: <FiPlus size={14} />, color: '#4CAF50', glow: 'rgba(76,175,80,0.55)', route: '/predictions/create-league' },
-                  { label: t('predictions.joinLeague'),   icon: <FiLogIn size={14} />, color: '#388E3C', glow: 'rgba(56,142,60,0.55)', route: '/predictions/join-league' },
+                  { label: t('predictions.createLeague'), icon: <FiPlus size={14} />, color: hex.green.bright, glow: alphaOf('green', 0.55), route: '/predictions/create-league' },
+                  { label: t('predictions.joinLeague'),   icon: <FiLogIn size={14} />, color: hex.green.hover,  glow: alpha(hex.green.hover, 0.55), route: '/predictions/join-league' },
                 ].map((opt) => (
                   <motion.button key={opt.label} whileTap={{ scale: 0.97 }}
                     onClick={() => { setShowLeagueModal(false); router.push(opt.route); }}
                     className="w-full flex items-center gap-3 py-3.5 px-4 rounded-xl text-[12px] font-black tracking-[0.10em] uppercase relative overflow-hidden"
                     style={{
-                      background: `linear-gradient(135deg, ${opt.color}14, rgba(2,8,20,0.90))`,
+                      background: `linear-gradient(135deg, ${opt.color}14, ${alpha(hex.bg.primary, 0.90)})`,
                       border: `1px solid ${opt.color}30`, color: opt.color,
                     }}>
                     <div className="absolute inset-x-0 top-0 h-px"
