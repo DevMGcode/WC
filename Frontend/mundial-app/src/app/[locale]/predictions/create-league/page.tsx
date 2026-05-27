@@ -11,10 +11,12 @@ import {
   FiShield, FiArrowLeft, FiAlertCircle, FiCopy,
   FiCheck, FiUsers, FiArrowRight, FiPlus,
 } from 'react-icons/fi';
+import { hex } from '@/lib/design/tokens';
+import { alpha, alphaOf } from '@/lib/design/effects';
 
 /* ── Shared input style helper ── */
 const inputStyle: React.CSSProperties = {
-  background: 'rgba(255,255,255,0.03)',
+  background: alpha(hex.neutral.white, 0.03),
   border: '1px solid rgba(34,211,238,0.18)',
   color: '#e2f8ff',
   outline: 'none',
@@ -103,7 +105,7 @@ export default function CreateLeaguePage() {
               style={{
                 background: 'linear-gradient(145deg, rgba(2,8,24,0.98), rgba(4,18,10,0.97))',
                 border: '1px solid rgba(52,211,153,0.20)',
-                boxShadow: '0 20px 60px rgba(0,0,0,0.50)',
+                boxShadow: `0 20px 60px ${alpha(hex.neutral.black, 0.50)}`,
               }}>
               <div className="absolute inset-x-0 top-0 h-[3px]"
                 style={{ background: 'linear-gradient(90deg, #22d3ee, #34d399, #22d3ee)', borderRadius: '12px 12px 0 0' }} />
@@ -158,7 +160,7 @@ export default function CreateLeaguePage() {
 
                 {/* Instructions */}
                 <div className="rounded-xl p-4 mb-5"
-                  style={{ background: 'rgba(76,175,80,0.04)', border: '1px solid rgba(76,175,80,0.10)' }}>
+                  style={{ background: alphaOf('green', 0.04), border: `1px solid ${alphaOf('green', 0.10)}` }}>
                   <div className="absolute inset-x-0 top-0 h-px" />
                   <p className="text-[9px] font-black tracking-[0.25em] uppercase text-green-400/50 mb-3">¿Cómo invitar amigos?</p>
                   {[
@@ -182,7 +184,7 @@ export default function CreateLeaguePage() {
                     onClick={() => router.push('/predictions')}
                     whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.97 }}
                     className="flex-1 py-3 rounded-xl text-sm font-black text-orionix-text-secondary flex items-center justify-center gap-2"
-                    style={{ border: '1px solid rgba(255,255,255,0.07)', background: 'rgba(255,255,255,0.02)' }}
+                    style={{ border: `1px solid ${alpha(hex.neutral.white, 0.07)}`, background: alpha(hex.neutral.white, 0.02) }}
                   >
                     <FiArrowLeft size={13} /> Ir a Porras
                   </motion.button>
@@ -194,7 +196,7 @@ export default function CreateLeaguePage() {
                     style={{ background: 'linear-gradient(135deg, #059669, #34d399)', boxShadow: '0 6px 24px rgba(52,211,153,0.28)' }}
                   >
                     <motion.div className="absolute inset-0 pointer-events-none"
-                      style={{ background: 'linear-gradient(108deg, transparent 28%, rgba(255,255,255,0.18) 50%, transparent 72%)' }}
+                      style={{ background: `linear-gradient(108deg, transparent 28%, ${alpha(hex.neutral.white, 0.18)} 50%, transparent 72%)` }}
                       animate={{ x: ['-120%', '120%'] }}
                       transition={{ duration: 2.5, repeat: Infinity, ease: 'linear', repeatDelay: 2 }} />
                     <span className="relative flex items-center gap-2">Ver mi Liga <FiArrowRight size={13} /></span>
@@ -240,7 +242,7 @@ export default function CreateLeaguePage() {
             style={{
               background: 'linear-gradient(145deg, rgba(2,8,24,0.98), rgba(4,14,36,0.97))',
               border: '1px solid rgba(34,211,238,0.14)',
-              boxShadow: '0 20px 60px rgba(0,0,0,0.50)',
+              boxShadow: `0 20px 60px ${alpha(hex.neutral.black, 0.50)}`,
             }}>
             <div className="absolute inset-x-0 top-0 h-px"
               style={{ background: 'linear-gradient(90deg, transparent, rgba(34,211,238,0.65), transparent)' }} />
@@ -347,7 +349,7 @@ export default function CreateLeaguePage() {
                     type="button" onClick={() => router.back()}
                     whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.97 }}
                     className="flex-1 py-3 rounded-xl text-sm font-black text-orionix-text-secondary flex items-center justify-center gap-2"
-                    style={{ border: '1px solid rgba(255,255,255,0.07)', background: 'rgba(255,255,255,0.02)' }}
+                    style={{ border: `1px solid ${alpha(hex.neutral.white, 0.07)}`, background: alpha(hex.neutral.white, 0.02) }}
                   >
                     <FiArrowLeft size={13} /> Cancelar
                   </motion.button>
@@ -356,10 +358,10 @@ export default function CreateLeaguePage() {
                     whileHover={{ scale: 1.02, boxShadow: '0 12px 36px rgba(0,210,185,0.40)' }}
                     whileTap={{ scale: 0.97 }}
                     className="flex-1 py-3 rounded-xl text-sm font-black text-white flex items-center justify-center gap-2 disabled:opacity-50 relative overflow-hidden"
-                    style={{ background: 'linear-gradient(135deg, #1B5E20, #388E3C)', boxShadow: '0 6px 24px rgba(76,175,80,0.30)' }}
+                    style={{ background: `linear-gradient(135deg, ${hex.green.dark}, ${hex.green.hover})`, boxShadow: `0 6px 24px ${alphaOf('green', 0.30)}` }}
                   >
                     <motion.div className="absolute inset-0 pointer-events-none"
-                      style={{ background: 'linear-gradient(108deg, transparent 28%, rgba(255,255,255,0.18) 50%, transparent 72%)' }}
+                      style={{ background: `linear-gradient(108deg, transparent 28%, ${alpha(hex.neutral.white, 0.18)} 50%, transparent 72%)` }}
                       animate={{ x: ['-120%', '120%'] }}
                       transition={{ duration: 2.5, repeat: Infinity, ease: 'linear', repeatDelay: 2 }} />
                     <span className="relative flex items-center gap-2">

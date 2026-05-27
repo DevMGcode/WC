@@ -3,6 +3,7 @@
 import { usePathname } from 'next/navigation';
 import { useState, useEffect, ReactNode } from 'react';
 import { useSidebar } from '@/contexts/SidebarContext';
+import { hex } from '@/lib/design/tokens';
 
 const AUTH_ROUTES = ['/login', '/register', '/onboarding', '/privacy'];
 
@@ -31,7 +32,7 @@ export function AppShell({ children }: { children: ReactNode }) {
         paddingLeft: pl,
         transition: 'padding-left 0.38s cubic-bezier(0.22,1,0.36,1)',
         minHeight: '100dvh',
-        backgroundColor: isAuth ? undefined : '#06110A',
+        backgroundColor: isAuth ? undefined : hex.bg.primary,
       }}
     >
       {children}

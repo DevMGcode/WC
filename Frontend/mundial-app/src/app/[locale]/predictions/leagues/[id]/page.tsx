@@ -10,6 +10,8 @@ import {
   FiShield, FiUsers, FiCopy, FiCheck, FiArrowLeft,
   FiLogOut, FiTrash2, FiRepeat, FiAlertCircle,
 } from 'react-icons/fi';
+import { hex } from '@/lib/design/tokens';
+import { alpha, alphaOf } from '@/lib/design/effects';
 
 /* ── GlowBar ── */
 const GlowBar = ({ value, max = 100, color, height = 4 }: {
@@ -17,7 +19,7 @@ const GlowBar = ({ value, max = 100, color, height = 4 }: {
 }) => {
   const pct = Math.min(100, (value / Math.max(max, 1)) * 100);
   return (
-    <div className="relative w-full rounded-full overflow-hidden" style={{ height, background: 'rgba(255,255,255,0.05)' }}>
+    <div className="relative w-full rounded-full overflow-hidden" style={{ height, background: alpha(hex.neutral.white, 0.05) }}>
       <motion.div
         className="h-full rounded-full"
         style={{ background: `linear-gradient(90deg, ${color}80, ${color})`, boxShadow: `0 0 8px ${color}80` }}
@@ -31,6 +33,7 @@ const GlowBar = ({ value, max = 100, color, height = 4 }: {
 
 const MEDALS = ['🥇', '🥈', '🥉'];
 const MEDAL_COLORS = ['#fbbf24', '#94a3b8', '#f97316'];
+const ROW_FALLBACK_COLOR = alpha(hex.neutral.white, 0.20);
 
 export default function LeagueDetailPage() {
   const params = useParams();
@@ -116,7 +119,7 @@ export default function LeagueDetailPage() {
   if (loading) {
     return (
       <div className="flex items-center justify-center h-screen"
-        style={{ background: 'radial-gradient(ellipse at 30% 50%, #050D07 0%, #08170D 42%, #06110A 100%)' }}>
+        style={{ background: `radial-gradient(ellipse at 30% 50%, ${hex.bg.primary} 0%, ${hex.bg.secondary} 42%, ${hex.bg.primary} 100%)` }}>
         <div className="flex flex-col items-center gap-4">
           <motion.div className="w-12 h-12 rounded-full border-2 border-green-500/20 border-t-green-500"
             animate={{ rotate: 360 }} transition={{ duration: 0.9, repeat: Infinity, ease: 'linear' }} />
@@ -129,7 +132,7 @@ export default function LeagueDetailPage() {
   if (!league) {
     return (
       <div className="flex items-center justify-center h-screen"
-        style={{ background: 'radial-gradient(ellipse at 30% 50%, #050D07 0%, #08170D 42%, #06110A 100%)' }}>
+        style={{ background: `radial-gradient(ellipse at 30% 50%, ${hex.bg.primary} 0%, ${hex.bg.secondary} 42%, ${hex.bg.primary} 100%)` }}>
         <div className="text-center">
           <p className="text-orionix-text-secondary mb-4">Liga no encontrada</p>
           <button onClick={() => router.back()}
@@ -183,7 +186,7 @@ export default function LeagueDetailPage() {
           style={{
             background: 'linear-gradient(145deg, rgba(2,8,24,0.98), rgba(4,14,36,0.97))',
             border: '1px solid rgba(34,211,238,0.14)',
-            boxShadow: '0 20px 60px rgba(0,0,0,0.50)',
+            boxShadow: `0 20px 60px ${alpha(hex.neutral.black, 0.50)}`,
           }}
         >
           <div className="absolute inset-x-0 top-0 h-px"
@@ -215,7 +218,7 @@ export default function LeagueDetailPage() {
             <div className="grid grid-cols-3 gap-2 mb-4">
               {statChips.map(({ label, value, color }) => (
                 <div key={label} className="relative overflow-hidden rounded-xl p-3 text-center"
-                  style={{ background: 'rgba(6,17,10,0.80)', border: `1px solid ${color}22` }}>
+                  style={{ background: alpha(hex.bg.primary, 0.80), border: `1px solid ${color}22` }}>
                   <div className="absolute inset-x-0 top-0 h-px"
                     style={{ background: `linear-gradient(90deg, transparent, ${color}60, transparent)` }} />
                   <p className="text-xl font-black" style={{ color, textShadow: `0 0 14px ${color}80` }}>{value}</p>
@@ -269,7 +272,7 @@ export default function LeagueDetailPage() {
           style={{
             background: 'linear-gradient(145deg, rgba(2,8,24,0.98), rgba(4,14,36,0.97))',
             border: '1px solid rgba(251,191,36,0.12)',
-            boxShadow: '0 20px 60px rgba(0,0,0,0.50)',
+            boxShadow: `0 20px 60px ${alpha(hex.neutral.black, 0.50)}`,
           }}
         >
           <div className="absolute inset-x-0 top-0 h-px"
@@ -300,7 +303,7 @@ export default function LeagueDetailPage() {
 
                 {ranking.map((player: any, idx: number) => {
                   const isMe     = player.userId === userId;
-                  const rowColor = isMe ? '#22d3ee' : (MEDAL_COLORS[idx] ?? 'rgba(255,255,255,0.20)');
+                  const rowColor = isMe ? '#22d3ee' : (MEDAL_COLORS[idx] ?? ROW_FALLBACK_COLOR);
                   return (
                     <motion.div
                       key={player.userId}
@@ -309,8 +312,8 @@ export default function LeagueDetailPage() {
                       transition={{ delay: 0.12 + idx * 0.05 }}
                       className="relative overflow-hidden rounded-xl"
                       style={{
-                        background: isMe ? 'rgba(34,211,238,0.06)' : (idx < 3 ? 'rgba(251,191,36,0.03)' : 'rgba(255,255,255,0.02)'),
-                        border: isMe ? '1px solid rgba(34,211,238,0.20)' : '1px solid rgba(255,255,255,0.04)',
+                        background: isMe ? 'rgba(34,211,238,0.06)' : (idx < 3 ? 'rgba(251,191,36,0.03)' : alpha(hex.neutral.white, 0.02)),
+                        border: isMe ? '1px solid rgba(34,211,238,0.20)' : `1px solid ${alpha(hex.neutral.white, 0.04)}`,
                       }}
                     >
                       {isMe && <div className="absolute inset-x-0 top-0 h-px"
@@ -354,7 +357,7 @@ export default function LeagueDetailPage() {
             style={{
               background: 'linear-gradient(145deg, rgba(2,8,24,0.98), rgba(20,4,4,0.97))',
               border: '1px solid rgba(239,68,68,0.14)',
-              boxShadow: '0 20px 60px rgba(0,0,0,0.50)',
+              boxShadow: `0 20px 60px ${alpha(hex.neutral.black, 0.50)}`,
             }}
           >
             <div className="absolute inset-x-0 top-0 h-px"
@@ -374,11 +377,11 @@ export default function LeagueDetailPage() {
                     value={selectedNewOwnerId}
                     onChange={e => setSelectedNewOwnerId(e.target.value)}
                     className="w-full px-3 py-2.5 rounded-xl text-sm text-orionix-text-secondary font-medium"
-                    style={{ background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.10)', outline: 'none' }}
+                    style={{ background: alpha(hex.neutral.white, 0.04), border: `1px solid ${alpha(hex.neutral.white, 0.10)}`, outline: 'none' }}
                   >
-                    <option value="" style={{ background: '#06110A' }}>Selecciona nuevo propietario…</option>
+                    <option value="" style={{ background: hex.bg.primary }}>Selecciona nuevo propietario…</option>
                     {transferableMembers.map((m: any) => (
-                      <option key={m.userId} value={m.userId} style={{ background: '#06110A' }}>
+                      <option key={m.userId} value={m.userId} style={{ background: hex.bg.primary }}>
                         {m.fullName || m.username}
                       </option>
                     ))}
@@ -388,7 +391,7 @@ export default function LeagueDetailPage() {
                     disabled={actionLoading || !selectedNewOwnerId}
                     whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.97 }}
                     className="w-full py-3 rounded-xl text-sm font-black text-white flex items-center justify-center gap-2 disabled:opacity-40"
-                    style={{ background: 'linear-gradient(135deg, #1B5E20, #388E3C)', boxShadow: '0 4px 20px rgba(76,175,80,0.25)' }}
+                    style={{ background: `linear-gradient(135deg, ${hex.green.dark}, ${hex.green.hover})`, boxShadow: `0 4px 20px ${alphaOf('green', 0.25)}` }}
                   >
                     <FiRepeat size={14} />
                     {actionLoading ? 'Transfiriendo…' : 'Transferir Propiedad'}
@@ -433,7 +436,7 @@ export default function LeagueDetailPage() {
             onClick={() => router.back()}
             whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.97 }}
             className="flex-1 py-3 rounded-xl text-sm font-black text-orionix-text-secondary flex items-center justify-center gap-2"
-            style={{ border: '1px solid rgba(255,255,255,0.07)', background: 'rgba(255,255,255,0.02)' }}
+            style={{ border: `1px solid ${alpha(hex.neutral.white, 0.07)}`, background: alpha(hex.neutral.white, 0.02) }}
           >
             <FiArrowLeft size={14} /> Volver
           </motion.button>
@@ -444,8 +447,8 @@ export default function LeagueDetailPage() {
             whileTap={!isOwner ? { scale: 0.97 } : {}}
             className="flex-1 py-3 rounded-xl text-sm font-black flex items-center justify-center gap-2"
             style={{
-              background: isOwner ? 'rgba(255,255,255,0.03)' : 'linear-gradient(135deg, rgba(239,68,68,0.15), rgba(239,68,68,0.08))',
-              border: isOwner ? '1px solid rgba(255,255,255,0.06)' : '1px solid rgba(239,68,68,0.28)',
+              background: isOwner ? alpha(hex.neutral.white, 0.03) : 'linear-gradient(135deg, rgba(239,68,68,0.15), rgba(239,68,68,0.08))',
+              border: isOwner ? `1px solid ${alpha(hex.neutral.white, 0.06)}` : '1px solid rgba(239,68,68,0.28)',
               color: isOwner ? 'rgba(100,116,139,0.50)' : '#f87171',
               opacity: isOwner ? 0.55 : 1,
             }}

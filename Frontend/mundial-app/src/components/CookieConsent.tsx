@@ -3,6 +3,8 @@
 import { useState, useEffect } from 'react';
 import { usePathname } from 'next/navigation';
 import { motion, AnimatePresence } from 'framer-motion';
+import { hex } from '@/lib/design/tokens';
+import { alpha, alphaOf } from '@/lib/design/effects';
 
 const STORAGE_KEY = 'orionix_cookie_consent';
 
@@ -56,12 +58,12 @@ export default function CookieConsent() {
         >
           <div className="relative rounded-2xl overflow-hidden"
             style={{
-              background: 'linear-gradient(145deg, rgba(6,17,10,0.98), rgba(11,27,18,0.97))',
-              border: '1px solid rgba(76,175,80,0.18)',
-              boxShadow: '0 20px 60px rgba(0,0,0,0.60)',
+              background: `linear-gradient(145deg, ${alpha(hex.bg.primary, 0.98)}, ${alpha(hex.bg.secondary, 0.97)})`,
+              border: `1px solid ${alphaOf('green', 0.18)}`,
+              boxShadow: `0 20px 60px ${alpha(hex.neutral.black, 0.60)}`,
             }}>
             <div className="absolute inset-x-0 top-0 h-px"
-              style={{ background: 'linear-gradient(90deg, transparent, rgba(76,175,80,0.5), transparent)' }} />
+              style={{ background: `linear-gradient(90deg, transparent, ${alphaOf('green', 0.5)}, transparent)` }} />
 
             <div className="p-4">
               <div className="flex items-start gap-3 mb-3">
@@ -84,7 +86,7 @@ export default function CookieConsent() {
                   onClick={handleReject}
                   whileTap={{ scale: 0.96 }}
                   className="flex-1 py-2 rounded-xl text-xs font-black text-orionix-text-muted"
-                  style={{ background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.08)' }}
+                  style={{ background: alpha(hex.neutral.white, 0.04), border: `1px solid ${alpha(hex.neutral.white, 0.08)}` }}
                 >
                   Rechazar
                 </motion.button>
@@ -92,7 +94,7 @@ export default function CookieConsent() {
                   onClick={handleAccept}
                   whileTap={{ scale: 0.96 }}
                   className="flex-1 py-2 rounded-xl text-xs font-black text-white"
-                  style={{ background: 'linear-gradient(135deg, #1B5E20, #388E3C)', boxShadow: '0 4px 16px rgba(76,175,80,0.25)' }}
+                  style={{ background: `linear-gradient(135deg, ${hex.green.dark}, ${hex.green.hover})`, boxShadow: `0 4px 16px ${alphaOf('green', 0.25)}` }}
                 >
                   Aceptar
                 </motion.button>
