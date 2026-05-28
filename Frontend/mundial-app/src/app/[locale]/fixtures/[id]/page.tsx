@@ -1,15 +1,5 @@
 'use client';
 
-/**
- * Fixture detail page — migrated to the design-token system.
- *
- * Pattern: identical to fixtures/page.tsx. Every visual value comes from
- * `tokens.ts` (`hex.*`) and `effects.ts` (`alpha`, `alphaOf`, `borders`,
- * `shadows`). Local `DarkCard` was kept as a thin wrapper because it ties
- * an accent color to a `BrandColor`, which is a domain concept of THIS page
- * (each prediction state has its own accent).
- */
-
 import React, { useState, useEffect } from 'react';
 import { Header } from '@/components/Navigation';
 import { FixtureCard } from '@/components/Cards';
@@ -22,11 +12,25 @@ import { predictionService } from '@/services/predictions';
 import { useAuth } from '@/contexts/AuthContext';
 import {
   FiTarget, FiZap, FiCheck, FiX, FiEdit2, FiArrowLeft,
-  FiMapPin, FiAlertCircle,
+  FiMapPin, FiAlertCircle, FiList, FiBarChart2, FiUsers, FiRepeat,
 } from 'react-icons/fi';
 
 import { hex, type BrandColor } from '@/lib/design/tokens';
 import { alpha, alphaOf, borders, gradients } from '@/lib/design/effects';
+
+import LineupsTab    from './_components/LineupsTab';
+import StatisticsTab from './_components/StatisticsTab';
+import PlayersTab    from './_components/PlayersTab';
+import HeadToHeadTab from './_components/HeadToHeadTab';
+
+type DetailTab = 'lineups' | 'stats' | 'players' | 'h2h';
+
+const DETAIL_TABS: { key: DetailTab; label: string; icon: React.ReactNode }[] = [
+  { key: 'lineups',  label: 'Alineaciones', icon: <FiList    size={12} /> },
+  { key: 'stats',    label: 'Estadísticas', icon: <FiBarChart2 size={12} /> },
+  { key: 'players',  label: 'Jugadores',    icon: <FiUsers   size={12} /> },
+  { key: 'h2h',      label: 'H2H',          icon: <FiRepeat  size={12} /> },
+];
 
 /* ── Scoring rules config — all colors driven by tokens ── */
 const SCORE_RULES: { pts: number; label: string; sublabel: string; color: BrandColor; icon: React.ReactNode }[] = [
@@ -79,6 +83,7 @@ export default function FixtureDetailPage({ params }: { params: { id: string } }
   const [submitting,  setSubmitting]  = useState(false);
   const [predError,   setPredError]   = useState('');
   const [predSuccess, setPredSuccess] = useState(false);
+  const [detailTab,   setDetailTab]   = useState<DetailTab>('lineups');
 
   useEffect(() => {
     const loadFixture = async () => {
@@ -593,6 +598,63 @@ export default function FixtureDetailPage({ params }: { params: { id: string } }
             </div>
           </DarkCard>
         )}
+
+        {/* ── DETAIL TABS (Lineups / Stats / Players / H2H) ── */}
+        <DarkCard accent="green" delay={0.28} className="mb-4">
+          <div className="p-4">
+            {/* Tab bar */}
+            <div className="flex gap-1 mb-4 p-1 rounded-xl" style={{ background: alpha(hex.neutral.white, 0.03), border: `1px solid ${alpha(hex.neutral.white, 0.05)}` }}>
+              {DETAIL_TABS.map(tab => {
+                const active = detailTab === tab.key;
+                return (
+                  <motion.button
+                    key={tab.key}
+                    onClick={() => setDetailTab(tab.key)}
+                    whileTap={{ scale: 0.96 }}
+                    className="flex-1 flex items-center justify-center gap-1 py-2 rounded-lg text-[9px] font-black tracking-wide uppercase transition-all"
+                    style={{
+                      background: active ? `${hex.green.bright}15` : 'transparent',
+                      border: `1px solid ${active ? `${hex.green.bright}30` : 'transparent'}`,
+                      color: active ? hex.green.bright : alpha(hex.text.secondary, 0.4),
+                    }}
+                  >
+                    {tab.icon}
+                    <span className="hidden sm:inline">{tab.label}</span>
+                  </motion.button>
+                );
+              })}
+            </div>
+
+            {/* Tab content */}
+            <AnimatePresence mode="wait">
+              <motion.div
+                key={detailTab}
+                initial={{ opacity: 0, y: 6 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -4 }}
+                transition={{ duration: 0.2 }}
+              >
+                {detailTab === 'lineups'  && <LineupsTab    fixtureId={fixture.id} />}
+                {detailTab === 'stats'    && <StatisticsTab fixtureId={fixture.id} />}
+                {detailTab === 'players'  && (
+                  <PlayersTab
+                    fixtureId={fixture.id}
+                    homeTeamId={fixture.homeTeam?.id ?? 0}
+                    awayTeamId={fixture.awayTeam?.id ?? 0}
+                  />
+                )}
+                {detailTab === 'h2h'      && (
+                  <HeadToHeadTab
+                    homeTeamId={fixture.homeTeam?.id ?? 0}
+                    awayTeamId={fixture.awayTeam?.id ?? 0}
+                    homeTeamName={fixture.homeTeam?.name ?? ''}
+                    awayTeamName={fixture.awayTeam?.name ?? ''}
+                  />
+                )}
+              </motion.div>
+            </AnimatePresence>
+          </div>
+        </DarkCard>
 
         {/* ── BOTTOM BUTTONS ── */}
         <div className="flex gap-3">

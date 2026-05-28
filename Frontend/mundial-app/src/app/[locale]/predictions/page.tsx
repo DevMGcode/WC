@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import Image from 'next/image';
 import { useRouter, useParams } from 'next/navigation';
 import { useT } from '@/hooks/useT';
@@ -12,8 +12,16 @@ import {
 } from 'react-icons/fi';
 import { Header } from '@/components/Navigation';
 import ShareButton from '@/components/ShareButton';
-import { getUserPredictions, getFixtureById, getCurrentTournament } from '@/services/publicTournament';
-import { scoringService, leagueService } from '@/services/predictions';
+import {
+  useCurrentTournament,
+  useTournamentFixtures,
+  useUserPredictions,
+  useScoreHistory,
+  useGlobalRanking,
+  useUserLeaguesWithRankings,
+} from '@/hooks/useTournamentData';
+import { RANKING_PAGE } from '@/constants/tournament';
+import { fmtShortDate } from '@/utils/format';
 import { useAuth } from '@/contexts/AuthContext';
 import TourButton from '@/components/Tour/TourButton';
 import { getTourSteps } from '@/components/Tour/tourSteps';
@@ -174,9 +182,7 @@ const PredictionCard = ({ pred, index, t }: { pred: any; index: number; t: (key:
         <div className="flex items-center gap-1.5">
           <FiClock size={9} style={{ color: 'rgba(100,116,139,0.55)' }} />
           <span className="text-[9px] font-bold tracking-widest uppercase" style={{ color: hex.text.muted }}>
-            {fixture.kickoffAt
-              ? new Date(fixture.kickoffAt).toLocaleDateString('es', { day: '2-digit', month: 'short' })
-              : '—'}
+            {fixture.kickoffAt ? fmtShortDate(fixture.kickoffAt) : '—'}
           </span>
         </div>
         <div className="flex items-center gap-2">
@@ -264,111 +270,92 @@ export default function PredictionsPage() {
   const locale = (params?.locale as string) ?? 'es';
   const { user } = useAuth();
   const [activeTab,       setActiveTab]       = useState<'MY_PREDICTIONS' | 'RANKING' | 'LEAGUES'>('MY_PREDICTIONS');
-  const [myPredictions,   setMyPredictions]   = useState<any[]>([]);
-  const [globalRanking,   setGlobalRanking]   = useState<any[]>([]);
-  const [myLeagues,       setMyLeagues]       = useState<any[]>([]);
-  const [loading,         setLoading]         = useState(true);
   const [showLeagueModal, setShowLeagueModal] = useState(false);
-  const [tournamentId,    setTournamentId]    = useState<number>(2);
-  const [stats, setStats] = useState({ total: 0, finished: 0, correct: 0 });
 
-  useEffect(() => {
-    getCurrentTournament().then((tournament) => { if (tournament?.id) setTournamentId(tournament.id); });
-  }, []);
+  // ── TanStack Query — sin useEffect ni N+1 ──
+  const userId = user ? Number(user.id) : null;
+  const { data: tournament }               = useCurrentTournament();
+  const tournamentId                       = tournament?.id ?? null;
 
-  useEffect(() => {
-    if (user) loadData();
-  }, [activeTab, user, tournamentId]);
+  // 1 fetch para todos los fixtures (elimina N+1 de getFixtureById)
+  const { data: allFixtures = [], isLoading: fixturesLoading } = useTournamentFixtures(tournamentId);
+  const { data: rawPredictions = [], isLoading: predsLoading } = useUserPredictions(userId);
+  const { data: scoreHistory = [], isLoading: histLoading }   = useScoreHistory(userId, tournamentId);
+  const { data: rankingItems = [], isLoading: rankLoading }   = useGlobalRanking(tournamentId, RANKING_PAGE.predictions);
+  const { data: leaguesData = [], isLoading: leaguesLoading } = useUserLeaguesWithRankings(userId);
 
-  const loadData = async () => {
-    try {
-      setLoading(true);
-      const userId = Number(user?.id ?? 0);
-      if (!userId) return;
+  const loading =
+    activeTab === 'MY_PREDICTIONS' ? fixturesLoading || predsLoading || histLoading :
+    activeTab === 'RANKING'        ? rankLoading :
+    leaguesLoading;
 
-      if (activeTab === 'MY_PREDICTIONS') {
-        const rawPredictions = await getUserPredictions(userId);
-        const scoreMap: Record<number, { pointsAwarded: number; ruleCode: string }> = {};
-        try {
-          const histRes = await fetch(`/api/v1/public/scores/history/${tournamentId}?userId=${userId}`);
-          if (histRes.ok) {
-            const histData = await histRes.json();
-            const scores: any[] = histData?.data ?? [];
-            scores.forEach((s: any) => {
-              scoreMap[s.predictionId] = { pointsAwarded: s.pointsAwarded ?? 0, ruleCode: s.ruleCode ?? 'PENDING' };
-            });
-          }
-        } catch { /* silently ignore */ }
+  // ── Derived state via useMemo — sin setState ──
 
-        const predictions = await Promise.all(
-          rawPredictions.map(async (pred: any) => {
-            const fixture = await getFixtureById(pred.fixtureId);
-            const score = scoreMap[pred.id];
-            const pointsAwarded = score?.pointsAwarded ?? 0;
-            const ruleCode      = score?.ruleCode ?? 'PENDING';
-            const resultStatus: ResultStatus =
-              ruleCode === 'EXACT_SCORE' ? 'EXACT' :
-              ruleCode === 'WINNER_ONLY' ? 'CORRECT' :
-              ruleCode === 'PENDING'     ? 'PENDING' : 'WRONG';
+  // Mapa fixtureId → fixture para join O(1)
+  const fixtureMap = useMemo(() => {
+    const m: Record<number, any> = {};
+    (allFixtures as any[]).forEach(f => { m[f.id] = f; });
+    return m;
+  }, [allFixtures]);
 
-            return {
-              id: pred.id,
-              fixture: fixture ? {
-                id: fixture.id, homeTeam: fixture.homeTeam, awayTeam: fixture.awayTeam,
-                homeScore: fixture.homeScore, awayScore: fixture.awayScore,
-                kickoffAt: fixture.kickoffAt, status: fixture.status,
-              } : null,
-              predictedHomeScore: pred.predictedHomeScore,
-              predictedAwayScore: pred.predictedAwayScore,
-              pointsAwarded, resultStatus, submittedAt: pred.submittedAt,
-            };
-          })
-        );
+  // Mapa predictionId → score entry
+  const scoreMap = useMemo(() => {
+    const m: Record<number, { pointsAwarded: number; ruleCode: string }> = {};
+    (scoreHistory as any[]).forEach((s: any) => {
+      m[s.predictionId] = { pointsAwarded: s.pointsAwarded ?? 0, ruleCode: s.ruleCode ?? 'PENDING' };
+    });
+    return m;
+  }, [scoreHistory]);
 
-        const valid    = predictions.filter(p => p.fixture !== null);
-        const finished = valid.filter(p => p.fixture?.status === 'FINISHED');
-        const correct  = finished.filter(p =>
-          p.predictedHomeScore === p.fixture?.homeScore && p.predictedAwayScore === p.fixture?.awayScore
-        );
-        setMyPredictions(valid);
-        setStats({ total: valid.length, finished: finished.length, correct: correct.length });
+  // Predicciones enriquecidas con fixture + score (O(n), no N fetches)
+  const myPredictions = useMemo(() =>
+    (rawPredictions as any[])
+      .map((pred: any) => {
+        const fixture = fixtureMap[pred.fixtureId];
+        if (!fixture) return null;
+        const score         = scoreMap[pred.id];
+        const pointsAwarded = score?.pointsAwarded ?? 0;
+        const ruleCode      = score?.ruleCode ?? 'PENDING';
+        const resultStatus: ResultStatus =
+          ruleCode === 'EXACT_SCORE' ? 'EXACT' :
+          ruleCode === 'WINNER_ONLY' ? 'CORRECT' :
+          ruleCode === 'PENDING'     ? 'PENDING' : 'WRONG';
+        return {
+          id: pred.id,
+          fixture: {
+            id: fixture.id, homeTeam: fixture.homeTeam, awayTeam: fixture.awayTeam,
+            homeScore: fixture.homeScore, awayScore: fixture.awayScore,
+            kickoffAt: fixture.kickoffAt, status: fixture.status,
+          },
+          predictedHomeScore: pred.predictedHomeScore,
+          predictedAwayScore: pred.predictedAwayScore,
+          pointsAwarded, resultStatus, submittedAt: pred.submittedAt,
+        };
+      })
+      .filter(Boolean),
+    [rawPredictions, fixtureMap, scoreMap]
+  );
 
-      } else if (activeTab === 'RANKING') {
-        const response = await scoringService.getGlobalRanking(tournamentId, { page: 0, pageSize: 10 });
-        const items: any[] = response?.data ?? [];
-        setGlobalRanking(items.map((score: any, idx: number) => ({
-          rank: score.rankPosition ?? idx + 1,
-          user: score.fullName || score.username,
-          points: score.totalPoints ?? 0,
-          predictions: score.matchesScored ?? 0,
-        })));
+  const globalRanking = useMemo(() =>
+    (rankingItems as any[]).map((score: any, idx: number) => ({
+      rank:        score.rankPosition ?? idx + 1,
+      user:        score.fullName || score.username,
+      points:      score.totalPoints ?? 0,
+      predictions: score.matchesScored ?? 0,
+    })),
+    [rankingItems]
+  );
 
-      } else if (activeTab === 'LEAGUES') {
-        const leagues = await leagueService.getUserLeagues(userId);
-        const leaguesWithRanking = await Promise.all(
-          leagues.map(async (league: any) => {
-            try {
-              const ranking = await leagueService.getLeagueRanking(league.id);
-              const myLeagueScore = ranking.find((r: any) => Number(r.userId) === userId);
-              const leader = ranking[0];
-              return {
-                id: league.id, name: league.name, code: league.code,
-                memberCount: league.memberCount, maxMembers: league.maxMembers,
-                myRank: myLeagueScore?.rankPosition || 0,
-                myPoints: myLeagueScore?.userScore?.totalPoints || 0,
-                leader: { name: leader?.userId || 'N/A', points: leader?.userScore?.totalPoints || 0 },
-              };
-            } catch { return null; }
-          })
-        );
-        setMyLeagues(leaguesWithRanking.filter(Boolean));
-      }
-    } catch (error) {
-      console.error('Error loading data:', error);
-    } finally {
-      setLoading(false);
-    }
-  };
+  const myLeagues = leaguesData as any[];
+
+  const stats = useMemo(() => {
+    const valid    = myPredictions;
+    const finished = valid.filter((p: any) => p?.fixture?.status === 'FINISHED');
+    const correct  = finished.filter((p: any) =>
+      p?.predictedHomeScore === p?.fixture?.homeScore && p?.predictedAwayScore === p?.fixture?.awayScore
+    );
+    return { total: valid.length, finished: finished.length, correct: correct.length };
+  }, [myPredictions]);
 
   const accuracy = stats.finished > 0 ? Math.round((stats.correct / stats.finished) * 100) : 0;
 

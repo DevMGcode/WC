@@ -1,6 +1,7 @@
 import React from 'react';
 import { Team } from '@/types';
 import Image from 'next/image';
+import { fmtTime, fmtShortDate } from '@/utils/format';
 
 interface TeamCardProps {
   team: Team;
@@ -98,14 +99,6 @@ export const FixtureCard: React.FC<FixtureCardProps> = ({
   const isLive = status === 'LIVE';
   const isFinished = status === 'FINISHED';
 
-  const formatTime = (date: Date) => {
-    return new Date(date).toLocaleTimeString('es-ES', { hour: '2-digit', minute: '2-digit' });
-  };
-
-  const formatDate = (date: Date) => {
-    return new Date(date).toLocaleDateString('es-ES', { month: 'short', day: 'numeric' });
-  };
-
   return (
     <div
       className={`rounded-xl overflow-hidden cursor-pointer transition-all duration-300 hover:shadow-xl ${
@@ -119,7 +112,7 @@ export const FixtureCard: React.FC<FixtureCardProps> = ({
       }`}>
         {isLive && '🔴 EN VIVO'}
         {isFinished && 'FINALIZADO'}
-        {status === 'SCHEDULED' && `${formatDate(kickoffAt)} ${formatTime(kickoffAt)}`}
+        {status === 'SCHEDULED' && `${fmtShortDate(kickoffAt)} ${fmtTime(kickoffAt)}`}
         {status === 'POSTPONED' && 'POSPUESTO'}
       </div>
 
