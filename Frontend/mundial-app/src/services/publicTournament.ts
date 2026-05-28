@@ -215,3 +215,22 @@ export async function getUserPredictions(userId: number): Promise<any[]> {
     return [];
   }
 }
+
+// ── Scores (public) ─────────────────────────────────────────────────────────
+
+export async function getUserScore(userId: number, tournamentId: number): Promise<any> {
+  try {
+    return await request<any>(`/scores/user/${tournamentId}`, { userId });
+  } catch {
+    return null;
+  }
+}
+
+export async function getScoreHistory(userId: number, tournamentId: number): Promise<any[]> {
+  try {
+    const response = await request<any>(`/scores/history/${tournamentId}`, { userId });
+    return Array.isArray(response) ? response : (response as any)?.data ?? [];
+  } catch {
+    return [];
+  }
+}

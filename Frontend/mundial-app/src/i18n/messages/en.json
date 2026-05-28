@@ -4,11 +4,23 @@
     "home": "Home",
     "calendar": "Calendar",
     "groups": "Groups",
+    "scorers": "Scorers",
     "predictions": "Predictions",
     "admin": "Admin",
     "profile": "Profile",
     "online": "Online",
     "live": "Live"
+  },
+  "scorers": {
+    "title": "Top Scorers",
+    "subtitle": "Tournament statistics · World Cup 2026",
+    "tabs": {
+      "goals": "Top Scorers",
+      "assists": "Top Assists"
+    },
+    "noData": "No data available",
+    "noDataSub": "Stats are updated during the tournament",
+    "others": "Ranking"
   },
   "common": {
     "save": "Save",

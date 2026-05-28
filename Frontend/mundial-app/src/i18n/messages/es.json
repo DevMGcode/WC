@@ -4,11 +4,23 @@
     "home": "Inicio",
     "calendar": "Calendario",
     "groups": "Grupos",
+    "scorers": "Goleadores",
     "predictions": "Porras",
     "admin": "Admin",
     "profile": "Perfil",
     "online": "En línea",
     "live": "En vivo"
+  },
+  "scorers": {
+    "title": "Goleadores",
+    "subtitle": "Estadísticas del torneo · Mundial 2026",
+    "tabs": {
+      "goals": "Goleadores",
+      "assists": "Asistencias"
+    },
+    "noData": "Sin datos disponibles",
+    "noDataSub": "Los datos se actualizan durante el torneo",
+    "others": "Clasificación"
   },
   "common": {
     "save": "Guardar",

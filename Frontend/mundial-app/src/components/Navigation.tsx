@@ -1,11 +1,12 @@
 'use client';
 
-import React, { useEffect, useState, useRef } from 'react';
+import React, { useEffect, useState, useRef, useCallback } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
 import { usePathname } from 'next/navigation';
+import { useQueryClient } from '@tanstack/react-query';
 import {
-  FiHome, FiCalendar, FiTarget, FiTrendingUp,
+  FiHome, FiCalendar, FiTarget, FiTrendingUp, FiAward,
   FiSettings, FiUser, FiChevronRight, FiZap, FiChevronUp,
 } from 'react-icons/fi';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -14,6 +15,16 @@ import { useSidebar } from '@/contexts/SidebarContext';
 import { useT } from '@/hooks/useT';
 import { hex } from '@/lib/design/tokens';
 import { alpha, alphaOf } from '@/lib/design/effects';
+import {
+  getCurrentTournament,
+  getAllFixtures,
+  getTournamentGroups,
+  getTournamentFixtures,
+} from '@/services/publicTournament';
+import { QUERY_KEYS } from '@/hooks/useTournamentData';
+import { STALE } from '@/constants/tournament';
+
+const fetchJson = (url: string) => fetch(url).then(r => r.ok ? r.json() : null).then(d => d?.data ?? []);
 
 interface NavItem {
   label: string;
@@ -30,7 +41,8 @@ const baseNavConfig = [
   { key: 'home',        href: '/',            icon: <FiHome size={15} />,       accentHex: hex.green.bright, glowRgba: alphaOf('green', 0.55),         bgRgba: alphaOf('green', 0.10) },
   { key: 'calendar',    href: '/fixtures',    icon: <FiCalendar size={15} />,   accentHex: hex.green.soft,   glowRgba: alpha(hex.green.soft, 0.55),    bgRgba: alpha(hex.green.soft, 0.10) },
   { key: 'groups',      href: '/groups',      icon: <FiTarget size={15} />,     accentHex: hex.green.hover,  glowRgba: alpha(hex.green.hover, 0.55),   bgRgba: alpha(hex.green.hover, 0.10) },
-  { key: 'predictions', href: '/predictions', icon: <FiTrendingUp size={15} />, accentHex: hex.gold.base,    glowRgba: alpha(hex.gold.base, 0.55),     bgRgba: alphaOf('gold', 0.10) },
+  { key: 'scorers',     href: '/scorers',     icon: <FiAward size={15} />,      accentHex: hex.gold.base,    glowRgba: alpha(hex.gold.base, 0.55),     bgRgba: alphaOf('gold', 0.10) },
+  { key: 'predictions', href: '/predictions', icon: <FiTrendingUp size={15} />, accentHex: hex.green.muted,  glowRgba: alpha(hex.green.muted, 0.55),   bgRgba: alpha(hex.green.muted, 0.10) },
 ];
 
 /* ── Active orb glow behind selected item ── */
@@ -79,17 +91,76 @@ const NavTooltip = ({ label, accentHex, glowRgba }: { label: string; accentHex: 
    NAVIGATION COMPONENT
 ══════════════════════════════════════════════════════════ */
 export const Navigation: React.FC = () => {
-  const pathname  = usePathname();
-  const { user }  = useAuth();
+  const pathname     = usePathname();
+  const { user }     = useAuth();
   const { collapsed, toggle } = useSidebar();
   const { t, locale } = useT();
+  const queryClient  = useQueryClient();
 
   const [mounted,       setMounted]       = useState(false);
   const [hovered,       setHovered]       = useState<string | null>(null);
   const [mobileVisible, setMobileVisible] = useState(true);
   const lastScrollY = useRef(0);
+  /** Rutas cuyo prefetch de datos ya fue lanzado — evita duplicados */
+  const prefetchedRoutes = useRef<Set<string>>(new Set());
 
   useEffect(() => { setMounted(true); }, []);
+
+  /**
+   * Prefetch de datos TanStack Query al hacer hover sobre un nav item.
+   * Si el caché ya tiene el dato fresco (staleTime), no hace nada.
+   */
+  const prefetchRouteData = useCallback(async (originalHref: string) => {
+    if (prefetchedRoutes.current.has(originalHref)) return;
+    prefetchedRoutes.current.add(originalHref);
+
+    try {
+      if (originalHref === '/fixtures') {
+        await queryClient.prefetchQuery({
+          queryKey: QUERY_KEYS.fixtures(),
+          queryFn:  () => getAllFixtures(),
+          staleTime: STALE.scores,
+        });
+      }
+      if (originalHref === '/groups') {
+        const tournament = await queryClient.fetchQuery({
+          queryKey: QUERY_KEYS.tournament,
+          queryFn:  getCurrentTournament,
+          staleTime: STALE.tournament,
+        });
+        if (tournament?.id) {
+          await Promise.all([
+            queryClient.prefetchQuery({
+              queryKey: QUERY_KEYS.groups(tournament.id),
+              queryFn:  () => getTournamentGroups(tournament.id),
+              staleTime: STALE.scores,
+            }),
+            queryClient.prefetchQuery({
+              queryKey: QUERY_KEYS.tournamentFixtures(tournament.id),
+              queryFn:  () => getTournamentFixtures(tournament.id),
+              staleTime: STALE.scores,
+            }),
+          ]);
+        }
+      }
+      if (originalHref === '/scorers') {
+        await Promise.all([
+          queryClient.prefetchQuery({ queryKey: QUERY_KEYS.topScorers, queryFn: () => fetchJson('/api/v1/public/players/topscorers'), staleTime: STALE.scorers }),
+          queryClient.prefetchQuery({ queryKey: QUERY_KEYS.topAssists, queryFn: () => fetchJson('/api/v1/public/players/topassists'), staleTime: STALE.scorers }),
+        ]);
+      }
+      if (originalHref === '/predictions') {
+        await queryClient.prefetchQuery({
+          queryKey: QUERY_KEYS.fixtures(),
+          queryFn:  () => getAllFixtures(),
+          staleTime: STALE.scores,
+        });
+      }
+    } catch {
+      // prefetch silencioso — si falla, la página lo cargará normalmente
+      prefetchedRoutes.current.delete(originalHref);
+    }
+  }, [queryClient]);
 
   /* Mobile auto-hide on scroll-down, reveal on scroll-up */
   useEffect(() => {
@@ -269,8 +340,12 @@ export const Navigation: React.FC = () => {
                 <Link
                   key={item.href}
                   href={item.href}
+                  prefetch={true}
                   className="block"
-                  onMouseEnter={() => setHovered(item.href)}
+                  onMouseEnter={() => {
+                    setHovered(item.href);
+                    prefetchRouteData(item.originalHref);
+                  }}
                   onMouseLeave={() => setHovered(null)}
                 >
                   <motion.div
@@ -457,11 +532,12 @@ export const Navigation: React.FC = () => {
           <div className="absolute inset-x-0 top-0 h-px"
             style={{ background: `linear-gradient(90deg, transparent 5%, ${activeItem?.accentHex ?? hex.green.bright}55 50%, transparent 95%)` }} />
 
-          <div className="grid grid-cols-4 px-2 pt-2 pb-[max(0.6rem,env(safe-area-inset-bottom))]">
+          <div className="grid px-2 pt-2 pb-[max(0.6rem,env(safe-area-inset-bottom))]"
+            style={{ gridTemplateColumns: `repeat(${navItems.length}, 1fr)` }}>
             {navItems.map((item) => {
               const isActive = pathname === item.href || (item.originalHref === '/' && pathname === `/${locale}`);
               return (
-                <Link key={item.href} href={item.href}>
+                <Link key={item.href} href={item.href} prefetch={true}>
                   <motion.div
                     className="relative flex flex-col items-center gap-1 py-2.5 rounded-2xl overflow-hidden"
                     whileTap={{ scale: 0.88 }}

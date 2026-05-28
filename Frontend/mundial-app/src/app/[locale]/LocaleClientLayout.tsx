@@ -1,14 +1,18 @@
 'use client';
 
 import Script from 'next/script';
-import { Navigation } from '@/components/Navigation';
-import { IntroSplash } from '@/components/IntroSplash';
+import dynamic from 'next/dynamic';
 import { AppShell } from '@/components/AppShell';
 import { AuthProvider } from '@/contexts/AuthContext';
 import { SidebarProvider } from '@/contexts/SidebarContext';
 import CookieConsent, { useCookieConsent } from '@/components/CookieConsent';
 import { TourProvider } from '@/contexts/TourContext';
+import QueryProvider from '@/components/QueryProvider';
 
+// Dynamic imports — estos componentes son pesados (framer-motion + lógica)
+// Se cargan en paralelo pero NO bloquean el render inicial de la página
+const Navigation  = dynamic(() => import('@/components/Navigation').then(m => ({ default: m.Navigation })),  { ssr: false });
+const IntroSplash = dynamic(() => import('@/components/IntroSplash').then(m => ({ default: m.IntroSplash })), { ssr: false });
 
 const GA_ID = process.env.NEXT_PUBLIC_GA_ID;
 
@@ -29,18 +33,20 @@ export default function LocaleClientLayout({ children }: { children: React.React
   return (
     <>
       <GAScripts />
-      <AuthProvider>
-        <SidebarProvider>
-          <TourProvider>
-            <IntroSplash />
-            <AppShell>
-              {children}
-            </AppShell>
-            <Navigation />
-            <CookieConsent />
-          </TourProvider>
-        </SidebarProvider>
-      </AuthProvider>
+      <QueryProvider>
+        <AuthProvider>
+          <SidebarProvider>
+            <TourProvider>
+              <IntroSplash />
+              <AppShell>
+                {children}
+              </AppShell>
+              <Navigation />
+              <CookieConsent />
+            </TourProvider>
+          </SidebarProvider>
+        </AuthProvider>
+      </QueryProvider>
     </>
   );
 }
