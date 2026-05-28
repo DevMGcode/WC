@@ -23,11 +23,15 @@ import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import com.mundial2026.backend.tournament.integration.port.ExternalStanding;
+
 import java.time.Instant;
 import java.time.OffsetDateTime;
 import java.time.ZoneOffset;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 
 @Service
@@ -49,15 +53,54 @@ public class FixtureSyncService {
 
     @Transactional
     public SyncResult syncAllTournamentFixtures() {
-        return persist(apiFootballClient.fetchTournamentFixtures());
+        // API-Football exposes the team→group association through /standings,
+        // NOT through /fixtures (where `leagueRound` is the matchday: "Group Stage - 1/2/3").
+        // We fetch standings once and build a team→groupCode map for the whole sync.
+        Map<Long, String> teamToGroup = buildTeamGroupMap();
+        return persist(apiFootballClient.fetchTournamentFixtures(), teamToGroup);
     }
 
     @Transactional
     public SyncResult syncLiveFixtures() {
-        return persist(matchDataPort.fetchLiveMatches());
+        // Live syncs are score-only; we don't need to recompute the group mapping here.
+        return persist(matchDataPort.fetchLiveMatches(), Map.of());
     }
 
-    private SyncResult persist(List<ExternalMatch> matches) {
+    /**
+     * Builds an in-memory map of {@code teamExternalId → groupCode (A, B, ..., L)}
+     * by hitting the /standings endpoint once. Falls back to an empty map if the
+     * call fails so the fixture sync can still proceed.
+     */
+    private Map<Long, String> buildTeamGroupMap() {
+        try {
+            List<ExternalStanding> standings = apiFootballClient.fetchStandings();
+            Map<Long, String> map = new HashMap<>();
+            for (ExternalStanding s : standings) {
+                String groupCode = parseGroupLetter(s.groupName());
+                if (groupCode != null && s.teamId() != null) {
+                    map.put(s.teamId(), groupCode);
+                }
+            }
+            log.info("Built team→group map from /standings: {} teams across {} groups",
+                    map.size(), map.values().stream().distinct().count());
+            return map;
+        } catch (Exception e) {
+            log.warn("Could not fetch standings to build team→group map; fixtures will be saved without group_stage_id. cause={}",
+                    e.getMessage());
+            return Map.of();
+        }
+    }
+
+    /** "Group A" → "A". Returns null for non-group entries (e.g. "Ranking of third-placed teams"). */
+    private String parseGroupLetter(String groupName) {
+        if (groupName == null) return null;
+        String trimmed = groupName.trim();
+        if (!trimmed.toLowerCase().startsWith("group ")) return null;
+        String tail = trimmed.substring("Group ".length()).trim();
+        return tail.isEmpty() ? null : tail.toUpperCase();
+    }
+
+    private SyncResult persist(List<ExternalMatch> matches, Map<Long, String> teamToGroup) {
         Tournament tournament = tournamentRepository.findByCode(TOURNAMENT_CODE).orElse(null);
         if (tournament == null) {
             log.warn("Tournament {} not found in DB; skipping fixture sync", TOURNAMENT_CODE);
@@ -81,7 +124,12 @@ public class FixtureSyncService {
             }
 
             Stage stage = resolveStage(tournament, ext.leagueRound()).orElse(null);
-            GroupStage groupStage = resolveGroupStage(tournament, ext.leagueRound()).orElse(null);
+            // First try to resolve the group from the team→group map (sourced from /standings).
+            // Fall back to parsing it from the round name (rare — used to work for older seasons
+            // where API-Football encoded the letter in leagueRound, e.g. "Group Stage - A").
+            GroupStage groupStage = resolveGroupStageFromTeamMap(tournament, ext.homeTeamId(), teamToGroup)
+                    .or(() -> resolveGroupStage(tournament, ext.leagueRound()))
+                    .orElse(null);
             Team home = teamRepository.findByExternalProviderId(ext.homeTeamId()).orElse(null);
             Team away = teamRepository.findByExternalProviderId(ext.awayTeamId()).orElse(null);
 
@@ -183,15 +231,31 @@ public class FixtureSyncService {
                 .flatMap(code -> groupStageRepository.findByTournamentIdAndCode(t.getId(), code));
     }
 
+    /**
+     * Resolves the group of a fixture from the precomputed team→group map (built from
+     * /standings at the start of the sync). This is the canonical path for API-Football,
+     * since its /fixtures endpoint encodes the matchday in {@code leagueRound}, not the
+     * group letter.
+     */
+    private Optional<GroupStage> resolveGroupStageFromTeamMap(Tournament t, Long homeTeamExternalId,
+                                                              Map<Long, String> teamToGroup) {
+        if (homeTeamExternalId == null || teamToGroup.isEmpty()) return Optional.empty();
+        String code = teamToGroup.get(homeTeamExternalId);
+        if (code == null) return Optional.empty();
+        return groupStageRepository.findByTournamentIdAndCode(t.getId(), code);
+    }
+
     private String mapStageCode(String round) {
         if (round == null) return null;
         String r = round.toLowerCase();
-        if (r.startsWith("group")) return "GROUP";
-        if (r.contains("round of 32")) return "R32";
-        if (r.contains("round of 16")) return "R16";
-        if (r.contains("quarter")) return "QF";
-        if (r.contains("semi")) return "SF";
-        if (r.contains("3rd") || r.contains("third")) return "THIRD";
+        // Map API-Football round names → stage codes used in this DB (Spanish).
+        // Check 3rd-place / round-of-X BEFORE the generic "final" check, otherwise
+        // "Semi-finals" → would match "final" first. Order matters.
+        if (r.startsWith("group")) return "GROUPS";
+        if (r.contains("round of 16")) return "OCTAVOS";
+        if (r.contains("quarter")) return "CUARTOS";
+        if (r.contains("semi")) return "SEMIFINAL";
+        if (r.contains("3rd") || r.contains("third")) return "TERCER_PUESTO";
         if (r.contains("final")) return "FINAL";
         return null;
     }

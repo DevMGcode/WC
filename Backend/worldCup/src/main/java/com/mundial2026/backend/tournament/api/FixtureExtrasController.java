@@ -6,6 +6,8 @@ import com.mundial2026.backend.tournament.api.dto.HeadToHeadFixtureResponse;
 import com.mundial2026.backend.tournament.api.dto.LineupResponse;
 import com.mundial2026.backend.tournament.api.dto.MatchPlayerStatResponse;
 import com.mundial2026.backend.tournament.api.dto.MatchStatisticResponse;
+import com.mundial2026.backend.tournament.domain.Fixture;
+import com.mundial2026.backend.tournament.repository.FixtureRepository;
 import com.mundial2026.backend.tournament.service.FixturePredictionService;
 import com.mundial2026.backend.tournament.service.HeadToHeadService;
 import com.mundial2026.backend.tournament.service.LineupService;
@@ -19,6 +21,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
+import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 
@@ -37,16 +40,28 @@ public class FixtureExtrasController {
     private final FixturePredictionService fixturePredictionService;
     private final MatchStatisticsService matchStatisticsService;
     private final MatchPlayerStatsService matchPlayerStatsService;
+    private final FixtureRepository fixtureRepository;
+
+    /** Resuelve el externalProviderId dado el ID interno. Retorna null si no existe o no tiene ID externo. */
+    private Long resolveExternalId(Long fixtureId) {
+        return fixtureRepository.findById(fixtureId)
+                .map(Fixture::getExternalProviderId)
+                .orElse(null);
+    }
 
     @GetMapping("/{fixtureId}/lineups")
     public ResponseEntity<ApiResponse<List<LineupResponse>>> lineups(@PathVariable Long fixtureId) {
-        return ResponseEntity.ok(ApiResponse.ok("Lineups", lineupService.findByFixture(fixtureId)));
+        Long extId = resolveExternalId(fixtureId);
+        if (extId == null) return ResponseEntity.ok(ApiResponse.ok("Lineups", Collections.emptyList()));
+        return ResponseEntity.ok(ApiResponse.ok("Lineups", lineupService.findByFixture(extId)));
     }
 
     @GetMapping("/{fixtureId}/predictions")
     public ResponseEntity<ApiResponse<Optional<FixturePredictionResponse>>> prediction(@PathVariable Long fixtureId) {
+        Long extId = resolveExternalId(fixtureId);
+        if (extId == null) return ResponseEntity.ok(ApiResponse.ok("Fixture prediction", Optional.empty()));
         return ResponseEntity.ok(ApiResponse.ok("Fixture prediction",
-                fixturePredictionService.findByFixture(fixtureId)));
+                fixturePredictionService.findByFixture(extId)));
     }
 
     @GetMapping("/headtohead")
@@ -60,13 +75,17 @@ public class FixtureExtrasController {
 
     @GetMapping("/{fixtureId}/statistics")
     public ResponseEntity<ApiResponse<List<MatchStatisticResponse>>> statistics(@PathVariable Long fixtureId) {
+        Long extId = resolveExternalId(fixtureId);
+        if (extId == null) return ResponseEntity.ok(ApiResponse.ok("Match statistics", Collections.emptyList()));
         return ResponseEntity.ok(ApiResponse.ok("Match statistics",
-                matchStatisticsService.findByFixture(fixtureId)));
+                matchStatisticsService.findByFixture(extId)));
     }
 
     @GetMapping("/{fixtureId}/players")
     public ResponseEntity<ApiResponse<List<MatchPlayerStatResponse>>> players(@PathVariable Long fixtureId) {
+        Long extId = resolveExternalId(fixtureId);
+        if (extId == null) return ResponseEntity.ok(ApiResponse.ok("Match player stats", Collections.emptyList()));
         return ResponseEntity.ok(ApiResponse.ok("Match player stats",
-                matchPlayerStatsService.findByFixture(fixtureId)));
+                matchPlayerStatsService.findByFixture(extId)));
     }
 }
