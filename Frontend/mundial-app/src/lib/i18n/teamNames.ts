@@ -1,99 +1,170 @@
 /**
- * Spanish localization of team names that come from API-Football.
+ * Localización de nombres de equipos provenientes de API-Football.
  *
- * Why this lives in the frontend and not in the database:
- *   - API-Football is the canonical source of truth for the 48 teams. We mirror
- *     it verbatim in `team.name`, so any sync re-applies cleanly without us
- *     having to maintain translation overrides every time.
- *   - Team-name translation is a presentation concern (i18n), like the rest of
- *     the UI labels. Keeping it co-located with the other locale-dependent
- *     strings makes the responsibility obvious.
- *   - When `/en/...` routes are activated in the future, no DB change is needed
- *     — `localizeTeamName(name, 'en')` simply returns the original.
+ * Estrategia: API-Football devuelve los nombres en inglés. Mantenemos esos
+ * nombres como fuente canónica en la BD y traducimos en el frontend usando
+ * `Intl.DisplayNames` (nativo del navegador), que soporta los 7 idiomas
+ * configurados (es, en, pt, fr, de, ar, ru) sin mantener tablas manuales.
  *
- * Fallback: if the team isn't in the map, the original name is returned. This
- * keeps the UI functional even if API-Football adds a country we haven't
- * translated yet.
+ * Para los pocos casos en los que el nombre de API-Football no coincide con
+ * un código ISO 3166 estándar (Türkiye, Cabo Verde, Curazao, etc.) usamos un
+ * mapeo manual de respaldo.
  */
 
-// English (from API-Football) → Spanish (display)
-const TEAM_NAMES_ES: Record<string, string> = {
+/** Inglés (API-Football) → ISO 3166-1 alpha-2 */
+const ENGLISH_TO_ISO2: Record<string, string> = {
   // CONMEBOL
-  Argentina: 'Argentina',
-  Brazil: 'Brasil',
-  Colombia: 'Colombia',
-  Uruguay: 'Uruguay',
-  Paraguay: 'Paraguay',
-  Ecuador: 'Ecuador',
+  Argentina: 'AR',
+  Brazil: 'BR',
+  Colombia: 'CO',
+  Uruguay: 'UY',
+  Paraguay: 'PY',
+  Ecuador: 'EC',
 
   // CONCACAF
-  Mexico: 'México',
-  USA: 'Estados Unidos',
-  Canada: 'Canadá',
-  Panama: 'Panamá',
-  Haiti: 'Haití',
-  Curaçao: 'Curazao',
+  Mexico: 'MX',
+  USA: 'US',
+  Canada: 'CA',
+  Panama: 'PA',
+  Haiti: 'HT',
+  Curaçao: 'CW',
 
   // UEFA
-  Spain: 'España',
-  France: 'Francia',
-  England: 'Inglaterra',
-  Germany: 'Alemania',
-  Portugal: 'Portugal',
-  Belgium: 'Bélgica',
-  Netherlands: 'Países Bajos',
-  Italy: 'Italia',
-  Croatia: 'Croacia',
-  Switzerland: 'Suiza',
-  Sweden: 'Suecia',
-  Norway: 'Noruega',
-  Scotland: 'Escocia',
-  Austria: 'Austria',
-  'Czech Republic': 'República Checa',
-  'Bosnia & Herzegovina': 'Bosnia y Herzegovina',
-  Türkiye: 'Turquía',
+  Spain: 'ES',
+  France: 'FR',
+  England: 'GB-ENG',
+  Germany: 'DE',
+  Portugal: 'PT',
+  Belgium: 'BE',
+  Netherlands: 'NL',
+  Italy: 'IT',
+  Croatia: 'HR',
+  Switzerland: 'CH',
+  Sweden: 'SE',
+  Norway: 'NO',
+  Scotland: 'GB-SCT',
+  Austria: 'AT',
+  'Czech Republic': 'CZ',
+  'Bosnia & Herzegovina': 'BA',
+  Türkiye: 'TR',
 
   // AFC
-  Japan: 'Japón',
-  'South Korea': 'Corea del Sur',
-  Australia: 'Australia',
-  Iran: 'Irán',
-  'Saudi Arabia': 'Arabia Saudita',
-  Qatar: 'Catar',
-  Iraq: 'Irak',
-  Uzbekistan: 'Uzbekistán',
-  Jordan: 'Jordania',
+  Japan: 'JP',
+  'South Korea': 'KR',
+  Australia: 'AU',
+  Iran: 'IR',
+  'Saudi Arabia': 'SA',
+  Qatar: 'QA',
+  Iraq: 'IQ',
+  Uzbekistan: 'UZ',
+  Jordan: 'JO',
 
   // CAF
-  Senegal: 'Senegal',
-  Morocco: 'Marruecos',
-  Tunisia: 'Túnez',
-  Egypt: 'Egipto',
-  Algeria: 'Argelia',
-  Ghana: 'Ghana',
-  'Ivory Coast': 'Costa de Marfil',
-  'Congo DR': 'RD del Congo',
-  'South Africa': 'Sudáfrica',
-  'Cape Verde Islands': 'Cabo Verde',
+  Senegal: 'SN',
+  Morocco: 'MA',
+  Tunisia: 'TN',
+  Egypt: 'EG',
+  Algeria: 'DZ',
+  Ghana: 'GH',
+  'Ivory Coast': 'CI',
+  'Congo DR': 'CD',
+  'South Africa': 'ZA',
+  'Cape Verde Islands': 'CV',
 
   // OFC
-  'New Zealand': 'Nueva Zelanda',
+  'New Zealand': 'NZ',
 };
 
 /**
- * Returns the localized team name for the given locale. Falls back to the
- * original (English) name if no translation is found or if `locale !== 'es'`.
+ * Overrides manuales para casos donde `Intl.DisplayNames` no devuelve un
+ * nombre amigable o el ISO 3166 no aplica directamente (selecciones
+ * sub-nacionales como Inglaterra/Escocia, o nombres comerciales como Türkiye).
+ */
+const MANUAL_OVERRIDES: Record<string, Record<string, string>> = {
+  es: {
+    England: 'Inglaterra',
+    Scotland: 'Escocia',
+    'Cape Verde Islands': 'Cabo Verde',
+    Türkiye: 'Turquía',
+    Curaçao: 'Curazao',
+    'Congo DR': 'RD del Congo',
+    'Ivory Coast': 'Costa de Marfil',
+    'Saudi Arabia': 'Arabia Saudita',
+  },
+  en: {
+    Türkiye: 'Türkiye',
+    'Congo DR': 'DR Congo',
+    'Cape Verde Islands': 'Cape Verde',
+  },
+  pt: {
+    England: 'Inglaterra',
+    Scotland: 'Escócia',
+    'Cape Verde Islands': 'Cabo Verde',
+    Türkiye: 'Turquia',
+    Curaçao: 'Curaçao',
+    'Congo DR': 'RD do Congo',
+  },
+  fr: {
+    England: 'Angleterre',
+    Scotland: 'Écosse',
+    'Cape Verde Islands': 'Cap-Vert',
+    Türkiye: 'Turquie',
+    Curaçao: 'Curaçao',
+    'Congo DR': 'RD du Congo',
+  },
+  de: {
+    England: 'England',
+    Scotland: 'Schottland',
+    'Cape Verde Islands': 'Kap Verde',
+    Türkiye: 'Türkei',
+    Curaçao: 'Curaçao',
+    'Congo DR': 'DR Kongo',
+  },
+  ar: {
+    England: 'إنجلترا',
+    Scotland: 'اسكتلندا',
+    'Cape Verde Islands': 'الرأس الأخضر',
+    Türkiye: 'تركيا',
+    Curaçao: 'كوراساو',
+    'Congo DR': 'جمهورية الكونغو الديمقراطية',
+  },
+  ru: {
+    England: 'Англия',
+    Scotland: 'Шотландия',
+    'Cape Verde Islands': 'Кабо-Верде',
+    Türkiye: 'Турция',
+    Curaçao: 'Кюрасао',
+    'Congo DR': 'ДР Конго',
+  },
+};
+
+const SUPPORTED_LOCALES = new Set(['es', 'en', 'pt', 'fr', 'de', 'ar', 'ru']);
+
+/**
+ * Devuelve el nombre del equipo en el idioma indicado. Si no hay traducción
+ * disponible, devuelve el nombre original (inglés de API-Football).
  */
 export function localizeTeamName(name: string | undefined | null, locale: string = 'es'): string {
   if (!name) return '';
-  if (locale !== 'es') return name;
-  return TEAM_NAMES_ES[name] ?? name;
+  const lang = SUPPORTED_LOCALES.has(locale) ? locale : 'es';
+
+  const override = MANUAL_OVERRIDES[lang]?.[name];
+  if (override) return override;
+
+  const iso2 = ENGLISH_TO_ISO2[name];
+  if (!iso2) return name;
+
+  try {
+    const display = new Intl.DisplayNames([lang], { type: 'region' }).of(iso2);
+    return display ?? name;
+  } catch {
+    return name;
+  }
 }
 
 /**
- * Convenience for places where we only have a name string and want the Spanish
- * version unconditionally (e.g. inside services that don't know the locale).
- * Same as `localizeTeamName(name, 'es')`.
+ * Atajo retrocompatible. Equivalente a `localizeTeamName(name, 'es')`.
+ * Se mantiene para que servicios que aún no propagan `locale` no rompan.
  */
 export function toSpanish(name: string | undefined | null): string {
   return localizeTeamName(name, 'es');
