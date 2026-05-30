@@ -14,13 +14,14 @@
 
 import React, { useState, useEffect, useMemo } from 'react';
 import { motion } from 'framer-motion';
-import { useRouter, useParams } from 'next/navigation';
+import { useRouter } from 'next/navigation';
+import dynamic from 'next/dynamic';
 import {
   FiActivity, FiCrosshair, FiAward, FiBarChart2,
 } from 'react-icons/fi';
 import { useAuth } from '@/contexts/AuthContext';
 import { Header } from '@/components/Navigation';
-import { useT } from '@/hooks/useT';
+import { useTranslations, useLocale } from 'next-intl';
 import {
   useCurrentTournament,
   useTournamentFixtures,
@@ -35,22 +36,24 @@ import { getTourSteps } from '@/components/Tour/tourSteps';
 
 import { hex } from '@/lib/design/tokens';
 import { alpha, alphaOf, gradients } from '@/lib/design/effects';
+import { TabSkeleton } from '@/components/PageSkeleton';
 
 import { KPIChip } from './home/_components/HomeUtils';
-import HomeCountdown from './home/_components/HomeCountdown';
-import UpcomingMatches from './home/_components/UpcomingMatches';
-import RecentResults from './home/_components/RecentResults';
-import RightColumn from './home/_components/RightColumn';
-import QuickAccessBento from './home/QuickAccessBento';
+
+// Lazy load de secciones pesadas — se descargan en paralelo pero no bloquean el render inicial
+const HomeCountdown   = dynamic(() => import('./home/_components/HomeCountdown'),   { loading: () => <TabSkeleton /> });
+const UpcomingMatches = dynamic(() => import('./home/_components/UpcomingMatches'), { loading: () => <TabSkeleton /> });
+const RecentResults   = dynamic(() => import('./home/_components/RecentResults'),   { loading: () => <TabSkeleton /> });
+const RightColumn     = dynamic(() => import('./home/_components/RightColumn'),     { loading: () => <TabSkeleton /> });
+const QuickAccessBento = dynamic(() => import('./home/_components/QuickAccessBento'), { loading: () => <TabSkeleton /> });
 
 /* ══════════════════════════════════════════
    PAGE
 ══════════════════════════════════════════ */
 export default function HomePage() {
   const router = useRouter();
-  const { t } = useT();
-  const params = useParams();
-  const locale = (params?.locale as string) ?? 'es';
+  const t      = useTranslations();
+  const locale = useLocale();
   const { user, loading: authLoading, isAuthenticated } = useAuth();
 
   const [countdown, setCountdown]           = useState({ days: 0, hours: 0, minutes: 0, seconds: 0 });
@@ -133,10 +136,8 @@ export default function HomePage() {
 
   if (!authLoading && !isAuthenticated) return null;
 
-  const pageBg = `radial-gradient(ellipse at 20% 30%, ${hex.bg.primary} 0%, ${hex.bg.secondary} 55%, ${hex.bg.primary} 100%)`;
-
   return (
-    <div className="w-full relative min-h-screen" style={{ background: pageBg }}>
+    <div className="w-full relative">
 
       {/* ═══ BACKGROUND ORBS ═══ */}
       <div className="fixed rounded-full pointer-events-none" style={{
@@ -181,11 +182,11 @@ export default function HomePage() {
                 <div className="absolute inset-0 rounded-full" style={{ border: `1px solid ${alphaOf('green', 0.30)}` }} />
               </div>
               <div className="hidden sm:block">
-                <p className="text-sm font-black text-transparent bg-clip-text leading-none"
+                <p className="text-[14px] font-black text-transparent bg-clip-text leading-none"
                   style={{ backgroundImage: `linear-gradient(90deg, ${hex.green.soft}, ${hex.green.bright})` }}>
                   {user?.displayName}
                 </p>
-                <p className="text-[10px] leading-none mt-0.5 text-orionix-text-muted">{user?.email}</p>
+                <p className="text-[11px] leading-none mt-0.5 text-orionix-text-muted">{user?.email}</p>
               </div>
             </div>
           }
@@ -193,7 +194,7 @@ export default function HomePage() {
       </div>
 
       {/* ═══ DASHBOARD CONTENT ═══ */}
-      <div className="relative z-10 px-3 sm:px-5 py-4 max-w-6xl mx-auto w-full pb-32">
+      <div className="relative z-10 px-4 sm:px-6 py-5 max-w-6xl mx-auto w-full pb-32">
 
         {/* Loading bar */}
         {loading && (
@@ -216,7 +217,8 @@ export default function HomePage() {
           className="flex items-center justify-between mb-5"
         >
           <div>
-            <h1 className="text-xl sm:text-2xl font-black text-white leading-none">
+            {/* Título principal: text-2xl / text-3xl para máxima legibilidad */}
+            <h1 className="text-2xl sm:text-3xl font-black text-white leading-none">
               {t('home.welcome')},{' '}
               <span className="text-transparent bg-clip-text"
                 style={{ backgroundImage: `linear-gradient(90deg, ${hex.green.soft}, ${hex.green.bright})` }}>
@@ -228,35 +230,39 @@ export default function HomePage() {
                 👋
               </motion.span>
             </h1>
-            <p className="text-[11px] mt-1 tracking-wide text-orionix-text-muted" suppressHydrationWarning>
-              {fmtTodayHeader()}
+            {/* Fecha: mínimo 13px */}
+            <p className="text-[13px] mt-1.5 tracking-wide text-orionix-text-secondary" suppressHydrationWarning>
+              {fmtTodayHeader(new Date(), locale)}
             </p>
           </div>
 
-          <div className="flex flex-col items-end gap-1">
-            <div className="flex items-center gap-2 px-3 py-1.5 rounded-xl"
+          <div className="flex flex-col items-end gap-1.5">
+            {/* Badge torneo: "FIFA" mínimo 10px, "WORLD CUP" mínimo 13px */}
+            <div className="flex items-center gap-2.5 px-3.5 py-2 rounded-xl"
               style={{
-                background: `linear-gradient(135deg, ${alphaOf('gold', 0.12)} 0%, ${alpha(hex.neutral.black, 0.50)} 100%)`,
-                border: `1px solid ${alphaOf('gold', 0.28)}`,
+                background: `linear-gradient(135deg, ${alphaOf('gold', 0.14)} 0%, ${alpha(hex.neutral.black, 0.55)} 100%)`,
+                border: `1px solid ${alphaOf('gold', 0.32)}`,
+                boxShadow: `0 4px 16px ${alphaOf('gold', 0.12)}`,
               }}>
-              <span className="text-base">🏆</span>
+              <span className="text-lg">🏆</span>
               <div>
-                <p className="text-[7px] font-black tracking-[0.30em] uppercase leading-none"
-                  style={{ color: alphaOf('gold', 0.55) }}>FIFA</p>
-                <p className="text-[10px] font-black tracking-[0.14em] leading-none" style={{ color: hex.gold.base }}>WORLD CUP 2026</p>
+                <p className="text-[10px] font-black tracking-[0.26em] uppercase leading-none"
+                  style={{ color: alphaOf('gold', 0.70) }}>FIFA</p>
+                <p className="text-[13px] font-black tracking-[0.10em] leading-none mt-0.5" style={{ color: hex.gold.bright }}>WORLD CUP 2026</p>
               </div>
             </div>
-            <div className="hidden sm:flex items-center gap-2">
+            {/* Sedes: código de país mínimo 10px */}
+            <div className="hidden sm:flex items-center gap-2.5">
               {[
                 { flag: '🇺🇸', code: 'USA', color: hex.host.usaRed },
                 { flag: '🇲🇽', code: 'MEX', color: hex.host.mexGreen },
                 { flag: '🇨🇦', code: 'CAN', color: hex.host.canRed },
               ].map((n, i) => (
                 <React.Fragment key={n.code}>
-                  {i > 0 && <span className="text-white/10 text-xs">·</span>}
+                  {i > 0 && <span className="text-white/15 text-sm">·</span>}
                   <div className="flex items-center gap-1">
-                    <span className="text-[11px] leading-none">{n.flag}</span>
-                    <span className="text-[7px] font-black tracking-[0.18em]" style={{ color: n.color }}>{n.code}</span>
+                    <span className="text-sm leading-none">{n.flag}</span>
+                    <span className="text-[10px] font-black tracking-[0.14em]" style={{ color: n.color }}>{n.code}</span>
                   </div>
                 </React.Fragment>
               ))}
@@ -265,7 +271,7 @@ export default function HomePage() {
         </motion.div>
 
         {/* ── ROW 1 — KPI CHIPS ── */}
-        <div data-tour="stats" className="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-4">
+        <div data-tour="stats" className="grid grid-cols-2 sm:grid-cols-4 gap-4 mb-5">
           <KPIChip icon={<FiActivity />}  value={stats.predictions}                        label={t('home.stats.predictions')} color={hex.green.bright} glow={hex.green.bright} bg={alphaOf('green', 0.07)}        delay={0.08} />
           <KPIChip icon={<FiCrosshair />} value={stats.exactas}                            label={t('home.stats.exact')}        color={hex.green.hover}  glow={hex.green.hover}  bg={alphaOf('success', 0.07)}      delay={0.14} />
           <KPIChip icon={<FiAward />}     value={stats.puntos}                             label={t('home.stats.points')}       color={hex.gold.base}    glow={hex.gold.base}    bg={alphaOf('gold', 0.07)}         delay={0.20} />
@@ -276,10 +282,10 @@ export default function HomePage() {
         <HomeCountdown countdown={countdown} mundialStarted={mundialStarted} t={t} />
 
         {/* ── ROW 3 — BENTO GRID ── */}
-        <div className="grid grid-cols-1 lg:grid-cols-[1fr_300px] gap-4">
+        <div className="grid grid-cols-1 lg:grid-cols-[1fr_316px] gap-5">
 
           {/* LEFT COLUMN */}
-          <div className="flex flex-col gap-4">
+          <div className="flex flex-col gap-5">
             <UpcomingMatches fixtures={todayUpcoming} t={t} />
             <RecentResults fixtures={recentResults} predictions={myPredictions} t={t} />
           </div>

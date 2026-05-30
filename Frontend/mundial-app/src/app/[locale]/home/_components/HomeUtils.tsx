@@ -12,12 +12,14 @@ import { alpha, alphaOf } from '@/lib/design/effects';
 
 /* ══════════════════════════════════════════
    CARD SURFACE HELPER
+   — fondo más diferenciado del bg general
+   para separar visualmente cada sección
 ══════════════════════════════════════════ */
 export const card = (border: string): React.CSSProperties => ({
-  background: `linear-gradient(145deg, ${alpha(hex.bg.primary, 0.98)} 0%, ${alpha(hex.bg.secondary, 0.97)} 100%)`,
+  background: `linear-gradient(160deg, ${alpha(hex.bg.soft, 0.90)} 0%, ${alpha(hex.bg.elevated, 0.95)} 55%, ${alpha(hex.bg.secondary, 0.98)} 100%)`,
   border: `1px solid ${border}`,
   backdropFilter: 'blur(28px)',
-  boxShadow: `0 20px 60px ${alpha(hex.neutral.black, 0.55)}, inset 0 1px 0 ${alpha(hex.neutral.white, 0.03)}`,
+  boxShadow: `0 28px 72px ${alpha(hex.neutral.black, 0.70)}, 0 4px 12px ${alpha(hex.neutral.black, 0.45)}, inset 0 1px 0 ${alpha(hex.neutral.white, 0.07)}`,
 });
 
 /* ══════════════════════════════════════════
@@ -27,18 +29,18 @@ export const IconBox = ({
   icon, color, size = 'md',
 }: { icon: React.ReactNode; color: string; size?: 'sm' | 'md' | 'lg' }) => {
   const dim = { sm: 'w-9 h-9', md: 'w-11 h-11', lg: 'w-14 h-14' }[size];
-  const px  = { sm: 14, md: 18, lg: 24 }[size];
+  const px  = { sm: 16, md: 20, lg: 26 }[size];
   const rnd = { sm: 'rounded-xl', md: 'rounded-2xl', lg: 'rounded-2xl' }[size];
   return (
     <div className={`relative shrink-0 ${dim} ${rnd} flex items-center justify-center overflow-hidden`}
       style={{
-        background: `linear-gradient(145deg, ${color}1a 0%, ${alpha(hex.neutral.black, 0.60)} 100%)`,
-        border: `1px solid ${color}35`,
-        boxShadow: `inset 0 1px 0 ${alpha(hex.neutral.white, 0.07)}, 0 4px 16px ${alpha(hex.neutral.black, 0.40)}`,
+        background: `linear-gradient(145deg, ${color}22 0%, ${alpha(hex.neutral.black, 0.65)} 100%)`,
+        border: `1px solid ${color}45`,
+        boxShadow: `inset 0 1px 0 ${alpha(hex.neutral.white, 0.10)}, 0 4px 16px ${alpha(hex.neutral.black, 0.45)}, 0 0 24px ${color}18`,
       }}>
       <div className={`absolute inset-x-0 top-0 h-px ${rnd}`}
-        style={{ background: `linear-gradient(90deg, transparent, ${color}55, transparent)` }} />
-      <span style={{ color, fontSize: px, filter: `drop-shadow(0 0 6px ${color}90)` }}>{icon}</span>
+        style={{ background: `linear-gradient(90deg, transparent, ${color}70, transparent)` }} />
+      <span style={{ color, fontSize: px, filter: `drop-shadow(0 0 9px ${color}aa)` }}>{icon}</span>
     </div>
   );
 };
@@ -55,7 +57,7 @@ export const Ring = ({
   return (
     <svg width={size} height={size} className="rotate-[-90deg]" style={{ overflow: 'visible' }}>
       <circle cx={size/2} cy={size/2} r={r} fill="none"
-        stroke={trail ?? alpha(hex.neutral.white, 0.05)} strokeWidth={stroke} />
+        stroke={trail ?? alpha(hex.neutral.white, 0.08)} strokeWidth={stroke} />
       <motion.circle
         cx={size/2} cy={size/2} r={r}
         fill="none" stroke={color} strokeWidth={stroke} strokeLinecap="round"
@@ -63,7 +65,7 @@ export const Ring = ({
         initial={{ strokeDashoffset: circ }}
         animate={{ strokeDashoffset: off }}
         transition={{ duration: 1.6, delay: 0.5, ease: [0.22, 1, 0.36, 1] }}
-        style={{ filter: `drop-shadow(0 0 8px ${color}) drop-shadow(0 0 18px ${color}44)` }}
+        style={{ filter: `drop-shadow(0 0 10px ${color}) drop-shadow(0 0 22px ${color}55)` }}
       />
     </svg>
   );
@@ -72,14 +74,14 @@ export const Ring = ({
 /* ══════════════════════════════════════════
    GLOW BAR — barra de progreso con brillo
 ══════════════════════════════════════════ */
-export const GlowBar = ({ value, max = 100, color, height = 3 }: {
+export const GlowBar = ({ value, max = 100, color, height = 5 }: {
   value: number; max?: number; color: string; height?: number;
 }) => (
   <div className="relative w-full rounded-full overflow-hidden"
-    style={{ height, background: alpha(hex.neutral.white, 0.05) }}>
+    style={{ height, background: alpha(hex.neutral.white, 0.08) }}>
     <motion.div
       className="h-full rounded-full"
-      style={{ background: `linear-gradient(90deg, ${color}70, ${color})`, boxShadow: `0 0 8px ${color}55` }}
+      style={{ background: `linear-gradient(90deg, ${color}60, ${color})`, boxShadow: `0 0 10px ${color}66` }}
       initial={{ width: 0 }}
       animate={{ width: `${Math.min(100, (value / Math.max(max, 1)) * 100)}%` }}
       transition={{ duration: 1.3, delay: 0.35, ease: [0.22, 1, 0.36, 1] }}
@@ -88,7 +90,8 @@ export const GlowBar = ({ value, max = 100, color, height = 3 }: {
 );
 
 /* ══════════════════════════════════════════
-   KPI CHIP
+   KPI CHIP — más aire, número prominente,
+   label con contraste real (miopía-safe)
 ══════════════════════════════════════════ */
 export const KPIChip = ({
   icon, value, label, color, glow, bg, delay,
@@ -97,28 +100,51 @@ export const KPIChip = ({
   color: string; glow: string; bg: string; delay: number;
 }) => (
   <motion.div
-    initial={{ opacity: 0, y: -14, scale: 0.93 }}
+    initial={{ opacity: 0, y: -16, scale: 0.92 }}
     animate={{ opacity: 1, y: 0, scale: 1 }}
-    transition={{ duration: 0.5, delay, ease: [0.22, 1, 0.36, 1] }}
-    whileHover={{ y: -4, scale: 1.03 }}
+    transition={{ duration: 0.55, delay, ease: [0.22, 1, 0.36, 1] }}
+    whileHover={{ y: -6, scale: 1.04, transition: { duration: 0.2 } }}
     className="relative overflow-hidden rounded-2xl cursor-default"
     style={{
-      background: `linear-gradient(145deg, ${bg} 0%, ${alpha(hex.bg.primary, 0.97)} 100%)`,
-      border: `1px solid ${color}28`,
-      boxShadow: `0 8px 30px ${alpha(hex.neutral.black, 0.45)}, 0 0 0 1px ${alpha(hex.neutral.white, 0.02)}, inset 0 1px 0 ${alpha(hex.neutral.white, 0.04)}`,
+      background: `linear-gradient(160deg, ${bg} 0%, ${alpha(hex.bg.soft, 0.90)} 40%, ${alpha(hex.bg.secondary, 0.98)} 100%)`,
+      border: `1px solid ${color}38`,
+      boxShadow: `0 10px 38px ${alpha(hex.neutral.black, 0.55)}, 0 0 0 1px ${alpha(hex.neutral.white, 0.03)}, inset 0 1px 0 ${alpha(hex.neutral.white, 0.07)}`,
     }}
   >
+    {/* Top glow line */}
     <div className="absolute inset-x-0 top-0 h-[2px]"
-      style={{ background: `linear-gradient(90deg, transparent, ${color}cc, transparent)` }} />
-    <div className="absolute -top-8 -right-8 w-20 h-20 rounded-full pointer-events-none"
-      style={{ background: `radial-gradient(circle, ${glow}28 0%, transparent 70%)`, filter: 'blur(12px)' }} />
-    <div className="relative z-10 p-4">
+      style={{ background: `linear-gradient(90deg, transparent, ${color}ee, transparent)` }} />
+
+    {/* Corner orb */}
+    <div className="absolute -top-6 -right-6 w-24 h-24 rounded-full pointer-events-none"
+      style={{ background: `radial-gradient(circle, ${glow}38 0%, transparent 70%)`, filter: 'blur(16px)' }} />
+
+    {/* Bottom shine */}
+    <div className="absolute inset-x-0 bottom-0 h-[1px]"
+      style={{ background: `linear-gradient(90deg, transparent, ${alpha(hex.neutral.white, 0.06)}, transparent)` }} />
+
+    <div className="relative z-10 p-5 pb-6">
+      {/* Header row: label + icon */}
       <div className="flex items-start justify-between mb-3">
-        <p className="text-[8px] font-black tracking-[0.30em] uppercase" style={{ color: `${color}65` }}>{label}</p>
+        <div>
+          {/* label miopía-safe: 13px, contraste real — decorativo uppercase */}
+          <p className="text-[13px] font-black tracking-[0.16em] uppercase leading-none mb-1.5"
+            style={{ color: `${color}dd` }}>
+            {label}
+          </p>
+          <div className="w-6 h-[2px] rounded-full" style={{ background: `${color}55` }} />
+        </div>
         <IconBox icon={icon} color={color} size="sm" />
       </div>
-      <p className="text-[2.2rem] font-black tabular-nums leading-none"
-        style={{ color, textShadow: `0 0 24px ${glow}55`, fontVariantNumeric: 'tabular-nums' }}>
+
+      {/* Big number */}
+      <p className="font-black tabular-nums leading-none"
+        style={{
+          fontSize: 'clamp(2.1rem, 4.5vw, 2.7rem)',
+          color,
+          textShadow: `0 0 36px ${glow}77, 0 2px 4px ${alpha(hex.neutral.black, 0.55)}`,
+          fontVariantNumeric: 'tabular-nums',
+        }}>
         {value}
       </p>
     </div>
@@ -132,13 +158,19 @@ export const Flag = ({ url, name, size = 'md', glow }: {
   url: string; name: string; size?: 'sm' | 'md' | 'lg'; glow?: string;
 }) => {
   const sz = { sm: 'w-10 h-10', md: 'w-14 h-14', lg: 'w-[72px] h-[72px]' }[size];
+  const borderSize = { sm: 'border-2', md: 'border-2', lg: 'border-[3px]' }[size];
   return (
     <div className="relative shrink-0">
-      {glow && <div className="absolute inset-0 rounded-full pointer-events-none"
-        style={{ background: glow, filter: 'blur(14px)', transform: 'scale(1.45)', opacity: 0.6 }} />}
-      <div className={`relative ${sz} rounded-full border-2 overflow-hidden`}
-        style={{ borderColor: alpha(hex.neutral.white, 0.12), background: hex.bg.elevated,
-                 boxShadow: `0 4px 16px ${alpha(hex.neutral.black, 0.55)}` }}>
+      {glow && (
+        <div className="absolute inset-0 rounded-full pointer-events-none"
+          style={{ background: glow, filter: 'blur(16px)', transform: 'scale(1.55)', opacity: 0.55 }} />
+      )}
+      <div className={`relative ${sz} rounded-full ${borderSize} overflow-hidden`}
+        style={{
+          borderColor: alpha(hex.neutral.white, 0.22),
+          background: hex.bg.elevated,
+          boxShadow: `0 4px 18px ${alpha(hex.neutral.black, 0.60)}, 0 0 0 1px ${alpha(hex.neutral.white, 0.06)}`,
+        }}>
         <img src={url} alt={name} className="w-full h-full object-cover" />
       </div>
     </div>
@@ -149,7 +181,7 @@ export const Flag = ({ url, name, size = 'md', glow }: {
    PITCH MINI — decorativo SVG cancha
 ══════════════════════════════════════════ */
 export const PitchMini = ({ color }: { color: string }) => (
-  <svg viewBox="0 0 64 32" width={64} height={32} style={{ opacity: 0.28 }}>
+  <svg viewBox="0 0 64 32" width={64} height={32} style={{ opacity: 0.30 }}>
     <rect x="1" y="1" width="62" height="30" rx="3" fill="none" stroke={color} strokeWidth="1.2" />
     <line x1="32" y1="1" x2="32" y2="31" stroke={color} strokeWidth="0.9" />
     <circle cx="32" cy="16" r="6.5" fill="none" stroke={color} strokeWidth="0.9" />
@@ -163,6 +195,7 @@ export const PitchMini = ({ color }: { color: string }) => (
 
 /* ══════════════════════════════════════════
    FORM STRIP — historial de forma reciente
+   Dots más grandes y label más legible
 ══════════════════════════════════════════ */
 export const FormStrip = ({ results, predictions }: {
   results: any[]; predictions: Record<number, any>;
@@ -172,23 +205,24 @@ export const FormStrip = ({ results, predictions }: {
     if (!pred) return null;
     const { predictedHomeScore: ph, predictedAwayScore: pa } = pred;
     const { homeScore: rh, awayScore: ra } = f;
-    if (ph === rh && pa === ra) return { type: 'E', color: hex.green.hover, bg: alphaOf('success', 0.13), label: 'Exacta' };
-    if (Math.sign(ph - pa) === Math.sign(rh - ra)) return { type: 'W', color: hex.green.bright, bg: alphaOf('green', 0.09), label: 'Correcto' };
-    return { type: 'L', color: hex.status.danger, bg: alphaOf('danger', 0.14), label: 'Fallado' };
+    if (ph === rh && pa === ra) return { type: 'E', color: hex.green.hover, bg: alphaOf('success', 0.15), label: 'Exacta' };
+    if (Math.sign(ph - pa) === Math.sign(rh - ra)) return { type: 'W', color: hex.green.bright, bg: alphaOf('green', 0.11), label: 'Correcto' };
+    return { type: 'L', color: hex.status.danger, bg: alphaOf('danger', 0.16), label: 'Fallado' };
   }).filter(Boolean);
 
   if (!dots.length) return null;
 
   return (
-    <div className="flex items-center gap-2 mt-4 pt-3"
-      style={{ borderTop: `1px solid ${alpha(hex.neutral.white, 0.05)}` }}>
-      <span className="text-[7.5px] font-black tracking-[0.24em] uppercase"
-        style={{ color: alpha(hex.neutral.white, 0.22) }}>FORMA</span>
+    <div className="flex items-center gap-2.5 mt-4 pt-3.5"
+      style={{ borderTop: `1px solid ${alpha(hex.neutral.white, 0.08)}` }}>
+      {/* "FORMA" — 12px mínimo para texto secundario de apoyo */}
+      <span className="text-[12px] font-black tracking-[0.16em] uppercase"
+        style={{ color: alpha(hex.neutral.white, 0.50) }}>FORMA</span>
       <div className="flex items-center gap-1.5">
         {dots.map((d, i) => (
           <div key={i}
-            className="w-[22px] h-[22px] rounded-full flex items-center justify-center text-[8px] font-black"
-            style={{ background: d!.bg, border: `1px solid ${d!.color}45`, color: d!.color }}
+            className="w-[30px] h-[30px] rounded-full flex items-center justify-center text-[12px] font-black"
+            style={{ background: d!.bg, border: `1px solid ${d!.color}55`, color: d!.color, boxShadow: `0 0 8px ${d!.color}35` }}
             title={d!.label}>
             {d!.type}
           </div>
@@ -199,23 +233,33 @@ export const FormStrip = ({ results, predictions }: {
 };
 
 /* ══════════════════════════════════════════
-   SECTION HEADER
+   SECTION HEADER — label más grande,
+   barra más prominente, mejor contraste
 ══════════════════════════════════════════ */
 export const SectionHeader = ({
   label, accent = hex.green.bright, right,
 }: { label: string; accent?: string; right?: React.ReactNode }) => (
   <div className="flex items-center justify-between mb-5">
-    <div className="flex items-center gap-2.5">
-      <div className="w-1 h-5 rounded-full" style={{ background: `linear-gradient(180deg, ${accent}, ${accent}55)` }} />
-      <span className="text-[10px] font-black tracking-[0.26em] uppercase text-orionix-text-muted">{label}</span>
+    <div className="flex items-center gap-3">
+      {/* Barra lateral con glow más visible */}
+      <div className="relative w-1 h-7 rounded-full overflow-hidden shrink-0">
+        <div className="absolute inset-0 rounded-full"
+          style={{ background: `linear-gradient(180deg, ${accent}, ${accent}60)` }} />
+        <div className="absolute inset-0 rounded-full"
+          style={{ background: accent, filter: `blur(2px)`, opacity: 0.7 }} />
+      </div>
+      {/* label miopía-safe: text-sm = 14px */}
+      <span className="text-sm font-black tracking-[0.14em] uppercase"
+        style={{ color: alpha(hex.neutral.white, 0.90) }}>
+        {label}
+      </span>
     </div>
     {right}
   </div>
 );
 
 /* ══════════════════════════════════════════
-   GET PRED RESULT — helper de resultado de predicción
-   Returns null si no hay predicción/partido
+   GET PRED RESULT — helper resultado predicción
 ══════════════════════════════════════════ */
 export const getPredResult = (fixture: any, prediction: any, t: (k: string) => string) => {
   if (!prediction || !fixture) return null;

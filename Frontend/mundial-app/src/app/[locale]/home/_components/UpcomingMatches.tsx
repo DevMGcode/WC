@@ -3,45 +3,55 @@
 import React from 'react';
 import { motion } from 'framer-motion';
 import Link from 'next/link';
-import { FiChevronRight } from 'react-icons/fi';
+import { useLocale } from 'next-intl';
+import { FiChevronRight, FiZap } from 'react-icons/fi';
 import { hex } from '@/lib/design/tokens';
 import { alpha, alphaOf } from '@/lib/design/effects';
 import { fmtDate, fmtTime, fmtDay } from '@/utils/format';
 import { Flag, SectionHeader, card } from './HomeUtils';
+import { localizeTeamName } from '@/lib/i18n/teamNames';
 
 interface UpcomingMatchesProps {
   fixtures: any[];
   t: (key: string) => string;
 }
 
-const UpcomingMatches = ({ fixtures, t }: UpcomingMatchesProps) => (
+const UpcomingMatches = ({ fixtures, t }: UpcomingMatchesProps) => {
+  const locale = useLocale();
+  return (
   <motion.div
     data-tour="matches"
     initial={{ opacity: 0, y: 20 }}
     animate={{ opacity: 1, y: 0 }}
     transition={{ duration: 0.6, delay: 0.36, ease: [0.22, 1, 0.36, 1] }}
     className="relative overflow-hidden rounded-3xl"
-    style={card(alphaOf('green', 0.18))}
+    style={card(alphaOf('green', 0.24))}
   >
+    {/* Top glow line */}
     <div className="absolute inset-x-0 top-0 h-[2px]"
-      style={{ background: `linear-gradient(90deg, transparent, ${hex.green.bright}aa, transparent)` }} />
-    <div className="absolute -top-20 -left-20 w-56 h-56 rounded-full pointer-events-none"
-      style={{ background: `radial-gradient(circle, ${alphaOf('green', 0.09)} 0%, transparent 65%)`, filter: 'blur(30px)' }} />
+      style={{ background: `linear-gradient(90deg, transparent, ${hex.green.bright}dd, transparent)` }} />
 
-    <div className="relative p-5 sm:p-6">
+    {/* Ambient orb */}
+    <div className="absolute -top-24 -left-24 w-64 h-64 rounded-full pointer-events-none"
+      style={{ background: `radial-gradient(circle, ${alphaOf('green', 0.12)} 0%, transparent 65%)`, filter: 'blur(36px)' }} />
+
+    <div className="relative p-5 sm:p-7">
       <SectionHeader
-        label={fixtures.length > 1 ? 'PRÓXIMOS PARTIDOS' : t('home.nextMatch')}
+        label={fixtures.length > 1 ? t('home.upcomingMatches') : t('home.nextMatch')}
         accent={hex.green.bright}
         right={
-          <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-full"
-            style={{ border: `1px solid ${alphaOf('green', 0.28)}`, background: alphaOf('green', 0.08) }}>
+          <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-full"
+            style={{ border: `1px solid ${alphaOf('green', 0.35)}`, background: alphaOf('green', 0.12) }}>
             {fixtures.length > 0 && (
-              <span className="text-[8px] font-black px-1 py-0.5 rounded-full tabular-nums"
-                style={{ background: alphaOf('green', 0.15), color: hex.green.bright }}>
+              <span className="text-[11px] font-black px-1.5 py-0.5 rounded-full tabular-nums"
+                style={{ background: alphaOf('green', 0.22), color: hex.green.bright }}>
                 {fixtures.length}
               </span>
             )}
-            <span className="text-[8px] font-black tracking-widest text-orionix-green-soft">{t('home.pending')}</span>
+            {/* "PENDIENTES" — 12px mínimo */}
+            <span className="text-[12px] font-black tracking-[0.14em]" style={{ color: hex.green.soft }}>
+              {t('home.pending')}
+            </span>
           </div>
         }
       />
@@ -49,139 +59,164 @@ const UpcomingMatches = ({ fixtures, t }: UpcomingMatchesProps) => (
       {fixtures.length > 0 ? (
         fixtures.length === 1 ? (
           <>
-            <div className="flex items-center justify-center gap-2 mb-5">
-              <div className="h-px flex-1" style={{ background: `linear-gradient(90deg, transparent, ${alphaOf('green', 0.20)})` }} />
-              <div className="flex items-center gap-2 px-3 py-1 rounded-full"
-                style={{ background: alphaOf('green', 0.06), border: `1px solid ${alphaOf('green', 0.18)}` }}>
-                <span className="text-sm">🏟️</span>
-                <span className="text-[9px] font-semibold text-orionix-text-muted">{fmtDate(fixtures[0].kickoffAt)}</span>
+            {/* Single match — featured layout */}
+            <div className="flex items-center justify-center gap-2 mb-6">
+              <div className="h-px flex-1" style={{ background: `linear-gradient(90deg, transparent, ${alphaOf('green', 0.25)})` }} />
+              <div className="flex items-center gap-2 px-4 py-2 rounded-full"
+                style={{ background: alphaOf('green', 0.08), border: `1px solid ${alphaOf('green', 0.22)}` }}>
+                <span className="text-base">🏟️</span>
+                {/* Fecha del partido: 13px */}
+                <span className="text-[13px] font-semibold" style={{ color: hex.text.secondary }}>
+                  {fmtDate(fixtures[0].kickoffAt, locale)}
+                </span>
               </div>
-              <div className="h-px flex-1" style={{ background: `linear-gradient(90deg, ${alphaOf('green', 0.20)}, transparent)` }} />
+              <div className="h-px flex-1" style={{ background: `linear-gradient(90deg, ${alphaOf('green', 0.25)}, transparent)` }} />
             </div>
 
-            <div className="flex items-center justify-around pb-5">
-              <motion.div className="flex flex-col items-center gap-3 flex-1" whileHover={{ scale: 1.04 }}>
-                <Flag url={fixtures[0].homeTeam.flagUrl} name={fixtures[0].homeTeam.name} size="lg" glow={alphaOf('green', 0.20)} />
+            <div className="flex items-center justify-around pb-6">
+              <motion.div className="flex flex-col items-center gap-3 flex-1" whileHover={{ scale: 1.05 }}>
+                <Flag url={fixtures[0].homeTeam.flagUrl} name={fixtures[0].homeTeam.name} size="lg" glow={alphaOf('green', 0.25)} />
                 <div className="text-center">
-                  <p className="text-base font-black tracking-wider uppercase" style={{ color: hex.text.primary }}>
+                  {/* Nombre equipo: text-xl = 20px */}
+                  <p className="text-xl font-black tracking-wider uppercase" style={{ color: hex.text.primary }}>
                     {fixtures[0].homeTeam.shortName}
                   </p>
-                  <p className="text-[9px] font-medium mt-0.5 hidden sm:block truncate max-w-[90px] text-orionix-text-muted">
-                    {fixtures[0].homeTeam.name}
+                  {/* Nombre completo: 13px */}
+                  <p className="text-[13px] font-medium mt-0.5 hidden sm:block truncate max-w-[100px]" style={{ color: hex.text.secondary }}>
+                    {localizeTeamName(fixtures[0].homeTeam.name, locale)}
                   </p>
                 </div>
               </motion.div>
 
-              <div className="flex flex-col items-center px-4 shrink-0">
+              <div className="flex flex-col items-center px-4 shrink-0 gap-2.5">
                 <div className="w-16 h-16 rounded-2xl flex items-center justify-center"
                   style={{
-                    background: `linear-gradient(145deg, ${alphaOf('green', 0.10)}, ${alpha(hex.neutral.black, 0.60)})`,
-                    border: `1px solid ${alphaOf('green', 0.22)}`,
-                    boxShadow: `0 0 30px ${alphaOf('green', 0.10)}`,
+                    background: `linear-gradient(145deg, ${alphaOf('green', 0.14)}, ${alpha(hex.neutral.black, 0.65)})`,
+                    border: `1px solid ${alphaOf('green', 0.28)}`,
+                    boxShadow: `0 0 32px ${alphaOf('green', 0.14)}`,
                   }}>
-                  <span className="text-[13px] font-black tracking-[0.12em]"
-                    style={{ color: alphaOf('green', 0.60) }}>VS</span>
+                  {/* VS: 14px */}
+                  <span className="text-sm font-black tracking-[0.10em]"
+                    style={{ color: alphaOf('green', 0.80) }}>VS</span>
                 </div>
-                <div className="mt-2 px-2 py-0.5 rounded-full text-center"
-                  style={{ background: alphaOf('gold', 0.08), border: `1px solid ${alphaOf('gold', 0.18)}` }}>
-                  <span className="text-[8px] font-black tracking-widest"
-                    style={{ color: `${hex.gold.base}80` }}>GRUPO A</span>
+                <div className="px-3 py-1.5 rounded-full text-center"
+                  style={{ background: alphaOf('gold', 0.12), border: `1px solid ${alphaOf('gold', 0.25)}` }}>
+                  {/* "GRUPO" — 11px decorativo */}
+                  <span className="text-[11px] font-black tracking-[0.20em]"
+                    style={{ color: `${hex.gold.base}aa` }}>GRUPO</span>
                 </div>
               </div>
 
-              <motion.div className="flex flex-col items-center gap-3 flex-1" whileHover={{ scale: 1.04 }}>
-                <Flag url={fixtures[0].awayTeam.flagUrl} name={fixtures[0].awayTeam.name} size="lg" glow={alphaOf('green', 0.20)} />
+              <motion.div className="flex flex-col items-center gap-3 flex-1" whileHover={{ scale: 1.05 }}>
+                <Flag url={fixtures[0].awayTeam.flagUrl} name={fixtures[0].awayTeam.name} size="lg" glow={alphaOf('green', 0.25)} />
                 <div className="text-center">
-                  <p className="text-base font-black tracking-wider uppercase" style={{ color: hex.text.primary }}>
+                  <p className="text-xl font-black tracking-wider uppercase" style={{ color: hex.text.primary }}>
                     {fixtures[0].awayTeam.shortName}
                   </p>
-                  <p className="text-[9px] font-medium mt-0.5 hidden sm:block truncate max-w-[90px] text-orionix-text-muted">
-                    {fixtures[0].awayTeam.name}
+                  <p className="text-[13px] font-medium mt-0.5 hidden sm:block truncate max-w-[100px]" style={{ color: hex.text.secondary }}>
+                    {localizeTeamName(fixtures[0].awayTeam.name, locale)}
                   </p>
                 </div>
               </motion.div>
             </div>
 
-            <div className="h-px w-full mb-4"
-              style={{ background: `linear-gradient(90deg, transparent, ${alphaOf('green', 0.15)}, transparent)` }} />
+            <div className="h-px w-full mb-5"
+              style={{ background: `linear-gradient(90deg, transparent, ${alphaOf('green', 0.20)}, transparent)` }} />
 
             <Link href={`/fixtures/${fixtures[0].id}`}>
               <motion.button
-                whileHover={{ scale: 1.02, boxShadow: `0 14px 44px ${alphaOf('success', 0.55)}` }}
+                whileHover={{ scale: 1.02, boxShadow: `0 18px 52px ${alphaOf('success', 0.65)}` }}
                 whileTap={{ scale: 0.97 }}
-                className="relative w-full py-3.5 rounded-xl font-black text-white tracking-wide overflow-hidden flex items-center justify-center gap-2"
+                className="relative w-full py-4 rounded-xl font-black text-white tracking-wide overflow-hidden flex items-center justify-center gap-2.5"
                 style={{
                   background: `linear-gradient(135deg, ${hex.green.dark}, ${hex.green.base}, ${hex.green.hover})`,
-                  boxShadow: `0 6px 24px ${alphaOf('success', 0.32)}`,
-                  fontSize: '13px',
+                  boxShadow: `0 6px 28px ${alphaOf('success', 0.40)}`,
+                  fontSize: '15px',
+                  letterSpacing: '0.07em',
                 }}
               >
                 <motion.div className="absolute inset-0"
-                  style={{ background: `linear-gradient(105deg, transparent 30%, ${alpha(hex.neutral.white, 0.18)} 50%, transparent 70%)` }}
+                  style={{ background: `linear-gradient(105deg, transparent 30%, ${alpha(hex.neutral.white, 0.22)} 50%, transparent 70%)` }}
                   animate={{ x: ['-130%', '130%'] }}
                   transition={{ duration: 2.4, repeat: Infinity, ease: 'linear', repeatDelay: 2.5 }} />
-                <span className="relative">⚡</span>
+                <FiZap className="relative" size={16} />
                 <span className="relative">{t('home.makePrediction')}</span>
-                <FiChevronRight className="relative" size={14} />
+                <FiChevronRight className="relative" size={15} />
               </motion.button>
             </Link>
           </>
         ) : (
-          <div className="flex flex-col gap-2">
+          /* Multi-match list */
+          <div className="flex flex-col gap-3">
             {fixtures.map((fixture, i) => (
               <motion.div
                 key={fixture.id}
-                initial={{ opacity: 0, x: -12 }}
+                initial={{ opacity: 0, x: -14 }}
                 animate={{ opacity: 1, x: 0 }}
-                transition={{ delay: 0.08 * i, duration: 0.35, ease: [0.22, 1, 0.36, 1] }}
+                transition={{ delay: 0.07 * i, duration: 0.35, ease: [0.22, 1, 0.36, 1] }}
                 whileHover={{ scale: 1.01 }}
                 className="relative overflow-hidden rounded-2xl group"
                 style={{
-                  background: alphaOf('green', 0.03),
-                  border: `1px solid ${alphaOf('green', 0.10)}`,
-                  transition: 'border-color 0.2s ease',
+                  background: `linear-gradient(145deg, ${alphaOf('green', 0.05)} 0%, ${alpha(hex.bg.elevated, 0.65)} 100%)`,
+                  border: `1px solid ${alphaOf('green', 0.14)}`,
+                  transition: 'border-color 0.22s ease, transform 0.2s ease',
                 }}
               >
-                <div className="absolute inset-x-0 top-0 h-px opacity-0 group-hover:opacity-100 transition-opacity"
-                  style={{ background: `linear-gradient(90deg, transparent, ${hex.green.bright}80, transparent)` }} />
+                {/* Hover top line */}
+                <div className="absolute inset-x-0 top-0 h-px opacity-0 group-hover:opacity-100 transition-opacity duration-300"
+                  style={{ background: `linear-gradient(90deg, transparent, ${hex.green.bright}99, transparent)` }} />
 
-                <div className="flex items-center gap-2 px-3 py-3">
-                  <div className="flex items-center gap-2 flex-1 min-w-0">
+                <div className="flex items-center gap-2 px-4 py-4">
+                  {/* Home team */}
+                  <div className="flex items-center gap-2.5 flex-1 min-w-0">
                     <Flag url={fixture.homeTeam.flagUrl} name={fixture.homeTeam.name} size="sm" />
-                    <span className="text-xs font-black tracking-wide truncate uppercase text-orionix-text-secondary">
+                    {/* Nombre equipo: 13px mínimo */}
+                    <span className="text-[13px] font-black tracking-wide truncate uppercase"
+                      style={{ color: hex.text.primary }}>
                       {fixture.homeTeam.shortName}
                     </span>
                   </div>
 
-                  <div className="text-center shrink-0 px-2 min-w-[76px]">
-                    <span className="text-[9.5px] font-semibold block leading-none mb-0.5 text-orionix-text-muted">
-                      {fmtDay(fixture.kickoffAt)}
+                  {/* Time center */}
+                  <div className="text-center shrink-0 px-2 min-w-[88px]">
+                    {/* Día: 12px */}
+                    <span className="text-[12px] font-semibold block leading-none mb-1.5" style={{ color: hex.text.muted }}>
+                      {fmtDay(fixture.kickoffAt, locale)}
                     </span>
-                    <span className="text-sm font-black leading-none"
-                      style={{ color: hex.green.bright, textShadow: `0 0 12px ${alphaOf('green', 0.40)}` }}>
-                      {fmtTime(fixture.kickoffAt)}
-                    </span>
+                    <div className="px-2.5 py-1 rounded-lg inline-block"
+                      style={{ background: alphaOf('green', 0.12), border: `1px solid ${alphaOf('green', 0.22)}` }}>
+                      {/* Hora: text-sm = 14px */}
+                      <span className="text-sm font-black leading-none tabular-nums"
+                        style={{ color: hex.green.bright, textShadow: `0 0 14px ${alphaOf('green', 0.55)}` }}>
+                        {fmtTime(fixture.kickoffAt, locale)}
+                      </span>
+                    </div>
                   </div>
 
-                  <div className="flex items-center gap-2 flex-1 min-w-0 justify-end">
-                    <span className="text-xs font-black tracking-wide truncate uppercase text-orionix-text-secondary">
+                  {/* Away team */}
+                  <div className="flex items-center gap-2.5 flex-1 min-w-0 justify-end">
+                    <span className="text-[13px] font-black tracking-wide truncate uppercase"
+                      style={{ color: hex.text.primary }}>
                       {fixture.awayTeam.shortName}
                     </span>
                     <Flag url={fixture.awayTeam.flagUrl} name={fixture.awayTeam.name} size="sm" />
                   </div>
 
-                  <Link href={`/fixtures/${fixture.id}`} className="shrink-0 ml-2">
+                  {/* CTA Button — 12px mínimo */}
+                  <Link href={`/fixtures/${fixture.id}`} className="shrink-0 ml-3">
                     <motion.button
-                      whileHover={{ scale: 1.07, boxShadow: `0 4px 20px ${alphaOf('success', 0.50)}` }}
+                      whileHover={{ scale: 1.08, boxShadow: `0 8px 26px ${alphaOf('success', 0.58)}` }}
                       whileTap={{ scale: 0.93 }}
-                      className="flex items-center gap-1 px-3 py-1.5 rounded-xl font-black text-white whitespace-nowrap"
+                      className="flex items-center gap-1.5 px-4 py-2.5 rounded-xl font-black text-white whitespace-nowrap"
                       style={{
                         background: `linear-gradient(135deg, ${hex.green.dark}, ${hex.green.base})`,
-                        boxShadow: `0 3px 12px ${alphaOf('success', 0.28)}`,
-                        fontSize: '10px',
+                        boxShadow: `0 3px 14px ${alphaOf('success', 0.35)}`,
+                        fontSize: '12px',
+                        letterSpacing: '0.04em',
                       }}
                     >
-                      ⚡ Porra
+                      <FiZap size={12} />
+                      {t('common.predict')}
                     </motion.button>
                   </Link>
                 </div>
@@ -190,16 +225,18 @@ const UpcomingMatches = ({ fixtures, t }: UpcomingMatchesProps) => (
           </div>
         )
       ) : (
-        <div className="flex flex-col items-center justify-center py-12">
-          <div className="w-16 h-16 rounded-2xl flex items-center justify-center mb-3"
-            style={{ background: alphaOf('green', 0.07), border: `1px solid ${alphaOf('green', 0.15)}` }}>
+        <div className="flex flex-col items-center justify-center py-14">
+          <div className="w-16 h-16 rounded-2xl flex items-center justify-center mb-4"
+            style={{ background: alphaOf('green', 0.08), border: `1px solid ${alphaOf('green', 0.18)}` }}>
             <span className="text-3xl">⚽</span>
           </div>
-          <p className="text-sm font-semibold text-orionix-text-muted">{t('home.noFixtures')}</p>
+          {/* Estado vacío: text-sm = 14px */}
+          <p className="text-sm font-semibold" style={{ color: hex.text.secondary }}>{t('home.noFixtures')}</p>
         </div>
       )}
     </div>
   </motion.div>
-);
+  );
+};
 
 export default UpcomingMatches;

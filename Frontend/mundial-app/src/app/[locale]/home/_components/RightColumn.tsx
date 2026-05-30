@@ -10,6 +10,7 @@ import ShareButton from '@/components/ShareButton';
 import { Ring, GlowBar, SectionHeader, FormStrip, card } from './HomeUtils';
 
 const MEDAL = ['🥇', '🥈', '🥉'];
+const MEDAL_COLORS = [hex.gold.base, hex.text.secondary, '#cd7c3e'];
 
 interface Stats {
   predictions: number;
@@ -40,48 +41,56 @@ const RightColumn = ({ stats, recentResults, myPredictions, topRanking, maxRankP
     : 0;
 
   return (
-    <div className="flex flex-col gap-4">
+    <div className="flex flex-col gap-5">
 
-      {/* RENDIMIENTO */}
+      {/* ── RENDIMIENTO ── */}
       <motion.div
         initial={{ opacity: 0, x: 20 }}
         animate={{ opacity: 1, x: 0 }}
         transition={{ duration: 0.55, delay: 0.42, ease: [0.22, 1, 0.36, 1] }}
         className="relative overflow-hidden rounded-3xl"
-        style={card(alphaOf('success', 0.18))}
+        style={card(alphaOf('success', 0.24))}
       >
         <div className="absolute inset-x-0 top-0 h-[2px]"
-          style={{ background: `linear-gradient(90deg, transparent, ${hex.green.hover}bb, transparent)` }} />
-        <div className="absolute -top-16 -left-16 w-44 h-44 rounded-full pointer-events-none"
-          style={{ background: `radial-gradient(circle, ${alphaOf('success', 0.09)} 0%, transparent 65%)`, filter: 'blur(26px)' }} />
+          style={{ background: `linear-gradient(90deg, transparent, ${hex.green.hover}dd, transparent)` }} />
+        <div className="absolute -top-16 -left-16 w-48 h-48 rounded-full pointer-events-none"
+          style={{ background: `radial-gradient(circle, ${alphaOf('success', 0.12)} 0%, transparent 65%)`, filter: 'blur(28px)' }} />
 
-        <div className="relative p-5">
+        <div className="relative p-5 sm:p-6">
           <SectionHeader label={t('home.performance')} accent={hex.green.hover} />
 
           <div className="flex items-center gap-5">
+            {/* Ring más grande: 96px */}
             <div className="relative shrink-0">
-              <Ring value={accuracyPct} max={100} size={84} stroke={7} color={hex.green.hover} />
+              <Ring value={accuracyPct} max={100} size={96} stroke={8} color={hex.green.hover} />
               <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none">
-                <p className="text-xl font-black leading-none tabular-nums"
-                  style={{ color: hex.green.soft, textShadow: `0 0 16px ${alphaOf('success', 0.80)}` }}>
+                {/* Porcentaje: text-2xl */}
+                <p className="text-2xl font-black leading-none tabular-nums"
+                  style={{ color: hex.green.soft, textShadow: `0 0 20px ${alphaOf('success', 0.90)}` }}>
                   {accuracyPct}%
                 </p>
-                <p className="text-[6px] font-black tracking-[0.2em] uppercase mt-0.5 text-orionix-text-muted">Exactas</p>
+                {/* Label: 10px — compacto pero visible */}
+                <p className="text-[10px] font-black tracking-[0.18em] uppercase mt-1" style={{ color: hex.text.muted }}>
+                  Exactas
+                </p>
               </div>
             </div>
 
-            <div className="flex-1 space-y-3">
+            {/* Bars */}
+            <div className="flex-1 space-y-4">
               {[
                 { label: t('home.stats.predictionsLabel'), value: stats.predictions, max: 64,  color: hex.green.bright },
-                { label: t('home.stats.exact'),            value: stats.exactas,     max: stats.predictions || 1, color: hex.green.hover  },
-                { label: t('home.stats.points'),           value: stats.puntos,      max: 192, color: hex.gold.base    },
+                { label: t('home.stats.exact'),            value: stats.exactas,     max: stats.predictions || 1, color: hex.green.hover },
+                { label: t('home.stats.points'),           value: stats.puntos,      max: 192, color: hex.gold.base },
               ].map(({ label, value, max, color }) => (
                 <div key={label}>
-                  <div className="flex justify-between items-baseline mb-1">
-                    <span className="text-[8.5px] font-bold tracking-wide text-orionix-text-muted">{label}</span>
-                    <span className="text-[10px] font-black tabular-nums" style={{ color }}>{value}</span>
+                  <div className="flex justify-between items-baseline mb-2">
+                    {/* Label barra: text-xs = 12px */}
+                    <span className="text-xs font-bold tracking-wide" style={{ color: hex.text.secondary }}>{label}</span>
+                    {/* Valor: text-sm = 14px */}
+                    <span className="text-sm font-black tabular-nums" style={{ color }}>{value}</span>
                   </div>
-                  <GlowBar value={value} max={max} color={color} height={3} />
+                  <GlowBar value={value} max={max} color={color} height={5} />
                 </div>
               ))}
             </div>
@@ -91,27 +100,27 @@ const RightColumn = ({ stats, recentResults, myPredictions, topRanking, maxRankP
         </div>
       </motion.div>
 
-      {/* CLASIFICACIÓN GLOBAL */}
+      {/* ── CLASIFICACIÓN GLOBAL ── */}
       <motion.div
         data-tour="ranking"
         initial={{ opacity: 0, x: 20 }}
         animate={{ opacity: 1, x: 0 }}
         transition={{ duration: 0.55, delay: 0.50, ease: [0.22, 1, 0.36, 1] }}
         className="relative overflow-hidden rounded-3xl flex-1"
-        style={card(alpha(hex.neutral.white, 0.07))}
+        style={card(alphaOf('gold', 0.18))}
       >
         <div className="absolute inset-x-0 top-0 h-[2px]"
-          style={{ background: `linear-gradient(90deg, transparent, ${hex.gold.base}60, transparent)` }} />
-        <div className="absolute -top-14 -right-14 w-40 h-40 rounded-full pointer-events-none"
-          style={{ background: `radial-gradient(circle, ${alphaOf('gold', 0.08)} 0%, transparent 65%)`, filter: 'blur(24px)' }} />
+          style={{ background: `linear-gradient(90deg, transparent, ${hex.gold.base}99, transparent)` }} />
+        <div className="absolute -top-14 -right-14 w-44 h-44 rounded-full pointer-events-none"
+          style={{ background: `radial-gradient(circle, ${alphaOf('gold', 0.12)} 0%, transparent 65%)`, filter: 'blur(26px)' }} />
 
-        <div className="relative p-5">
+        <div className="relative p-5 sm:p-6">
           <SectionHeader
             label={t('home.globalRanking')}
             accent={hex.gold.base}
             right={
               <div className="flex items-center gap-2">
-                <span className="text-sm" style={{ filter: `drop-shadow(0 0 5px ${hex.gold.base}55)` }}>⚽</span>
+                <span className="text-sm" style={{ filter: `drop-shadow(0 0 6px ${hex.gold.base}66)` }}>⚽</span>
                 {stats.rank > 0 && (
                   <ShareButton
                     title="⚽ Orionix Gol — Mundial 2026"
@@ -125,68 +134,92 @@ const RightColumn = ({ stats, recentResults, myPredictions, topRanking, maxRankP
             }
           />
 
-          <div className="space-y-2">
+          <div className="space-y-2.5">
             {topRanking.length > 0 ? topRanking.map((p, i) => {
-              const rankColors = [hex.gold.base, hex.text.secondary, '#cd7c3e'];
-              const barColor   = p.isMe ? hex.green.bright : (rankColors[i] ?? alpha(hex.neutral.white, 0.18));
+              const barColor = p.isMe ? hex.green.bright : (MEDAL_COLORS[i] ?? alpha(hex.neutral.white, 0.22));
               return (
                 <motion.div
                   key={i}
-                  initial={{ opacity: 0, x: 14 }}
+                  initial={{ opacity: 0, x: 16 }}
                   animate={{ opacity: 1, x: 0 }}
-                  transition={{ delay: 0.56 + i * 0.06 }}
-                  className="relative overflow-hidden rounded-2xl p-2.5"
+                  transition={{ delay: 0.56 + i * 0.07 }}
+                  whileHover={{ scale: 1.02, transition: { duration: 0.18 } }}
+                  className="relative overflow-hidden rounded-2xl p-3"
                   style={{
                     background: p.isMe
-                      ? alphaOf('green', 0.08)
-                      : (i < 3 ? alpha(hex.neutral.white, 0.03) : alpha(hex.neutral.white, 0.02)),
+                      ? `linear-gradient(145deg, ${alphaOf('green', 0.12)}, ${alpha(hex.bg.elevated, 0.82)})`
+                      : (i < 3
+                        ? `linear-gradient(145deg, ${alpha(barColor, 0.07)}, ${alpha(hex.bg.elevated, 0.72)})`
+                        : alpha(hex.neutral.white, 0.025)),
                     border: p.isMe
-                      ? `1px solid ${alphaOf('green', 0.24)}`
-                      : (i < 3 ? `1px solid ${barColor}20` : `1px solid ${alpha(hex.neutral.white, 0.04)}`),
+                      ? `1px solid ${alphaOf('green', 0.32)}`
+                      : (i < 3 ? `1px solid ${alpha(barColor, 0.25)}` : `1px solid ${alpha(hex.neutral.white, 0.06)}`),
                   }}
                 >
-                  {p.isMe && (
+                  {(p.isMe || i < 3) && (
                     <div className="absolute inset-x-0 top-0 h-px"
-                      style={{ background: `linear-gradient(90deg, transparent, ${hex.green.bright}60, transparent)` }} />
-                  )}
-                  {i < 3 && !p.isMe && (
-                    <div className="absolute inset-x-0 top-0 h-px"
-                      style={{ background: `linear-gradient(90deg, transparent, ${barColor}40, transparent)` }} />
+                      style={{ background: `linear-gradient(90deg, transparent, ${barColor}60, transparent)` }} />
                   )}
 
-                  <div className="flex items-center gap-2 mb-1.5">
-                    <span className="text-sm w-5 text-center shrink-0 leading-none">
-                      {i < 3 ? MEDAL[i] : (
-                        <span className="text-[10px] font-black text-orionix-text-muted">{p.rank}</span>
+                  <div className="flex items-center gap-2.5 mb-2">
+                    {/* Posición / medalla */}
+                    <div className="w-8 h-8 rounded-lg flex items-center justify-center shrink-0"
+                      style={{
+                        background: i < 3 ? alpha(barColor, 0.16) : alpha(hex.neutral.white, 0.05),
+                        border: `1px solid ${i < 3 ? alpha(barColor, 0.30) : alpha(hex.neutral.white, 0.07)}`,
+                      }}>
+                      {i < 3 ? (
+                        <span className="text-base leading-none">{MEDAL[i]}</span>
+                      ) : (
+                        <span className="text-[12px] font-black" style={{ color: hex.text.secondary }}>{p.rank}</span>
                       )}
-                    </span>
-                    <span className="flex-1 text-xs font-bold truncate"
-                      style={{ color: p.isMe ? hex.green.soft : hex.text.secondary }}>
-                      {p.isMe && <span className="mr-0.5" style={{ color: hex.green.bright }}>›</span>}
+                    </div>
+
+                    {/* Nombre jugador: 12px */}
+                    <span className="flex-1 text-[12px] font-bold truncate"
+                      style={{ color: p.isMe ? hex.green.soft : hex.text.primary }}>
+                      {p.isMe && (
+                        <span className="mr-1.5 text-[11px] font-black px-1.5 py-0.5 rounded"
+                          style={{ background: alphaOf('green', 0.18), color: hex.green.bright }}>
+                          TÚ
+                        </span>
+                      )}
                       {p.name}
                     </span>
-                    <span className="text-xs font-black tabular-nums shrink-0"
-                      style={{ color: barColor, textShadow: `0 0 10px ${barColor}80` }}>
-                      {p.points}
-                    </span>
-                    <span className="text-[7.5px] text-orionix-text-muted shrink-0">pts</span>
+
+                    {/* Puntos: 14px */}
+                    <div className="text-right shrink-0">
+                      <span className="text-sm font-black tabular-nums leading-none"
+                        style={{ color: barColor, textShadow: `0 0 12px ${barColor}80` }}>
+                        {p.points}
+                      </span>
+                      <span className="text-[11px] font-bold ml-0.5" style={{ color: hex.text.muted }}>pts</span>
+                    </div>
                   </div>
-                  <GlowBar value={p.points} max={maxRankPts} color={barColor} height={2} />
+
+                  {/* Barra */}
+                  <GlowBar value={p.points} max={maxRankPts} color={barColor} height={4} />
                 </motion.div>
               );
             }) : (
-              <p className="text-xs text-center py-8 text-orionix-text-muted">{t('home.noRankingData')}</p>
+              <p className="text-sm text-center py-10" style={{ color: hex.text.muted }}>{t('home.noRankingData')}</p>
             )}
           </div>
 
-          <Link href="/predictions">
+          <Link href="/predictions?tab=ranking">
             <motion.button
-              whileHover={{ borderColor: alphaOf('green', 0.35), color: hex.green.bright }}
-              className="w-full mt-4 py-2.5 rounded-xl text-[9px] font-black border transition-all tracking-[0.24em] uppercase text-orionix-text-muted flex items-center justify-center gap-1"
-              style={{ borderColor: alpha(hex.neutral.white, 0.06) }}
+              whileHover={{ borderColor: alphaOf('green', 0.45), color: hex.green.bright }}
+              className="w-full mt-5 py-3.5 rounded-xl font-black border transition-all uppercase flex items-center justify-center gap-1.5"
+              style={{
+                borderColor: alpha(hex.neutral.white, 0.10),
+                color: hex.text.secondary,
+                /* "Ver ranking completo": 12px */
+                fontSize: '12px',
+                letterSpacing: '0.20em',
+              }}
             >
               {t('home.viewFullRanking')}
-              <FiChevronRight size={11} />
+              <FiChevronRight size={13} />
             </motion.button>
           </Link>
         </div>
