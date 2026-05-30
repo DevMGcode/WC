@@ -160,6 +160,18 @@ public class UserService {
 
         user.setEmail(request.email());
         user.setFirstName(request.firstName());
+        // Campos opcionales: solo se actualizan si el cliente los envía.
+        // El frontend actual solo manda firstName+email, pero Postman/clientes
+        // móviles pueden enviar más, y todos los campos existen en la BD.
+        if (request.lastName() != null) {
+            user.setLastName(request.lastName());
+        }
+        if (request.preferredLanguage() != null && !request.preferredLanguage().isBlank()) {
+            user.setPreferredLanguage(request.preferredLanguage());
+        }
+        if (request.timeZone() != null && !request.timeZone().isBlank()) {
+            user.setTimeZone(request.timeZone());
+        }
 
         return appUserRepository.save(user);
     }

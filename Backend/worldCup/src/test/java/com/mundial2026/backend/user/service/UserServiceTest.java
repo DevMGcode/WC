@@ -3,6 +3,7 @@ package com.mundial2026.backend.user.service;
 import com.mundial2026.backend.common.exception.BusinessRuleException;
 import com.mundial2026.backend.common.exception.ResourceNotFoundException;
 import com.mundial2026.backend.user.api.dto.CreateUserRequest;
+import com.mundial2026.backend.user.api.dto.UpdateUserProfileRequest;
 import com.mundial2026.backend.user.domain.AppUser;
 import com.mundial2026.backend.user.domain.RoleEntity;
 import com.mundial2026.backend.user.domain.UserStatus;
@@ -171,6 +172,133 @@ class UserServiceTest {
         when(appUserRepository.findById(999L)).thenReturn(Optional.empty());
 
         assertThatThrownBy(() -> userService.findById(999L))
+                .isInstanceOf(ResourceNotFoundException.class);
+    }
+
+    // ── updateProfile ─────────────────────────────────────────────────────────
+
+    /**
+     * Caso del frontend: solo manda firstName + email. lastName y demás vienen
+     * como null y NO deben sobrescribir los campos existentes en BD.
+     */
+    @Test
+    void updateProfile_onlyFirstNameAndEmail_keepsOtherFields() {
+        AppUser existing = buildActiveVerifiedUser("old@test.com", "$h");
+        existing.setId(7L);
+        existing.setLastName("Bonilla");
+        existing.setPreferredLanguage("es");
+        existing.setTimeZone("America/Bogota");
+
+        when(appUserRepository.findById(7L)).thenReturn(Optional.of(existing));
+        when(appUserRepository.existsByEmail("new@test.com")).thenReturn(false);
+        when(appUserRepository.save(any(AppUser.class))).thenAnswer(inv -> inv.getArgument(0));
+
+        var req = new UpdateUserProfileRequest("Nuevo", null, "new@test.com", null, null);
+        AppUser updated = userService.updateProfile(7L, req);
+
+        assertThat(updated.getFirstName()).isEqualTo("Nuevo");
+        assertThat(updated.getEmail()).isEqualTo("new@test.com");
+        // No deben cambiar:
+        assertThat(updated.getLastName()).isEqualTo("Bonilla");
+        assertThat(updated.getPreferredLanguage()).isEqualTo("es");
+        assertThat(updated.getTimeZone()).isEqualTo("America/Bogota");
+    }
+
+    /**
+     * Cliente alterno (Postman/futuro móvil) puede enviar lastName y se persiste.
+     * Cubre el Bug 4: antes el backend ignoraba lastName aunque viniera.
+     */
+    @Test
+    void updateProfile_withLastName_persistsLastName() {
+        AppUser existing = buildActiveVerifiedUser("a@b.com", "$h");
+        existing.setId(8L);
+        existing.setLastName("Old");
+
+        when(appUserRepository.findById(8L)).thenReturn(Optional.of(existing));
+        when(appUserRepository.save(any(AppUser.class))).thenAnswer(inv -> inv.getArgument(0));
+
+        var req = new UpdateUserProfileRequest("Alice", "NewLast", "a@b.com", null, null);
+        AppUser updated = userService.updateProfile(8L, req);
+
+        assertThat(updated.getLastName()).isEqualTo("NewLast");
+    }
+
+    @Test
+    void updateProfile_withLanguageAndTimezone_persistsBoth() {
+        AppUser existing = buildActiveVerifiedUser("a@b.com", "$h");
+        existing.setId(9L);
+
+        when(appUserRepository.findById(9L)).thenReturn(Optional.of(existing));
+        when(appUserRepository.save(any(AppUser.class))).thenAnswer(inv -> inv.getArgument(0));
+
+        var req = new UpdateUserProfileRequest("Alice", null, "a@b.com", "en", "America/Mexico_City");
+        AppUser updated = userService.updateProfile(9L, req);
+
+        assertThat(updated.getPreferredLanguage()).isEqualTo("en");
+        assertThat(updated.getTimeZone()).isEqualTo("America/Mexico_City");
+    }
+
+    /**
+     * Strings vacíos/blank en idioma o tz NO deben sobrescribir los valores
+     * existentes (mantenemos el comportamiento defensivo del service).
+     */
+    @Test
+    void updateProfile_blankLanguageOrTz_doesNotOverwrite() {
+        AppUser existing = buildActiveVerifiedUser("a@b.com", "$h");
+        existing.setId(10L);
+        existing.setPreferredLanguage("es");
+        existing.setTimeZone("America/Bogota");
+
+        when(appUserRepository.findById(10L)).thenReturn(Optional.of(existing));
+        when(appUserRepository.save(any(AppUser.class))).thenAnswer(inv -> inv.getArgument(0));
+
+        var req = new UpdateUserProfileRequest("Alice", null, "a@b.com", "  ", "");
+        AppUser updated = userService.updateProfile(10L, req);
+
+        assertThat(updated.getPreferredLanguage()).isEqualTo("es");
+        assertThat(updated.getTimeZone()).isEqualTo("America/Bogota");
+    }
+
+    @Test
+    void updateProfile_duplicateEmail_throwsBusinessRule() {
+        AppUser existing = buildActiveVerifiedUser("old@test.com", "$h");
+        existing.setId(11L);
+
+        when(appUserRepository.findById(11L)).thenReturn(Optional.of(existing));
+        when(appUserRepository.existsByEmail("taken@test.com")).thenReturn(true);
+
+        var req = new UpdateUserProfileRequest("Alice", null, "taken@test.com", null, null);
+
+        assertThatThrownBy(() -> userService.updateProfile(11L, req))
+                .isInstanceOf(BusinessRuleException.class)
+                .hasMessageContaining("El email ya existe");
+    }
+
+    @Test
+    void updateProfile_sameEmail_doesNotCheckUniqueness() {
+        AppUser existing = buildActiveVerifiedUser("me@test.com", "$h");
+        existing.setId(12L);
+
+        when(appUserRepository.findById(12L)).thenReturn(Optional.of(existing));
+        when(appUserRepository.save(any(AppUser.class))).thenAnswer(inv -> inv.getArgument(0));
+
+        // Mismo email → no debe llamar existsByEmail; si lo hiciera el mock no
+        // configurado devolvería false y dejaría pasar igual, pero validamos
+        // que se guarda correctamente.
+        var req = new UpdateUserProfileRequest("Yo", null, "me@test.com", null, null);
+        AppUser updated = userService.updateProfile(12L, req);
+
+        assertThat(updated.getEmail()).isEqualTo("me@test.com");
+        assertThat(updated.getFirstName()).isEqualTo("Yo");
+    }
+
+    @Test
+    void updateProfile_missingUser_throwsResourceNotFound() {
+        when(appUserRepository.findById(999L)).thenReturn(Optional.empty());
+
+        var req = new UpdateUserProfileRequest("X", null, "x@y.com", null, null);
+
+        assertThatThrownBy(() -> userService.updateProfile(999L, req))
                 .isInstanceOf(ResourceNotFoundException.class);
     }
 
