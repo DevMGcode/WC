@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
+import { useTranslations } from 'next-intl';
 import Image from 'next/image';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useAuth } from '@/contexts/AuthContext';
@@ -40,6 +41,7 @@ interface Field {
 }
 
 export default function RegisterPage() {
+  const t      = useTranslations();
   const router = useRouter();
   const { register, isAuthenticated, loading: authLoading } = useAuth();
 
@@ -75,36 +77,39 @@ export default function RegisterPage() {
     if (isLoading) return;
 
     if (form.password !== form.confirmPassword) {
-      setError('Las contraseñas no coinciden.');
+      setError(t('register.passwordMismatch'));
       return;
     }
     if (form.password.length < 5) {
-      setError('La contraseña debe tener al menos 5 caracteres.');
+      setError(t('register.passwordTooShort'));
       return;
     }
     if (form.username.length < 3) {
-      setError('El nombre de usuario debe tener al menos 3 caracteres.');
+      setError(t('register.passwordTooShort'));
       return;
     }
 
     setIsLoading(true);
     setError('');
 
-    const result = await register({
-      username: form.username.trim(),
-      email: form.email.trim(),
-      password: form.password,
-      firstName: form.firstName.trim(),
-      lastName: form.lastName.trim(),
-    });
+    try {
+      const result = await register({
+        username: form.username.trim(),
+        email: form.email.trim(),
+        password: form.password,
+        firstName: form.firstName.trim(),
+        lastName: form.lastName.trim(),
+      });
 
-    if (result.ok) {
-      setSuccess(true);
-      if (!result.emailVerificationRequired) {
-        setTimeout(() => router.replace('/'), 1200);
+      if (result.ok) {
+        setSuccess(true);
+        if (!result.emailVerificationRequired) {
+          setTimeout(() => router.replace('/es/login'), 1500);
+        }
+      } else {
+        setError(result.message || t('register.genericError'));
       }
-    } else {
-      setError(result.message || 'No se pudo crear la cuenta. Intenta de nuevo.');
+    } finally {
       setIsLoading(false);
     }
   };
@@ -112,9 +117,9 @@ export default function RegisterPage() {
   const fields: Field[] = [
     {
       id: 'firstName',
-      label: 'Nombre',
+      label: t('register.firstName'),
       type: 'text',
-      placeholder: 'Tu nombre',
+      placeholder: t('register.firstNamePlaceholder'),
       icon: (
         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
           <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" /><circle cx="12" cy="7" r="4" />
@@ -123,9 +128,9 @@ export default function RegisterPage() {
     },
     {
       id: 'lastName',
-      label: 'Apellido',
+      label: t('register.lastName'),
       type: 'text',
-      placeholder: 'Tu apellido',
+      placeholder: t('register.lastNamePlaceholder'),
       icon: (
         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
           <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" /><circle cx="12" cy="7" r="4" />
@@ -134,9 +139,9 @@ export default function RegisterPage() {
     },
     {
       id: 'username',
-      label: 'Usuario',
+      label: t('register.username'),
       type: 'text',
-      placeholder: 'nombre_usuario',
+      placeholder: t('register.usernamePlaceholder'),
       icon: (
         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
           <path d="M18 20a6 6 0 0 0-12 0" /><circle cx="12" cy="10" r="4" /><path d="M22 20h-4M2 20h4" />
@@ -145,9 +150,9 @@ export default function RegisterPage() {
     },
     {
       id: 'email',
-      label: 'Email',
+      label: t('register.email'),
       type: 'email',
-      placeholder: 'tu@email.com',
+      placeholder: t('register.emailPlaceholder'),
       icon: (
         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
           <rect width="20" height="16" x="2" y="4" rx="2" /><path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7" />
@@ -156,9 +161,9 @@ export default function RegisterPage() {
     },
     {
       id: 'password',
-      label: 'Contraseña',
+      label: t('register.password'),
       type: 'password',
-      placeholder: 'Mínimo 5 caracteres',
+      placeholder: t('register.passwordMin'),
       icon: (
         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
           <rect width="18" height="11" x="3" y="11" rx="2" ry="2" /><path d="M7 11V7a5 5 0 0 1 10 0v4" />
@@ -167,9 +172,9 @@ export default function RegisterPage() {
     },
     {
       id: 'confirmPassword',
-      label: 'Confirmar contraseña',
+      label: t('register.confirmPassword'),
       type: 'password',
-      placeholder: 'Repite tu contraseña',
+      placeholder: t('register.passwordRepeat'),
       icon: (
         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
           <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
@@ -254,9 +259,9 @@ export default function RegisterPage() {
             </div>
             <div className="flex-1 min-w-0">
               <h1 className="text-xl font-bold text-white" style={{ fontFamily: 'var(--font-display)', letterSpacing: '0.01em' }}>
-                Crear cuenta
+                {t('register.title')}
               </h1>
-              <p className="text-xs mt-0.5 text-orionix-text-muted">Únete y comienza a predecir</p>
+              <p className="text-xs mt-0.5 text-orionix-text-muted">{t('register.subtitle')}</p>
             </div>
             <span className="text-[10px] font-bold px-2 py-0.5 rounded-full flex-shrink-0"
               style={{ background: 'rgba(212,175,55,0.10)', color: '#D4AF37', border: '1px solid rgba(212,175,55,0.25)' }}>
@@ -290,10 +295,22 @@ export default function RegisterPage() {
                 className="mb-4 px-4 py-3 rounded-xl text-xs font-medium flex items-center gap-2"
                 style={{ background: 'rgba(56,142,60,0.1)', border: '1px solid rgba(56,142,60,0.25)', color: '#4CAF50' }}
               >
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-                  <polyline points="20 6 9 17 4 12" />
-                </svg>
-                ¡Cuenta creada! Revisa tu correo (incluso la carpeta de spam) y haz clic en el enlace para activarla.
+                <div className="flex flex-col gap-3 w-full">
+                  <div className="flex items-center gap-2">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                      <polyline points="20 6 9 17 4 12" />
+                    </svg>
+                    {t('register.successMessage')}
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => router.replace('/es/login')}
+                    className="w-full py-2 rounded-lg text-xs font-bold tracking-widest uppercase"
+                    style={{ background: 'rgba(76,175,80,0.2)', border: '1px solid rgba(76,175,80,0.4)', color: '#4CAF50' }}
+                  >
+                    {t('auth.goToLogin')} →
+                  </button>
+                </div>
               </motion.div>
             )}
           </AnimatePresence>
@@ -397,19 +414,19 @@ export default function RegisterPage() {
                   transition={{ duration: 2.4, repeat: Infinity, ease: 'linear', repeatDelay: 1.5 }}
                 />
               )}
-              {isLoading ? (
+              {success ? (
+                t('register.successTitle')
+              ) : isLoading ? (
                 <span className="flex items-center justify-center gap-2">
                   <motion.span
                     className="inline-block w-4 h-4 rounded-full border-2 border-white/30 border-t-white"
                     animate={{ rotate: 360 }}
                     transition={{ duration: 0.7, repeat: Infinity, ease: 'linear' }}
                   />
-                  Creando cuenta...
+                  {t('register.submitting')}
                 </span>
-              ) : success ? (
-                '¡Listo!'
               ) : (
-                'Crear cuenta →'
+                t('register.submit') + ' →'
               )}
             </motion.button>
           </form>
@@ -417,13 +434,13 @@ export default function RegisterPage() {
           {/* Footer */}
           <div className="mt-5 pt-4 flex items-center justify-center"
             style={{ borderTop: '1px solid rgba(255,255,255,0.06)' }}>
-            <span className="text-xs text-orionix-text-muted">¿Ya tienes cuenta?</span>
+            <span className="text-xs text-orionix-text-muted">{t('register.haveAccount')}</span>
             <button
               onClick={() => router.push('/login')}
               className="ml-1.5 text-xs font-semibold transition-colors duration-200 flex items-center gap-1"
               style={{ color: 'rgba(76,175,80,0.85)' }}
             >
-              Inicia sesión
+              {t('auth.signInButton')}
               <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
                 <path d="M5 12h14M12 5l7 7-7 7" />
               </svg>
@@ -431,7 +448,7 @@ export default function RegisterPage() {
           </div>
 
           <p className="text-center text-[10px] mt-4 text-orionix-text-muted">
-            © 2026 MUNDIAL APP — TODOS LOS DERECHOS RESERVADOS
+            {t('auth.copyright')}
           </p>
         </div>
       </motion.div>

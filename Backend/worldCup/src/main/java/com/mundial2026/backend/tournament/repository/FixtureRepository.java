@@ -10,6 +10,7 @@ import java.util.List;
 import java.util.Optional;
 
 public interface FixtureRepository extends JpaRepository<Fixture, Long> {
+
     List<Fixture> findByStatusOrderByKickoffAtAsc(FixtureStatus status);
 
     @EntityGraph(attributePaths = {"tournament", "stage", "groupStage", "venue", "homeTeam", "awayTeam"})
@@ -33,4 +34,6 @@ public interface FixtureRepository extends JpaRepository<Fixture, Long> {
 
     List<Fixture> findByStatusAndExternalProviderIdNotNullAndKickoffAtAfter(
             FixtureStatus status, OffsetDateTime since);
+
+    boolean existsByKickoffAtBetween(OffsetDateTime from, OffsetDateTime to);
 }

@@ -23,27 +23,38 @@ public class StandingsCalculatorService {
 
     @Transactional
     public void recalculateForGroup(GroupStage groupStage) {
-        List<Fixture> finished = fixtureRepository
-                .findByGroupStageIdOrderByKickoffAtAsc(groupStage.getId())
-                .stream()
+        // Pull ALL fixtures of this group so we can: (a) derive the full team
+        // roster of the group (home + away across all fixtures, finished or not)
+        // and (b) compute totals from the FINISHED ones only.
+        List<Fixture> allFixtures = fixtureRepository
+                .findByGroupStageIdOrderByKickoffAtAsc(groupStage.getId());
+
+        // Derive the unique set of teams that belong to this group from its fixtures.
+        // This decouples us from the external module (no need to ask /standings) and
+        // makes the recalculation self-contained inside the tournament aggregate.
+        Map<Long, Team> teamsInGroup = new LinkedHashMap<>();
+        for (Fixture f : allFixtures) {
+            if (f.getHomeTeam() != null) teamsInGroup.putIfAbsent(f.getHomeTeam().getId(), f.getHomeTeam());
+            if (f.getAwayTeam() != null) teamsInGroup.putIfAbsent(f.getAwayTeam().getId(), f.getAwayTeam());
+        }
+
+        // Start every team in the group at zero — this handles the initial-seed
+        // case (empty group_standing table) without any external coupling.
+        Map<Long, Stats> stats = new LinkedHashMap<>();
+        for (Team t : teamsInGroup.values()) stats.put(t.getId(), new Stats(t));
+
+        // Accumulate totals from the finished fixtures only.
+        List<Fixture> finished = allFixtures.stream()
                 .filter(f -> f.getStatus() == FixtureStatus.FINISHED
                           && f.getHomeScore() != null
                           && f.getAwayScore() != null)
                 .toList();
 
-        Map<Long, Stats> map = new LinkedHashMap<>();
-
         for (Fixture f : finished) {
-            Team home = f.getHomeTeam();
-            Team away = f.getAwayTeam();
             int hs = f.getHomeScore();
             int as = f.getAwayScore();
-
-            map.putIfAbsent(home.getId(), new Stats(home));
-            map.putIfAbsent(away.getId(), new Stats(away));
-
-            Stats ht = map.get(home.getId());
-            Stats at = map.get(away.getId());
+            Stats ht = stats.get(f.getHomeTeam().getId());
+            Stats at = stats.get(f.getAwayTeam().getId());
 
             ht.played++; at.played++;
             ht.goalsFor += hs; ht.goalsAgainst += as;
@@ -54,13 +65,18 @@ public class StandingsCalculatorService {
             else              { ht.drawn++; ht.points++; at.drawn++; at.points++; }
         }
 
-        List<Stats> sorted = map.values().stream()
+        // Sort ALL teams in the group (including those that haven't played yet)
+        // by FIFA tiebreakers: points → goal difference → goals for.
+        List<Stats> sorted = stats.values().stream()
                 .sorted(Comparator
                         .comparingInt((Stats s) -> -s.points)
                         .thenComparingInt(s -> -(s.goalsFor - s.goalsAgainst))
                         .thenComparingInt(s -> -s.goalsFor))
                 .toList();
 
+        // Upsert each team's standing row. If the row doesn't exist yet, this
+        // doubles as the initial seed (zero-stats row) — so a single call to
+        // this method on a group whose group_standing is empty populates it.
         for (int i = 0; i < sorted.size(); i++) {
             Stats s = sorted.get(i);
             GroupStanding standing = groupStandingRepository
@@ -83,7 +99,8 @@ public class StandingsCalculatorService {
             groupStandingRepository.save(standing);
         }
 
-        log.info("Standings recalculados — Grupo {}: {} equipos", groupStage.getCode(), sorted.size());
+        log.info("Standings recalculados — Grupo {}: {} equipos, {} partidos jugados",
+                groupStage.getCode(), sorted.size(), finished.size());
     }
 
     @Transactional

@@ -2,6 +2,8 @@
 
 import { useEffect } from 'react';
 import { useRouter } from 'next/navigation';
+import { hex } from '@/lib/design/tokens';
+import { alpha } from '@/lib/design/effects';
 
 export default function TermsPage() {
   const router = useRouter();
@@ -12,24 +14,21 @@ export default function TermsPage() {
   }, []);
 
   return (
-    <div
-      className="min-h-screen w-full relative"
-      style={{ background: 'radial-gradient(ellipse at 25% 60%, #080f22 0%, #010810 45%, #000509 100%)' }}
-    >
+    <div className="w-full relative">
       {/* Ambient orbs */}
       <div className="fixed top-[-15%] right-[-5%] w-[38vw] h-[38vw] rounded-full pointer-events-none"
-        style={{ background: 'radial-gradient(circle, rgba(0,180,155,0.07) 0%, transparent 70%)', filter: 'blur(55px)' }} />
+        style={{ background: `radial-gradient(circle, ${alpha(hex.accent.tealDeep, 0.07)} 0%, transparent 70%)`, filter: 'blur(55px)' }} />
       <div className="fixed bottom-[-10%] left-[-5%] w-[32vw] h-[32vw] rounded-full pointer-events-none"
-        style={{ background: 'radial-gradient(circle, rgba(0,130,210,0.05) 0%, transparent 70%)', filter: 'blur(50px)' }} />
+        style={{ background: `radial-gradient(circle, ${alpha(hex.accent.skyBlue, 0.05)} 0%, transparent 70%)`, filter: 'blur(50px)' }} />
 
       <div className="relative z-10 max-w-3xl mx-auto px-6 py-12">
         {/* Back button */}
         <button
           onClick={() => router.back()}
           className="flex items-center gap-2 mb-8 text-xs font-semibold tracking-widest uppercase transition-colors duration-200"
-          style={{ color: 'rgba(0,210,185,0.7)' }}
-          onMouseEnter={e => (e.currentTarget.style.color = 'rgba(0,210,185,1)')}
-          onMouseLeave={e => (e.currentTarget.style.color = 'rgba(0,210,185,0.7)')}
+          style={{ color: alpha(hex.accent.teal, 0.7) }}
+          onMouseEnter={e => (e.currentTarget.style.color = hex.accent.teal)}
+          onMouseLeave={e => (e.currentTarget.style.color = alpha(hex.accent.teal, 0.7))}
         >
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
             <path d="M19 12H5M12 5l-7 7 7 7" />
@@ -41,15 +40,15 @@ export default function TermsPage() {
         <div
           className="rounded-2xl p-8 md:p-10"
           style={{
-            background: 'linear-gradient(145deg, rgba(9,14,31,0.97), rgba(11,22,40,0.95))',
-            border: '1px solid rgba(56,189,248,0.10)',
-            boxShadow: '0 24px 64px rgba(0,0,0,0.50)',
+            background: `linear-gradient(145deg, ${alpha(hex.accent.navyPanel, 0.97)}, ${alpha(hex.accent.navyPanelAlt, 0.95)})`,
+            border: `1px solid ${alpha(hex.accent.sky, 0.10)}`,
+            boxShadow: `0 24px 64px ${alpha(hex.neutral.black, 0.50)}`,
           }}
         >
           {/* Header */}
-          <div className="mb-8 pb-6" style={{ borderBottom: '1px solid rgba(255,255,255,0.06)' }}>
+          <div className="mb-8 pb-6" style={{ borderBottom: `1px solid ${alpha(hex.neutral.white, 0.06)}` }}>
             <span className="text-[10px] font-bold tracking-widest uppercase px-2.5 py-1 rounded-full mb-4 inline-block"
-              style={{ background: 'rgba(0,210,185,0.10)', color: '#00d2b9', border: '1px solid rgba(0,210,185,0.20)' }}>
+              style={{ background: alpha(hex.accent.teal, 0.10), color: hex.accent.teal, border: `1px solid ${alpha(hex.accent.teal, 0.20)}` }}>
               Legal
             </span>
             <h1 className="text-2xl font-black text-white mt-3" style={{ fontFamily: 'var(--font-display)' }}>
@@ -58,7 +57,7 @@ export default function TermsPage() {
             <p className="text-xs text-orionix-text-muted mt-2">Última actualización: mayo de 2026 · Orionix Gol</p>
           </div>
 
-          <div className="space-y-8 text-sm leading-relaxed" style={{ color: 'rgba(148,163,184,0.85)' }}>
+          <div className="space-y-8 text-sm leading-relaxed" style={{ color: alpha(hex.accent.slate, 0.85) }}>
 
             <section>
               <h2 className="text-base font-bold text-orionix-text-secondary mb-3">1. Aceptación de los términos</h2>
@@ -96,7 +95,7 @@ export default function TermsPage() {
                   'Puedes solicitar la eliminación de tu cuenta en cualquier momento contactando con nosotros.',
                 ].map(item => (
                   <li key={item} className="flex items-start gap-2">
-                    <span className="mt-1.5 w-1 h-1 rounded-full flex-shrink-0" style={{ background: 'rgba(0,210,185,0.6)' }} />
+                    <span className="mt-1.5 w-1 h-1 rounded-full flex-shrink-0" style={{ background: alpha(hex.accent.teal, 0.6) }} />
                     {item}
                   </li>
                 ))}
@@ -115,7 +114,7 @@ export default function TermsPage() {
                   'Realizar ingeniería inversa o intentar comprometer la seguridad del sistema.',
                 ].map(item => (
                   <li key={item} className="flex items-start gap-2">
-                    <span className="mt-1.5 w-1 h-1 rounded-full flex-shrink-0" style={{ background: 'rgba(239,68,68,0.6)' }} />
+                    <span className="mt-1.5 w-1 h-1 rounded-full flex-shrink-0" style={{ background: alpha(hex.accent.red, 0.6) }} />
                     {item}
                   </li>
                 ))}
@@ -163,7 +162,7 @@ export default function TermsPage() {
               <h2 className="text-base font-bold text-orionix-text-secondary mb-3">10. Contacto</h2>
               <p>
                 Para cualquier consulta sobre estos términos, puedes escribirnos a{' '}
-                <a href="mailto:orionixgol@gmail.com" className="underline" style={{ color: 'rgba(0,210,185,0.8)' }}>
+                <a href="mailto:orionixgol@gmail.com" className="underline" style={{ color: alpha(hex.accent.teal, 0.8) }}>
                   orionixgol@gmail.com
                 </a>.
               </p>
@@ -171,7 +170,7 @@ export default function TermsPage() {
 
           </div>
 
-          <div className="mt-10 pt-6 text-center" style={{ borderTop: '1px solid rgba(255,255,255,0.06)' }}>
+          <div className="mt-10 pt-6 text-center" style={{ borderTop: `1px solid ${alpha(hex.neutral.white, 0.06)}` }}>
             <p className="text-[10px] text-orionix-text-muted tracking-widest uppercase">
               © 2026 ORIONIX GOL — TODOS LOS DERECHOS RESERVADOS
             </p>

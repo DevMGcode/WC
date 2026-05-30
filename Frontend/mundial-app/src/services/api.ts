@@ -59,7 +59,10 @@ class ApiClient {
             this.isRefreshing = false;
           }
           this.clearAuth();
-          window.location.href = '/es/login';
+          // Preservar locale actual de la URL (ej: /es/login, /en/login)
+          const localeMatch = window.location.pathname.match(/^\/([a-z]{2})\//);
+          const locale = localeMatch ? localeMatch[1] : 'es';
+          window.location.href = `/${locale}/login`;
         }
         return Promise.reject(error);
       }

@@ -4,6 +4,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.mundial2026.backend.common.exception.BusinessRuleException;
 import com.mundial2026.backend.common.exception.ResourceNotFoundException;
 import com.mundial2026.backend.security.JwtTokenProvider;
+import com.mundial2026.backend.user.repository.AppUserRepository;
 import com.mundial2026.backend.user.api.dto.AuthUserResponse;
 import java.time.OffsetDateTime;
 import com.mundial2026.backend.user.api.mapper.UserMapper;
@@ -44,6 +45,9 @@ class AuthControllerTest {
     @MockitoBean JwtTokenProvider tokenProvider;
     @MockitoBean UserMapper userMapper;
     @MockitoBean EmailService emailService;
+    // JwtAuthenticationFilter ahora carga roles desde la BD, así que necesita
+    // AppUserRepository en el contexto incluso cuando el filtro está deshabilitado.
+    @MockitoBean AppUserRepository appUserRepository;
 
     private static final String LOGIN_URL = "/api/v1/auth/login";
 
@@ -74,25 +78,32 @@ class AuthControllerTest {
     @Test
     void login_wrongPassword_returns422() throws Exception {
         when(userService.authenticate(anyString(), anyString()))
-                .thenThrow(new BusinessRuleException("Contraseña incorrecta"));
+                .thenThrow(new BusinessRuleException("Credenciales inválidas"));
 
         mockMvc.perform(post(LOGIN_URL)
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(
                                 Map.of("email", "alice@test.com", "password", "wrong"))))
-                .andExpect(status().isUnprocessableEntity());
+                .andExpect(status().isUnprocessableEntity())
+                .andExpect(jsonPath("$.message").value("Credenciales inválidas"));
     }
 
+    /**
+     * Anti-enumeración: cuando el usuario no existe, devolvemos el MISMO 422 con
+     * mensaje genérico "Credenciales inválidas" (no 404 que delataría que el email
+     * no está registrado). El test confirma que la API no distingue ambos casos.
+     */
     @Test
-    void login_userNotFound_returns404() throws Exception {
+    void login_userNotFound_returnsGenericInvalidCredentials() throws Exception {
         when(userService.authenticate(anyString(), anyString()))
-                .thenThrow(new ResourceNotFoundException("Usuario no encontrado"));
+                .thenThrow(new BusinessRuleException("Credenciales inválidas"));
 
         mockMvc.perform(post(LOGIN_URL)
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(
                                 Map.of("email", "ghost@test.com", "password", "pass"))))
-                .andExpect(status().isNotFound());
+                .andExpect(status().isUnprocessableEntity())
+                .andExpect(jsonPath("$.message").value("Credenciales inválidas"));
     }
 
     @Test

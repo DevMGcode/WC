@@ -4,7 +4,9 @@ import React, { useEffect, useState } from 'react';
 import { AnimatePresence, motion } from 'framer-motion';
 import Image from 'next/image';
 import { FiActivity, FiAward, FiUsers, FiBarChart2, FiCalendar } from 'react-icons/fi';
-import { useT } from '@/hooks/useT';
+import { useTranslations } from 'next-intl';
+import { hex } from '@/lib/design/tokens';
+import { alpha, alphaOf } from '@/lib/design/effects';
 
 const SPLASH_DURATION_MS   = 2500;
 const SPLASH_EXIT_DELAY_MS = 600;
@@ -13,11 +15,11 @@ const PROGRESS_TICK_MS     = 40;
 const getProgress = (ms: number) => Math.min(100, Math.floor((ms / SPLASH_DURATION_MS) * 100));
 
 const FEATURE_CFGS = [
-  { icon: <FiActivity />,  color: '#4CAF50', glow: 'rgba(76,175,80,0.55)'  },
-  { icon: <FiAward />,     color: '#D4A72C', glow: 'rgba(212,167,44,0.55)'  },
-  { icon: <FiUsers />,     color: '#388E3C', glow: 'rgba(56,142,60,0.55)'  },
-  { icon: <FiBarChart2 />, color: '#66BB6A', glow: 'rgba(102,187,106,0.55)'  },
-  { icon: <FiCalendar />,  color: '#c084fc', glow: 'rgba(192,132,252,0.55)' },
+  { icon: <FiActivity />,  color: hex.green.bright, glow: alphaOf('green', 0.55)        },
+  { icon: <FiAward />,     color: hex.gold.base,    glow: alpha(hex.gold.base, 0.55)    },
+  { icon: <FiUsers />,     color: hex.green.hover,  glow: alpha(hex.green.hover, 0.55)  },
+  { icon: <FiBarChart2 />, color: hex.green.soft,   glow: alpha(hex.green.soft, 0.55)   },
+  { icon: <FiCalendar />,  color: '#c084fc',        glow: 'rgba(192,132,252,0.55)'      },
 ];
 
 const HostNations = () => (
@@ -28,7 +30,7 @@ const HostNations = () => (
       { flag: '🇨🇦', name: 'CANADA', color: '#D80621' },
     ].map((n, i) => (
       <React.Fragment key={n.name}>
-        {i > 0 && <div className="w-px h-3" style={{ background: 'rgba(255,255,255,0.08)' }} />}
+        {i > 0 && <div className="w-px h-3" style={{ background: alpha(hex.neutral.white, 0.08) }} />}
         <div className="flex items-center gap-1">
           <span className="text-base leading-none">{n.flag}</span>
           <span className="text-[7px] font-black tracking-[0.22em] uppercase" style={{ color: n.color }}>
@@ -49,7 +51,7 @@ const FeatureSpotlight = ({ featureIdx, features }: { featureIdx: number; featur
         key={featureIdx}
         className="flex items-center gap-3 px-4 py-2.5 rounded-xl"
         style={{
-          background: `linear-gradient(135deg, ${f.color}0d 0%, rgba(6,17,10,0.85) 100%)`,
+          background: `linear-gradient(135deg, ${f.color}0d 0%, ${alpha(hex.bg.primary, 0.85)} 100%)`,
           border: `1px solid ${f.color}28`,
         }}
         initial={{ opacity: 0, y: 4 }}
@@ -72,7 +74,7 @@ const FeatureSpotlight = ({ featureIdx, features }: { featureIdx: number; featur
 };
 
 export function IntroSplash() {
-  const { t } = useT();
+  const t = useTranslations();
 
   const FEATURES: FeatureItem[] = FEATURE_CFGS.map((cfg, i) => ({
     ...cfg,
@@ -132,16 +134,16 @@ export function IntroSplash() {
           initial={{ opacity: 1 }}
           animate={{ opacity: 1 }}
           exit={{ opacity: 0, transition: { duration: 0.5, ease: 'easeInOut' } }}
-          style={{ background: '#06110A' }}
+          style={{ background: hex.bg.primary }}
         >
           {/* Subtle radial glow */}
           <div className="absolute inset-0 pointer-events-none" style={{
-            background: 'radial-gradient(ellipse 60% 55% at 50% 38%, rgba(76,175,80,0.06) 0%, transparent 70%)',
+            background: `radial-gradient(ellipse 60% 55% at 50% 38%, ${alphaOf('green', 0.06)} 0%, transparent 70%)`,
           }} />
 
           {/* Vignette */}
           <div className="absolute inset-0 pointer-events-none" style={{
-            background: 'radial-gradient(ellipse 100% 100% at 50% 50%, transparent 50%, rgba(0,0,0,0.55) 100%)',
+            background: `radial-gradient(ellipse 100% 100% at 50% 50%, transparent 50%, ${alpha(hex.neutral.black, 0.55)} 100%)`,
           }} />
 
           {/* ══ MAIN CONTENT ══ */}
@@ -178,7 +180,7 @@ export function IntroSplash() {
                 priority
                 className="w-[180px] h-auto select-none"
                 style={{
-                  filter: 'drop-shadow(0 0 18px rgba(76,175,80,0.45)) drop-shadow(0 4px 16px rgba(0,0,0,0.6))',
+                  filter: `drop-shadow(0 0 18px ${alphaOf('green', 0.45)}) drop-shadow(0 4px 16px ${alpha(hex.neutral.black, 0.6)})`,
                 }}
               />
             </motion.div>
@@ -191,7 +193,7 @@ export function IntroSplash() {
               transition={{ duration: 0.4, delay: 0.35, ease: [0.22, 1, 0.36, 1] }}
             >
               <div className="mb-3 w-40 h-px" style={{
-                background: 'linear-gradient(90deg, transparent, rgba(212,167,44,0.6), transparent)',
+                background: `linear-gradient(90deg, transparent, ${alpha(hex.gold.base, 0.6)}, transparent)`,
               }} />
               <Image
                 src="/texto_logo_pestaña.png"
@@ -201,11 +203,11 @@ export function IntroSplash() {
                 className="w-[240px] h-auto select-none"
                 style={{
                   mixBlendMode: 'screen',
-                  filter: 'drop-shadow(0 0 8px rgba(76,175,80,0.5)) brightness(1.15)',
+                  filter: `drop-shadow(0 0 8px ${alphaOf('green', 0.5)}) brightness(1.15)`,
                 }}
               />
               <div className="mt-3 w-24 h-px" style={{
-                background: 'linear-gradient(90deg, transparent, rgba(76,175,80,0.45), transparent)',
+                background: `linear-gradient(90deg, transparent, ${alphaOf('green', 0.45)}, transparent)`,
               }} />
             </motion.div>
 
@@ -223,7 +225,7 @@ export function IntroSplash() {
                     style={{ color: 'rgba(148,163,184,0.5)' }}
                   >
                     {t('splash.tagline')}{' '}
-                    <span style={{ color: 'rgba(212,167,44,0.65)' }}>{t('common.worldCup')}</span>.{' '}
+                    <span style={{ color: alpha(hex.gold.base, 0.65) }}>{t('common.worldCup')}</span>.{' '}
                     {t('splash.compete')}
                   </motion.p>
                   <FeatureSpotlight featureIdx={featIdx} features={FEATURES} />
@@ -236,14 +238,14 @@ export function IntroSplash() {
             <div className="w-[min(78vw,300px)] mt-5">
               <div
                 className="relative h-[2px] w-full overflow-hidden rounded-full"
-                style={{ background: 'rgba(6,17,10,1)', border: '1px solid rgba(76,175,80,0.08)' }}
+                style={{ background: hex.bg.primary, border: `1px solid ${alphaOf('green', 0.08)}` }}
               >
                 <motion.div
                   className="h-full rounded-full"
                   style={{
                     width: `${progress}%`,
-                    background: 'linear-gradient(90deg, #1B5E20, #4CAF50, #388E3C)',
-                    boxShadow: '0 0 8px rgba(76,175,80,0.50)',
+                    background: `linear-gradient(90deg, ${hex.green.dark}, ${hex.green.bright}, ${hex.green.hover})`,
+                    boxShadow: `0 0 8px ${alphaOf('green', 0.50)}`,
                   }}
                   transition={{ duration: 0.04, ease: 'linear' }}
                 />
@@ -258,7 +260,7 @@ export function IntroSplash() {
                     exit={{ opacity: 0 }}
                     transition={{ duration: 0.2 }}
                     className="text-[7.5px] font-semibold tracking-[0.18em] uppercase"
-                    style={{ color: 'rgba(212,167,44,0.25)' }}
+                    style={{ color: alpha(hex.gold.base, 0.25) }}
                   >
                     {LOADING_MESSAGES[msgIndex]}
                   </motion.span>
@@ -266,7 +268,7 @@ export function IntroSplash() {
 
                 <span
                   className="text-sm font-black tabular-nums"
-                  style={{ color: '#4CAF50' }}
+                  style={{ color: hex.green.bright }}
                 >
                   {progress}%
                 </span>
@@ -279,7 +281,7 @@ export function IntroSplash() {
                 <motion.div
                   key={i}
                   className="rounded-full"
-                  style={{ width: 4, height: 4, background: i === 1 ? 'rgba(212,167,44,0.45)' : 'rgba(76,175,80,0.35)' }}
+                  style={{ width: 4, height: 4, background: i === 1 ? alpha(hex.gold.base, 0.45) : alphaOf('green', 0.35) }}
                   animate={{ opacity: [0.3, 1, 0.3] }}
                   transition={{ duration: 1.2, repeat: Infinity, delay: i * 0.22, ease: 'easeInOut' }}
                 />

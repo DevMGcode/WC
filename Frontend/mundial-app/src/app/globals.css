@@ -72,7 +72,7 @@
 }
 
 html {
-  background-color: #06110A;
+  background-color: #020705;
   overflow-x: hidden;
 }
 
@@ -92,14 +92,19 @@ h6 {
 }
 
 .tech-app-bg {
-  background-color: #06110A;
+  background-color: #050D07;
   background-image:
-    linear-gradient(120deg, rgba(76, 175, 80, 0.06) 0%, transparent 45%),
-    linear-gradient(300deg, rgba(46, 125, 50, 0.05) 0%, transparent 40%),
-    linear-gradient(to right, rgba(76, 175, 80, 0.04) 1px, transparent 1px),
-    linear-gradient(to bottom, rgba(76, 175, 80, 0.04) 1px, transparent 1px),
-    linear-gradient(180deg, #06110A 0%, #0B1B12 100%);
-  background-size: auto, auto, 28px 28px, 28px 28px, auto;
+    /* Bloom verde superior — conecta con el logo */
+    radial-gradient(ellipse at 50% 0%, rgba(46,125,50,0.14) 0%, transparent 52%),
+    /* Acento inferior izquierdo */
+    radial-gradient(ellipse at 5% 100%, rgba(27,94,32,0.09) 0%, transparent 42%),
+    /* Grilla horizontal */
+    linear-gradient(to right, rgba(76, 175, 80, 0.038) 1px, transparent 1px),
+    /* Grilla vertical */
+    linear-gradient(to bottom, rgba(76, 175, 80, 0.038) 1px, transparent 1px),
+    /* Base con vignette sutil */
+    radial-gradient(ellipse at 50% 48%, #07130B 0%, #050D07 48%, #020705 100%);
+  background-size: 100% 56%, 50% 50%, 30px 30px, 30px 30px, 100% 100%;
 }
 
 .tech-app-bg::before {
@@ -108,12 +113,15 @@ h6 {
   inset: 0;
   pointer-events: none;
   background-image:
-    radial-gradient(circle at 12% 78%, rgba(76, 175, 80, 0.08) 0 1px, transparent 2px),
-    radial-gradient(circle at 78% 22%, rgba(76, 175, 80, 0.08) 0 1px, transparent 2px),
-    radial-gradient(circle at 82% 86%, rgba(46, 125, 50, 0.07) 0 1px, transparent 2px),
-    linear-gradient(110deg, transparent 0%, rgba(76, 175, 80, 0.05) 35%, transparent 65%);
-  background-size: 180px 180px, 220px 220px, 160px 160px, 100% 100%;
-  opacity: 0.35;
+    /* Puntos luminosos dispersos */
+    radial-gradient(circle at 12% 75%, rgba(76, 175, 80, 0.07) 0 1px, transparent 2px),
+    radial-gradient(circle at 76% 22%, rgba(76, 175, 80, 0.07) 0 1px, transparent 2px),
+    radial-gradient(circle at 84% 84%, rgba(46, 125, 50, 0.06) 0 1px, transparent 2px),
+    radial-gradient(circle at 30% 52%, rgba(76, 175, 80, 0.05) 0 1px, transparent 2px),
+    /* Rayo diagonal sutil */
+    linear-gradient(118deg, transparent 0%, rgba(76, 175, 80, 0.04) 38%, transparent 62%);
+  background-size: 180px 180px, 220px 220px, 160px 160px, 140px 140px, 100% 100%;
+  opacity: 0.50;
   z-index: 0;
 }
 

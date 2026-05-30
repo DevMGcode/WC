@@ -49,6 +49,9 @@ management:
     web:
       exposure:
         include: health,info
+  endpoint:
+    health:
+      show-details: when-authorized
 
 springdoc:
   api-docs:
@@ -62,3 +65,21 @@ app:
     jwt-expiration-ms: 86400000
     jwt-refresh-expiration-ms: 604800000
   frontend-url: "${FRONTEND_URL:http://localhost:3000}"
+  email:
+    verification-required: "${EMAIL_VERIFICATION_REQUIRED:true}"
+
+apifootball:
+  base-url: "${APIFOOTBALL_BASE_URL:https://v3.football.api-sports.io}"
+  api-key: "${APIFOOTBALL_API_KEY:}"
+  mode: "${APIFOOTBALL_MODE:DIRECT}"
+  rapidapi-host: "api-football-v1.p.rapidapi.com"
+  league-id: 1
+  season: 2026
+  timeout-ms: 5000
+  connect-timeout-ms: 2000
+
+tournament:
+  sync:
+    enabled: "${SYNC_ENABLED:true}"
+    live-poll-ms: "${LIVE_POLL_MS:5000}"
+    csv-bootstrap-path: classpath:data/fixtures-bootstrap.csv

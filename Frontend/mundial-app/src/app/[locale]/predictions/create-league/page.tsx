@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
+import { useTranslations } from 'next-intl';
 import { Header } from '@/components/Navigation';
 import { motion, AnimatePresence } from 'framer-motion';
 import { leagueService } from '@/services/predictions';
@@ -11,10 +12,12 @@ import {
   FiShield, FiArrowLeft, FiAlertCircle, FiCopy,
   FiCheck, FiUsers, FiArrowRight, FiPlus,
 } from 'react-icons/fi';
+import { hex } from '@/lib/design/tokens';
+import { alpha, alphaOf } from '@/lib/design/effects';
 
 /* ── Shared input style helper ── */
 const inputStyle: React.CSSProperties = {
-  background: 'rgba(255,255,255,0.03)',
+  background: alpha(hex.neutral.white, 0.03),
   border: '1px solid rgba(34,211,238,0.18)',
   color: '#e2f8ff',
   outline: 'none',
@@ -22,6 +25,7 @@ const inputStyle: React.CSSProperties = {
 
 export default function CreateLeaguePage() {
   const router = useRouter();
+  const t      = useTranslations();
   const { user } = useAuth();
 
   const [tournamentId, setTournamentId] = useState<number>(0);
@@ -52,7 +56,7 @@ export default function CreateLeaguePage() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError(''); setLoading(true);
-    if (!user?.id)     { setError('Debes iniciar sesión para crear una liga'); setLoading(false); return; }
+    if (!user?.id)     { setError(t('league.mustLoginCreate')); setLoading(false); return; }
     if (!tournamentId) { setError('No se pudo obtener el torneo activo. Intenta de nuevo.'); setLoading(false); return; }
     try {
       const newLeague = await leagueService.createLeague({ userId: Number(user.id), ...formData, tournamentId });
@@ -88,7 +92,7 @@ export default function CreateLeaguePage() {
           transition={{ duration: 12, repeat: Infinity }} />
 
         <div className="relative" style={{ zIndex: 10 }}>
-          <Header title="¡Liga Creada!" subtitle="Comparte el código con tus amigos" centered />
+          <Header title={t('league.createTitle')} subtitle={t('league.createSubtitle')} centered />
         </div>
 
         <div className="relative z-10 px-4 py-6 max-w-lg mx-auto w-full pb-32">
@@ -103,7 +107,7 @@ export default function CreateLeaguePage() {
               style={{
                 background: 'linear-gradient(145deg, rgba(2,8,24,0.98), rgba(4,18,10,0.97))',
                 border: '1px solid rgba(52,211,153,0.20)',
-                boxShadow: '0 20px 60px rgba(0,0,0,0.50)',
+                boxShadow: `0 20px 60px ${alpha(hex.neutral.black, 0.50)}`,
               }}>
               <div className="absolute inset-x-0 top-0 h-[3px]"
                 style={{ background: 'linear-gradient(90deg, #22d3ee, #34d399, #22d3ee)', borderRadius: '12px 12px 0 0' }} />
@@ -126,7 +130,7 @@ export default function CreateLeaguePage() {
                 <div className="mb-5">
                   <p className="text-[9px] font-black tracking-[0.28em] uppercase text-center mb-3"
                     style={{ color: 'rgba(251,191,36,0.60)' }}>
-                    Código de invitación
+                    {t('league.inviteCode')}
                   </p>
                   <motion.button
                     onClick={handleCopyCode}
@@ -158,13 +162,13 @@ export default function CreateLeaguePage() {
 
                 {/* Instructions */}
                 <div className="rounded-xl p-4 mb-5"
-                  style={{ background: 'rgba(76,175,80,0.04)', border: '1px solid rgba(76,175,80,0.10)' }}>
+                  style={{ background: alphaOf('green', 0.04), border: `1px solid ${alphaOf('green', 0.10)}` }}>
                   <div className="absolute inset-x-0 top-0 h-px" />
-                  <p className="text-[9px] font-black tracking-[0.25em] uppercase text-green-400/50 mb-3">¿Cómo invitar amigos?</p>
+                  <p className="text-[9px] font-black tracking-[0.25em] uppercase text-green-400/50 mb-3">{t('league.howToInvite')}</p>
                   {[
-                    `Comparte el código ${createdLeague.code} con ellos`,
-                    'Ellos van a Porras → Ligas → Unirse a Liga',
-                    'Ingresan el código y quedan dentro',
+                    t('league.inviteStep1', { code: createdLeague.code }),
+                    t('league.inviteStep2'),
+                    t('league.inviteStep3'),
                   ].map((step, i) => (
                     <div key={i} className="flex items-start gap-2.5 mb-2 last:mb-0">
                       <span className="w-5 h-5 rounded-full shrink-0 flex items-center justify-center text-[9px] font-black mt-0.5"
@@ -182,9 +186,9 @@ export default function CreateLeaguePage() {
                     onClick={() => router.push('/predictions')}
                     whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.97 }}
                     className="flex-1 py-3 rounded-xl text-sm font-black text-orionix-text-secondary flex items-center justify-center gap-2"
-                    style={{ border: '1px solid rgba(255,255,255,0.07)', background: 'rgba(255,255,255,0.02)' }}
+                    style={{ border: `1px solid ${alpha(hex.neutral.white, 0.07)}`, background: alpha(hex.neutral.white, 0.02) }}
                   >
-                    <FiArrowLeft size={13} /> Ir a Porras
+                    <FiArrowLeft size={13} /> {t('league.goToPredictions')}
                   </motion.button>
                   <motion.button
                     onClick={() => router.push(`/predictions/leagues/${createdLeague.id}`)}
@@ -194,10 +198,10 @@ export default function CreateLeaguePage() {
                     style={{ background: 'linear-gradient(135deg, #059669, #34d399)', boxShadow: '0 6px 24px rgba(52,211,153,0.28)' }}
                   >
                     <motion.div className="absolute inset-0 pointer-events-none"
-                      style={{ background: 'linear-gradient(108deg, transparent 28%, rgba(255,255,255,0.18) 50%, transparent 72%)' }}
+                      style={{ background: `linear-gradient(108deg, transparent 28%, ${alpha(hex.neutral.white, 0.18)} 50%, transparent 72%)` }}
                       animate={{ x: ['-120%', '120%'] }}
                       transition={{ duration: 2.5, repeat: Infinity, ease: 'linear', repeatDelay: 2 }} />
-                    <span className="relative flex items-center gap-2">Ver mi Liga <FiArrowRight size={13} /></span>
+                    <span className="relative flex items-center gap-2">{t('league.viewMyLeague')} <FiArrowRight size={13} /></span>
                   </motion.button>
                 </div>
               </div>
@@ -226,7 +230,7 @@ export default function CreateLeaguePage() {
         transition={{ duration: 14, repeat: Infinity, delay: 5 }} />
 
       <div className="relative" style={{ zIndex: 10 }}>
-        <Header title="Crear Liga" subtitle="Inicia tu propia competencia" centered />
+        <Header title={t('league.createLeague')} subtitle={t('league.pageStartCompetition')} centered />
       </div>
 
       <div className="relative z-10 px-4 py-6 max-w-lg mx-auto w-full pb-32">
@@ -240,7 +244,7 @@ export default function CreateLeaguePage() {
             style={{
               background: 'linear-gradient(145deg, rgba(2,8,24,0.98), rgba(4,14,36,0.97))',
               border: '1px solid rgba(34,211,238,0.14)',
-              boxShadow: '0 20px 60px rgba(0,0,0,0.50)',
+              boxShadow: `0 20px 60px ${alpha(hex.neutral.black, 0.50)}`,
             }}>
             <div className="absolute inset-x-0 top-0 h-px"
               style={{ background: 'linear-gradient(90deg, transparent, rgba(34,211,238,0.65), transparent)' }} />
@@ -276,8 +280,8 @@ export default function CreateLeaguePage() {
                   />
                 </div>
                 <div>
-                  <p className="text-[9px] font-black tracking-[0.28em] uppercase text-green-400/50 mb-0.5">Nueva competencia</p>
-                  <h2 className="text-base font-black text-white leading-none">Crear Liga Privada</h2>
+                  <p className="text-[9px] font-black tracking-[0.28em] uppercase text-green-400/50 mb-0.5">{t('league.pageStartCompetition')}</p>
+                  <h2 className="text-base font-black text-white leading-none">{t('league.createLeague')}</h2>
                 </div>
               </div>
 
@@ -286,11 +290,11 @@ export default function CreateLeaguePage() {
                 <div>
                   <label className="block text-[9px] font-black tracking-[0.28em] uppercase mb-2"
                     style={{ color: focusedField === 'name' ? '#22d3ee' : 'rgba(100,116,139,0.80)' }}>
-                    Nombre de la Liga
+                    {t('league.leagueName')}
                   </label>
                   <input
                     type="text" name="name" value={formData.name} onChange={handleChange}
-                    placeholder="ej: Mi Oficina" required maxLength={50}
+                    placeholder={t('league.leagueNamePlaceholder')} required maxLength={50}
                     className="w-full px-4 py-3 rounded-xl text-sm transition-all"
                     style={inputStyle}
                     {...focusProps('name')}
@@ -301,11 +305,11 @@ export default function CreateLeaguePage() {
                 <div>
                   <label className="block text-[9px] font-black tracking-[0.28em] uppercase mb-2"
                     style={{ color: focusedField === 'description' ? '#22d3ee' : 'rgba(100,116,139,0.80)' }}>
-                    Descripción <span className="normal-case font-normal text-orionix-text-muted">(opcional)</span>
+                    {t('league.leagueDescription')} <span className="normal-case font-normal text-orionix-text-muted">{t('league.optional')}</span>
                   </label>
                   <textarea
                     name="description" value={formData.description} onChange={handleChange}
-                    placeholder="ej: Competencia entre compañeros de oficina"
+                    placeholder={t('league.leagueDescriptionPlaceholder')}
                     rows={3}
                     className="w-full px-4 py-3 rounded-xl text-sm resize-none transition-all"
                     style={{ ...inputStyle, lineHeight: 1.6 }}
@@ -318,7 +322,7 @@ export default function CreateLeaguePage() {
                   <label className="block text-[9px] font-black tracking-[0.28em] uppercase mb-2"
                     style={{ color: focusedField === 'maxMembers' ? '#22d3ee' : 'rgba(100,116,139,0.80)' }}>
                     <span className="inline-flex items-center gap-1">
-                      <FiUsers size={9} /> Máximo de Miembros
+                      <FiUsers size={9} /> {t('league.maxMembers')}
                     </span>
                   </label>
                   <input
@@ -328,7 +332,7 @@ export default function CreateLeaguePage() {
                     style={inputStyle}
                     {...focusProps('maxMembers')}
                   />
-                  <p className="text-[9px] text-orionix-text-muted mt-1.5 ml-1">Mínimo 2 · Máximo 100 participantes</p>
+                  <p className="text-[9px] text-orionix-text-muted mt-1.5 ml-1">{t('league.maxMembersHint')}</p>
                 </div>
 
                 {/* Error */}
@@ -347,26 +351,26 @@ export default function CreateLeaguePage() {
                     type="button" onClick={() => router.back()}
                     whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.97 }}
                     className="flex-1 py-3 rounded-xl text-sm font-black text-orionix-text-secondary flex items-center justify-center gap-2"
-                    style={{ border: '1px solid rgba(255,255,255,0.07)', background: 'rgba(255,255,255,0.02)' }}
+                    style={{ border: `1px solid ${alpha(hex.neutral.white, 0.07)}`, background: alpha(hex.neutral.white, 0.02) }}
                   >
-                    <FiArrowLeft size={13} /> Cancelar
+                    <FiArrowLeft size={13} /> {t('league.cancel')}
                   </motion.button>
                   <motion.button
                     type="submit" disabled={loading}
                     whileHover={{ scale: 1.02, boxShadow: '0 12px 36px rgba(0,210,185,0.40)' }}
                     whileTap={{ scale: 0.97 }}
                     className="flex-1 py-3 rounded-xl text-sm font-black text-white flex items-center justify-center gap-2 disabled:opacity-50 relative overflow-hidden"
-                    style={{ background: 'linear-gradient(135deg, #1B5E20, #388E3C)', boxShadow: '0 6px 24px rgba(76,175,80,0.30)' }}
+                    style={{ background: `linear-gradient(135deg, ${hex.green.dark}, ${hex.green.hover})`, boxShadow: `0 6px 24px ${alphaOf('green', 0.30)}` }}
                   >
                     <motion.div className="absolute inset-0 pointer-events-none"
-                      style={{ background: 'linear-gradient(108deg, transparent 28%, rgba(255,255,255,0.18) 50%, transparent 72%)' }}
+                      style={{ background: `linear-gradient(108deg, transparent 28%, ${alpha(hex.neutral.white, 0.18)} 50%, transparent 72%)` }}
                       animate={{ x: ['-120%', '120%'] }}
                       transition={{ duration: 2.5, repeat: Infinity, ease: 'linear', repeatDelay: 2 }} />
                     <span className="relative flex items-center gap-2">
                       {loading
                         ? <><motion.span className="w-3.5 h-3.5 rounded-full border-2 border-white/30 border-t-white"
-                            animate={{ rotate: 360 }} transition={{ duration: 0.8, repeat: Infinity, ease: 'linear' }} /> Creando…</>
-                        : <><FiPlus size={13} /> Crear Liga</>}
+                            animate={{ rotate: 360 }} transition={{ duration: 0.8, repeat: Infinity, ease: 'linear' }} /> {t('league.joining')}</>
+                        : <><FiPlus size={13} /> {t('league.createLeague')}</>}
                     </span>
                   </motion.button>
                 </div>

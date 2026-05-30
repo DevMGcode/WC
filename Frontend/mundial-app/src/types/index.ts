@@ -237,3 +237,80 @@ export interface PaginatedResponse<T> {
     totalPages: number;
   };
 }
+
+// WebSocket — tiempo real
+export type MatchStatus = 'SCHEDULED' | 'LIVE' | 'FINISHED' | 'POSTPONED' | 'CANCELLED'
+
+export interface MatchLiveDelta {
+  matchId: number;
+  homeScore: number;
+  awayScore: number;
+  elapsedMinutes: number;
+  status: MatchStatus;
+  updatedAt: string;
+}
+
+export type MatchEventType =
+  | 'GOAL' | 'OWN_GOAL' | 'PENALTY_GOAL' | 'PENALTY_MISSED'
+  | 'YELLOW_CARD' | 'RED_CARD' | 'SUBSTITUTION' | 'VAR_REVIEW' | 'STATUS_CHANGE'
+
+export interface MatchEvent {
+  matchId: number;
+  type: MatchEventType;
+  teamId: number;
+  playerId: number;
+  minute: number;
+  extraMinute?: number;
+  detail?: string;
+  occurredAt: string;
+}
+
+// Equipos favoritos del usuario
+export interface FavoriteTeam {
+  id: number;
+  teamId: number;
+  userId: string;
+  team?: {
+    id: number;
+    name: string;
+    shortName?: string;
+    flagUrl?: string;
+  };
+  createdAt?: Date;
+}
+
+// Preferencias de notificación
+export interface NotificationPreference {
+  fixtureReminders: boolean;
+  resultNotifications: boolean;
+  leagueUpdates: boolean;
+  newsUpdates: boolean;
+  pushEnabled?: boolean;
+}
+
+// Notificación de usuario
+export interface Notification {
+  id: string;
+  userId: string;
+  type: string;
+  title: string;
+  body: string;
+  read: boolean;
+  data?: Record<string, any>;
+  createdAt: Date;
+}
+
+// Artículo de contenido (noticias, perfiles de equipos)
+export interface ContentArticle {
+  id: string;
+  type: string;
+  title: string;
+  slug: string;
+  summary?: string;
+  body?: string;
+  language: string;
+  teamId?: number;
+  imageUrl?: string;
+  publishedAt?: Date;
+  createdAt: Date;
+}
