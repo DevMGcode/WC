@@ -1,10 +1,16 @@
 /** @type {import('next').NextConfig} */
-const { withSentryConfig } = require('@sentry/nextjs');
+// GlitchTip es open-source y compatible con el protocolo Sentry, por eso
+// reutilizamos el wrapper oficial `withSentryConfig` del SDK `@sentry/nextjs`
+// como transporte. Los eventos NO van a Sentry — van al DSN de GlitchTip.
+const { withSentryConfig: withGlitchTipConfig } = require('@sentry/nextjs');
+const createNextIntlPlugin = require('next-intl/plugin');
+const withNextIntl = createNextIntlPlugin('./src/i18n/request.ts');
 
 const internalApiBaseUrl = process.env.INTERNAL_API_BASE_URL || 'http://localhost:8080';
 
 const nextConfig = {
   reactStrictMode: true,
+  output: 'standalone',
   experimental: {
     instrumentationHook: true,
   },
@@ -17,7 +23,7 @@ const nextConfig = {
     ],
   },
   env: {
-    NEXT_PUBLIC_API_URL: process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3002/api',
+    NEXT_PUBLIC_API_URL: process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8080/api',
   },
   async headers() {
     return [
@@ -44,7 +50,10 @@ const nextConfig = {
   },
 };
 
-module.exports = withSentryConfig(nextConfig, {
+// Envolvemos Next con el wrapper de GlitchTip (alias de withSentryConfig).
+// Sourcemaps desactivados: GlitchTip cloud free no acepta subir sourcemaps.
+// Si auto-hospedas GlitchTip puedes activarlos.
+module.exports = withGlitchTipConfig(withNextIntl(nextConfig), {
   silent: true,
   sourcemaps: {
     disable: true,
