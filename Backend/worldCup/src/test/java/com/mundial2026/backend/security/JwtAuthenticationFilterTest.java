@@ -1,6 +1,7 @@
 package com.mundial2026.backend.security;
 
 
+import com.mundial2026.backend.user.repository.AppUserRepository;
 import jakarta.servlet.FilterChain;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
@@ -11,6 +12,8 @@ import org.springframework.mock.web.MockHttpServletRequest;
 import org.springframework.mock.web.MockHttpServletResponse;
 import org.springframework.security.core.context.SecurityContextHolder;
 
+import java.util.Optional;
+
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.when;
 
@@ -18,6 +21,7 @@ import static org.mockito.Mockito.when;
 class JwtAuthenticationFilterTest {
 
     @Mock JwtTokenProvider tokenProvider;
+    @Mock AppUserRepository appUserRepository;
     @Mock FilterChain filterChain;
 
     @AfterEach
@@ -27,7 +31,7 @@ class JwtAuthenticationFilterTest {
 
     @Test
     void validAccessToken_setsAuthentication() throws Exception {
-        JwtAuthenticationFilter filter = new JwtAuthenticationFilter(tokenProvider);
+        JwtAuthenticationFilter filter = new JwtAuthenticationFilter(tokenProvider, appUserRepository);
         MockHttpServletRequest request = new MockHttpServletRequest();
         request.addHeader("Authorization", "Bearer token123");
         MockHttpServletResponse response = new MockHttpServletResponse();
@@ -35,6 +39,7 @@ class JwtAuthenticationFilterTest {
         when(tokenProvider.validateToken("token123")).thenReturn(true);
         when(tokenProvider.isRefreshToken("token123")).thenReturn(false);
         when(tokenProvider.getUsernameFromToken("token123")).thenReturn("alice");
+        when(appUserRepository.findByUsername("alice")).thenReturn(Optional.empty());
 
         filter.doFilter(request, response, filterChain);
 
@@ -44,7 +49,7 @@ class JwtAuthenticationFilterTest {
 
     @Test
     void refreshToken_doesNotAuthenticate() throws Exception {
-        JwtAuthenticationFilter filter = new JwtAuthenticationFilter(tokenProvider);
+        JwtAuthenticationFilter filter = new JwtAuthenticationFilter(tokenProvider, appUserRepository);
         MockHttpServletRequest request = new MockHttpServletRequest();
         request.addHeader("Authorization", "Bearer refresh");
         MockHttpServletResponse response = new MockHttpServletResponse();
