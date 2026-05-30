@@ -6,6 +6,7 @@ import { alpha, alphaOf, borders } from '@/lib/design/effects';
 import { StatusPill, FlagBig, toDatetimeLocal, SCHED_SELECT, STATUS_CFG_SCHED } from './AdminShared';
 import { IconPlus, IconX, IconCheck, IconEdit, IconTrash } from './AdminIcons';
 import type { FixtureAdmin, TeamItem, StageItem, GroupItem } from './types';
+import { apiFetch } from '@/lib/apiFetch';
 
 interface ScheduleTabProps { tournamentId: number; token: string; }
 
@@ -41,10 +42,10 @@ export default function ScheduleTab({ tournamentId, token }: ScheduleTabProps) {
     setLoading(true);
     try {
       const [tr, sr, gr, fr] = await Promise.all([
-        fetch('/api/v1/public/teams').then(r => r.json()),
-        fetch(`/api/v1/public/tournaments/${tournamentId}/stages`).then(r => r.json()),
-        fetch(`/api/v1/public/tournaments/${tournamentId}/groups`).then(r => r.json()),
-        fetch(`/api/v1/public/tournaments/${tournamentId}/fixtures`).then(r => r.json()),
+        apiFetch('/api/v1/public/teams').then(r => r.json()),
+        apiFetch(`/api/v1/public/tournaments/${tournamentId}/stages`).then(r => r.json()),
+        apiFetch(`/api/v1/public/tournaments/${tournamentId}/groups`).then(r => r.json()),
+        apiFetch(`/api/v1/public/tournaments/${tournamentId}/fixtures`).then(r => r.json()),
       ]);
       setTeams((tr?.data ?? []).map((t: any) => ({ id: t.id, name: t.name, shortName: t.shortName, flagUrl: t.flagUrl })));
       setStages((sr?.data ?? []).map((s: any) => ({ id: s.id, code: s.code, name: s.name, sortOrder: s.sortOrder })));
@@ -73,9 +74,9 @@ export default function ScheduleTab({ tournamentId, token }: ScheduleTabProps) {
     try {
       const body: any = { tournamentId, homeTeamId: Number(cHome), awayTeamId: Number(cAway), stageId: Number(cStage), kickoffAt: new Date(cKick).toISOString() };
       if (cGroup) body.groupStageId = Number(cGroup);
-      const res = await fetch('/api/v1/public/tournaments/fixtures', {
+      const res = await apiFetch('/api/v1/public/tournaments/fixtures', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(body),
       });
       if (!res.ok) { const err = await res.json(); setCError(err?.message || 'Error al crear'); return; }
@@ -102,9 +103,9 @@ export default function ScheduleTab({ tournamentId, token }: ScheduleTabProps) {
     try {
       const body: any = { homeTeamId: Number(eHome), awayTeamId: Number(eAway), stageId: Number(eStage), kickoffAt: new Date(eKick).toISOString() };
       if (eGroup) body.groupStageId = Number(eGroup);
-      const res = await fetch(`/api/v1/public/tournaments/fixtures/${id}`, {
+      const res = await apiFetch(`/api/v1/public/tournaments/fixtures/${id}`, {
         method: 'PUT',
-        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(body),
       });
       if (!res.ok) { const err = await res.json(); setEError(err?.message || 'Error al guardar'); return; }
@@ -117,7 +118,7 @@ export default function ScheduleTab({ tournamentId, token }: ScheduleTabProps) {
   const handleDelete = async (id: number) => {
     setDeletingId(id);
     try {
-      const res = await fetch(`/api/v1/public/tournaments/fixtures/${id}`, { method: 'DELETE', headers: { Authorization: `Bearer ${token}` } });
+      const res = await apiFetch(`/api/v1/public/tournaments/fixtures/${id}`, { method: 'DELETE' });
       if (!res.ok) return;
       setFixtures(prev => prev.filter(f => f.id !== id)); setConfirmId(null);
     } finally { setDeletingId(null); }

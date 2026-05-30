@@ -65,52 +65,91 @@ export default function FixtureCard({
       )}
 
       <div className="relative p-4">
-        {/* Row: ID + status */}
-        <div className="flex items-center justify-between mb-4">
-          <span className="text-[10px] font-mono px-2 py-0.5 rounded-md"
-            style={{ color: alpha(hex.text.secondary, 0.45), background: alpha(hex.neutral.white, 0.04), border: `1px solid ${alpha(hex.neutral.white, 0.06)}` }}>
-            #{fixture.id}
-          </span>
-          <div className="flex items-center gap-1.5 text-[10px] font-bold px-2.5 py-1 rounded-full"
+        {/* Row: ID + group + status */}
+        <div className="flex items-center justify-between mb-3 gap-2">
+          <div className="flex items-center gap-1.5 min-w-0">
+            <span className="text-[10px] font-mono px-2 py-0.5 rounded-md shrink-0"
+              style={{ color: alpha(hex.text.secondary, 0.45), background: alpha(hex.neutral.white, 0.04), border: `1px solid ${alpha(hex.neutral.white, 0.06)}` }}>
+              #{fixture.id}
+            </span>
+            {(fixture.groupCode || fixture.stageName) && (
+              <span className="text-[9px] font-black px-2 py-0.5 rounded-md tracking-widest truncate"
+                style={{ color: alpha(hex.text.secondary, 0.45), background: alpha(hex.neutral.white, 0.03), border: `1px solid ${alpha(hex.neutral.white, 0.05)}` }}>
+                {fixture.groupCode ? `GRUPO ${fixture.groupCode}` : fixture.stageName}
+              </span>
+            )}
+          </div>
+          <div className="flex items-center gap-1.5 text-[10px] font-bold px-2.5 py-1 rounded-full shrink-0"
             style={{
               color: isSuccess ? hex.green.hover : isFinished ? hex.green.soft : hex.gold.base,
-              background: isSuccess ? alpha(hex.green.hover, 0.1) : isFinished ? alpha(hex.green.soft, 0.1) : alphaOf('gold', 0.1),
+              background: isSuccess ? alpha(hex.green.hover, 0.10) : isFinished ? alpha(hex.green.soft, 0.10) : alphaOf('gold', 0.10),
               border: `1px solid ${isSuccess ? alpha(hex.green.hover, 0.25) : isFinished ? alpha(hex.green.soft, 0.20) : alpha(hex.gold.base, 0.25)}`,
             }}>
-            <span className={`w-1.5 h-1.5 rounded-full ${isSuccess ? 'bg-emerald-400' : isFinished ? 'bg-green-400' : 'bg-amber-400 animate-pulse'}`} />
+            <span className={`w-1.5 h-1.5 rounded-full shrink-0 ${isSuccess ? 'bg-emerald-400' : isFinished ? 'bg-green-400' : 'bg-amber-400 animate-pulse'}`} />
             {isSuccess ? 'Guardado' : isFinished ? 'Finalizado' : 'Pendiente'}
           </div>
         </div>
 
-        {/* Scoreboard */}
-        <div className="flex items-center gap-3 mb-2">
-          <p className="flex-1 text-right font-black leading-tight truncate"
-            style={{ color: hex.text.primary, fontFamily: 'var(--font-display)', letterSpacing: '0.02em', fontSize: '1rem' }}>
-            {fixture.homeTeam.name}
-          </p>
-          <div className="shrink-0 flex items-center justify-center px-4 py-2.5 rounded-2xl"
+        {/* Scoreboard with flags */}
+        <div className="flex items-center gap-3 mb-1">
+          {/* Home team */}
+          <div className="flex-1 flex flex-col items-end gap-1.5 min-w-0">
+            {fixture.homeTeam.flagUrl ? (
+              <img src={fixture.homeTeam.flagUrl} alt={fixture.homeTeam.name}
+                className="w-10 h-7 rounded-md object-cover ml-auto"
+                style={{ border: `1px solid ${alpha(hex.neutral.white, 0.14)}`, boxShadow: '0 2px 8px rgba(0,0,0,0.45)' }}
+                onError={e => { (e.target as HTMLImageElement).style.display = 'none'; }} />
+            ) : (
+              <div className="w-10 h-7 rounded-md ml-auto flex items-center justify-center text-sm"
+                style={{ background: alpha(hex.neutral.white, 0.05), border: `1px solid ${alpha(hex.neutral.white, 0.07)}` }}>🏳</div>
+            )}
+            <p className="font-black text-right leading-tight truncate w-full"
+              style={{ color: hex.text.primary, fontFamily: 'var(--font-display)', letterSpacing: '0.02em', fontSize: '0.88rem' }}>
+              {fixture.homeTeam.shortName || fixture.homeTeam.name}
+            </p>
+          </div>
+
+          {/* Score / VS */}
+          <div className="shrink-0 flex flex-col items-center justify-center rounded-2xl"
             style={{
-              background: isFinished && !isEditing ? alphaOf('green', 0.08) : alpha(hex.neutral.white, 0.05),
-              border: `1.5px solid ${isFinished && !isEditing ? alphaOf('green', 0.3) : alpha(hex.neutral.white, 0.08)}`,
-              minWidth: 88,
-              boxShadow: isFinished && !isEditing ? `0 0 16px ${alphaOf('green', 0.1)}` : 'none',
+              background: isFinished && !isEditing ? alphaOf('green', 0.08) : alpha(hex.neutral.white, 0.04),
+              border: `1.5px solid ${isFinished && !isEditing ? alphaOf('green', 0.28) : alpha(hex.neutral.white, 0.08)}`,
+              minWidth: 86,
+              padding: '10px 14px',
+              boxShadow: isFinished && !isEditing ? `0 0 20px ${alphaOf('green', 0.13)}` : 'none',
             }}>
             {isFinished && fixture.homeScore !== null && !isEditing ? (
-              <span className="font-black text-2xl tracking-wider" style={{ color: hex.green.bright, fontFamily: 'var(--font-display)', letterSpacing: '0.12em' }}>
-                {fixture.homeScore}<span style={{ color: alpha(hex.text.secondary, 0.35), margin: '0 4px' }}>–</span>{fixture.awayScore}
+              <span className="font-black leading-none"
+                style={{ color: hex.green.bright, fontFamily: 'var(--font-display)', fontSize: '1.65rem', letterSpacing: '0.08em' }}>
+                {fixture.homeScore}
+                <span style={{ color: alpha(hex.text.secondary, 0.28), margin: '0 5px', fontSize: '1.2rem' }}>–</span>
+                {fixture.awayScore}
               </span>
             ) : (
-              <span className="text-sm font-black" style={{ color: alpha(hex.text.secondary, 0.35), fontFamily: 'var(--font-display)' }}>VS</span>
+              <span className="text-base font-black" style={{ color: alpha(hex.text.secondary, 0.28), fontFamily: 'var(--font-display)' }}>VS</span>
             )}
           </div>
-          <p className="flex-1 font-black leading-tight truncate"
-            style={{ color: hex.text.primary, fontFamily: 'var(--font-display)', letterSpacing: '0.02em', fontSize: '1rem' }}>
-            {fixture.awayTeam.name}
-          </p>
+
+          {/* Away team */}
+          <div className="flex-1 flex flex-col items-start gap-1.5 min-w-0">
+            {fixture.awayTeam.flagUrl ? (
+              <img src={fixture.awayTeam.flagUrl} alt={fixture.awayTeam.name}
+                className="w-10 h-7 rounded-md object-cover"
+                style={{ border: `1px solid ${alpha(hex.neutral.white, 0.14)}`, boxShadow: '0 2px 8px rgba(0,0,0,0.45)' }}
+                onError={e => { (e.target as HTMLImageElement).style.display = 'none'; }} />
+            ) : (
+              <div className="w-10 h-7 rounded-md flex items-center justify-center text-sm"
+                style={{ background: alpha(hex.neutral.white, 0.05), border: `1px solid ${alpha(hex.neutral.white, 0.07)}` }}>🏳</div>
+            )}
+            <p className="font-black leading-tight truncate w-full"
+              style={{ color: hex.text.primary, fontFamily: 'var(--font-display)', letterSpacing: '0.02em', fontSize: '0.88rem' }}>
+              {fixture.awayTeam.shortName || fixture.awayTeam.name}
+            </p>
+          </div>
         </div>
 
         {/* Kickoff date */}
-        <p className="text-center text-[11px] mb-4" style={{ color: alpha(hex.text.secondary, 0.38) }}>
+        <p className="text-center text-[10px] mb-4 mt-1" style={{ color: alpha(hex.text.secondary, 0.35) }}>
           {new Date(fixture.kickoffAt).toLocaleDateString('es', {
             weekday: 'short', day: '2-digit', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit',
           })}
@@ -177,26 +216,28 @@ export default function FixtureCard({
           )}
         </AnimatePresence>
 
-        {/* Action buttons */}
+        {/* Action buttons — always side by side */}
         {!isEditing && (
-          <div className={`flex gap-2 ${(isLive || isFinished) ? 'flex-col' : ''}`}>
+          <div className="flex gap-2">
             <motion.button onClick={onEdit} whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.97 }}
-              className="flex-1 flex items-center justify-center gap-2 py-2.5 rounded-xl text-xs font-black transition-all"
+              className="flex-1 flex items-center justify-center gap-1.5 py-2.5 rounded-xl text-xs font-black transition-all"
               style={{
-                background: isFinished ? alpha(hex.neutral.white, 0.05) : `linear-gradient(90deg, ${alphaOf('green', 0.12)}, rgba(16,185,129,0.12))`,
-                border: `1px solid ${isFinished ? alpha(hex.neutral.white, 0.09) : alphaOf('green', 0.3)}`,
-                color: isFinished ? alpha(hex.text.secondary, 0.7) : hex.green.bright,
-                fontFamily: 'var(--font-display)', letterSpacing: '0.06em',
-                boxShadow: isFinished ? 'none' : `0 0 16px ${alphaOf('green', 0.08)}`,
+                background: isFinished
+                  ? alpha(hex.neutral.white, 0.05)
+                  : `linear-gradient(90deg, ${alphaOf('green', 0.13)}, rgba(16,185,129,0.10))`,
+                border: `1px solid ${isFinished ? alpha(hex.neutral.white, 0.09) : alphaOf('green', 0.30)}`,
+                color: isFinished ? alpha(hex.text.secondary, 0.65) : hex.green.bright,
+                fontFamily: 'var(--font-display)', letterSpacing: '0.05em',
+                boxShadow: isFinished ? 'none' : `0 0 14px ${alphaOf('green', 0.08)}`,
               }}>
               <IconEdit />
-              {isFinished ? 'EDITAR RESULTADO' : 'INGRESAR RESULTADO'}
+              {isFinished ? 'EDITAR' : 'RESULTADO'}
             </motion.button>
             {(isLive || isFinished) && (
               <motion.button onClick={onExtend} whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.97 }}
-                className="flex-1 flex items-center justify-center gap-2 py-2 rounded-xl text-xs font-black"
-                style={{ background: alphaOf('gold', 0.08), border: `1px solid ${alpha(hex.gold.base, 0.28)}`, color: hex.gold.base }}>
-                ⏱ EXTENDER PARTIDO
+                className="flex-1 flex items-center justify-center gap-1.5 py-2.5 rounded-xl text-xs font-black"
+                style={{ background: alphaOf('gold', 0.08), border: `1px solid ${alpha(hex.gold.base, 0.26)}`, color: hex.gold.base }}>
+                ⏱ EXTENDER
               </motion.button>
             )}
           </div>
