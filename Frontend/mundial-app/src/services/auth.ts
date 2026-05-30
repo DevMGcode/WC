@@ -72,7 +72,7 @@ export const authService = {
   async register(req: RegisterRequest): Promise<AuthResponse> {
     try {
       // 1. Create the user account
-      const registerResponse = await fetch('/api/v1/public/users', {
+      const registerResponse = await fetch('/api/v1/users', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -96,11 +96,13 @@ export const authService = {
         };
       }
 
-      // Email verification required — do NOT auto-login
+      const emailVerified = registerData?.data?.emailVerified === true;
       return {
         success: true,
-        emailVerificationRequired: true,
-        message: 'Cuenta creada. Revisa tu correo y haz clic en el enlace de verificación para activarla.',
+        emailVerificationRequired: !emailVerified,
+        message: emailVerified
+          ? '¡Cuenta creada! Inicia sesión con tus credenciales.'
+          : 'Cuenta creada. Revisa tu correo y haz clic en el enlace de verificación para activarla.',
       };
     } catch {
       return { success: false, message: 'Error de conexión con el servidor' };

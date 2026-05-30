@@ -16,7 +16,7 @@ export const predictionService = {
     predictedHomeScore: number;
     predictedAwayScore: number;
   }): Promise<Prediction> {
-    return apiClient.post<Prediction>('/v1/public/predictions', data);
+    return apiClient.post<Prediction>('/v1/predictions', data);
   },
 
   async updatePrediction(
@@ -26,37 +26,37 @@ export const predictionService = {
       predictedAwayScore: number;
     }
   ): Promise<Prediction> {
-    return apiClient.put<Prediction>(`/v1/public/predictions/${predictionId}`, data);
+    return apiClient.put<Prediction>(`/v1/predictions/${predictionId}`, data);
   },
 
   async getPrediction(predictionId: string | number): Promise<Prediction> {
-    return apiClient.get<Prediction>(`/v1/public/predictions/${predictionId}`);
+    return apiClient.get<Prediction>(`/v1/predictions/${predictionId}`);
   },
 
   async getUserPredictions(userId: number): Promise<Prediction[]> {
-    return apiClient.get<Prediction[]>(`/v1/public/predictions/user/${userId}`);
+    return apiClient.get<Prediction[]>(`/v1/predictions/user/${userId}`);
   },
 
   async getUserPredictionForFixture(fixtureId: number): Promise<Prediction | null> {
     try {
-      return await apiClient.get<Prediction>(`/v1/public/predictions/fixture/${fixtureId}`);
+      return await apiClient.get<Prediction>(`/v1/predictions/fixture/${fixtureId}`);
     } catch {
       return null;
     }
   },
 
   async deletePrediction(predictionId: string | number): Promise<void> {
-    return apiClient.delete(`/v1/public/predictions/${predictionId}`);
+    return apiClient.delete(`/v1/predictions/${predictionId}`);
   },
 };
 
 export const scoringService = {
-  async getUserScore(tournamentId: number): Promise<UserTournamentScore> {
-    return apiClient.get<UserTournamentScore>(`/v1/public/scores/user/${tournamentId}`);
+  async getUserScore(tournamentId: number, userId: number): Promise<UserTournamentScore> {
+    return apiClient.get<UserTournamentScore>(`/v1/scores/user/${tournamentId}`, { userId });
   },
 
-  async getUserScoreHistory(tournamentId: number): Promise<PredictionScore[]> {
-    return apiClient.get<PredictionScore[]>(`/v1/public/scores/history/${tournamentId}`);
+  async getUserScoreHistory(tournamentId: number, userId: number): Promise<PredictionScore[]> {
+    return apiClient.get<PredictionScore[]>(`/v1/scores/history/${tournamentId}`, { userId });
   },
 
   async getGlobalRanking(
@@ -64,14 +64,15 @@ export const scoringService = {
     params?: { page?: number; pageSize?: number }
   ): Promise<PaginatedResponse<UserTournamentScore>> {
     return apiClient.get<PaginatedResponse<UserTournamentScore>>(
-      `/v1/public/rankings/global/${tournamentId}`,
+      `/v1/rankings/global/${tournamentId}`,
       params
     );
   },
 
-  async getUserRankPosition(tournamentId: number): Promise<{ rank: number; totalUsers: number }> {
+  async getUserRankPosition(tournamentId: number, userId: number): Promise<{ rank: number; totalUsers: number }> {
     return apiClient.get<{ rank: number; totalUsers: number }>(
-      `/v1/public/rankings/user/${tournamentId}/position`
+      `/v1/rankings/user/${tournamentId}/position`,
+      { userId }
     );
   },
 };
@@ -84,27 +85,27 @@ export const leagueService = {
     description?: string;
     maxMembers?: number;
   }): Promise<PrivateLeague> {
-    return apiClient.post<PrivateLeague>('/v1/public/leagues', data);
+    return apiClient.post<PrivateLeague>('/v1/leagues', data);
   },
 
   async getLeague(leagueId: string): Promise<PrivateLeague> {
-    return apiClient.get<PrivateLeague>(`/v1/public/leagues/${leagueId}`);
+    return apiClient.get<PrivateLeague>(`/v1/leagues/${leagueId}`);
   },
 
   async getUserLeagues(userId: number): Promise<PrivateLeague[]> {
-    return apiClient.get<PrivateLeague[]>(`/v1/public/leagues/user/${userId}`);
+    return apiClient.get<PrivateLeague[]>(`/v1/leagues/user/${userId}`);
   },
 
   async getLeagueMembers(leagueId: string): Promise<PrivateLeagueMember[]> {
-    return apiClient.get<PrivateLeagueMember[]>(`/v1/public/leagues/${leagueId}/members`);
+    return apiClient.get<PrivateLeagueMember[]>(`/v1/leagues/${leagueId}/members`);
   },
 
   async joinLeague(data: { userId: number; leagueCode: string }): Promise<PrivateLeagueMember> {
-    return apiClient.post<PrivateLeagueMember>('/v1/public/leagues/join', data);
+    return apiClient.post<PrivateLeagueMember>('/v1/leagues/join', data);
   },
 
   async leaveLeague(leagueId: string, userId: number): Promise<void> {
-    return apiClient.post(`/v1/public/leagues/${leagueId}/leave`, { userId });
+    return apiClient.post(`/v1/leagues/${leagueId}/leave`, { userId });
   },
 
   async transferOwnership(
@@ -112,25 +113,25 @@ export const leagueService = {
     currentOwnerUserId: number,
     newOwnerUserId: number
   ): Promise<PrivateLeague> {
-    return apiClient.post<PrivateLeague>(`/v1/public/leagues/${leagueId}/transfer-ownership`, {
+    return apiClient.post<PrivateLeague>(`/v1/leagues/${leagueId}/transfer-ownership`, {
       currentOwnerUserId,
       newOwnerUserId,
     });
   },
 
   async getLeagueRanking(leagueId: string): Promise<PrivateLeagueScore[]> {
-    return apiClient.get<PrivateLeagueScore[]>(`/v1/public/leagues/${leagueId}/ranking`);
+    return apiClient.get<PrivateLeagueScore[]>(`/v1/leagues/${leagueId}/ranking`);
   },
 
   async updateLeague(
     leagueId: string,
     data: { name?: string; description?: string }
   ): Promise<PrivateLeague> {
-    return apiClient.put<PrivateLeague>(`/v1/public/leagues/${leagueId}`, data);
+    return apiClient.put<PrivateLeague>(`/v1/leagues/${leagueId}`, data);
   },
 
   async deleteLeague(leagueId: string, ownerUserId: number): Promise<void> {
-    return apiClient.delete(`/v1/public/leagues/${leagueId}`, { ownerUserId });
+    return apiClient.delete(`/v1/leagues/${leagueId}`, { ownerUserId });
   },
 };
 
