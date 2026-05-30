@@ -43,6 +43,36 @@ public class SecurityConfig {
             .csrf(csrf -> csrf.disable())
             .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
             .authorizeHttpRequests(auth -> auth
+                // ─────────────────────────────────────────────────────────────
+                // REGLAS RESTRICTIVAS PRIMERO. Spring Security evalúa en orden
+                // y la primera coincidencia gana, así que las restricciones
+                // específicas deben preceder al permitAll genérico para que
+                // no se "tragen" peticiones mutativas a rutas /public/**.
+                // ─────────────────────────────────────────────────────────────
+
+                // Operaciones mutativas sobre fixtures bajo /public/tournaments/**:
+                // pese al prefijo "public", crear/editar/borrar partidos y editar
+                // marcadores son acciones administrativas y deben requerir ADMIN.
+                .requestMatchers(HttpMethod.POST,   "/api/v1/public/tournaments/fixtures",
+                                                   "/api/v1/public/tournaments/fixtures/**").hasRole("ADMIN")
+                .requestMatchers(HttpMethod.PUT,    "/api/v1/public/tournaments/fixtures/**").hasRole("ADMIN")
+                .requestMatchers(HttpMethod.PATCH,  "/api/v1/public/tournaments/fixtures/**").hasRole("ADMIN")
+                .requestMatchers(HttpMethod.DELETE, "/api/v1/public/tournaments/fixtures/**").hasRole("ADMIN")
+
+                // Endpoints administrativos clásicos: requieren rol ADMIN
+                .requestMatchers("/api/v1/admin/**").hasRole("ADMIN")
+
+                // Admin operations bajo /public/admin/** (config, eventos manuales)
+                .requestMatchers("/api/v1/public/admin/**").hasRole("ADMIN")
+
+                // Signup: POST /api/v1/users (sin auth, creación de cuenta)
+                .requestMatchers(HttpMethod.POST, "/api/v1/users").permitAll()
+
+                // ─────────────────────────────────────────────────────────────
+                // PERMIT ALL para GETs públicos. Ya filtramos arriba las
+                // mutaciones, así que estos matchers solo aplican a GET (y al
+                // resto de métodos no listados, que el controller no expone).
+                // ─────────────────────────────────────────────────────────────
                 .requestMatchers(
                     "/actuator/health",
                     "/actuator/info",
@@ -55,6 +85,7 @@ public class SecurityConfig {
                     "/api/v1/auth/**",
 
                     // Endpoints REALMENTE públicos del torneo (no exponen datos privados):
+                    "/api/v1/public/health",
                     "/api/v1/public/tournaments",
                     "/api/v1/public/tournaments/**",
                     "/api/v1/public/players/**",
@@ -67,10 +98,6 @@ public class SecurityConfig {
                     "/api/v1/predictions/count",
                     "/api/v1/users/count"
                 ).permitAll()
-                // Signup: POST /api/v1/users (sin auth, creación de cuenta)
-                .requestMatchers(HttpMethod.POST, "/api/v1/users").permitAll()
-                // Endpoints administrativos: requieren rol ADMIN
-                .requestMatchers("/api/v1/admin/**").hasRole("ADMIN")
                 // El resto (predictions, leagues, scores, rankings/user, users/{id}, etc.)
                 // requiere autenticación; los controllers validan ownership con SecurityUtils.
                 .anyRequest().authenticated()
