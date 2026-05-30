@@ -3,6 +3,7 @@ import React, { useEffect, useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { hex } from '@/lib/design/tokens';
 import { alpha, alphaOf, borders } from '@/lib/design/effects';
+import { apiFetch } from '@/lib/apiFetch';
 
 interface GoalScorerPanelProps {
   fixtureId: number;
@@ -23,7 +24,7 @@ export default function GoalScorerPanel({ fixtureId, homeTeam, awayTeam }: GoalS
 
   const loadScorers = async () => {
     try {
-      const res  = await fetch(`/api/v1/public/fixtures/${fixtureId}/events`);
+      const res  = await apiFetch(`/api/v1/public/fixtures/${fixtureId}/events`);
       const data = await res.json();
       setScorers(data?.data ?? []);
     } catch { /* no-op */ }
@@ -35,9 +36,9 @@ export default function GoalScorerPanel({ fixtureId, homeTeam, awayTeam }: GoalS
     if (!playerName.trim()) return;
     setSaving(true);
     try {
-      await fetch(`/api/v1/public/admin/fixtures/${fixtureId}/events`, {
+      await apiFetch(`/api/v1/public/admin/fixtures/${fixtureId}/events`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token()}` },
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           playerName: playerName.trim(),
           teamId:     teamId ? Number(teamId) : null,
@@ -53,8 +54,8 @@ export default function GoalScorerPanel({ fixtureId, homeTeam, awayTeam }: GoalS
   const deleteScorer = async (eventId: number) => {
     setDeleting(eventId);
     try {
-      await fetch(`/api/v1/public/admin/fixtures/events/${eventId}`, {
-        method: 'DELETE', headers: { Authorization: `Bearer ${token()}` },
+      await apiFetch(`/api/v1/public/admin/fixtures/events/${eventId}`, {
+        method: 'DELETE',
       });
       await loadScorers();
     } finally { setDeleting(null); }

@@ -8,6 +8,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { getCurrentTournament } from '@/services/publicTournament';
 import { hex } from '@/lib/design/tokens';
 import { alpha, alphaOf, borders, gradients } from '@/lib/design/effects';
+import { apiFetch } from '@/lib/apiFetch';
 import { IconShield, IconCheck, IconX, IconEdit } from './_components/AdminIcons';
 import FixtureCard from './_components/FixtureCard';
 import AnalyticsTab from './_components/AnalyticsTab';
@@ -56,7 +57,7 @@ export default function AdminPage() {
       if (!tournament?.id) return;
       setTournamentId(tournament.id);
       const token = localStorage.getItem('authToken');
-      const res  = await fetch(`/api/v1/public/tournaments/${tournament.id}/fixtures`, { headers: { Authorization: `Bearer ${token}` } });
+      const res  = await apiFetch(`/api/v1/public/tournaments/${tournament.id}/fixtures`);
       const data = await res.json();
       const list: FixtureAdmin[] = (data?.data ?? []).map((f: any) => ({
         id: f.id, name: f.name, status: f.status, homeTeam: f.homeTeam, awayTeam: f.awayTeam,
@@ -80,9 +81,8 @@ export default function AdminPage() {
     if (!extendId || !extraMins) return;
     setExtending(true);
     try {
-      const token = localStorage.getItem('authToken');
-      await fetch(`/api/v1/public/tournaments/fixtures/${extendId}/extend`, {
-        method: 'PATCH', headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+      await apiFetch(`/api/v1/public/tournaments/fixtures/${extendId}/extend`, {
+        method: 'PATCH', headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ extraMinutes: extraMins }),
       });
       setExtendId(null); setExtraMins(null);
@@ -94,9 +94,8 @@ export default function AdminPage() {
     if (homeScore === '' || awayScore === '') { setError('Ingresa ambos marcadores'); return; }
     setSaving(true); setError('');
     try {
-      const token = localStorage.getItem('authToken');
-      const res = await fetch(`/api/v1/public/tournaments/fixtures/${fixtureId}/result`, {
-        method: 'PATCH', headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+      const res = await apiFetch(`/api/v1/public/tournaments/fixtures/${fixtureId}/result`, {
+        method: 'PATCH', headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ homeScore: parseInt(homeScore), awayScore: parseInt(awayScore) }),
       });
       if (!res.ok) { const err = await res.json(); setError(err?.message || 'Error al guardar resultado'); return; }
@@ -137,55 +136,62 @@ export default function AdminPage() {
       ))}
 
       <div className="relative" style={{ zIndex: 1 }}>
-        {/* Admin header */}
+        {/* Admin header — compact strip */}
         <div className="relative overflow-hidden"
-          style={{ background: 'linear-gradient(180deg, rgba(4,8,5,0.98) 0%, rgba(6,12,7,0.96) 50%, rgba(5,10,6,0.95) 100%)', borderBottom: borders.brand('danger', 0.18) }}>
-          <div className="absolute inset-0 pointer-events-none" style={{ background: 'radial-gradient(ellipse 80% 60% at 50% 0%, rgba(211,47,47,0.10) 0%, transparent 65%)' }} />
-          <div className="absolute inset-0 pointer-events-none" style={{ background: 'linear-gradient(90deg, transparent 10%, rgba(211,47,47,0.04) 50%, transparent 90%)' }} />
+          style={{ background: 'linear-gradient(180deg, rgba(4,8,5,0.99) 0%, rgba(5,10,6,0.97) 100%)', borderBottom: borders.brand('danger', 0.18) }}>
+          <div className="absolute inset-0 pointer-events-none"
+            style={{ background: 'radial-gradient(ellipse 45% 120% at 0% 50%, rgba(211,47,47,0.09) 0%, transparent 65%)' }} />
           <motion.div className="absolute inset-x-0 bottom-0 h-px pointer-events-none"
-            style={{ background: `linear-gradient(90deg, transparent, rgba(211,47,47,0.7), ${alphaOf('green', 0.5)}, rgba(211,47,47,0.7), transparent)` }}
-            animate={{ opacity: [0.4, 1, 0.4] }} transition={{ duration: 2.8, repeat: Infinity, ease: 'easeInOut' }} />
-          <motion.div className="absolute -top-16 -left-16 w-48 h-48 rounded-full pointer-events-none"
-            style={{ background: 'radial-gradient(circle, rgba(211,47,47,0.12) 0%, transparent 65%)', filter: 'blur(32px)' }}
-            animate={{ scale: [1, 1.25, 1], opacity: [0.5, 0.9, 0.5] }} transition={{ duration: 5, repeat: Infinity }} />
-          <motion.div className="absolute -top-12 -right-12 w-40 h-40 rounded-full pointer-events-none"
-            style={{ background: `radial-gradient(circle, ${alphaOf('green', 0.10)} 0%, transparent 65%)`, filter: 'blur(28px)' }}
-            animate={{ scale: [1, 1.3, 1], opacity: [0.4, 0.8, 0.4] }} transition={{ duration: 6, repeat: Infinity, delay: 1.5 }} />
+            style={{ background: `linear-gradient(90deg, transparent, rgba(211,47,47,0.65), ${alphaOf('green', 0.38)}, rgba(211,47,47,0.65), transparent)` }}
+            animate={{ opacity: [0.35, 0.9, 0.35] }} transition={{ duration: 3, repeat: Infinity, ease: 'easeInOut' }} />
 
-          <div className="relative px-4 py-5 max-w-2xl mx-auto">
-            <div className="flex items-center justify-center mb-3">
-              <motion.div className="flex items-center gap-1.5 px-3 py-1 rounded-full text-[10px] font-black tracking-widest"
-                style={{ background: alphaOf('danger', 0.12), border: borders.brand('danger', 0.30), color: hex.status.danger, fontFamily: 'var(--font-display)' }}
-                animate={{ boxShadow: ['0 0 8px rgba(211,47,47,0.10)', '0 0 22px rgba(211,47,47,0.30)', '0 0 8px rgba(211,47,47,0.10)'] }}
-                transition={{ duration: 2.4, repeat: Infinity }}>
-                <IconShield /> ACCESO ADMIN
-              </motion.div>
-            </div>
-            <div className="inline-flex flex-col items-center w-full">
-              <div className="flex items-center justify-center gap-2.5 mb-2">
-                <div className="relative shrink-0">
-                  <motion.div className="absolute inset-0 rounded-full pointer-events-none"
-                    style={{ background: alphaOf('danger', 0.45), filter: 'blur(14px)' }}
-                    animate={{ scale: [0.8, 1.5, 0.8], opacity: [0.3, 0.8, 0.3] }} transition={{ duration: 3, repeat: Infinity }} />
-                  <motion.div
-                    animate={{ filter: ['drop-shadow(0 0 8px rgba(211,47,47,0.6))', `drop-shadow(0 0 20px rgba(211,47,47,0.9)) drop-shadow(0 0 40px ${alphaOf('green', 0.4)})`, 'drop-shadow(0 0 8px rgba(211,47,47,0.6))'] }}
-                    transition={{ duration: 2.8, repeat: Infinity }}>
-                    <Image src="/Logo_Pestaña.png" alt="Orionix Gol" width={52} height={52} className="relative z-10 w-12 h-12 object-contain" />
-                  </motion.div>
-                </div>
+          <div className="relative px-4 py-3.5 max-w-5xl mx-auto">
+            <div className="flex items-center justify-between gap-4">
+              {/* Left: logo + title */}
+              <div className="flex items-center gap-3 min-w-0">
                 <motion.div
-                  animate={{ filter: ['drop-shadow(0 0 6px rgba(211,47,47,0.4))', `drop-shadow(0 0 18px rgba(211,47,47,0.75)) drop-shadow(0 0 36px ${alphaOf('green', 0.30)})`, 'drop-shadow(0 0 6px rgba(211,47,47,0.4))'] }}
-                  transition={{ duration: 2.8, repeat: Infinity }}>
-                  <Image src="/texto_logo_pestaña.png" alt="Orionix Gol" width={160} height={40} className="h-9 w-auto object-contain" style={{ mixBlendMode: 'screen' }} />
+                  animate={{ filter: ['drop-shadow(0 0 5px rgba(211,47,47,0.45))', 'drop-shadow(0 0 14px rgba(211,47,47,0.80))', 'drop-shadow(0 0 5px rgba(211,47,47,0.45))'] }}
+                  transition={{ duration: 2.6, repeat: Infinity }}>
+                  <Image src="/Logo_Pestaña.png" alt="Orionix Gol" width={34} height={34} className="w-8 h-8 object-contain shrink-0" />
                 </motion.div>
+                <div className="min-w-0">
+                  <div className="flex items-center gap-2 flex-wrap">
+                    <h1 className="text-sm font-black leading-none"
+                      style={{ fontFamily: 'var(--font-display)', letterSpacing: '0.08em', color: hex.text.primary }}>
+                      PANEL DE CONTROL
+                    </h1>
+                    <motion.div className="flex items-center gap-1 px-2 py-0.5 rounded-full text-[9px] font-black tracking-widest shrink-0"
+                      style={{ background: alphaOf('danger', 0.12), border: borders.brand('danger', 0.28), color: hex.status.danger, fontFamily: 'var(--font-display)' }}
+                      animate={{ boxShadow: ['0 0 4px rgba(211,47,47,0.08)', '0 0 14px rgba(211,47,47,0.28)', '0 0 4px rgba(211,47,47,0.08)'] }}
+                      transition={{ duration: 2.2, repeat: Infinity }}>
+                      <IconShield /> ADMIN
+                    </motion.div>
+                  </div>
+                  <p className="text-[9px] tracking-widest mt-0.5" style={{ color: 'rgba(211,47,47,0.40)', letterSpacing: '0.18em' }}>
+                    MUNDIAL 2026 · GESTIÓN DE RESULTADOS
+                  </p>
+                </div>
               </div>
-              <motion.h1 className="text-center font-black text-xl leading-none mb-1"
-                style={{ fontFamily: 'var(--font-display)', letterSpacing: '0.10em', background: 'linear-gradient(135deg, #D32F2F, #e2e8f0, #818cf8)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>
-                PANEL DE CONTROL
-              </motion.h1>
-              <p className="text-center text-[10px] tracking-widest uppercase" style={{ color: alphaOf('danger', 0.45), letterSpacing: '0.20em' }}>
-                Mundial 2026 · Gestión de resultados
-              </p>
+
+              {/* Right: quick stats */}
+              {!loading && fixtures.length > 0 && (
+                <div className="flex items-center rounded-xl overflow-hidden shrink-0"
+                  style={{ border: `1px solid ${alpha(hex.neutral.white, 0.08)}`, background: alpha(hex.bg.primary, 0.7) }}>
+                  {[
+                    { val: pendingCount,    label: 'PEND',  color: hex.gold.base },
+                    { val: finishedCount,   label: 'FIN',   color: hex.green.hover },
+                    { val: fixtures.length, label: 'TOTAL', color: hex.text.secondary },
+                  ].map((s, i) => (
+                    <React.Fragment key={s.label}>
+                      {i > 0 && <div className="w-px self-stretch" style={{ background: alpha(hex.neutral.white, 0.08) }} />}
+                      <div className="flex flex-col items-center px-3 py-2">
+                        <span className="text-sm font-black leading-none" style={{ color: s.color, fontFamily: 'var(--font-display)' }}>{s.val}</span>
+                        <span className="text-[8px] tracking-widest mt-0.5" style={{ color: alpha(hex.text.secondary, 0.38) }}>{s.label}</span>
+                      </div>
+                    </React.Fragment>
+                  ))}
+                </div>
+              )}
             </div>
           </div>
         </div>
@@ -277,23 +283,37 @@ export default function AdminPage() {
               <motion.div key="resultados" initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -8 }} transition={{ duration: 0.18 }}>
 
                 {/* Filter tabs */}
-                <div className="flex gap-1.5 mb-5 p-1.5 rounded-2xl"
-                  style={{ background: alpha(hex.bg.primary, 0.92), border: borders.brand('green', 0.15), boxShadow: '0 6px 18px rgba(2,6,23,0.45)' }}>
-                  {FILTER_TABS.map(f => (
-                    <motion.button key={f.key} onClick={() => setFilterStatus(f.key)} whileTap={{ scale: 0.97 }}
-                      className="relative flex-1 py-2 px-1 rounded-xl text-[11px] font-black flex flex-col items-center gap-0.5"
-                      style={{ color: filterStatus === f.key ? hex.neutral.white : alpha(hex.text.secondary, 0.5), fontFamily: 'var(--font-display)', letterSpacing: '0.04em' }}>
-                      {filterStatus === f.key && (
-                        <motion.span layoutId="admin-filter-pill" className="absolute inset-0 rounded-xl"
-                          style={{ background: `linear-gradient(90deg, ${hex.green.base}, ${hex.green.bright}, #10b981)`, boxShadow: `0 4px 14px ${alpha(hex.green.base, 0.3)}` }}
-                          transition={{ type: 'spring', stiffness: 340, damping: 30 }} />
-                      )}
-                      <span className="relative z-10 flex flex-col items-center gap-0.5">
-                        <span className="text-base font-black" style={{ fontFamily: 'var(--font-display)', lineHeight: 1 }}>{f.count}</span>
-                        <span className="text-[9px] tracking-widest">{f.label.toUpperCase()}</span>
-                      </span>
-                    </motion.button>
-                  ))}
+                <div className="flex gap-2 mb-5">
+                  {FILTER_TABS.map(f => {
+                    const isActive = filterStatus === f.key;
+                    return (
+                      <motion.button key={f.key} onClick={() => setFilterStatus(f.key)}
+                        whileHover={{ scale: 1.02, y: -1 }} whileTap={{ scale: 0.97 }}
+                        className="relative flex-1 py-3 rounded-2xl flex flex-col items-center gap-1 overflow-hidden"
+                        style={{
+                          background: isActive
+                            ? `linear-gradient(145deg, ${alpha(f.dot, 0.18)}, ${alpha(f.dot, 0.08)})`
+                            : alpha(hex.bg.primary, 0.80),
+                          border: `1px solid ${isActive ? alpha(f.dot, 0.45) : alpha(hex.neutral.white, 0.08)}`,
+                          boxShadow: isActive ? `0 4px 20px ${alpha(f.dot, 0.20)}, inset 0 1px 0 ${alpha(f.dot, 0.15)}` : '0 2px 8px rgba(2,6,23,0.35)',
+                          transition: 'all 0.22s ease',
+                        }}>
+                        {isActive && (
+                          <motion.span className="absolute inset-x-3 top-0 h-px rounded-full"
+                            style={{ background: `linear-gradient(90deg, transparent, ${f.dot}, transparent)` }}
+                            animate={{ opacity: [0.5, 1, 0.5] }} transition={{ duration: 1.8, repeat: Infinity }} />
+                        )}
+                        <span className="text-xl font-black leading-none relative z-10"
+                          style={{ color: isActive ? f.dot : alpha(hex.text.secondary, 0.5), fontFamily: 'var(--font-display)' }}>
+                          {f.count}
+                        </span>
+                        <span className="text-[9px] font-black tracking-widest relative z-10"
+                          style={{ color: isActive ? alpha(hex.neutral.white, 0.75) : alpha(hex.text.secondary, 0.35), letterSpacing: '0.14em' }}>
+                          {f.label.toUpperCase()}
+                        </span>
+                      </motion.button>
+                    );
+                  })}
                 </div>
 
                 {/* Fixture list */}

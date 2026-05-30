@@ -5,6 +5,7 @@ import { FiRefreshCw, FiWifi, FiTrash2 } from 'react-icons/fi';
 import { hex } from '@/lib/design/tokens';
 import { alpha, alphaOf, borders, gradients, surfaces } from '@/lib/design/effects';
 import type { ApiFootballStatus, SyncResult } from './types';
+import { apiFetch } from '@/lib/apiFetch';
 
 export default function ConfigTab() {
   const [status,          setStatus]          = useState<ApiFootballStatus | null>(null);
@@ -34,7 +35,7 @@ export default function ConfigTab() {
   const loadStatus = async () => {
     setStatusLoading(true); setStatusError('');
     try {
-      const res  = await fetch('/api/v1/admin/apifootball/status', { headers: authHeader() });
+      const res  = await apiFetch('/api/v1/admin/apifootball/status');
       const data = await res.json();
       if (!res.ok) { setStatusError('No se pudo conectar con API Football'); return; }
       const s = data?.data ?? null;
@@ -46,10 +47,11 @@ export default function ConfigTab() {
   const syncTeams = async () => {
     setSyncingTeams(true); setTeamResult(null); setError(''); setMessage('');
     try {
-      const res  = await fetch('/api/v1/admin/apifootball/sync/teams', { method: 'POST', headers: authHeader() });
+      const res  = await apiFetch('/api/v1/admin/apifootball/sync/teams', { method: 'POST' });
       const data = await res.json();
       if (!res.ok) { setError(data?.message || 'Error al sincronizar equipos'); return; }
-      setTeamResult(data?.data ?? { created: 0, updated: 0, errors: [] });
+      const td = data?.data ?? {};
+      setTeamResult({ created: td.created ?? 0, updated: td.updated ?? 0, errors: td.errors ?? [] });
     } catch { setError('Error de conexión'); }
     finally { setSyncingTeams(false); }
   };
@@ -57,10 +59,11 @@ export default function ConfigTab() {
   const syncFixtures = async () => {
     setSyncingFixtures(true); setFixtureResult(null); setError(''); setMessage('');
     try {
-      const res  = await fetch('/api/v1/admin/apifootball/sync/fixtures', { method: 'POST', headers: authHeader() });
+      const res  = await apiFetch('/api/v1/admin/apifootball/sync/fixtures', { method: 'POST' });
       const data = await res.json();
       if (!res.ok) { setError(data?.message || 'Error al sincronizar partidos'); return; }
-      setFixtureResult(data?.data ?? { created: 0, updated: 0, errors: [] });
+      const fd = data?.data ?? {};
+      setFixtureResult({ created: fd.created ?? 0, updated: fd.updated ?? 0, errors: fd.errors ?? [] });
     } catch { setError('Error de conexión'); }
     finally { setSyncingFixtures(false); }
   };
@@ -75,10 +78,11 @@ export default function ConfigTab() {
   const syncLive = async () => {
     setSyncingLive(true); setLiveResult(null); setError(''); setMessage('');
     try {
-      const res  = await fetch('/api/v1/admin/apifootball/sync/fixtures/live', { method: 'POST', headers: authHeader() });
+      const res  = await apiFetch('/api/v1/admin/apifootball/sync/fixtures/live', { method: 'POST' });
       const data = await res.json();
       if (!res.ok) { setError(data?.message || 'Error al sincronizar partidos en vivo'); return; }
-      setLiveResult(data?.data ?? { created: 0, updated: 0, errors: [] });
+      const ld = data?.data ?? {};
+      setLiveResult({ created: ld.created ?? 0, updated: ld.updated ?? 0, errors: ld.errors ?? [] });
       setMessage('Partidos en vivo sincronizados correctamente');
     } catch { setError('Error de conexión'); }
     finally { setSyncingLive(false); }
@@ -89,7 +93,7 @@ export default function ConfigTab() {
   const cleanDemo = async () => {
     setCleaning(true); setError(''); setMessage(''); setConfirmClean(false);
     try {
-      const res  = await fetch('/api/v1/public/admin/config/demo-fixtures', { method: 'DELETE', headers: authHeader() });
+      const res  = await apiFetch('/api/v1/public/admin/config/demo-fixtures', { method: 'DELETE' });
       const data = await res.json();
       if (!res.ok) { setError('Error al limpiar'); return; }
       const d = data?.data ?? {};
@@ -101,7 +105,7 @@ export default function ConfigTab() {
   const recalculateStandings = async () => {
     setRecalculating(true); setError(''); setMessage('');
     try {
-      const res = await fetch('/api/v1/public/admin/config/recalculate-standings', { method: 'POST', headers: authHeader() });
+      const res = await apiFetch('/api/v1/public/admin/config/recalculate-standings', { method: 'POST' });
       if (!res.ok) { setError('Error al recalcular standings'); return; }
       setMessage('Standings recalculados correctamente desde los resultados de los partidos');
     } catch { setError('Error de conexión'); }
@@ -111,7 +115,7 @@ export default function ConfigTab() {
   const restoreDemo = async () => {
     setRestoring(true); setError(''); setMessage(''); setConfirmRestore(false);
     try {
-      const res = await fetch('/api/v1/public/admin/config/restore-demo', { method: 'POST', headers: authHeader() });
+      const res = await apiFetch('/api/v1/public/admin/config/restore-demo', { method: 'POST' });
       if (!res.ok) { setError('Error al restaurar datos demo'); return; }
       setMessage('Datos demo restaurados correctamente');
     } catch { setError('Error de conexión'); }
@@ -121,7 +125,7 @@ export default function ConfigTab() {
   const cleanApi = async () => {
     setCleaningApi(true); setError(''); setMessage(''); setConfirmCleanApi(false);
     try {
-      const res  = await fetch('/api/v1/public/admin/config/api-fixtures', { method: 'DELETE', headers: authHeader() });
+      const res  = await apiFetch('/api/v1/public/admin/config/api-fixtures', { method: 'DELETE' });
       const data = await res.json();
       if (!res.ok) { setError('Error al limpiar datos API'); return; }
       const d = data?.data ?? {};
@@ -193,8 +197,7 @@ export default function ConfigTab() {
               </div>
               <div className="rounded-xl p-3" style={{ background: alpha(hex.neutral.white, 0.03), border: `1px solid ${alpha(hex.neutral.white, 0.06)}` }}>
                 <p className="text-[9px] font-black tracking-[0.22em] uppercase mb-1" style={{ color: alpha(hex.text.secondary, 0.45) }}>Cuenta</p>
-                <p className="text-sm font-black text-white truncate">{status.account?.firstname ?? '—'}</p>
-                <p className="text-[9px] mt-0.5 truncate" style={{ color: alpha(hex.text.secondary, 0.40) }}>{status.account?.email ?? '—'}</p>
+                <p className="text-sm font-black text-white truncate">Dev AndresT13</p>
               </div>
             </div>
             <div className="space-y-1.5">
@@ -284,7 +287,7 @@ export default function ConfigTab() {
                 <span className="text-[9px] font-black uppercase tracking-widest shrink-0" style={{ color: alpha(hex.green.hover, 0.7) }}>Partidos</span>
                 <span className="text-[10px] font-black text-green-500">+{fixtureResult.created} nuevos</span>
                 <span className="text-[10px] font-black text-green-400">{fixtureResult.updated} actualizados</span>
-                {fixtureResult.errors.length > 0 && <span className="text-[10px] font-black text-amber-400">{fixtureResult.errors.length} avisos</span>}
+                {(fixtureResult.errors?.length ?? 0) > 0 && <span className="text-[10px] font-black text-amber-400">{fixtureResult.errors?.length} avisos</span>}
               </div>
             )}
           </motion.div>
@@ -330,7 +333,7 @@ export default function ConfigTab() {
               <span className="text-[9px] font-black uppercase tracking-widest shrink-0" style={{ color: alpha(hex.status.danger, 0.7) }}>En vivo</span>
               <span className="text-[10px] font-black text-green-500">+{liveResult.created} nuevos</span>
               <span className="text-[10px] font-black text-green-400">{liveResult.updated} actualizados</span>
-              {liveResult.errors.length > 0 && <span className="text-[10px] font-black text-amber-400">{liveResult.errors.length} avisos</span>}
+              {(liveResult.errors?.length ?? 0) > 0 && <span className="text-[10px] font-black text-amber-400">{liveResult.errors?.length} avisos</span>}
             </div>
           </motion.div>
         )}
