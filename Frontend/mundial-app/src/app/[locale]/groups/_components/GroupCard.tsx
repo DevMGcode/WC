@@ -200,4 +200,4 @@ const GroupCard = ({ group, index, t }: GroupCardProps) => {
   );
 };
 
-export default GroupCard;
+export default React.memo(GroupCard);

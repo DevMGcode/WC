@@ -7,7 +7,7 @@ import { FiAward, FiTarget, FiZap } from 'react-icons/fi';
 import { Header } from '@/components/Navigation';
 import { hex } from '@/lib/design/tokens';
 import { alpha, alphaOf, borders, surfaces } from '@/lib/design/effects';
-import { useT } from '@/hooks/useT';
+import { useTranslations } from 'next-intl';
 import { useTopScorers, useTopAssists } from '@/hooks/useTournamentData';
 
 interface PlayerStat {
@@ -167,7 +167,7 @@ function Skeleton() {
    MAIN PAGE
 ══════════════════════════════════════════ */
 export default function ScorersClient() {
-  const { t } = useT();
+  const t = useTranslations();
   const [tab, setTab] = useState<Tab>('goals');
 
   const { data: rawScorers = [], isLoading: loadingScorers, isError: errScorers } = useTopScorers();
