@@ -7,6 +7,7 @@ import Image from 'next/image';
 import Link from 'next/link';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useRouter } from 'next/navigation';
+import { useTranslations } from 'next-intl';
 import { getFixtureById } from '@/services/publicTournament';
 import { predictionService } from '@/services/predictions';
 import { useAuth } from '@/contexts/AuthContext';
@@ -15,29 +16,22 @@ import {
   FiMapPin, FiAlertCircle, FiList, FiBarChart2, FiUsers, FiRepeat,
 } from 'react-icons/fi';
 
-import { hex, type BrandColor } from '@/lib/design/tokens';
+import { hex, type BrandColor, resolveBrandHex } from '@/lib/design/tokens';
 import { alpha, alphaOf, borders, gradients } from '@/lib/design/effects';
 
-import LineupsTab    from './_components/LineupsTab';
-import StatisticsTab from './_components/StatisticsTab';
-import PlayersTab    from './_components/PlayersTab';
-import HeadToHeadTab from './_components/HeadToHeadTab';
+import dynamic from 'next/dynamic';
+import { TabSkeleton } from '@/components/PageSkeleton';
+import { ErrorBoundary } from '@/components/ErrorBoundary';
+
+const LineupsTab    = dynamic(() => import('./_components/LineupsTab'),    { loading: () => <TabSkeleton /> });
+const StatisticsTab = dynamic(() => import('./_components/StatisticsTab'), { loading: () => <TabSkeleton /> });
+const PlayersTab    = dynamic(() => import('./_components/PlayersTab'),    { loading: () => <TabSkeleton /> });
+const HeadToHeadTab = dynamic(() => import('./_components/HeadToHeadTab'), { loading: () => <TabSkeleton /> });
+
+import { useMatchLive }   from '@/hooks/useMatchLive';
+import { useMatchEvents } from '@/hooks/useMatchEvents';
 
 type DetailTab = 'lineups' | 'stats' | 'players' | 'h2h';
-
-const DETAIL_TABS: { key: DetailTab; label: string; icon: React.ReactNode }[] = [
-  { key: 'lineups',  label: 'Alineaciones', icon: <FiList    size={12} /> },
-  { key: 'stats',    label: 'Estadísticas', icon: <FiBarChart2 size={12} /> },
-  { key: 'players',  label: 'Jugadores',    icon: <FiUsers   size={12} /> },
-  { key: 'h2h',      label: 'H2H',          icon: <FiRepeat  size={12} /> },
-];
-
-/* ── Scoring rules config — all colors driven by tokens ── */
-const SCORE_RULES: { pts: number; label: string; sublabel: string; color: BrandColor; icon: React.ReactNode }[] = [
-  { pts: 3, label: 'Marcador exacto',     sublabel: 'Resultado y goles exactos', color: 'green',   icon: <FiZap   size={14} /> },
-  { pts: 1, label: 'Resultado correcto',  sublabel: 'Ganador o empate correcto', color: 'success', icon: <FiCheck size={14} /> },
-  { pts: 0, label: 'Fallaste',             sublabel: 'No acertaste el resultado', color: 'neutral', icon: <FiX     size={14} /> },
-];
 
 /**
  * Local thin wrapper around the card pattern used on this page. We don't use
@@ -72,7 +66,24 @@ const DarkCard = ({
 
 export default function FixtureDetailPage({ params }: { params: { id: string } }) {
   const router = useRouter();
+  const t      = useTranslations();
   const { user, isAuthenticated } = useAuth();
+  const fixtureId = parseInt(params.id, 10);
+
+  /* Tabs y reglas de puntuación dependen de t() ⇒ se construyen dentro del
+   * componente para reaccionar al cambio de locale. */
+  const DETAIL_TABS: { key: DetailTab; label: string; icon: React.ReactNode }[] = [
+    { key: 'lineups',  label: t('fixture.tabs.lineups')   ?? 'Alineaciones', icon: <FiList    size={12} /> },
+    { key: 'stats',    label: t('fixture.tabs.stats')     ?? 'Estadísticas', icon: <FiBarChart2 size={12} /> },
+    { key: 'players',  label: t('fixture.tabs.players')   ?? 'Jugadores',    icon: <FiUsers   size={12} /> },
+    { key: 'h2h',      label: t('fixture.tabs.h2h')       ?? 'H2H',          icon: <FiRepeat  size={12} /> },
+  ];
+
+  const SCORE_RULES: { pts: number; label: string; sublabel: string; color: BrandColor; icon: React.ReactNode }[] = [
+    { pts: 3, label: t('fixture.rules.exactLabel'),   sublabel: t('fixture.rules.exactSub'),   color: 'green',   icon: <FiZap   size={14} /> },
+    { pts: 1, label: t('fixture.rules.correctLabel'), sublabel: t('fixture.rules.correctSub'), color: 'success', icon: <FiCheck size={14} /> },
+    { pts: 0, label: t('fixture.rules.wrongLabel'),   sublabel: t('fixture.rules.wrongSub'),   color: 'neutral', icon: <FiX     size={14} /> },
+  ];
 
   const [fixture,     setFixture]     = useState<any>(null);
   const [loading,     setLoading]     = useState(true);
@@ -85,15 +96,25 @@ export default function FixtureDetailPage({ params }: { params: { id: string } }
   const [predSuccess, setPredSuccess] = useState(false);
   const [detailTab,   setDetailTab]   = useState<DetailTab>('lineups');
 
+  // WebSocket — tiempo real (solo activo cuando el partido está LIVE)
+  const liveDelta  = useMatchLive(fixture?.status === 'LIVE' ? fixtureId : null);
+  const liveEvents = useMatchEvents(fixture?.status === 'LIVE' ? fixtureId : null);
+
+  // Scores y status en vivo (WebSocket tiene prioridad sobre el snapshot HTTP)
+  const liveHomeScore    = liveDelta?.homeScore    ?? fixture?.homeScore;
+  const liveAwayScore    = liveDelta?.awayScore    ?? fixture?.awayScore;
+  const liveStatus       = liveDelta?.status       ?? fixture?.status;
+  const elapsedMinutes   = liveDelta?.elapsedMinutes ?? null;
+
   useEffect(() => {
     const loadFixture = async () => {
       try {
-        const data = await getFixtureById(parseInt(params.id, 10));
+        const data = await getFixtureById(fixtureId);
         setFixture(data ?? null);
       } finally { setLoading(false); }
     };
     loadFixture();
-  }, [params.id]);
+  }, [fixtureId]);
 
   useEffect(() => {
     if (!isAuthenticated || !user || !fixture) return;
@@ -122,7 +143,7 @@ export default function FixtureDetailPage({ params }: { params: { id: string } }
       }
       setPredSuccess(true); setEditing(false);
     } catch (err: any) {
-      setPredError(err?.response?.data?.error || err?.message || 'Error al guardar la porra');
+      setPredError(err?.response?.data?.error || err?.message || t('fixture.saveError'));
     } finally { setSubmitting(false); }
   };
 
@@ -146,14 +167,14 @@ export default function FixtureDetailPage({ params }: { params: { id: string } }
   if (!fixture) {
     return (
       <div className="flex items-center justify-center h-screen" style={{ background: pageBg }}>
-        <p className="text-orionix-text-muted font-semibold">Partido no encontrado</p>
+        <p className="text-orionix-text-muted font-semibold">{t('fixture.notFound')}</p>
       </div>
     );
   }
 
-  const isScheduled = fixture.status === 'SCHEDULED';
-  const isLive      = fixture.status === 'LIVE';
-  const isFinished  = fixture.status === 'FINISHED';
+  const isScheduled = liveStatus === 'SCHEDULED';
+  const isLive      = liveStatus === 'LIVE';
+  const isFinished  = liveStatus === 'FINISHED';
   const canPredict  = isScheduled && isAuthenticated;
   const showForm    = canPredict && (!prediction || editing);
 
@@ -168,12 +189,12 @@ export default function FixtureDetailPage({ params }: { params: { id: string } }
 
   // Result config — uses BrandColor instead of hex literals
   const resultCfg: { color: BrandColor; label: string; icon: string; pts: string } =
-    predCorrect      ? { color: 'green',   label: '¡Marcador exacto!',     icon: '🎯', pts: '+3 pts' }
-    : predResultCorrect ? { color: 'success', label: 'Resultado correcto',  icon: '✅', pts: '+1 pt'  }
-    :                     { color: 'danger',  label: 'No acertaste esta vez', icon: '❌', pts: '0 pts'  };
+    predCorrect      ? { color: 'green',   label: t('fixture.exactScore'),  icon: '🎯', pts: '+3 pts' }
+    : predResultCorrect ? { color: 'success', label: t('fixture.correctScore'),  icon: '✅', pts: '+1 pt'  }
+    :                     { color: 'danger',  label: t('fixture.wrongScore'), icon: '❌', pts: '0 pts'  };
 
   return (
-    <div className="w-full relative min-h-screen" style={{ background: pageBg }}>
+    <div className="w-full relative">
 
       {/* Ambient blobs */}
       <motion.div className="fixed rounded-full pointer-events-none"
@@ -190,7 +211,7 @@ export default function FixtureDetailPage({ params }: { params: { id: string } }
         transition={{ duration: 14, repeat: Infinity, delay: 5 }} />
 
       <div className="relative" style={{ zIndex: 10 }}>
-        <Header title="⚽ Detalle del Partido" subtitle={fixture.stageName ?? ''} />
+        <Header title={t('fixture.headerTitle')} subtitle={fixture.stageName ?? ''} />
       </div>
 
       <div className="relative z-10 px-4 py-6 max-w-4xl mx-auto w-full pb-32">
@@ -200,10 +221,11 @@ export default function FixtureDetailPage({ params }: { params: { id: string } }
           <FixtureCard
             homeTeam={fixture.homeTeam}
             awayTeam={fixture.awayTeam}
-            homeScore={fixture.homeScore}
-            awayScore={fixture.awayScore}
+            homeScore={liveHomeScore}
+            awayScore={liveAwayScore}
             kickoffAt={fixture.kickoffAt}
-            status={fixture.status}
+            status={liveStatus}
+            elapsedMinutes={isLive ? elapsedMinutes : undefined}
           />
         </motion.div>
 
@@ -226,8 +248,8 @@ export default function FixtureDetailPage({ params }: { params: { id: string } }
                     <FiTarget size={28} style={{ color: hex.green.bright, filter: `drop-shadow(0 0 6px ${alphaOf('green', 0.7)})` }} />
                   </motion.div>
                 </div>
-                <p className="text-white font-black text-lg mb-1">¿Cuál será el marcador?</p>
-                <p className="text-orionix-text-muted text-sm mb-5">Inicia sesión para hacer tu porra</p>
+                <p className="text-white font-black text-lg mb-1">{t('fixture.whatScore')}</p>
+                <p className="text-orionix-text-muted text-sm mb-5">{t('fixture.loginToPredict')}</p>
                 <motion.button
                   onClick={() => router.push('/onboarding')}
                   whileHover={{ scale: 1.03 }} whileTap={{ scale: 0.97 }}
@@ -254,8 +276,8 @@ export default function FixtureDetailPage({ params }: { params: { id: string } }
                 >
                   <span style={{ fontSize: 28 }}>🔒</span>
                 </motion.div>
-                <p className="text-white font-black text-base mb-1">Porras cerradas</p>
-                <p className="text-orionix-text-muted text-sm">Este partido ya comenzó. No se pueden registrar predicciones.</p>
+                <p className="text-white font-black text-base mb-1">{t('fixture.closed')}</p>
+                <p className="text-orionix-text-muted text-sm">{t('fixture.alreadyStarted')}</p>
                 {prediction && (
                   <div className="mt-4 inline-flex items-center gap-3 px-5 py-3 rounded-xl"
                     style={{ background: alphaOf('danger', 0.06), border: borders.brand('danger', 0.15) }}>
@@ -277,10 +299,7 @@ export default function FixtureDetailPage({ params }: { params: { id: string } }
                 {/* Scoring rules */}
                 <div className="grid grid-cols-3 gap-2 mb-5">
                   {SCORE_RULES.map(({ pts, label, sublabel, color, icon }) => {
-                    const c = ({ green: hex.green.bright, gold: hex.gold.base,
-                                 danger: hex.status.danger, warning: hex.status.warning,
-                                 success: hex.green.hover, info: hex.status.info,
-                                 neutral: hex.text.muted } as const)[color];
+                    const c = resolveBrandHex(color);
                     return (
                       <div key={pts} className="relative overflow-hidden rounded-xl p-3 text-center"
                         style={{ background: alpha(hex.bg.primary, 0.80), border: `1px solid ${alphaOf(color, 0.09)}` }}>
@@ -306,7 +325,7 @@ export default function FixtureDetailPage({ params }: { params: { id: string } }
                   <div className="flex items-center gap-2">
                     <div className="w-[3px] h-5 rounded-full"
                       style={{ background: `linear-gradient(180deg, ${hex.green.bright}, ${hex.green.hover})` }} />
-                    <span className="text-[10px] font-black text-orionix-text-muted tracking-[0.24em] uppercase">Tu Porra</span>
+                    <span className="text-[10px] font-black text-orionix-text-muted tracking-[0.24em] uppercase">{t('fixture.yourPrediction')}</span>
                   </div>
                   {prediction && !editing && (
                     <motion.button
@@ -432,7 +451,7 @@ export default function FixtureDetailPage({ params }: { params: { id: string } }
                             animate={{ x: ['-120%', '120%'] }}
                             transition={{ duration: 2.5, repeat: Infinity, ease: 'linear', repeatDelay: 2 }} />
                           <span className="relative">
-                            {submitting ? 'Guardando…' : prediction ? 'Actualizar Porra' : '⚡ Confirmar Porra'}
+                            {submitting ? t('fixture.saving') : prediction ? t('fixture.updatePrediction') : t('fixture.confirmPrediction')}
                           </span>
                         </motion.button>
                       </div>
@@ -443,7 +462,7 @@ export default function FixtureDetailPage({ params }: { params: { id: string } }
                 {predSuccess && (
                   <motion.p initial={{ opacity: 0, y: 4 }} animate={{ opacity: 1, y: 0 }}
                     className="text-emerald-400 text-xs text-center mt-3 font-black tracking-wide">
-                    ✓ Porra guardada correctamente
+                    {t('fixture.savedOk')}
                   </motion.p>
                 )}
               </div>
@@ -464,7 +483,7 @@ export default function FixtureDetailPage({ params }: { params: { id: string } }
                 <div className="flex items-stretch gap-4">
                   <div className="flex-1 text-center rounded-xl p-4"
                     style={{ background: alpha(hex.bg.primary, 0.60), border: `1px solid ${alpha(hex.neutral.white, 0.06)}` }}>
-                    <p className="text-[8px] font-black text-orionix-text-muted tracking-[0.25em] uppercase mb-2">Tu Porra</p>
+                    <p className="text-[8px] font-black text-orionix-text-muted tracking-[0.25em] uppercase mb-2">{t('fixture.yourPrediction')}</p>
                     <p className="text-3xl font-black text-white tabular-nums">
                       {prediction.predictedHomeScore}
                       <span className="text-orionix-text-muted mx-1 text-xl">–</span>
@@ -497,7 +516,7 @@ export default function FixtureDetailPage({ params }: { params: { id: string } }
           {/* Logged in — no prediction for finished */}
           {isAuthenticated && isFinished && !prediction && (
             <DarkCard accent="neutral" delay={0.08}>
-              <p className="text-orionix-text-muted text-sm text-center py-5">No hiciste una porra para este partido</p>
+              <p className="text-orionix-text-muted text-sm text-center py-5">{t('fixture.noPrediction')}</p>
             </DarkCard>
           )}
         </div>
@@ -509,7 +528,7 @@ export default function FixtureDetailPage({ params }: { params: { id: string } }
               <div className="flex items-center gap-2 mb-4">
                 <div className="w-[3px] h-5 rounded-full"
                   style={{ background: `linear-gradient(180deg, ${hex.green.bright}, ${hex.green.muted})` }} />
-                <span className="text-[10px] font-black text-orionix-text-muted tracking-[0.24em] uppercase">Información del Partido</span>
+                <span className="text-[10px] font-black text-orionix-text-muted tracking-[0.24em] uppercase">{t('fixture.matchInfo')}</span>
                 <FiMapPin size={12} style={{ color: hex.green.bright, marginLeft: 2 }} />
               </div>
               <div className="grid grid-cols-2 gap-4">
@@ -538,7 +557,7 @@ export default function FixtureDetailPage({ params }: { params: { id: string } }
                 <div className="flex items-center gap-2">
                   <div className="w-[3px] h-5 rounded-full"
                     style={{ background: `linear-gradient(180deg, ${hex.gold.bright}, ${hex.gold.muted})` }} />
-                  <span className="text-[10px] font-black text-orionix-text-muted tracking-[0.24em] uppercase">Goleadores</span>
+                  <span className="text-[10px] font-black text-orionix-text-muted tracking-[0.24em] uppercase">{t('fixture.scorers')}</span>
                   <span className="text-[8px] font-black px-1.5 py-0.5 rounded-full"
                     style={{ background: alphaOf('gold', 0.10), color: hex.gold.bright, border: borders.brand('gold', 0.20) }}>
                     {fixture.scorers.length}
@@ -634,23 +653,25 @@ export default function FixtureDetailPage({ params }: { params: { id: string } }
                 exit={{ opacity: 0, y: -4 }}
                 transition={{ duration: 0.2 }}
               >
-                {detailTab === 'lineups'  && <LineupsTab    fixtureId={fixture.id} />}
-                {detailTab === 'stats'    && <StatisticsTab fixtureId={fixture.id} />}
-                {detailTab === 'players'  && (
-                  <PlayersTab
-                    fixtureId={fixture.id}
-                    homeTeamId={fixture.homeTeam?.id ?? 0}
-                    awayTeamId={fixture.awayTeam?.id ?? 0}
-                  />
-                )}
-                {detailTab === 'h2h'      && (
-                  <HeadToHeadTab
-                    homeTeamId={fixture.homeTeam?.id ?? 0}
-                    awayTeamId={fixture.awayTeam?.id ?? 0}
-                    homeTeamName={fixture.homeTeam?.name ?? ''}
-                    awayTeamName={fixture.awayTeam?.name ?? ''}
-                  />
-                )}
+                <ErrorBoundary fallbackMessage={t('fixture.sectionDataError')}>
+                  {detailTab === 'lineups'  && <LineupsTab    fixtureId={fixture.id} />}
+                  {detailTab === 'stats'    && <StatisticsTab fixtureId={fixture.id} />}
+                  {detailTab === 'players'  && (
+                    <PlayersTab
+                      fixtureId={fixture.id}
+                      homeTeamId={fixture.homeTeam?.id ?? 0}
+                      awayTeamId={fixture.awayTeam?.id ?? 0}
+                    />
+                  )}
+                  {detailTab === 'h2h'      && (
+                    <HeadToHeadTab
+                      homeTeamId={fixture.homeTeam?.id ?? 0}
+                      awayTeamId={fixture.awayTeam?.id ?? 0}
+                      homeTeamName={fixture.homeTeam?.name ?? ''}
+                      awayTeamName={fixture.awayTeam?.name ?? ''}
+                    />
+                  )}
+                </ErrorBoundary>
               </motion.div>
             </AnimatePresence>
           </div>
@@ -664,7 +685,7 @@ export default function FixtureDetailPage({ params }: { params: { id: string } }
               className="w-full py-3 rounded-xl text-sm font-black text-orionix-text-muted flex items-center justify-center gap-2 cursor-pointer"
               style={{ border: `1px solid ${alpha(hex.neutral.white, 0.07)}`, background: alpha(hex.neutral.white, 0.02) }}
             >
-              <FiArrowLeft size={14} /> Volver
+              <FiArrowLeft size={14} /> {t('fixture.back')}
             </motion.div>
           </Link>
           <Link href="/predictions" className="flex-1">
@@ -679,7 +700,7 @@ export default function FixtureDetailPage({ params }: { params: { id: string } }
                 style={{ background: `linear-gradient(108deg, transparent 28%, ${alpha(hex.neutral.white, 0.18)} 50%, transparent 72%)` }}
                 animate={{ x: ['-120%', '120%'] }}
                 transition={{ duration: 2.5, repeat: Infinity, ease: 'linear', repeatDelay: 2 }} />
-              <span className="relative flex items-center gap-2"><FiTarget size={13} /> Mis Porras</span>
+              <span className="relative flex items-center gap-2"><FiTarget size={13} /> {t('fixture.myPredictions')}</span>
             </motion.div>
           </Link>
         </div>

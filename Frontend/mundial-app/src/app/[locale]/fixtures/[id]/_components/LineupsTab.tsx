@@ -3,8 +3,10 @@
 import React, { useEffect, useState } from 'react';
 import Image from 'next/image';
 import { motion } from 'framer-motion';
+import { useTranslations } from 'next-intl';
 import { hex } from '@/lib/design/tokens';
 import { alpha, alphaOf } from '@/lib/design/effects';
+import { apiFetch } from '@/lib/apiFetch';
 
 interface LineupPlayer { playerId: number; playerName: string; shirtNumber: number; position: string; grid?: string; }
 interface LineupTeam { teamId: number; teamName: string; teamLogoUrl: string; coachName: string; coachPhotoUrl?: string; formation: string; startXI: LineupPlayer[]; substitutes: LineupPlayer[]; }
@@ -93,12 +95,13 @@ function TeamLineup({ team, side }: { team: LineupTeam; side: 'home' | 'away' })
 }
 
 export default function LineupsTab({ fixtureId }: { fixtureId: number }) {
+  const t = useTranslations();
   const [lineups, setLineups] = useState<LineupTeam[]>([]);
   const [loading, setLoading] = useState(true);
   const [empty,   setEmpty]   = useState(false);
 
   useEffect(() => {
-    fetch(`/api/v1/public/fixtures/${fixtureId}/lineups`)
+    apiFetch(`/api/v1/public/fixtures/${fixtureId}/lineups`)
       .then(r => r.ok ? r.json() : null)
       .then(d => {
         const data = d?.data ?? [];
@@ -125,10 +128,10 @@ export default function LineupsTab({ fixtureId }: { fixtureId: number }) {
     <div className="flex flex-col items-center justify-center py-16 gap-3">
       <span className="text-4xl">📋</span>
       <p className="text-sm font-bold text-center" style={{ color: alpha(hex.text.secondary, 0.5) }}>
-        Alineaciones no disponibles aún
+        {t('fixture.lineupsNotYet')}
       </p>
       <p className="text-[10px] tracking-widest uppercase text-center" style={{ color: alpha(hex.text.secondary, 0.3) }}>
-        Se publican cerca del inicio del partido
+        {t('fixture.lineupsHint')}
       </p>
     </div>
   );

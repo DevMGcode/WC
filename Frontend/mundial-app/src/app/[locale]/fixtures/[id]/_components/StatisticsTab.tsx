@@ -3,8 +3,10 @@
 import React, { useEffect, useState } from 'react';
 import Image from 'next/image';
 import { motion } from 'framer-motion';
+import { useTranslations } from 'next-intl';
 import { hex } from '@/lib/design/tokens';
 import { alpha, alphaOf } from '@/lib/design/effects';
+import { apiFetch } from '@/lib/apiFetch';
 
 interface StatTeam { teamId: number; teamName: string; teamLogoUrl: string; statistics: Record<string, string>; }
 
@@ -51,12 +53,13 @@ function StatBar({ label, homeVal, awayVal }: { label: string; homeVal: string; 
 }
 
 export default function StatisticsTab({ fixtureId }: { fixtureId: number }) {
+  const t = useTranslations();
   const [stats,   setStats]   = useState<StatTeam[]>([]);
   const [loading, setLoading] = useState(true);
   const [empty,   setEmpty]   = useState(false);
 
   useEffect(() => {
-    fetch(`/api/v1/public/fixtures/${fixtureId}/statistics`)
+    apiFetch(`/api/v1/public/fixtures/${fixtureId}/statistics`)
       .then(r => r.ok ? r.json() : null)
       .then(d => {
         const data = d?.data ?? [];
@@ -81,9 +84,9 @@ export default function StatisticsTab({ fixtureId }: { fixtureId: number }) {
   if (empty || stats.length < 2) return (
     <div className="flex flex-col items-center justify-center py-16 gap-3">
       <span className="text-4xl">📊</span>
-      <p className="text-sm font-bold" style={{ color: alpha(hex.text.secondary, 0.5) }}>Estadísticas no disponibles</p>
+      <p className="text-sm font-bold" style={{ color: alpha(hex.text.secondary, 0.5) }}>{t('fixture.statsNotAvailable')}</p>
       <p className="text-[10px] tracking-widest uppercase" style={{ color: alpha(hex.text.secondary, 0.3) }}>
-        Disponibles durante y después del partido
+        {t('fixture.statsHint')}
       </p>
     </div>
   );

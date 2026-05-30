@@ -1,11 +1,7 @@
 'use client';
 
 /**
- * Fixtures page — pilot for the design-token migration.
- *
- * Sub-componentes extraídos a ./_components/:
- *   - MatchCard       → tarjeta de partido individual
- *   - FixturesFilterBar → barra de filtros (ALL / LIVE / SCHEDULED / FINISHED)
+ * Fixtures page — Calendario del Mundial 2026.
  */
 
 import React, { useState, useMemo } from 'react';
@@ -13,16 +9,15 @@ import { motion, AnimatePresence } from 'framer-motion';
 import {
   FiCalendar, FiClock, FiActivity, FiCheck, FiList,
 } from 'react-icons/fi';
-import { useParams } from 'next/navigation';
 import { Header } from '@/components/Navigation';
 import { useAllFixtures } from '@/hooks/useTournamentData';
 import { LIVE_REFETCH_INTERVAL_MS } from '@/constants/tournament';
 import { fmtDayLong } from '@/utils/format';
-import { useT } from '@/hooks/useT';
+import { useTranslations, useLocale } from 'next-intl';
 import TourButton from '@/components/Tour/TourButton';
 import { getTourSteps } from '@/components/Tour/tourSteps';
 
-import { hex, type BrandColor } from '@/lib/design/tokens';
+import { hex, type BrandColor, resolveBrandHex } from '@/lib/design/tokens';
 import { alpha, alphaOf, borders, gradients, shadows } from '@/lib/design/effects';
 import { Surface, StatusDot } from '@/components/ui';
 
@@ -30,7 +25,7 @@ import MatchCard, { getEffectiveStatus } from './_components/MatchCard';
 import FixturesFilterBar, { type FilterKey } from './_components/FixturesFilterBar';
 
 /* ══════════════════════════════════════════
-   KPI CHIP
+   EQ BARS — decorativo
 ══════════════════════════════════════════ */
 const EQBars = ({ color, count = 7, maxH = 14 }: { color: string; count?: number; maxH?: number }) => {
   const seq = [6, 14, 9, 18, 11, 16, 7, 13, 10, 17, 8, 15, 12];
@@ -51,50 +46,87 @@ const EQBars = ({ color, count = 7, maxH = 14 }: { color: string; count?: number
   );
 };
 
+/* ══════════════════════════════════════════
+   KPI CHIP — con estado vacío/activo diferenciado
+══════════════════════════════════════════ */
 const KPIChip = ({
   icon, value, label, color, delay = 0,
 }: { icon: React.ReactNode; value: number | string; label: string; color: BrandColor; delay?: number }) => {
-  const glow = alphaOf(color, 0.55);
-  const bg   = alphaOf(color, 0.07);
-  const text = ({ neutral: hex.text.secondary, green: hex.green.bright, gold: hex.gold.base,
-                  danger: hex.status.danger, warning: hex.status.warning, success: hex.green.hover,
-                  info: hex.status.info } as const)[color];
+  const isEmpty = value === 0 || value === '0';
+  // Cuando vacío: misma estructura visible, solo sin glow/animación
+  const opacityMult  = isEmpty ? 0.85 : 1;
+  const glowIntensity = isEmpty ? 0.30 : 0.55;
+  const borderAlpha   = isEmpty ? 0.14 : 0.21;
+  const bgAlpha       = isEmpty ? 0.05 : 0.07;
+
+  const glow = alphaOf(color, glowIntensity);
+  const bg   = alphaOf(color, bgAlpha);
+  const text = resolveBrandHex(color);
+
   return (
     <motion.div
       initial={{ opacity: 0, y: -14, scale: 0.92 }}
       animate={{ opacity: 1, y: 0, scale: 1 }}
       transition={{ duration: 0.55, delay, ease: [0.22, 1, 0.36, 1] }}
-      whileHover={{ y: -3, scale: 1.03 }}
-      className="relative flex items-center gap-3 rounded-2xl px-4 py-3 overflow-hidden"
+      whileHover={{ y: isEmpty ? 0 : -3, scale: isEmpty ? 1 : 1.03 }}
+      className="relative flex items-center gap-3 rounded-2xl px-4 py-3.5 overflow-hidden"
       style={{
-        background: `linear-gradient(145deg, ${bg}, ${alpha(hex.bg.primary, 0.95)})`,
-        border: `1px solid ${alphaOf(color, 0.21)}`,
-        boxShadow: `0 8px 32px ${alphaOf(color, 0.10)}, inset 0 1px 0 ${alpha(hex.neutral.white, 0.04)}`,
+        background: `linear-gradient(145deg, ${bg}, ${alpha(hex.bg.elevated, 0.97)})`,
+        border: `1px solid ${alphaOf(color, borderAlpha)}`,
+        boxShadow: isEmpty
+          ? `0 4px 16px ${alpha(hex.neutral.black, 0.35)}, inset 0 1px 0 ${alpha(hex.neutral.white, 0.02)}`
+          : `0 8px 32px ${alphaOf(color, 0.12)}, inset 0 1px 0 ${alpha(hex.neutral.white, 0.04)}`,
         backdropFilter: 'blur(20px)',
+        transition: 'all 0.3s ease',
       }}
     >
-      <div className="absolute inset-x-0 top-0 h-px pointer-events-none"
-        style={{ background: gradients.divider(color, 0.55) }} />
+      {/* Top line — solo visible si hay valor */}
+      {!isEmpty && (
+        <div className="absolute inset-x-0 top-0 h-px pointer-events-none"
+          style={{ background: gradients.divider(color, 0.55) }} />
+      )}
+
+      {/* Corner glow — reducido si vacío */}
       <div className="absolute -top-4 -left-4 w-16 h-16 rounded-full pointer-events-none"
-        style={{ background: gradients.cornerGlow(color, 0.19), filter: 'blur(10px)' }} />
+        style={{ background: gradients.cornerGlow(color, isEmpty ? 0.06 : 0.19), filter: 'blur(10px)' }} />
+
+      {/* Icon box */}
       <motion.div className="relative z-10 flex items-center justify-center w-9 h-9 rounded-xl shrink-0"
-        style={{ background: `linear-gradient(145deg, ${bg}, ${alpha(hex.bg.primary, 0.85)})`,
-                 border: `1px solid ${alphaOf(color, 0.21)}` }}
-        animate={{ boxShadow: [`0 0 6px ${alphaOf(color, 0.12)}`, `0 0 18px ${glow}`, `0 0 6px ${alphaOf(color, 0.12)}`] }}
-        transition={{ duration: 2.6, repeat: Infinity, ease: 'easeInOut' }}>
+        style={{
+          background: `linear-gradient(145deg, ${bg}, ${alpha(hex.bg.primary, 0.85)})`,
+          border: `1px solid ${alphaOf(color, borderAlpha)}`,
+          opacity: opacityMult,
+        }}
+        animate={!isEmpty ? {
+          boxShadow: [`0 0 6px ${alphaOf(color, 0.12)}`, `0 0 18px ${glow}`, `0 0 6px ${alphaOf(color, 0.12)}`]
+        } : { boxShadow: `0 0 4px ${alphaOf(color, 0.06)}` }}
+        transition={{ duration: 2.6, repeat: isEmpty ? 0 : Infinity, ease: 'easeInOut' }}>
         <span style={{ color: text, fontSize: 16 }}>{icon}</span>
-        <motion.div className="absolute inset-0 rounded-xl pointer-events-none"
-          style={{ border: `1px solid ${alphaOf(color, 0.16)}` }}
-          animate={{ opacity: [0, 0.8, 0], scale: [1, 1.35, 1] }}
-          transition={{ duration: 3, repeat: Infinity, ease: 'easeOut' }} />
+        {!isEmpty && (
+          <motion.div className="absolute inset-0 rounded-xl pointer-events-none"
+            style={{ border: `1px solid ${alphaOf(color, 0.16)}` }}
+            animate={{ opacity: [0, 0.8, 0], scale: [1, 1.35, 1] }}
+            transition={{ duration: 3, repeat: Infinity, ease: 'easeOut' }} />
+        )}
       </motion.div>
+
       <div className="relative z-10 min-w-0">
-        <p className="text-base font-black tabular-nums leading-none" style={{ color: text }}>{value}</p>
-        <p className="text-[9px] font-bold tracking-[0.18em] uppercase mt-0.5" style={{ color: glow }}>{label}</p>
+        <p className="text-base font-black tabular-nums leading-none"
+          style={{ color: isEmpty ? alpha(text, 0.80) : text }}>
+          {value}
+        </p>
+        <p className="text-[9px] font-bold tracking-[0.18em] uppercase mt-0.5"
+          style={{ color: isEmpty ? alphaOf(color, 0.55) : glow }}>
+          {label}
+        </p>
       </div>
-      <div className="absolute right-3 bottom-2 opacity-30">
-        <EQBars color={text} count={5} maxH={10} />
-      </div>
+
+      {/* EQ bars — solo si hay valor */}
+      {!isEmpty && (
+        <div className="absolute right-3 bottom-2 opacity-30">
+          <EQBars color={text} count={5} maxH={10} />
+        </div>
+      )}
     </motion.div>
   );
 };
@@ -103,9 +135,8 @@ const KPIChip = ({
    PAGE
 ══════════════════════════════════════════ */
 export default function FixturesClient({ initialFixtures }: { initialFixtures?: any[] }) {
-  const { t } = useT();
-  const params = useParams();
-  const locale = (params?.locale as string) ?? 'es';
+  const t      = useTranslations();
+  const locale = useLocale();
   const [filter, setFilter] = useState<FilterKey>('ALL');
 
   const { data: allFixtures = [], isLoading: loading } = useAllFixtures(undefined, initialFixtures, LIVE_REFETCH_INTERVAL_MS);
@@ -120,12 +151,17 @@ export default function FixturesClient({ initialFixtures }: { initialFixtures?: 
     fixtures.forEach(f => {
       const d = new Date(f.kickoffAt);
       const key = d.toISOString().slice(0, 10);
-      const label = fmtDayLong(d);
+      const label = fmtDayLong(d, locale);
       if (!map.has(key)) map.set(key, { key, label, items: [] });
       map.get(key)!.items.push(f);
     });
-    return Array.from(map.values()).sort((a, b) => a.key.localeCompare(b.key));
-  }, [fixtures]);
+    // FINISHED: descendente (más reciente primero) — demás filtros: ascendente
+    return Array.from(map.values()).sort((a, b) =>
+      filter === 'FINISHED'
+        ? b.key.localeCompare(a.key)
+        : a.key.localeCompare(b.key)
+    );
+  }, [fixtures, filter, locale]);
 
   const counts = useMemo(() => ({
     total:     allFixtures.length,
@@ -138,19 +174,23 @@ export default function FixturesClient({ initialFixtures }: { initialFixtures?: 
 
   return (
     <div className="w-full min-h-screen relative"
-      style={{ background: `radial-gradient(ellipse at 20% 30%, ${hex.bg.primary} 0%, ${hex.bg.secondary} 50%, ${hex.bg.primary} 100%)` }}>
+      style={{
+        background: `radial-gradient(ellipse at 18% 28%, ${hex.bg.elevated} 0%, ${hex.bg.secondary} 45%, ${hex.bg.primary} 100%)`,
+      }}>
 
-      {/* Ambient orbs */}
+      {/* Ambient orbs — más definidos para separar fondo de cards */}
       <motion.div className="fixed rounded-full pointer-events-none"
         style={{ width: 700, height: 700, top: -200, left: -150,
-                 background: gradients.cornerGlow('success', 0.07).replace('circle,', 'circle at center,'),
+                 background: `radial-gradient(circle, ${alphaOf('success', 0.09)} 0%, transparent 65%)`,
                  filter: 'blur(70px)', zIndex: 0 }}
-        animate={{ scale: [1, 1.18, 1], opacity: [0.5, 0.85, 0.5] }} transition={{ duration: 12, repeat: Infinity }} />
+        animate={{ scale: [1, 1.18, 1], opacity: [0.5, 0.85, 0.5] }}
+        transition={{ duration: 12, repeat: Infinity }} />
       <motion.div className="fixed rounded-full pointer-events-none"
         style={{ width: 500, height: 500, bottom: -80, right: -80,
-                 background: gradients.cornerGlow('green', 0.07).replace('circle,', 'circle at center,'),
+                 background: `radial-gradient(circle, ${alphaOf('green', 0.07)} 0%, transparent 65%)`,
                  filter: 'blur(65px)', zIndex: 0 }}
-        animate={{ scale: [1, 1.22, 1], opacity: [0.4, 0.75, 0.4] }} transition={{ duration: 14, repeat: Infinity, delay: 4 }} />
+        animate={{ scale: [1, 1.22, 1], opacity: [0.4, 0.75, 0.4] }}
+        transition={{ duration: 14, repeat: Infinity, delay: 4 }} />
 
       <div className="relative z-10">
         <Header title="⚽ Orionix Gol" subtitle={t('fixtures.subtitle')} centered />
@@ -160,32 +200,35 @@ export default function FixturesClient({ initialFixtures }: { initialFixtures?: 
 
         {/* ── PAGE TITLE ── */}
         <motion.div initial={{ opacity: 0, y: -12 }} animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.5 }} className="flex flex-col sm:flex-row sm:items-end justify-between gap-4 mb-5">
+          transition={{ duration: 0.5 }}
+          className="flex flex-col sm:flex-row sm:items-end justify-between gap-4 mb-6">
           <div>
-            <div className="flex items-center gap-2.5 mb-1">
-              <div className="w-[3px] h-6 rounded-full"
-                style={{ background: `linear-gradient(180deg, ${hex.green.bright}, ${hex.green.muted})`,
-                         boxShadow: `0 0 8px ${alphaOf('green', 0.6)}` }} />
+            <div className="flex items-center gap-2.5 mb-1.5">
+              <div className="w-[3px] h-7 rounded-full"
+                style={{
+                  background: `linear-gradient(180deg, ${hex.green.bright}, ${hex.green.muted})`,
+                  boxShadow: `0 0 10px ${alphaOf('green', 0.65)}`,
+                }} />
               <h1 className="text-2xl sm:text-3xl font-black text-white leading-none tracking-tight">
                 {t('fixtures.title')}
               </h1>
               <motion.div className="flex items-center gap-1.5 px-2.5 py-1 rounded-full ml-1"
-                style={{ background: alphaOf('green', 0.08), border: borders.brand('green', 0.22) }}
-                animate={{ boxShadow: [`0 0 6px ${alphaOf('green', 0.06)}`, `0 0 16px ${alphaOf('green', 0.18)}`, `0 0 6px ${alphaOf('green', 0.06)}`] }}
+                style={{ background: alphaOf('green', 0.10), border: borders.brand('green', 0.24) }}
+                animate={{ boxShadow: [`0 0 6px ${alphaOf('green', 0.06)}`, `0 0 18px ${alphaOf('green', 0.22)}`, `0 0 6px ${alphaOf('green', 0.06)}`] }}
                 transition={{ duration: 2.5, repeat: Infinity }}>
                 <span className="text-[9px] font-black tabular-nums text-orionix-green-soft">{counts.total}</span>
                 <span className="text-[7px] tracking-widest uppercase font-bold text-orionix-text-muted">{t('fixtures.matches')}</span>
               </motion.div>
             </div>
             <p className="text-[11px] tracking-widest ml-5 uppercase text-orionix-text-muted">
-              Mundial 2026 · USA · México · Canadá
+              {t('fixtures.hostCountries')}
             </p>
           </div>
 
           {counts.live > 0 && (
             <motion.div className="flex items-center gap-2 px-4 py-2 rounded-full shrink-0"
-              style={{ background: alphaOf('danger', 0.10), border: borders.brand('danger', 0.30) }}
-              animate={{ boxShadow: [`0 0 10px ${alphaOf('danger', 0.10)}`, `0 0 24px ${alphaOf('danger', 0.28)}`, `0 0 10px ${alphaOf('danger', 0.10)}`] }}
+              style={{ background: alphaOf('danger', 0.12), border: borders.brand('danger', 0.32) }}
+              animate={{ boxShadow: [`0 0 10px ${alphaOf('danger', 0.10)}`, `0 0 26px ${alphaOf('danger', 0.32)}`, `0 0 10px ${alphaOf('danger', 0.10)}`] }}
               transition={{ duration: 1.4, repeat: Infinity }}>
               <StatusDot color="danger" size={8} />
               <span className="text-[10px] font-black tracking-widest uppercase" style={{ color: hex.status.danger }}>
@@ -197,7 +240,7 @@ export default function FixturesClient({ initialFixtures }: { initialFixtures?: 
 
         {/* ── KPI CHIPS ── */}
         {!loading && (
-          <div data-tour="calendar-kpi" className="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-5">
+          <div data-tour="calendar-kpi" className="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-6">
             <KPIChip icon={<FiList />}     value={counts.total}     label={t('fixtures.total')}            color="neutral" delay={0.06} />
             <KPIChip icon={<FiActivity />} value={counts.live}      label={t('fixtures.filters.live')}     color="danger"  delay={0.12} />
             <KPIChip icon={<FiClock />}    value={counts.scheduled} label={t('fixtures.filters.pending')}  color="green"   delay={0.18} />
@@ -213,19 +256,19 @@ export default function FixturesClient({ initialFixtures }: { initialFixtures?: 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
             {Array.from({ length: 6 }).map((_, i) => (
               <motion.div key={i} className="rounded-2xl overflow-hidden"
-                style={{ background: alpha(hex.bg.primary, 0.95), border: borders.brand('green', 0.07), height: 180 }}
+                style={{ background: alpha(hex.bg.elevated, 0.95), border: borders.brand('green', 0.07), height: 188 }}
                 animate={{ opacity: [0.25, 0.55, 0.25] }}
                 transition={{ duration: 1.8, repeat: Infinity, delay: i * 0.18 }}>
                 <div className="h-full flex flex-col">
                   <div className="h-11 border-b"
-                    style={{ borderColor: alpha(hex.neutral.white, 0.04), background: alpha(hex.neutral.black, 0.22) }} />
+                    style={{ borderColor: alpha(hex.neutral.white, 0.05), background: alpha(hex.neutral.black, 0.25) }} />
                   <div className="flex-1 flex items-center justify-around px-6 py-4 gap-4">
                     <div className="w-14 h-14 rounded-full" style={{ background: alpha(hex.neutral.white, 0.04) }} />
                     <div className="w-14 h-7 rounded-xl" style={{ background: alpha(hex.neutral.white, 0.04) }} />
                     <div className="w-14 h-14 rounded-full" style={{ background: alpha(hex.neutral.white, 0.04) }} />
                   </div>
                   <div className="h-9 border-t"
-                    style={{ borderColor: alpha(hex.neutral.white, 0.04), background: alpha(hex.neutral.black, 0.22) }} />
+                    style={{ borderColor: alpha(hex.neutral.white, 0.05), background: alpha(hex.neutral.black, 0.25) }} />
                 </div>
               </motion.div>
             ))}
@@ -233,20 +276,42 @@ export default function FixturesClient({ initialFixtures }: { initialFixtures?: 
         ) : grouped.length > 0 ? (
           <div className="space-y-8">
             {grouped.map(({ key, label, items }) => (
-              <motion.div key={key} initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.4 }}>
-                {/* Date separator */}
-                <div className="flex items-center gap-4 mb-4">
-                  <div className="flex items-center gap-2.5">
-                    <StatusDot color="success" size={8} />
-                    <span className="text-[11px] font-black tracking-[0.28em] uppercase"
-                      style={{ color: alphaOf('green', 0.70), textShadow: `0 0 10px ${alphaOf('green', 0.30)}` }}>
+              <motion.div key={key}
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.4 }}>
+
+                {/* ── Date separator — mejorado ── */}
+                <div className="flex items-center gap-3 mb-4">
+                  <div className="flex items-center gap-2">
+                    <StatusDot color="success" size={7} />
+                    <span className="text-[11px] font-black tracking-[0.26em] uppercase"
+                      suppressHydrationWarning
+                      style={{
+                        color: hex.green.soft,
+                        textShadow: `0 0 12px ${alphaOf('green', 0.35)}`,
+                      }}>
                       {label}
                     </span>
                   </div>
-                  <div className="flex-1 h-px" style={{ background: `linear-gradient(90deg, ${alphaOf('green', 0.18)}, transparent)` }} />
-                  <span className="text-[8px] font-black tracking-[0.22em] uppercase shrink-0 text-orionix-text-muted">
-                    {items.length} {items.length === 1 ? t('fixtures.match') : t('fixtures.matches')}
-                  </span>
+
+                  {/* Línea divisora */}
+                  <div className="flex-1 h-px"
+                    style={{ background: `linear-gradient(90deg, ${alphaOf('green', 0.22)}, transparent)` }} />
+
+                  {/* Badge de cantidad — más visible y elegante */}
+                  <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-full shrink-0"
+                    style={{
+                      background: alphaOf('green', 0.08),
+                      border: `1px solid ${alphaOf('green', 0.20)}`,
+                    }}>
+                    <span className="text-[9px] font-black tabular-nums" style={{ color: hex.green.bright }}>
+                      {items.length}
+                    </span>
+                    <span className="text-[8px] font-bold tracking-[0.16em] uppercase" style={{ color: alphaOf('green', 0.55) }}>
+                      {items.length === 1 ? t('fixtures.match') : t('fixtures.matches')}
+                    </span>
+                  </div>
                 </div>
 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
