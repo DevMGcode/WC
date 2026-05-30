@@ -1,7 +1,9 @@
 'use client';
 
+import { useEffect } from 'react';
 import Script from 'next/script';
 import dynamic from 'next/dynamic';
+import { useLocale } from 'next-intl';
 import { AppShell } from '@/components/AppShell';
 import { AuthProvider } from '@/contexts/AuthContext';
 import { SidebarProvider } from '@/contexts/SidebarContext';
@@ -30,6 +32,16 @@ function GAScripts() {
 }
 
 export default function LocaleClientLayout({ children }: { children: React.ReactNode }) {
+  const locale = useLocale();
+
+  // Mantiene <html lang="…"> sincronizado con el locale activo de next-intl.
+  // Lo usan `utils/format.ts` (toLocaleDateString) y los lectores de pantalla.
+  useEffect(() => {
+    if (locale && document.documentElement.lang !== locale) {
+      document.documentElement.lang = locale;
+    }
+  }, [locale]);
+
   return (
     <>
       <GAScripts />
