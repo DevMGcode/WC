@@ -4,6 +4,7 @@ import Image from 'next/image';
 import { motion } from 'framer-motion';
 import dynamic from 'next/dynamic';
 import { FiTarget, FiAward, FiBarChart2, FiGlobe } from 'react-icons/fi';
+import { useTranslations } from 'next-intl';
 import { hex } from '@/lib/design/tokens';
 import { alpha, alphaOf } from '@/lib/design/effects';
 import { CountBox, Ember, FireRing } from './LoginParticles';
@@ -13,12 +14,15 @@ const Trophy3D = dynamic(() => import('@/components/Trophy3D'), { ssr: false });
 
 interface FeatureChip { icon: React.ReactNode; label: string; color: string; glow: string; bg: string; border: string; }
 
-const FEATURES: FeatureChip[] = [
-  { icon: <FiTarget />,    label: 'Predicciones',   color: hex.green.bright, glow: alphaOf('green', 0.40),       bg: alphaOf('green', 0.08),       border: alphaOf('green', 0.20) },
-  { icon: <FiAward />,     label: 'Ligas privadas', color: hex.gold.base,    glow: alpha(hex.gold.base, 0.40),   bg: alpha(hex.gold.base, 0.07),   border: alpha(hex.gold.base, 0.20) },
-  { icon: <FiBarChart2 />, label: 'Estadísticas',   color: hex.green.hover,  glow: alpha(hex.green.hover, 0.40), bg: alpha(hex.green.hover, 0.07), border: alpha(hex.green.hover, 0.20) },
-  { icon: <FiGlobe />,     label: 'Mundial 2026',   color: hex.gold.base,    glow: alpha(hex.gold.base, 0.40),   bg: alpha(hex.gold.base, 0.07),   border: alpha(hex.gold.base, 0.20) },
-];
+// Construye chips traducidos en runtime para que respeten el locale activo.
+function buildFeatures(t: (key: string) => string): FeatureChip[] {
+  return [
+    { icon: <FiTarget />,    label: t('hero.chipPredictions'),    color: hex.green.bright, glow: alphaOf('green', 0.40),       bg: alphaOf('green', 0.08),       border: alphaOf('green', 0.20) },
+    { icon: <FiAward />,     label: t('hero.chipPrivateLeagues'), color: hex.gold.base,    glow: alpha(hex.gold.base, 0.40),   bg: alpha(hex.gold.base, 0.07),   border: alpha(hex.gold.base, 0.20) },
+    { icon: <FiBarChart2 />, label: t('hero.chipStatistics'),     color: hex.green.hover,  glow: alpha(hex.green.hover, 0.40), bg: alpha(hex.green.hover, 0.07), border: alpha(hex.green.hover, 0.20) },
+    { icon: <FiGlobe />,     label: t('hero.chipWorldCup'),       color: hex.gold.base,    glow: alpha(hex.gold.base, 0.40),   bg: alpha(hex.gold.base, 0.07),   border: alpha(hex.gold.base, 0.20) },
+  ];
+}
 
 function FeatureChipItem({ chip, index, sm }: { chip: FeatureChip; index: number; sm: boolean }) {
   return (
@@ -54,6 +58,8 @@ function FeatureChipItem({ chip, index, sm }: { chip: FeatureChip; index: number
 export interface LoginHeroProps { countdown: CountdownTime; predCount: number; }
 
 export default function LoginHero({ countdown, predCount }: LoginHeroProps) {
+  const t = useTranslations('auth');
+  const FEATURES = buildFeatures(t);
   return (
     <>
       {/* ── MOBILE HEADER (hidden lg+) ── */}
@@ -70,7 +76,7 @@ export default function LoginHero({ countdown, predCount }: LoginHeroProps) {
           </motion.div>
           <div className="leading-none">
             <div className="text-[2rem] font-black tracking-tight text-white leading-none"
-              style={{ textShadow: `0 0 24px ${alpha(hex.neutral.white, 0.15)}` }}>MUNDIAL</div>
+              style={{ textShadow: `0 0 24px ${alpha(hex.neutral.white, 0.15)}` }}>{t('hero.mundial')}</div>
             <div className="text-[2rem] font-black tracking-tight leading-none"
               style={{ color: hex.green.bright, textShadow: `0 0 22px ${alphaOf('green', 0.75)}` }}>2026</div>
           </div>
@@ -101,7 +107,7 @@ export default function LoginHero({ countdown, predCount }: LoginHeroProps) {
           </motion.div>
           <div className="leading-none">
             <div className="text-[3.2rem] font-black tracking-tight text-white leading-none"
-              style={{ textShadow: `0 0 30px ${alpha(hex.neutral.white, 0.18)}, 0 0 60px ${alphaOf('green', 0.12)}` }}>MUNDIAL</div>
+              style={{ textShadow: `0 0 30px ${alpha(hex.neutral.white, 0.18)}, 0 0 60px ${alphaOf('green', 0.12)}` }}>{t('hero.mundial')}</div>
             <div className="text-[3.2rem] font-black tracking-tight leading-none"
               style={{ color: hex.green.bright, textShadow: `0 0 28px ${alphaOf('green', 0.80)}, 0 0 60px ${alphaOf('green', 0.35)}` }}>2026</div>
           </div>
@@ -112,7 +118,7 @@ export default function LoginHero({ countdown, predCount }: LoginHeroProps) {
           <motion.div initial={{ scaleX: 0, opacity: 0 }} animate={{ scaleX: 1, opacity: 1 }} transition={{ delay: 0.5, duration: 0.6 }}
             style={{ width: 32, height: 1, background: `linear-gradient(90deg, transparent, ${alpha(hex.gold.base, 0.60)})` }} />
           <p className="text-[10px] font-bold tracking-[0.35em] uppercase" style={{ color: alphaOf('green', 0.50) }}>
-            {'FOOTBALL TECH EXPERIENCE'.split('').map((char, i) => (
+            {t('hero.tagline').split('').map((char, i) => (
               <motion.span key={i} initial={{ opacity: 0, y: 6 }} animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: 0.55 + i * 0.035, duration: 0.25 }}>{char}</motion.span>
             ))}
@@ -160,16 +166,16 @@ export default function LoginHero({ countdown, predCount }: LoginHeroProps) {
         <motion.div initial={{ opacity: 0, y: 14 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 1.1, duration: 0.7 }}
           className="flex flex-col items-center gap-2">
           <p className="text-[8px] font-bold tracking-[0.32em] uppercase" style={{ color: alpha(hex.gold.base, 0.42) }}>
-            ⚡ Faltan para el Mundial
+            {t('hero.countdownLabel')}
           </p>
           <div className="flex items-end gap-2">
-            <CountBox value={countdown.days}    label="DÍAS" />
+            <CountBox value={countdown.days}    label={t('hero.days')} />
             <span className="text-lg font-black mb-5" style={{ color: alphaOf('green', 0.35) }}>:</span>
-            <CountBox value={countdown.hours}   label="HRS" />
+            <CountBox value={countdown.hours}   label={t('hero.hours')} />
             <span className="text-lg font-black mb-5" style={{ color: alphaOf('green', 0.35) }}>:</span>
-            <CountBox value={countdown.minutes} label="MIN" />
+            <CountBox value={countdown.minutes} label={t('hero.minutes')} />
             <span className="text-lg font-black mb-5" style={{ color: alphaOf('green', 0.35) }}>:</span>
-            <CountBox value={countdown.seconds} label="SEG" />
+            <CountBox value={countdown.seconds} label={t('hero.seconds')} />
           </div>
           {predCount > 0 && (
             <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 1.6 }}
@@ -177,7 +183,7 @@ export default function LoginHero({ countdown, predCount }: LoginHeroProps) {
               <motion.div className="w-1.5 h-1.5 rounded-full" style={{ background: hex.green.bright }}
                 animate={{ opacity: [1, 0.3, 1] }} transition={{ duration: 1.4, repeat: Infinity }} />
               <span className="text-[9px] font-semibold tracking-wider" style={{ color: alpha(hex.green.hover, 0.50) }}>
-                {predCount.toLocaleString()} predicciones realizadas
+                {t('hero.predictionsMade', { count: predCount })}
               </span>
             </motion.div>
           )}

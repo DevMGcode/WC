@@ -1,6 +1,7 @@
 'use client';
 
 import React, { createContext, useState, useEffect, ReactNode } from 'react';
+import { useTranslations } from 'next-intl';
 import { authService, AuthUser, RegisterRequest } from '@/services/auth';
 
 export interface AuthContextType {
@@ -16,6 +17,7 @@ export interface AuthContextType {
 export const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export function AuthProvider({ children }: { children: ReactNode }) {
+  const t = useTranslations();
   // null / true on both server and client first render → no hydration mismatch
   const [user, setUser] = useState<AuthUser | null>(null);
   const [loading, setLoading] = useState(true);
@@ -38,10 +40,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         setUser(response.data.user);
         return true;
       }
-      setError(response.message || 'Login fallido');
+      setError(response.message || t('errors.invalidLogin'));
       return false;
     } catch {
-      setError('Error de conexión');
+      setError(t('errors.connection'));
       return false;
     } finally {
       setLoading(false);
@@ -53,18 +55,15 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     setError(null);
     try {
       const response = await authService.register(req);
-      if (response.success && response.emailVerificationRequired) {
-        return { ok: true, emailVerificationRequired: true, message: response.message };
+      if (response.success) {
+        if (response.data) setUser(response.data.user);
+        return { ok: true, emailVerificationRequired: response.emailVerificationRequired ?? true, message: response.message };
       }
-      if (response.success && response.data) {
-        setUser(response.data.user);
-        return { ok: true };
-      }
-      setError(response.message || 'Registro fallido');
+      setError(response.message || t('register.genericError'));
       return { ok: false, message: response.message };
     } catch {
-      setError('Error de conexión');
-      return { ok: false, message: 'Error de conexión' };
+      setError(t('errors.connection'));
+      return { ok: false, message: t('errors.connection') };
     } finally {
       setLoading(false);
     }

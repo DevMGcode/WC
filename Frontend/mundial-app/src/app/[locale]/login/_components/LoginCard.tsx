@@ -3,6 +3,7 @@ import React, { useState, useRef, useCallback, useMemo } from 'react';
 import Image from 'next/image';
 import { motion, AnimatePresence, useMotionValue, useSpring, useTransform } from 'framer-motion';
 import { useRouter, useSearchParams } from 'next/navigation';
+import { useTranslations } from 'next-intl';
 import { useAuth } from '@/contexts/AuthContext';
 import { hex } from '@/lib/design/tokens';
 import { alpha, alphaOf } from '@/lib/design/effects';
@@ -10,6 +11,7 @@ import { alpha, alphaOf } from '@/lib/design/effects';
 interface LoginCardProps { onShowForgot: () => void; }
 
 export default function LoginCard({ onShowForgot }: LoginCardProps) {
+  const t           = useTranslations();
   const router      = useRouter();
   const searchParams = useSearchParams();
   const { login, loading: authLoading, error: authError } = useAuth();
@@ -53,8 +55,8 @@ export default function LoginCard({ onShowForgot }: LoginCardProps) {
     try {
       const ok = await login(email, password);
       if (ok) router.push('/');
-      else setError(authError || 'Credenciales incorrectas');
-    } catch { setError('Error al iniciar sesión'); }
+      else setError(authError || t('auth.invalidCredentials'));
+    } catch { setError(t('auth.loginError')); }
     finally { setIsLoading(false); }
   };
 
@@ -120,8 +122,8 @@ export default function LoginCard({ onShowForgot }: LoginCardProps) {
                 </div>
               </motion.div>
               <div className="flex-1 min-w-0">
-                <h2 className="text-[1.75rem] font-black text-white tracking-tight leading-none mb-1">Inicia Sesión</h2>
-                <p className="text-xs tracking-wide text-orionix-text-muted">Accede y comienza a predecir</p>
+                <h2 className="text-[1.75rem] font-black text-white tracking-tight leading-none mb-1">{t('auth.title')}</h2>
+                <p className="text-xs tracking-wide text-orionix-text-muted">{t('auth.subtitle')}</p>
               </div>
               <motion.div className="px-3 py-1.5 rounded-full text-[9px] font-black tracking-widest uppercase shrink-0"
                 style={{ background: alphaOf('green', 0.08), border: `1px solid ${alphaOf('green', 0.28)}`, color: hex.green.soft }}
@@ -149,13 +151,13 @@ export default function LoginCard({ onShowForgot }: LoginCardProps) {
               {verifiedBanner === 'verified' && (
                 <div className="rounded-xl px-4 py-3 text-sm font-medium flex items-center gap-2"
                   style={{ background: alpha(hex.accent.emerald, 0.10), border: `1px solid ${alpha(hex.accent.emerald, 0.30)}`, color: hex.green.hover }}>
-                  ✓ Email verificado exitosamente. Ya puedes iniciar sesión.
+                  {t('auth.verifiedSuccess')}
                 </div>
               )}
               {verifiedBanner === 'invalid' && (
                 <div className="rounded-xl px-4 py-3 text-sm font-medium flex items-center gap-2"
                   style={{ background: alpha(hex.accent.red, 0.10), border: `1px solid ${alpha(hex.accent.red, 0.30)}`, color: hex.accent.redSoft }}>
-                  ✗ El enlace de verificación es inválido o ya fue usado.
+                  {t('auth.verifiedInvalid')}
                 </div>
               )}
 
@@ -187,7 +189,7 @@ export default function LoginCard({ onShowForgot }: LoginCardProps) {
               {/* Password */}
               <div>
                 <label htmlFor="login-password" className="block text-[10px] font-semibold tracking-widest uppercase mb-2 transition-colors duration-200"
-                  style={{ color: focused === 'password' ? hex.green.bright : alpha(hex.accent.slate, 0.7) }}>Contraseña</label>
+                  style={{ color: focused === 'password' ? hex.green.bright : alpha(hex.accent.slate, 0.7) }}>{t('auth.password')}</label>
                 <div className="relative">
                   <span className="absolute left-3.5 top-1/2 -translate-y-1/2 pointer-events-none transition-colors duration-200"
                     style={{ color: focused === 'password' ? hex.green.bright : alpha(hex.accent.slateDeep, 0.6) }}>
@@ -204,7 +206,7 @@ export default function LoginCard({ onShowForgot }: LoginCardProps) {
                     style={{ background: focused === 'password' ? inputFocusBg : inputBlurBg, border: focused === 'password' ? inputFocusBorder : inputBlurBorder, boxShadow: focused === 'password' ? inputFocusShadow : 'none' }}
                   />
                   <button type="button" onClick={() => setShowPassword(p => !p)} tabIndex={-1}
-                    aria-label={showPassword ? 'Ocultar contraseña' : 'Mostrar contraseña'}
+                    aria-label={showPassword ? t('auth.togglePasswordHide') : t('auth.togglePasswordShow')}
                     className="absolute right-3.5 top-1/2 -translate-y-1/2 cursor-pointer transition-all duration-200 opacity-60 hover:opacity-100"
                     style={{ color: showPassword ? hex.green.bright : alpha(hex.accent.slate, 0.8) }}>
                     {showPassword ? (
@@ -244,10 +246,10 @@ export default function LoginCard({ onShowForgot }: LoginCardProps) {
                       <>
                         <motion.span className="w-4 h-4 rounded-full border-2 border-white/30 border-t-white inline-block"
                           animate={{ rotate: 360 }} transition={{ duration: 0.75, repeat: Infinity, ease: 'linear' }} />
-                        Accediendo...
+                        {t('auth.accessing')}
                       </>
                     ) : (
-                      <>Iniciar Sesión
+                      <>{t('auth.signInButton')}
                         <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
                           <path d="M5 12h14M12 5l7 7-7 7" />
                         </svg>
@@ -262,12 +264,12 @@ export default function LoginCard({ onShowForgot }: LoginCardProps) {
             <div className="mt-7 flex items-center justify-between">
               <button type="button" onClick={onShowForgot}
                 className="text-xs transition-colors duration-200 text-orionix-text-muted hover:text-white/70">
-                ¿Olvidaste tu contraseña?
+                {t('auth.forgotPassword')}
               </button>
               <button onClick={() => router.push('/register')}
                 className="text-xs font-semibold transition-colors duration-200 flex items-center gap-1"
                 style={{ color: alphaOf('green', 0.85) }}>
-                Crear cuenta
+                {t('auth.createAccount')}
                 <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
                   <path d="M5 12h14M12 5l7 7-7 7" />
                 </svg>
@@ -276,7 +278,7 @@ export default function LoginCard({ onShowForgot }: LoginCardProps) {
 
             <div className="mt-7 pt-5 border-t text-center" style={{ borderColor: alpha(hex.neutral.white, 0.04) }}>
               <p className="text-[10px] tracking-widest uppercase text-orionix-text-muted">
-                © 2026 ORIONIX GOL — TODOS LOS DERECHOS RESERVADOS
+                {t('auth.copyright')}
               </p>
             </div>
           </div>

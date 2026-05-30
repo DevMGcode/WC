@@ -4,7 +4,7 @@ import React, { useEffect, useState } from 'react';
 import { AnimatePresence, motion } from 'framer-motion';
 import Image from 'next/image';
 import { FiActivity, FiAward, FiUsers, FiBarChart2, FiCalendar } from 'react-icons/fi';
-import { useT } from '@/hooks/useT';
+import { useTranslations } from 'next-intl';
 import { hex } from '@/lib/design/tokens';
 import { alpha, alphaOf } from '@/lib/design/effects';
 
@@ -74,7 +74,7 @@ const FeatureSpotlight = ({ featureIdx, features }: { featureIdx: number; featur
 };
 
 export function IntroSplash() {
-  const { t } = useT();
+  const t = useTranslations();
 
   const FEATURES: FeatureItem[] = FEATURE_CFGS.map((cfg, i) => ({
     ...cfg,

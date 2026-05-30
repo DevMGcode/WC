@@ -7,6 +7,7 @@ import LoginBackground from './_components/LoginBackground';
 import LoginHero from './_components/LoginHero';
 import LoginCard from './_components/LoginCard';
 import ForgotPasswordModal from './_components/ForgotPasswordModal';
+import { apiFetch } from '@/lib/apiFetch';
 
 export default function LoginPage() {
   const router = useRouter();
@@ -26,7 +27,7 @@ export default function LoginPage() {
   }, []);
 
   useEffect(() => {
-    fetch('/api/v1/public/predictions/count')
+    apiFetch('/api/v1/predictions/count')
       .then(r => r.ok ? r.json() : null)
       .then(d => { if (d?.data) setPredCount(d.data); })
       .catch(() => {});
