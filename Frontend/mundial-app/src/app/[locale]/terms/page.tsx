@@ -14,10 +14,7 @@ export default function TermsPage() {
   }, []);
 
   return (
-    <div
-      className="min-h-screen w-full relative"
-      style={{ background: `radial-gradient(ellipse at 25% 60%, ${hex.accent.navy} 0%, ${hex.accent.navyDeep} 45%, #000509 100%)` }}
-    >
+    <div className="w-full relative">
       {/* Ambient orbs */}
       <div className="fixed top-[-15%] right-[-5%] w-[38vw] h-[38vw] rounded-full pointer-events-none"
         style={{ background: `radial-gradient(circle, ${alpha(hex.accent.tealDeep, 0.07)} 0%, transparent 70%)`, filter: 'blur(55px)' }} />
