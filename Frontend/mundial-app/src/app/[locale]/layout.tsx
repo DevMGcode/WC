@@ -1,5 +1,7 @@
 import type { Metadata } from 'next';
 import { locales } from '@/i18n/locales';
+import { NextIntlClientProvider } from 'next-intl';
+import { getMessages } from 'next-intl/server';
 import LocaleClientLayout from './LocaleClientLayout';
 
 type Locale = 'es' | 'en' | 'fr' | 'de' | 'pt' | 'ru' | 'ar';
@@ -61,11 +63,16 @@ export function generateMetadata(
   };
 }
 
-export default function LocaleLayout({
+export default async function LocaleLayout({
   children,
 }: {
   children: React.ReactNode;
   params: { locale: string };
 }) {
-  return <LocaleClientLayout>{children}</LocaleClientLayout>;
+  const messages = await getMessages();
+  return (
+    <NextIntlClientProvider messages={messages}>
+      <LocaleClientLayout>{children}</LocaleClientLayout>
+    </NextIntlClientProvider>
+  );
 }
