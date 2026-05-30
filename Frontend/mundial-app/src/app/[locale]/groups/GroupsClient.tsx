@@ -20,14 +20,16 @@ import Image from 'next/image';
 import { Header } from '@/components/Navigation';
 import { Bracket } from '@/components/BracketChampions';  // 🛡️ PROTECTED
 import { useCurrentTournament, useTournamentGroups, useTournamentFixtures } from '@/hooks/useTournamentData';
-import { useT } from '@/hooks/useT';
+import { useTranslations, useLocale } from 'next-intl';
 import TourButton from '@/components/Tour/TourButton';
 import { getTourSteps } from '@/components/Tour/tourSteps';
 
 import { hex, type BrandColor } from '@/lib/design/tokens';
 import { alpha, alphaOf, borders, gradients } from '@/lib/design/effects';
+import { apiFetch } from '@/lib/apiFetch';
 
 import GroupCard, { EQBars } from './_components/GroupCard';
+import { localizeTeamName } from '@/lib/i18n/teamNames';
 import KnockoutCard, { ChampionBanner, ROUND_META, ROUND_I18N, ROUND_GRID } from './_components/KnockoutCard';
 import BracketBg from './_components/BracketBg';
 import type { Group, Match, BracketData, KnockoutRound, Team } from './_components/types';
@@ -99,15 +101,14 @@ export default function GroupsClient({ initialTournament, initialGroups, initial
   initialGroups?: any[];
   initialFixtures?: any[];
 }) {
-  const { t } = useT();
-  const params = useParams();
-  const locale = (params?.locale as string) ?? 'es';
+  const t      = useTranslations();
+  const locale = useLocale();
   const [activeTab,    setActiveTab]    = useState<'grupos' | 'eliminatorias'>('grupos');
   const [activeRound,  setActiveRound]  = useState<KnockoutRound>('octavos');
   const [bestDefense,  setBestDefense]  = useState<any[]>([]);
 
   useEffect(() => {
-    fetch('/api/v1/public/standings/best-defense')
+    apiFetch('/api/v1/public/standings/best-defense')
       .then(r => r.ok ? r.json() : null)
       .then(d => { if (d?.data) setBestDefense(d.data); })
       .catch(() => {});
@@ -122,17 +123,19 @@ export default function GroupsClient({ initialTournament, initialGroups, initial
   const groups: Group[] = useMemo(() =>
     rawGroups.length > 0
       ? rawGroups.map((g: any) => ({
-          id: g.id, name: g.name,
+          // Reconstruimos el nombre usando i18n + el code (A,B,C…) en lugar del
+          // `name` que viene del backend ya en español ("Grupo A").
+          id: g.id, name: `${t('groups.groupLabel')} ${g.code ?? g.name?.replace(/^grupo\s+/i, '') ?? ''}`.trim(),
           standings: (g.standings ?? []).map((s: any) => ({
             position: s.position,
-            team: { id: s.teamId, name: s.teamName, shortName: s.teamShortName ?? s.teamFifaCode ?? s.teamName,
+            team: { id: s.teamId, name: localizeTeamName(s.teamName, locale), shortName: s.teamShortName ?? s.teamFifaCode ?? s.teamName,
               flagUrl: s.teamFlagUrl ?? `https://flagcdn.com/${(s.teamFifaCode ?? 'un').toLowerCase()}.svg` },
             points: s.points, played: s.played, won: s.won, drawn: s.drawn, lost: s.lost,
             goalDiff: s.goalDifference ?? (s.goalsFor - s.goalsAgainst),
           })),
         }))
       : MOCK_GROUPS,
-    [rawGroups]
+    [rawGroups, locale, t]
   );
 
   const bracketsData: BracketData = useMemo(() => {
@@ -146,7 +149,7 @@ export default function GroupsClient({ initialTournament, initialGroups, initial
   const pageBg   = `radial-gradient(ellipse at 22% 30%, ${hex.bg.primary} 0%, ${hex.bg.secondary} 50%, ${hex.bg.primary} 100%)`;
 
   return (
-    <div className="w-full relative min-h-screen" style={{ background: pageBg }}>
+    <div className="w-full relative">
 
       {/* Ambient orbs */}
       <motion.div className="fixed rounded-full pointer-events-none"
@@ -288,7 +291,7 @@ export default function GroupsClient({ initialTournament, initialGroups, initial
                           style={{ background: `linear-gradient(180deg, ${hex.status.info}, ${alpha(hex.status.info, 0.4)})` }} />
                         <FiShield size={12} style={{ color: hex.status.info }} />
                         <span className="text-[10px] font-black tracking-[0.24em] uppercase" style={{ color: alpha(hex.text.secondary, 0.6) }}>
-                          Mejor Defensa
+                          {t('groups.bestDefense')}
                         </span>
                       </div>
                       <div className="space-y-2">
@@ -311,13 +314,13 @@ export default function GroupsClient({ initialTournament, initialGroups, initial
                               </div>
                             )}
                             <span className="flex-1 text-[11px] font-bold truncate" style={{ color: hex.text.primary }}>
-                              {row.teamName ?? row.name}
+                              {localizeTeamName(row.teamName ?? row.name, locale)}
                             </span>
                             <div className="flex items-center gap-1 shrink-0">
                               <span className="text-[10px] font-black tabular-nums" style={{ color: hex.status.info }}>
                                 {row.goalsAgainst ?? row.goalsConceeded ?? 0}
                               </span>
-                              <span className="text-[8px]" style={{ color: alpha(hex.text.secondary, 0.35) }}>gc</span>
+                              <span className="text-[8px]" style={{ color: alpha(hex.text.secondary, 0.35) }}>{t('groups.goalsConceded')}</span>
                             </div>
                           </motion.div>
                         ))}
