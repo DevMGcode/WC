@@ -81,44 +81,100 @@ Rellena todos los valores `<CAMBIAR_...>`:
 
 ---
 
-## PASO 5 — Configurar el dominio en nginx.conf
+## PASO 5 — Configurar el dominio en los archivos nginx
+
+Hay DOS archivos nginx en este repo:
+- `nginx-bootstrap.conf` → solo HTTP, sin SSL. Se usa para emitir el cert.
+- `nginx.conf` → HTTP→HTTPS redirect + bloque SSL. Se usa después.
+
+Reemplaza el dominio en AMBOS:
 
 ```bash
-# Reemplazar TU_DOMINIO en nginx.conf
-sed -i 's/TU_DOMINIO/orionixgol.com/g' nginx.conf
+DOMINIO=orionixgol.com   # cambia esto por tu dominio real
+sed -i "s/TU_DOMINIO/$DOMINIO/g" nginx-bootstrap.conf
+sed -i "s/TU_DOMINIO/$DOMINIO/g" nginx.conf
 ```
 
 ---
 
 ## PASO 6 — Obtener certificado SSL (HTTPS gratuito)
 
-```bash
-# 1. Arrancar solo nginx en modo HTTP temporalmente
-docker compose -f docker-compose.prod.yml up -d nginx
+⚠️ El nginx.conf final tiene un bloque `listen 443 ssl` que apunta a un cert
+que aún NO existe. Si arrancas nginx con ese config sin tener el cert, falla
+con "cannot load certificate". Por eso usamos primero el bootstrap.
 
-# 2. Obtener el certificado
-docker compose -f docker-compose.prod.yml run --rm certbot certonly \
+### Fase 1: Bootstrap (solo HTTP)
+
+```bash
+# 1. Apuntar el mount de nginx al config bootstrap (sin SSL).
+#    Edita docker-compose.prod.yml línea ~101, cambia:
+#       - ./nginx.conf:/etc/nginx/conf.d/default.conf:ro
+#    por:
+#       - ./nginx-bootstrap.conf:/etc/nginx/conf.d/default.conf:ro
+#
+#    Alternativa con sed (más rápido):
+sed -i 's|./nginx.conf:/etc/nginx/conf.d/default.conf|./nginx-bootstrap.conf:/etc/nginx/conf.d/default.conf|g' docker-compose.prod.yml
+
+# 2. Arrancar SOLO nginx en modo HTTP (no necesita backend/frontend todavía)
+docker compose -f docker-compose.prod.yml --env-file .env.prod up -d nginx
+
+# 3. Probar que el HTTP responde (debe devolver "Orionix Gol — esperando...")
+curl http://$DOMINIO/
+
+# 4. Obtener el certificado
+docker compose -f docker-compose.prod.yml --env-file .env.prod run --rm certbot certonly \
   --webroot -w /var/www/certbot \
-  -d tu-dominio.com \
+  -d $DOMINIO -d www.$DOMINIO \
   --email meligarcia3412@gmail.com \
   --agree-tos --no-eff-email
+```
+
+Si todo va bien, certbot te dirá `Successfully received certificate.` y el cert
+queda guardado en el volumen `certbot_certs` del compose.
+
+### Fase 2: Switch a HTTPS
+
+```bash
+# 1. Volver al config con HTTPS
+sed -i 's|./nginx-bootstrap.conf:/etc/nginx/conf.d/default.conf|./nginx.conf:/etc/nginx/conf.d/default.conf|g' docker-compose.prod.yml
+
+# 2. Recargar nginx con el nuevo config (ya tiene el cert disponible)
+docker compose -f docker-compose.prod.yml --env-file .env.prod up -d --force-recreate nginx
+
+# 3. Probar HTTPS
+curl https://$DOMINIO/ -I
+# → debería devolver HTTP/2 200 (o 307 redirect a /es)
 ```
 
 ---
 
 ## PASO 7 — Arrancar todo
 
+⚠️ El flag `--env-file .env.prod` es OBLIGATORIO en TODOS los comandos. Sin él, las
+variables `${...}` del compose quedan vacías (compose por defecto solo lee `.env`,
+no `.env.prod`). Alternativa: renombrar `.env.prod` a `.env`, pero perderías el
+patrón de naming explícito por entorno.
+
 ```bash
 cd ~/app/PRODUCCION_DEPLOY
 
 # Build y arranque completo
-docker compose -f docker-compose.prod.yml up -d --build
+docker compose -f docker-compose.prod.yml --env-file .env.prod up -d --build
 
 # Ver logs
-docker compose -f docker-compose.prod.yml logs -f
+docker compose -f docker-compose.prod.yml --env-file .env.prod logs -f
 
 # Ver estado de los contenedores
-docker compose -f docker-compose.prod.yml ps
+docker compose -f docker-compose.prod.yml --env-file .env.prod ps
+```
+
+💡 Tip: para no repetir el flag, exporta un alias en tu sesión:
+```bash
+alias dcp='docker compose -f docker-compose.prod.yml --env-file .env.prod'
+# Luego usa:
+dcp up -d --build
+dcp logs -f
+dcp ps
 ```
 
 ---
@@ -150,11 +206,11 @@ docker logs orionix-frontend -f
 
 ```bash
 # Reiniciar un servicio
-docker compose -f docker-compose.prod.yml restart backend
+docker compose -f docker-compose.prod.yml --env-file .env.prod restart backend
 
 # Actualizar a nueva versión del código
 git pull
-docker compose -f docker-compose.prod.yml up -d --build backend frontend
+docker compose -f docker-compose.prod.yml --env-file .env.prod up -d --build backend frontend
 
 # Ver uso de recursos
 docker stats
