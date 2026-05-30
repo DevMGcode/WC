@@ -1,6 +1,7 @@
 'use client';
 
-import * as Sentry from '@sentry/nextjs';
+// GlitchTip (open-source) recibe los errores. SDK transporte: @sentry/nextjs.
+import * as GlitchTip from '@sentry/nextjs';
 import { useEffect } from 'react';
 
 export default function GlobalError({
@@ -11,8 +12,8 @@ export default function GlobalError({
   reset: () => void;
 }) {
   useEffect(() => {
-    if (process.env.NEXT_PUBLIC_SENTRY_DSN) {
-      Sentry.captureException(error);
+    if (process.env.NEXT_PUBLIC_GLITCHTIP_DSN) {
+      GlitchTip.captureException(error);
     }
   }, [error]);
 

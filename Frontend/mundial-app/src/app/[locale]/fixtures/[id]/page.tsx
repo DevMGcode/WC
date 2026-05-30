@@ -7,45 +7,83 @@ import Image from 'next/image';
 import Link from 'next/link';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useRouter } from 'next/navigation';
+import { useTranslations } from 'next-intl';
 import { getFixtureById } from '@/services/publicTournament';
 import { predictionService } from '@/services/predictions';
 import { useAuth } from '@/contexts/AuthContext';
 import {
   FiTarget, FiZap, FiCheck, FiX, FiEdit2, FiArrowLeft,
-  FiMapPin, FiAlertCircle,
+  FiMapPin, FiAlertCircle, FiList, FiBarChart2, FiUsers, FiRepeat,
 } from 'react-icons/fi';
 
-/* ── Scoring rules config ── */
-const SCORE_RULES = [
-  { pts: 3, label: 'Marcador exacto',   sublabel: 'Resultado y goles exactos', color: '#34d399', icon: <FiZap  size={14} /> },
-  { pts: 1, label: 'Resultado correcto', sublabel: 'Ganador o empate correcto', color: '#4CAF50', icon: <FiCheck size={14} /> },
-  { pts: 0, label: 'Fallaste',           sublabel: 'No acertaste el resultado', color: '#64748b', icon: <FiX    size={14} /> },
-];
+import { hex, type BrandColor, resolveBrandHex } from '@/lib/design/tokens';
+import { alpha, alphaOf, borders, gradients } from '@/lib/design/effects';
 
-/* ── Shared dark card wrapper ── */
+import dynamic from 'next/dynamic';
+import { TabSkeleton } from '@/components/PageSkeleton';
+import { ErrorBoundary } from '@/components/ErrorBoundary';
+
+const LineupsTab    = dynamic(() => import('./_components/LineupsTab'),    { loading: () => <TabSkeleton /> });
+const StatisticsTab = dynamic(() => import('./_components/StatisticsTab'), { loading: () => <TabSkeleton /> });
+const PlayersTab    = dynamic(() => import('./_components/PlayersTab'),    { loading: () => <TabSkeleton /> });
+const HeadToHeadTab = dynamic(() => import('./_components/HeadToHeadTab'), { loading: () => <TabSkeleton /> });
+
+import { useMatchLive }   from '@/hooks/useMatchLive';
+import { useMatchEvents } from '@/hooks/useMatchEvents';
+
+type DetailTab = 'lineups' | 'stats' | 'players' | 'h2h';
+
+/**
+ * Local thin wrapper around the card pattern used on this page. We don't use
+ * the generic `<Surface>` primitive here because the accent gradient on top
+ * depends on a per-card BrandColor — exposing that via Surface would muddy
+ * its API. This keeps the concern co-located with the page that needs it.
+ */
 const DarkCard = ({
-  children, accent = '#4CAF50', className = '', delay = 0,
-}: { children: React.ReactNode; accent?: string; className?: string; delay?: number }) => (
+  children, accent = 'green', className = '', delay = 0,
+}: {
+  children: React.ReactNode;
+  accent?: BrandColor;
+  className?: string;
+  delay?: number;
+}) => (
   <motion.div
     initial={{ opacity: 0, y: 14 }}
     animate={{ opacity: 1, y: 0 }}
     transition={{ duration: 0.5, delay, ease: [0.22, 1, 0.36, 1] }}
     className={`relative overflow-hidden rounded-2xl ${className}`}
     style={{
-      background: 'linear-gradient(145deg, rgba(6,17,10,0.98), rgba(11,27,18,0.97))',
-      border: `1px solid ${accent}18`,
-      boxShadow: '0 20px 60px rgba(0,0,0,0.50)',
+      background:  `linear-gradient(145deg, ${alpha(hex.bg.primary, 0.98)}, ${alpha(hex.bg.secondary, 0.97)})`,
+      border:      `1px solid ${alphaOf(accent, 0.095)}`,
+      boxShadow:   `0 20px 60px ${alpha(hex.neutral.black, 0.50)}`,
     }}
   >
     <div className="absolute inset-x-0 top-0 h-px"
-      style={{ background: `linear-gradient(90deg, transparent, ${accent}65, transparent)` }} />
+      style={{ background: gradients.divider(accent, 0.65) }} />
     {children}
   </motion.div>
 );
 
 export default function FixtureDetailPage({ params }: { params: { id: string } }) {
   const router = useRouter();
+  const t      = useTranslations();
   const { user, isAuthenticated } = useAuth();
+  const fixtureId = parseInt(params.id, 10);
+
+  /* Tabs y reglas de puntuación dependen de t() ⇒ se construyen dentro del
+   * componente para reaccionar al cambio de locale. */
+  const DETAIL_TABS: { key: DetailTab; label: string; icon: React.ReactNode }[] = [
+    { key: 'lineups',  label: t('fixture.tabs.lineups')   ?? 'Alineaciones', icon: <FiList    size={12} /> },
+    { key: 'stats',    label: t('fixture.tabs.stats')     ?? 'Estadísticas', icon: <FiBarChart2 size={12} /> },
+    { key: 'players',  label: t('fixture.tabs.players')   ?? 'Jugadores',    icon: <FiUsers   size={12} /> },
+    { key: 'h2h',      label: t('fixture.tabs.h2h')       ?? 'H2H',          icon: <FiRepeat  size={12} /> },
+  ];
+
+  const SCORE_RULES: { pts: number; label: string; sublabel: string; color: BrandColor; icon: React.ReactNode }[] = [
+    { pts: 3, label: t('fixture.rules.exactLabel'),   sublabel: t('fixture.rules.exactSub'),   color: 'green',   icon: <FiZap   size={14} /> },
+    { pts: 1, label: t('fixture.rules.correctLabel'), sublabel: t('fixture.rules.correctSub'), color: 'success', icon: <FiCheck size={14} /> },
+    { pts: 0, label: t('fixture.rules.wrongLabel'),   sublabel: t('fixture.rules.wrongSub'),   color: 'neutral', icon: <FiX     size={14} /> },
+  ];
 
   const [fixture,     setFixture]     = useState<any>(null);
   const [loading,     setLoading]     = useState(true);
@@ -56,16 +94,27 @@ export default function FixtureDetailPage({ params }: { params: { id: string } }
   const [submitting,  setSubmitting]  = useState(false);
   const [predError,   setPredError]   = useState('');
   const [predSuccess, setPredSuccess] = useState(false);
+  const [detailTab,   setDetailTab]   = useState<DetailTab>('lineups');
+
+  // WebSocket — tiempo real (solo activo cuando el partido está LIVE)
+  const liveDelta  = useMatchLive(fixture?.status === 'LIVE' ? fixtureId : null);
+  const liveEvents = useMatchEvents(fixture?.status === 'LIVE' ? fixtureId : null);
+
+  // Scores y status en vivo (WebSocket tiene prioridad sobre el snapshot HTTP)
+  const liveHomeScore    = liveDelta?.homeScore    ?? fixture?.homeScore;
+  const liveAwayScore    = liveDelta?.awayScore    ?? fixture?.awayScore;
+  const liveStatus       = liveDelta?.status       ?? fixture?.status;
+  const elapsedMinutes   = liveDelta?.elapsedMinutes ?? null;
 
   useEffect(() => {
     const loadFixture = async () => {
       try {
-        const data = await getFixtureById(parseInt(params.id, 10));
+        const data = await getFixtureById(fixtureId);
         setFixture(data ?? null);
       } finally { setLoading(false); }
     };
     loadFixture();
-  }, [params.id]);
+  }, [fixtureId]);
 
   useEffect(() => {
     if (!isAuthenticated || !user || !fixture) return;
@@ -94,18 +143,22 @@ export default function FixtureDetailPage({ params }: { params: { id: string } }
       }
       setPredSuccess(true); setEditing(false);
     } catch (err: any) {
-      setPredError(err?.response?.data?.error || err?.message || 'Error al guardar la porra');
+      setPredError(err?.response?.data?.error || err?.message || t('fixture.saveError'));
     } finally { setSubmitting(false); }
   };
 
+  // Shared page background (radial gradient using tokens)
+  const pageBg = `radial-gradient(ellipse at 22% 35%, ${hex.bg.primary} 0%, ${hex.bg.secondary} 48%, ${hex.bg.primary} 100%)`;
+
   if (loading) {
     return (
-      <div className="flex items-center justify-center h-screen"
-        style={{ background: 'radial-gradient(ellipse at 30% 50%, #060f1e 0%, #08170D 42%, #06110A 100%)' }}>
+      <div className="flex items-center justify-center h-screen" style={{ background: pageBg }}>
         <div className="flex flex-col items-center gap-4">
-          <motion.div className="w-12 h-12 rounded-full border-2 border-green-500/20 border-t-green-500"
+          <motion.div className="w-12 h-12 rounded-full border-2"
+            style={{ borderColor: alphaOf('green', 0.20), borderTopColor: hex.green.base }}
             animate={{ rotate: 360 }} transition={{ duration: 0.9, repeat: Infinity, ease: 'linear' }} />
-          <p className="text-[10px] text-green-500/60 tracking-[0.3em] uppercase font-bold">Cargando</p>
+          <p className="text-[10px] tracking-[0.3em] uppercase font-bold"
+            style={{ color: alphaOf('green', 0.6) }}>Cargando</p>
         </div>
       </div>
     );
@@ -113,16 +166,15 @@ export default function FixtureDetailPage({ params }: { params: { id: string } }
 
   if (!fixture) {
     return (
-      <div className="flex items-center justify-center h-screen"
-        style={{ background: 'radial-gradient(ellipse at 30% 50%, #060f1e 0%, #08170D 42%, #06110A 100%)' }}>
-        <p className="text-orionix-text-muted font-semibold">Partido no encontrado</p>
+      <div className="flex items-center justify-center h-screen" style={{ background: pageBg }}>
+        <p className="text-orionix-text-muted font-semibold">{t('fixture.notFound')}</p>
       </div>
     );
   }
 
-  const isScheduled = fixture.status === 'SCHEDULED';
-  const isLive      = fixture.status === 'LIVE';
-  const isFinished  = fixture.status === 'FINISHED';
+  const isScheduled = liveStatus === 'SCHEDULED';
+  const isLive      = liveStatus === 'LIVE';
+  const isFinished  = liveStatus === 'FINISHED';
   const canPredict  = isScheduled && isAuthenticated;
   const showForm    = canPredict && (!prediction || editing);
 
@@ -135,43 +187,45 @@ export default function FixtureDetailPage({ params }: { params: { id: string } }
     Math.sign(prediction.predictedHomeScore - prediction.predictedAwayScore) ===
     Math.sign(fixture.homeScore - fixture.awayScore);
 
-  const resultCfg = predCorrect
-    ? { color: '#34d399', border: 'rgba(52,211,153,0.25)', bg: 'rgba(52,211,153,0.06)', label: '¡Marcador exacto!', icon: '🎯', pts: '+3 pts' }
-    : predResultCorrect
-      ? { color: '#4CAF50', border: 'rgba(76,175,80,0.22)', bg: 'rgba(76,175,80,0.05)', label: 'Resultado correcto', icon: '✅', pts: '+1 pt' }
-      : { color: '#f87171', border: 'rgba(248,113,113,0.22)', bg: 'rgba(239,68,68,0.05)', label: 'No acertaste esta vez', icon: '❌', pts: '0 pts' };
+  // Result config — uses BrandColor instead of hex literals
+  const resultCfg: { color: BrandColor; label: string; icon: string; pts: string } =
+    predCorrect      ? { color: 'green',   label: t('fixture.exactScore'),  icon: '🎯', pts: '+3 pts' }
+    : predResultCorrect ? { color: 'success', label: t('fixture.correctScore'),  icon: '✅', pts: '+1 pt'  }
+    :                     { color: 'danger',  label: t('fixture.wrongScore'), icon: '❌', pts: '0 pts'  };
 
   return (
-    <div className="w-full relative min-h-screen"
-      style={{ background: 'radial-gradient(ellipse at 22% 35%, #050D07 0%, #08170D 48%, #06110A 100%)' }}>
+    <div className="w-full relative">
 
       {/* Ambient blobs */}
       <motion.div className="fixed rounded-full pointer-events-none"
         style={{ width: 600, height: 600, top: -150, left: -120,
-          background: 'radial-gradient(circle, rgba(76,175,80,0.07) 0%, transparent 65%)', filter: 'blur(70px)', zIndex: 0 }}
+          background: `radial-gradient(circle, ${alphaOf('green', 0.07)} 0%, transparent 65%)`,
+          filter: 'blur(70px)', zIndex: 0 }}
         animate={{ scale: [1, 1.15, 1], opacity: [0.5, 0.8, 0.5] }}
         transition={{ duration: 12, repeat: Infinity }} />
       <motion.div className="fixed rounded-full pointer-events-none"
         style={{ width: 450, height: 450, bottom: -80, right: -80,
-          background: 'radial-gradient(circle, rgba(76,175,80,0.06) 0%, transparent 65%)', filter: 'blur(60px)', zIndex: 0 }}
+          background: `radial-gradient(circle, ${alphaOf('green', 0.06)} 0%, transparent 65%)`,
+          filter: 'blur(60px)', zIndex: 0 }}
         animate={{ scale: [1, 1.2, 1], opacity: [0.4, 0.7, 0.4] }}
         transition={{ duration: 14, repeat: Infinity, delay: 5 }} />
 
       <div className="relative" style={{ zIndex: 10 }}>
-        <Header title="⚽ Detalle del Partido" subtitle={fixture.stageName ?? ''} />
+        <Header title={t('fixture.headerTitle')} subtitle={fixture.stageName ?? ''} />
       </div>
 
       <div className="relative z-10 px-4 py-6 max-w-4xl mx-auto w-full pb-32">
 
-        {/* ── FIXTURE CARD (existing component keeps its style) ── */}
+        {/* ── FIXTURE CARD ── */}
         <motion.div className="mb-4" initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.24 }}>
           <FixtureCard
             homeTeam={fixture.homeTeam}
             awayTeam={fixture.awayTeam}
-            homeScore={fixture.homeScore}
-            awayScore={fixture.awayScore}
+            homeScore={liveHomeScore}
+            awayScore={liveAwayScore}
             kickoffAt={fixture.kickoffAt}
-            status={fixture.status}
+            status={liveStatus}
+            elapsedMinutes={isLive ? elapsedMinutes : undefined}
           />
         </motion.div>
 
@@ -180,26 +234,28 @@ export default function FixtureDetailPage({ params }: { params: { id: string } }
 
           {/* Not logged in */}
           {!isAuthenticated && (
-            <DarkCard accent="#4CAF50" delay={0.08}>
+            <DarkCard accent="green" delay={0.08}>
               <div className="p-6 text-center">
                 <div className="relative inline-block mb-4">
                   <div className="absolute inset-0 rounded-2xl pointer-events-none"
-                    style={{ background: 'rgba(76,175,80,0.35)', filter: 'blur(14px)', opacity: 0.25, transform: 'scale(1.15)' }} />
+                    style={{ background: alphaOf('green', 0.35), filter: 'blur(14px)', opacity: 0.25, transform: 'scale(1.15)' }} />
                   <motion.div className="relative w-16 h-16 rounded-2xl flex items-center justify-center mx-auto"
-                    style={{ background: 'linear-gradient(145deg, rgba(76,175,80,0.10), rgba(1,4,14,0.85))', border: '1px solid rgba(76,175,80,0.22)' }}
-                    animate={{ boxShadow: ['0 0 12px rgba(76,175,80,0.10)', '0 0 28px rgba(76,175,80,0.30)', '0 0 12px rgba(76,175,80,0.10)'] }}
+                    style={{ background: `linear-gradient(145deg, ${alphaOf('green', 0.10)}, ${alpha(hex.bg.primary, 0.85)})`,
+                             border: borders.brand('green', 0.22) }}
+                    animate={{ boxShadow: [`0 0 12px ${alphaOf('green', 0.10)}`, `0 0 28px ${alphaOf('green', 0.30)}`, `0 0 12px ${alphaOf('green', 0.10)}`] }}
                     transition={{ duration: 2.5, repeat: Infinity }}
                   >
-                    <FiTarget size={28} style={{ color: '#4CAF50', filter: 'drop-shadow(0 0 6px rgba(76,175,80,0.7))' }} />
+                    <FiTarget size={28} style={{ color: hex.green.bright, filter: `drop-shadow(0 0 6px ${alphaOf('green', 0.7)})` }} />
                   </motion.div>
                 </div>
-                <p className="text-white font-black text-lg mb-1">¿Cuál será el marcador?</p>
-                <p className="text-orionix-text-muted text-sm mb-5">Inicia sesión para hacer tu porra</p>
+                <p className="text-white font-black text-lg mb-1">{t('fixture.whatScore')}</p>
+                <p className="text-orionix-text-muted text-sm mb-5">{t('fixture.loginToPredict')}</p>
                 <motion.button
                   onClick={() => router.push('/onboarding')}
                   whileHover={{ scale: 1.03 }} whileTap={{ scale: 0.97 }}
                   className="px-8 py-3 rounded-xl text-sm font-black text-white"
-                  style={{ background: 'linear-gradient(135deg, #1B5E20, #388E3C)', boxShadow: '0 6px 24px rgba(76,175,80,0.30)' }}
+                  style={{ background: `linear-gradient(135deg, ${hex.green.dark}, ${hex.green.hover})`,
+                           boxShadow: `0 6px 24px ${alphaOf('green', 0.30)}` }}
                 >
                   Iniciar sesión
                 </motion.button>
@@ -209,21 +265,22 @@ export default function FixtureDetailPage({ params }: { params: { id: string } }
 
           {/* Logged in — LIVE match: porras cerradas */}
           {isAuthenticated && isLive && (
-            <DarkCard accent="#ef4444" delay={0.08}>
+            <DarkCard accent="danger" delay={0.08}>
               <div className="p-6 text-center">
                 <motion.div
                   className="w-16 h-16 rounded-2xl flex items-center justify-center mx-auto mb-4"
-                  style={{ background: 'linear-gradient(145deg, rgba(239,68,68,0.12), rgba(1,4,14,0.85))', border: '1px solid rgba(239,68,68,0.25)' }}
-                  animate={{ boxShadow: ['0 0 12px rgba(239,68,68,0.10)', '0 0 28px rgba(239,68,68,0.35)', '0 0 12px rgba(239,68,68,0.10)'] }}
+                  style={{ background: `linear-gradient(145deg, ${alphaOf('danger', 0.12)}, ${alpha(hex.bg.primary, 0.85)})`,
+                           border: borders.brand('danger', 0.25) }}
+                  animate={{ boxShadow: [`0 0 12px ${alphaOf('danger', 0.10)}`, `0 0 28px ${alphaOf('danger', 0.35)}`, `0 0 12px ${alphaOf('danger', 0.10)}`] }}
                   transition={{ duration: 1.8, repeat: Infinity }}
                 >
                   <span style={{ fontSize: 28 }}>🔒</span>
                 </motion.div>
-                <p className="text-white font-black text-base mb-1">Porras cerradas</p>
-                <p className="text-orionix-text-muted text-sm">Este partido ya comenzó. No se pueden registrar predicciones.</p>
+                <p className="text-white font-black text-base mb-1">{t('fixture.closed')}</p>
+                <p className="text-orionix-text-muted text-sm">{t('fixture.alreadyStarted')}</p>
                 {prediction && (
                   <div className="mt-4 inline-flex items-center gap-3 px-5 py-3 rounded-xl"
-                    style={{ background: 'rgba(239,68,68,0.06)', border: '1px solid rgba(239,68,68,0.15)' }}>
+                    style={{ background: alphaOf('danger', 0.06), border: borders.brand('danger', 0.15) }}>
                     <span className="text-orionix-text-muted text-sm font-bold">Tu porra:</span>
                     <span className="text-white font-black text-lg tabular-nums">
                       {prediction.predictedHomeScore} – {prediction.predictedAwayScore}
@@ -236,35 +293,39 @@ export default function FixtureDetailPage({ params }: { params: { id: string } }
 
           {/* Logged in — scheduled match */}
           {isAuthenticated && isScheduled && (
-            <DarkCard accent="#4CAF50" delay={0.08}>
+            <DarkCard accent="green" delay={0.08}>
               <div className="p-5">
 
                 {/* Scoring rules */}
                 <div className="grid grid-cols-3 gap-2 mb-5">
-                  {SCORE_RULES.map(({ pts, label, sublabel, color, icon }) => (
-                    <div key={pts} className="relative overflow-hidden rounded-xl p-3 text-center"
-                      style={{ background: 'rgba(6,17,10,0.80)', border: `1px solid ${color}18` }}>
-                      <div className="absolute inset-x-0 top-0 h-px"
-                        style={{ background: `linear-gradient(90deg, transparent, ${color}50, transparent)` }} />
-                      <div className="flex justify-center mb-1.5"
-                        style={{ color, filter: `drop-shadow(0 0 4px ${color})` }}>
-                        {icon}
+                  {SCORE_RULES.map(({ pts, label, sublabel, color, icon }) => {
+                    const c = resolveBrandHex(color);
+                    return (
+                      <div key={pts} className="relative overflow-hidden rounded-xl p-3 text-center"
+                        style={{ background: alpha(hex.bg.primary, 0.80), border: `1px solid ${alphaOf(color, 0.09)}` }}>
+                        <div className="absolute inset-x-0 top-0 h-px"
+                          style={{ background: gradients.divider(color, 0.5) }} />
+                        <div className="flex justify-center mb-1.5"
+                          style={{ color: c, filter: `drop-shadow(0 0 4px ${c})` }}>
+                          {icon}
+                        </div>
+                        <p className="text-lg font-black" style={{ color: c, textShadow: `0 0 12px ${alphaOf(color, 0.5)}` }}>
+                          {pts}<span className="text-xs font-bold ml-0.5">pts</span>
+                        </p>
+                        <p className="text-[8px] font-black tracking-wide mt-0.5 leading-tight"
+                          style={{ color: alphaOf(color, 0.5) }}>{label}</p>
+                        <p className="text-[7px] text-orionix-text-muted mt-0.5 leading-tight hidden sm:block">{sublabel}</p>
                       </div>
-                      <p className="text-lg font-black" style={{ color, textShadow: `0 0 12px ${color}80` }}>
-                        {pts}<span className="text-xs font-bold ml-0.5">pts</span>
-                      </p>
-                      <p className="text-[8px] font-black tracking-wide mt-0.5 leading-tight" style={{ color: `${color}80` }}>{label}</p>
-                      <p className="text-[7px] text-orionix-text-muted mt-0.5 leading-tight hidden sm:block">{sublabel}</p>
-                    </div>
-                  ))}
+                    );
+                  })}
                 </div>
 
                 {/* Porra header */}
                 <div className="flex items-center justify-between mb-4">
                   <div className="flex items-center gap-2">
                     <div className="w-[3px] h-5 rounded-full"
-                      style={{ background: 'linear-gradient(180deg, #4CAF50, #388E3C)' }} />
-                    <span className="text-[10px] font-black text-orionix-text-muted tracking-[0.24em] uppercase">Tu Porra</span>
+                      style={{ background: `linear-gradient(180deg, ${hex.green.bright}, ${hex.green.hover})` }} />
+                    <span className="text-[10px] font-black text-orionix-text-muted tracking-[0.24em] uppercase">{t('fixture.yourPrediction')}</span>
                   </div>
                   {prediction && !editing && (
                     <motion.button
@@ -282,7 +343,6 @@ export default function FixtureDetailPage({ params }: { params: { id: string } }
                   {prediction && !editing ? (
                     <motion.div key="saved" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
                       className="flex items-center justify-center gap-8 py-2">
-                      {/* Home */}
                       <div className="text-center">
                         <div className="flex items-center gap-2 justify-center mb-2">
                           {fixture.homeTeam?.flagUrl && (
@@ -292,12 +352,11 @@ export default function FixtureDetailPage({ params }: { params: { id: string } }
                           )}
                           <span className="text-orionix-text-muted text-xs font-bold">{fixture.homeTeam?.shortName}</span>
                         </div>
-                        <p className="text-white font-black text-4xl" style={{ textShadow: '0 0 20px rgba(76,175,80,0.30)' }}>
+                        <p className="text-white font-black text-4xl" style={{ textShadow: `0 0 20px ${alphaOf('green', 0.30)}` }}>
                           {prediction.predictedHomeScore}
                         </p>
                       </div>
                       <span className="text-orionix-text-muted font-black text-2xl">–</span>
-                      {/* Away */}
                       <div className="text-center">
                         <div className="flex items-center gap-2 justify-center mb-2">
                           {fixture.awayTeam?.flagUrl && (
@@ -307,7 +366,7 @@ export default function FixtureDetailPage({ params }: { params: { id: string } }
                           )}
                           <span className="text-orionix-text-muted text-xs font-bold">{fixture.awayTeam?.shortName}</span>
                         </div>
-                        <p className="text-white font-black text-4xl" style={{ textShadow: '0 0 20px rgba(76,175,80,0.30)' }}>
+                        <p className="text-white font-black text-4xl" style={{ textShadow: `0 0 20px ${alphaOf('green', 0.30)}` }}>
                           {prediction.predictedAwayScore}
                         </p>
                       </div>
@@ -329,12 +388,12 @@ export default function FixtureDetailPage({ params }: { params: { id: string } }
                           <div className="flex items-center gap-2">
                             <motion.button onClick={() => setPredHome(Math.max(0, predHome - 1))} whileHover={{ scale: 1.08 }} whileTap={{ scale: 0.92 }}
                               className="w-9 h-9 rounded-xl font-black text-lg text-white"
-                              style={{ background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.10)' }}>−</motion.button>
+                              style={{ background: alpha(hex.neutral.white, 0.06), border: `1px solid ${alpha(hex.neutral.white, 0.10)}` }}>−</motion.button>
                             <span className="text-white font-black text-4xl w-12 text-center tabular-nums"
-                              style={{ textShadow: '0 0 18px rgba(76,175,80,0.50)' }}>{predHome}</span>
+                              style={{ textShadow: `0 0 18px ${alphaOf('green', 0.50)}` }}>{predHome}</span>
                             <motion.button onClick={() => setPredHome(predHome + 1)} whileHover={{ scale: 1.08 }} whileTap={{ scale: 0.92 }}
                               className="w-9 h-9 rounded-xl font-black text-lg text-white"
-                              style={{ background: 'rgba(76,175,80,0.15)', border: '1px solid rgba(76,175,80,0.30)' }}>+</motion.button>
+                              style={{ background: alphaOf('green', 0.15), border: borders.brand('green', 0.30) }}>+</motion.button>
                           </div>
                         </div>
 
@@ -353,19 +412,19 @@ export default function FixtureDetailPage({ params }: { params: { id: string } }
                           <div className="flex items-center gap-2">
                             <motion.button onClick={() => setPredAway(Math.max(0, predAway - 1))} whileHover={{ scale: 1.08 }} whileTap={{ scale: 0.92 }}
                               className="w-9 h-9 rounded-xl font-black text-lg text-white"
-                              style={{ background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.10)' }}>−</motion.button>
+                              style={{ background: alpha(hex.neutral.white, 0.06), border: `1px solid ${alpha(hex.neutral.white, 0.10)}` }}>−</motion.button>
                             <span className="text-white font-black text-4xl w-12 text-center tabular-nums"
-                              style={{ textShadow: '0 0 18px rgba(76,175,80,0.50)' }}>{predAway}</span>
+                              style={{ textShadow: `0 0 18px ${alphaOf('green', 0.50)}` }}>{predAway}</span>
                             <motion.button onClick={() => setPredAway(predAway + 1)} whileHover={{ scale: 1.08 }} whileTap={{ scale: 0.92 }}
                               className="w-9 h-9 rounded-xl font-black text-lg text-white"
-                              style={{ background: 'rgba(76,175,80,0.15)', border: '1px solid rgba(76,175,80,0.30)' }}>+</motion.button>
+                              style={{ background: alphaOf('green', 0.15), border: borders.brand('green', 0.30) }}>+</motion.button>
                           </div>
                         </div>
                       </div>
 
                       {predError && (
                         <div className="flex items-center gap-2 mb-3 px-3 py-2 rounded-xl text-xs text-red-300"
-                          style={{ background: 'rgba(239,68,68,0.08)', border: '1px solid rgba(239,68,68,0.18)' }}>
+                          style={{ background: alphaOf('danger', 0.08), border: borders.brand('danger', 0.18) }}>
                           <FiAlertCircle size={12} /> {predError}
                         </div>
                       )}
@@ -376,7 +435,7 @@ export default function FixtureDetailPage({ params }: { params: { id: string } }
                             onClick={() => { setEditing(false); setPredError(''); }}
                             whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.97 }}
                             className="flex-1 py-3 rounded-xl text-sm font-black text-orionix-text-muted"
-                            style={{ border: '1px solid rgba(255,255,255,0.07)', background: 'rgba(255,255,255,0.02)' }}
+                            style={{ border: `1px solid ${alpha(hex.neutral.white, 0.07)}`, background: alpha(hex.neutral.white, 0.02) }}
                           >Cancelar</motion.button>
                         )}
                         <motion.button
@@ -384,14 +443,15 @@ export default function FixtureDetailPage({ params }: { params: { id: string } }
                           disabled={submitting}
                           whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.97 }}
                           className="flex-1 py-3 rounded-xl text-sm font-black text-white disabled:opacity-50 relative overflow-hidden"
-                          style={{ background: 'linear-gradient(135deg, #1B5E20, #388E3C)', boxShadow: '0 6px 24px rgba(76,175,80,0.30)' }}
+                          style={{ background: `linear-gradient(135deg, ${hex.green.dark}, ${hex.green.hover})`,
+                                   boxShadow: `0 6px 24px ${alphaOf('green', 0.30)}` }}
                         >
                           <motion.div className="absolute inset-0 pointer-events-none"
-                            style={{ background: 'linear-gradient(108deg, transparent 28%, rgba(255,255,255,0.18) 50%, transparent 72%)' }}
+                            style={{ background: `linear-gradient(108deg, transparent 28%, ${alpha(hex.neutral.white, 0.18)} 50%, transparent 72%)` }}
                             animate={{ x: ['-120%', '120%'] }}
                             transition={{ duration: 2.5, repeat: Infinity, ease: 'linear', repeatDelay: 2 }} />
                           <span className="relative">
-                            {submitting ? 'Guardando…' : prediction ? 'Actualizar Porra' : '⚡ Confirmar Porra'}
+                            {submitting ? t('fixture.saving') : prediction ? t('fixture.updatePrediction') : t('fixture.confirmPrediction')}
                           </span>
                         </motion.button>
                       </div>
@@ -402,7 +462,7 @@ export default function FixtureDetailPage({ params }: { params: { id: string } }
                 {predSuccess && (
                   <motion.p initial={{ opacity: 0, y: 4 }} animate={{ opacity: 1, y: 0 }}
                     className="text-emerald-400 text-xs text-center mt-3 font-black tracking-wide">
-                    ✓ Porra guardada correctamente
+                    {t('fixture.savedOk')}
                   </motion.p>
                 )}
               </div>
@@ -415,15 +475,15 @@ export default function FixtureDetailPage({ params }: { params: { id: string } }
               <div className="p-5">
                 <div className="flex items-center gap-2 mb-4">
                   <div className="w-[3px] h-5 rounded-full"
-                    style={{ background: `linear-gradient(180deg, ${resultCfg.color}, ${resultCfg.color}80)` }} />
-                  <span className="text-sm font-black" style={{ color: resultCfg.color }}>
+                    style={{ background: `linear-gradient(180deg, ${alphaOf(resultCfg.color, 1)}, ${alphaOf(resultCfg.color, 0.5)})` }} />
+                  <span className="text-sm font-black" style={{ color: alphaOf(resultCfg.color, 1) }}>
                     {resultCfg.icon} {resultCfg.label}
                   </span>
                 </div>
                 <div className="flex items-stretch gap-4">
                   <div className="flex-1 text-center rounded-xl p-4"
-                    style={{ background: 'rgba(6,17,10,0.60)', border: '1px solid rgba(255,255,255,0.06)' }}>
-                    <p className="text-[8px] font-black text-orionix-text-muted tracking-[0.25em] uppercase mb-2">Tu Porra</p>
+                    style={{ background: alpha(hex.bg.primary, 0.60), border: `1px solid ${alpha(hex.neutral.white, 0.06)}` }}>
+                    <p className="text-[8px] font-black text-orionix-text-muted tracking-[0.25em] uppercase mb-2">{t('fixture.yourPrediction')}</p>
                     <p className="text-3xl font-black text-white tabular-nums">
                       {prediction.predictedHomeScore}
                       <span className="text-orionix-text-muted mx-1 text-xl">–</span>
@@ -434,7 +494,7 @@ export default function FixtureDetailPage({ params }: { params: { id: string } }
                     <span className="text-orionix-text-muted font-black text-sm">vs</span>
                   </div>
                   <div className="flex-1 text-center rounded-xl p-4"
-                    style={{ background: 'rgba(6,17,10,0.60)', border: '1px solid rgba(255,255,255,0.06)' }}>
+                    style={{ background: alpha(hex.bg.primary, 0.60), border: `1px solid ${alpha(hex.neutral.white, 0.06)}` }}>
                     <p className="text-[8px] font-black text-orionix-text-muted tracking-[0.25em] uppercase mb-2">Resultado</p>
                     <p className="text-3xl font-black text-white tabular-nums">
                       {fixture.homeScore}
@@ -444,7 +504,8 @@ export default function FixtureDetailPage({ params }: { params: { id: string } }
                   </div>
                 </div>
                 <div className="mt-3 text-center">
-                  <span className="text-xs font-black" style={{ color: resultCfg.color, textShadow: `0 0 12px ${resultCfg.color}80` }}>
+                  <span className="text-xs font-black"
+                    style={{ color: alphaOf(resultCfg.color, 1), textShadow: `0 0 12px ${alphaOf(resultCfg.color, 0.5)}` }}>
                     {resultCfg.pts}
                   </span>
                 </div>
@@ -454,21 +515,21 @@ export default function FixtureDetailPage({ params }: { params: { id: string } }
 
           {/* Logged in — no prediction for finished */}
           {isAuthenticated && isFinished && !prediction && (
-            <DarkCard accent="#475569" delay={0.08}>
-              <p className="text-orionix-text-muted text-sm text-center py-5">No hiciste una porra para este partido</p>
+            <DarkCard accent="neutral" delay={0.08}>
+              <p className="text-orionix-text-muted text-sm text-center py-5">{t('fixture.noPrediction')}</p>
             </DarkCard>
           )}
         </div>
 
         {/* ── STADIUM INFO ── */}
         {(fixture.stadiumName || fixture.hostCity) && (
-          <DarkCard accent="#34d399" delay={0.16} className="mb-4">
+          <DarkCard accent="success" delay={0.16} className="mb-4">
             <div className="p-5">
               <div className="flex items-center gap-2 mb-4">
                 <div className="w-[3px] h-5 rounded-full"
-                  style={{ background: 'linear-gradient(180deg, #34d399, #10b981)' }} />
-                <span className="text-[10px] font-black text-orionix-text-muted tracking-[0.24em] uppercase">Información del Partido</span>
-                <FiMapPin size={12} style={{ color: '#34d399', marginLeft: 2 }} />
+                  style={{ background: `linear-gradient(180deg, ${hex.green.bright}, ${hex.green.muted})` }} />
+                <span className="text-[10px] font-black text-orionix-text-muted tracking-[0.24em] uppercase">{t('fixture.matchInfo')}</span>
+                <FiMapPin size={12} style={{ color: hex.green.bright, marginLeft: 2 }} />
               </div>
               <div className="grid grid-cols-2 gap-4">
                 {fixture.stadiumName && (
@@ -490,15 +551,15 @@ export default function FixtureDetailPage({ params }: { params: { id: string } }
 
         {/* ── GOLEADORES ── */}
         {isFinished && fixture.scorers && fixture.scorers.length > 0 && (
-          <DarkCard accent="#fbbf24" delay={0.22} className="mb-4">
+          <DarkCard accent="gold" delay={0.22} className="mb-4">
             <div className="p-5">
               <div className="flex items-center justify-between mb-4">
                 <div className="flex items-center gap-2">
                   <div className="w-[3px] h-5 rounded-full"
-                    style={{ background: 'linear-gradient(180deg, #fbbf24, #f59e0b)' }} />
-                  <span className="text-[10px] font-black text-orionix-text-muted tracking-[0.24em] uppercase">Goleadores</span>
+                    style={{ background: `linear-gradient(180deg, ${hex.gold.bright}, ${hex.gold.muted})` }} />
+                  <span className="text-[10px] font-black text-orionix-text-muted tracking-[0.24em] uppercase">{t('fixture.scorers')}</span>
                   <span className="text-[8px] font-black px-1.5 py-0.5 rounded-full"
-                    style={{ background: 'rgba(251,191,36,0.10)', color: '#fbbf24', border: '1px solid rgba(251,191,36,0.20)' }}>
+                    style={{ background: alphaOf('gold', 0.10), color: hex.gold.bright, border: borders.brand('gold', 0.20) }}>
                     {fixture.scorers.length}
                   </span>
                 </div>
@@ -511,7 +572,8 @@ export default function FixtureDetailPage({ params }: { params: { id: string } }
               <div className="space-y-2">
                 {fixture.scorers.map((scorer: any) => {
                   const isHome = scorer.teamId === fixture.homeTeam.id;
-                  const accentColor = isHome ? '#4CAF50' : '#f43f5e';
+                  const accentColor: BrandColor = isHome ? 'green' : 'danger';
+                  const accentHex = isHome ? hex.green.bright : hex.status.danger;
                   return (
                     <motion.div
                       key={scorer.id}
@@ -520,9 +582,9 @@ export default function FixtureDetailPage({ params }: { params: { id: string } }
                       transition={{ duration: 0.3 }}
                       className="flex items-center gap-3 px-3 py-2.5 rounded-xl"
                       style={{
-                        background: 'rgba(4,12,28,0.60)',
-                        border: '1px solid rgba(255,255,255,0.04)',
-                        borderLeft: `3px solid ${accentColor}`,
+                        background: alpha(hex.bg.primary, 0.60),
+                        border: `1px solid ${alpha(hex.neutral.white, 0.04)}`,
+                        borderLeft: `3px solid ${accentHex}`,
                       }}
                     >
                       <span className="text-lg">⚽</span>
@@ -540,7 +602,7 @@ export default function FixtureDetailPage({ params }: { params: { id: string } }
                       <div className="flex items-center gap-2 shrink-0">
                         {scorer.minute && (
                           <span className="text-[10px] font-black text-orionix-text-muted px-2 py-1 rounded-lg"
-                            style={{ background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.06)' }}>
+                            style={{ background: alpha(hex.neutral.white, 0.04), border: `1px solid ${alpha(hex.neutral.white, 0.06)}` }}>
                             {scorer.minute}&apos;
                           </span>
                         )}
@@ -556,29 +618,89 @@ export default function FixtureDetailPage({ params }: { params: { id: string } }
           </DarkCard>
         )}
 
+        {/* ── DETAIL TABS (Lineups / Stats / Players / H2H) ── */}
+        <DarkCard accent="green" delay={0.28} className="mb-4">
+          <div className="p-4">
+            {/* Tab bar */}
+            <div className="flex gap-1 mb-4 p-1 rounded-xl" style={{ background: alpha(hex.neutral.white, 0.03), border: `1px solid ${alpha(hex.neutral.white, 0.05)}` }}>
+              {DETAIL_TABS.map(tab => {
+                const active = detailTab === tab.key;
+                return (
+                  <motion.button
+                    key={tab.key}
+                    onClick={() => setDetailTab(tab.key)}
+                    whileTap={{ scale: 0.96 }}
+                    className="flex-1 flex items-center justify-center gap-1 py-2 rounded-lg text-[9px] font-black tracking-wide uppercase transition-all"
+                    style={{
+                      background: active ? `${hex.green.bright}15` : 'transparent',
+                      border: `1px solid ${active ? `${hex.green.bright}30` : 'transparent'}`,
+                      color: active ? hex.green.bright : alpha(hex.text.secondary, 0.4),
+                    }}
+                  >
+                    {tab.icon}
+                    <span className="hidden sm:inline">{tab.label}</span>
+                  </motion.button>
+                );
+              })}
+            </div>
+
+            {/* Tab content */}
+            <AnimatePresence mode="wait">
+              <motion.div
+                key={detailTab}
+                initial={{ opacity: 0, y: 6 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -4 }}
+                transition={{ duration: 0.2 }}
+              >
+                <ErrorBoundary fallbackMessage={t('fixture.sectionDataError')}>
+                  {detailTab === 'lineups'  && <LineupsTab    fixtureId={fixture.id} />}
+                  {detailTab === 'stats'    && <StatisticsTab fixtureId={fixture.id} />}
+                  {detailTab === 'players'  && (
+                    <PlayersTab
+                      fixtureId={fixture.id}
+                      homeTeamId={fixture.homeTeam?.id ?? 0}
+                      awayTeamId={fixture.awayTeam?.id ?? 0}
+                    />
+                  )}
+                  {detailTab === 'h2h'      && (
+                    <HeadToHeadTab
+                      homeTeamId={fixture.homeTeam?.id ?? 0}
+                      awayTeamId={fixture.awayTeam?.id ?? 0}
+                      homeTeamName={fixture.homeTeam?.name ?? ''}
+                      awayTeamName={fixture.awayTeam?.name ?? ''}
+                    />
+                  )}
+                </ErrorBoundary>
+              </motion.div>
+            </AnimatePresence>
+          </div>
+        </DarkCard>
+
         {/* ── BOTTOM BUTTONS ── */}
         <div className="flex gap-3">
           <Link href="/fixtures" className="flex-1">
             <motion.div
               whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.97 }}
               className="w-full py-3 rounded-xl text-sm font-black text-orionix-text-muted flex items-center justify-center gap-2 cursor-pointer"
-              style={{ border: '1px solid rgba(255,255,255,0.07)', background: 'rgba(255,255,255,0.02)' }}
+              style={{ border: `1px solid ${alpha(hex.neutral.white, 0.07)}`, background: alpha(hex.neutral.white, 0.02) }}
             >
-              <FiArrowLeft size={14} /> Volver
+              <FiArrowLeft size={14} /> {t('fixture.back')}
             </motion.div>
           </Link>
           <Link href="/predictions" className="flex-1">
             <motion.div
-              whileHover={{ scale: 1.02, boxShadow: '0 12px 36px rgba(76,175,80,0.40)' }}
+              whileHover={{ scale: 1.02, boxShadow: `0 12px 36px ${alphaOf('green', 0.40)}` }}
               whileTap={{ scale: 0.97 }}
               className="w-full py-3 rounded-xl text-sm font-black text-white flex items-center justify-center gap-2 cursor-pointer relative overflow-hidden"
-              style={{ background: 'linear-gradient(135deg, #1B5E20, #388E3C)', boxShadow: '0 6px 24px rgba(76,175,80,0.28)' }}
+              style={{ background: `linear-gradient(135deg, ${hex.green.dark}, ${hex.green.hover})`,
+                       boxShadow: `0 6px 24px ${alphaOf('green', 0.28)}` }}
             >
               <motion.div className="absolute inset-0 pointer-events-none"
-                style={{ background: 'linear-gradient(108deg, transparent 28%, rgba(255,255,255,0.18) 50%, transparent 72%)' }}
+                style={{ background: `linear-gradient(108deg, transparent 28%, ${alpha(hex.neutral.white, 0.18)} 50%, transparent 72%)` }}
                 animate={{ x: ['-120%', '120%'] }}
                 transition={{ duration: 2.5, repeat: Infinity, ease: 'linear', repeatDelay: 2 }} />
-              <span className="relative flex items-center gap-2"><FiTarget size={13} /> Mis Porras</span>
+              <span className="relative flex items-center gap-2"><FiTarget size={13} /> {t('fixture.myPredictions')}</span>
             </motion.div>
           </Link>
         </div>

@@ -9,6 +9,8 @@ import {
   FiZap, FiCalendar, FiBarChart2, FiStar, FiPlus,
 } from 'react-icons/fi';
 import { getTeams } from '@/services/publicTournament';
+import { hex } from '@/lib/design/tokens';
+import { alpha, alphaOf } from '@/lib/design/effects';
 
 type OnboardingTeam = { id: number; name: string; shortName: string; flagUrl?: string };
 
@@ -69,8 +71,8 @@ const Toggle = ({ checked, onChange, color = '#22d3ee' }: { checked: boolean; on
     onClick={() => onChange(!checked)}
     className="relative shrink-0 w-11 h-6 rounded-full cursor-pointer"
     style={{
-      background: checked ? `linear-gradient(90deg, ${color}90, ${color})` : 'rgba(255,255,255,0.07)',
-      border: `1px solid ${checked ? color + '55' : 'rgba(255,255,255,0.10)'}`,
+      background: checked ? `linear-gradient(90deg, ${color}90, ${color})` : alpha(hex.neutral.white, 0.07),
+      border: `1px solid ${checked ? color + '55' : alpha(hex.neutral.white, 0.10)}`,
       boxShadow: checked ? `0 0 12px ${color}40` : 'none',
       transition: 'background 250ms, border-color 250ms, box-shadow 250ms',
     }}
@@ -92,7 +94,7 @@ const DarkCard = ({ children, accentColor = '#22d3ee' }: { children: React.React
       background: 'linear-gradient(145deg, rgba(2,8,24,0.98), rgba(4,14,36,0.97))',
       border: `1px solid ${accentColor}18`,
       backdropFilter: 'blur(32px)',
-      boxShadow: `0 24px 64px rgba(0,0,0,0.55), inset 0 1px 0 rgba(255,255,255,0.03)`,
+      boxShadow: `0 24px 64px ${alpha(hex.neutral.black, 0.55)}, inset 0 1px 0 ${alpha(hex.neutral.white, 0.03)}`,
     }}
   >
     <div className="absolute inset-x-0 top-0 h-px"
@@ -253,8 +255,8 @@ export default function OnboardingPage() {
                 key={i}
                 className="h-1 rounded-full flex-1"
                 style={{
-                  background: done ? 'linear-gradient(90deg, #4CAF50, #388E3C)' : 'rgba(255,255,255,0.07)',
-                  boxShadow: done ? '0 0 8px rgba(76,175,80,0.50)' : 'none',
+                  background: done ? `linear-gradient(90deg, ${hex.green.bright}, ${hex.green.hover})` : alpha(hex.neutral.white, 0.07),
+                  boxShadow: done ? `0 0 8px ${alphaOf('green', 0.50)}` : 'none',
                   transition: 'box-shadow 0.4s, background 0.4s',
                 }}
                 animate={{ opacity: 1 }}
@@ -311,8 +313,8 @@ export default function OnboardingPage() {
                             whileTap={{ scale: 0.98 }}
                             className="w-full flex items-center justify-between px-4 py-3.5 rounded-2xl text-left transition-all"
                             style={{
-                              background: active ? 'rgba(34,211,238,0.08)' : 'rgba(255,255,255,0.02)',
-                              border: `1px solid ${active ? 'rgba(34,211,238,0.30)' : 'rgba(255,255,255,0.06)'}`,
+                              background: active ? 'rgba(34,211,238,0.08)' : alpha(hex.neutral.white, 0.02),
+                              border: `1px solid ${active ? 'rgba(34,211,238,0.30)' : alpha(hex.neutral.white, 0.06)}`,
                               boxShadow: active ? '0 0 16px rgba(34,211,238,0.08)' : 'none',
                             }}
                           >
@@ -359,7 +361,7 @@ export default function OnboardingPage() {
                         <motion.span
                           initial={{ scale: 0 }} animate={{ scale: 1 }}
                           className="px-2 py-0.5 rounded-full text-[8px] font-black"
-                          style={{ background: 'rgba(244,114,182,0.15)', border: '1px solid rgba(244,114,182,0.30)', color: '#f472b6' }}
+                          style={{ background: alpha(hex.accent.pink, 0.15), border: `1px solid ${alpha(hex.accent.pink, 0.30)}`, color: hex.accent.pink }}
                         >
                           {selectedTeams.length} seleccionados
                         </motion.span>
@@ -386,9 +388,9 @@ export default function OnboardingPage() {
                             whileTap={{ scale: 0.96 }}
                             className="relative cursor-pointer rounded-xl overflow-hidden"
                             style={{
-                              background: selected ? 'rgba(244,114,182,0.10)' : 'rgba(255,255,255,0.02)',
-                              border: `1px solid ${selected ? 'rgba(244,114,182,0.35)' : 'rgba(255,255,255,0.06)'}`,
-                              boxShadow: selected ? '0 0 16px rgba(244,114,182,0.12)' : 'none',
+                              background: selected ? alpha(hex.accent.pink, 0.10) : alpha(hex.neutral.white, 0.02),
+                              border: `1px solid ${selected ? alpha(hex.accent.pink, 0.35) : alpha(hex.neutral.white, 0.06)}`,
+                              boxShadow: selected ? `0 0 16px ${alpha(hex.accent.pink, 0.12)}` : 'none',
                             }}
                           >
                             <div className="aspect-square p-2 flex items-center justify-center">
@@ -402,7 +404,7 @@ export default function OnboardingPage() {
                               )}
                             </div>
                             <p className="text-[9px] font-black text-center pb-1.5 tracking-wider"
-                              style={{ color: selected ? '#f472b6' : '#475569' }}>
+                              style={{ color: selected ? hex.accent.pink : hex.accent.slateDark }}>
                               {team.shortName}
                             </p>
                             {/* Selected checkmark */}
@@ -413,7 +415,7 @@ export default function OnboardingPage() {
                                   animate={{ scale: 1, opacity: 1 }}
                                   exit={{ scale: 0, opacity: 0 }}
                                   className="absolute top-1.5 right-1.5 w-5 h-5 rounded-full flex items-center justify-center"
-                                  style={{ background: 'rgba(244,114,182,0.90)', boxShadow: '0 0 8px rgba(244,114,182,0.60)' }}
+                                  style={{ background: alpha(hex.accent.pink, 0.90), boxShadow: `0 0 8px ${alpha(hex.accent.pink, 0.60)}` }}
                                 >
                                   <FiCheck size={11} style={{ color: '#fff' }} />
                                 </motion.div>
@@ -465,8 +467,8 @@ export default function OnboardingPage() {
                             key={notif.key}
                             className="flex items-center justify-between px-4 py-3.5 rounded-2xl transition-all"
                             style={{
-                              background: on ? 'rgba(255,255,255,0.03)' : 'rgba(255,255,255,0.01)',
-                              border: `1px solid ${on ? 'rgba(255,255,255,0.07)' : 'rgba(255,255,255,0.04)'}`,
+                              background: on ? alpha(hex.neutral.white, 0.03) : alpha(hex.neutral.white, 0.01),
+                              border: `1px solid ${on ? alpha(hex.neutral.white, 0.07) : alpha(hex.neutral.white, 0.04)}`,
                             }}
                           >
                             <div className="flex items-center gap-3">
@@ -585,10 +587,10 @@ export default function OnboardingPage() {
           {step > 1 && (
             <motion.button
               onClick={() => setStep(s => s - 1)}
-              whileHover={{ borderColor: 'rgba(255,255,255,0.18)' }}
+              whileHover={{ borderColor: alpha(hex.neutral.white, 0.18) }}
               whileTap={{ scale: 0.97 }}
               className="flex items-center justify-center gap-1.5 px-5 py-3 rounded-2xl text-sm font-bold text-orionix-text-secondary transition-all shrink-0"
-              style={{ border: '1px solid rgba(255,255,255,0.08)', background: 'rgba(255,255,255,0.03)' }}
+              style={{ border: `1px solid ${alpha(hex.neutral.white, 0.08)}`, background: alpha(hex.neutral.white, 0.03) }}
             >
               <FiArrowLeft size={14} />
               {language === 'es' ? 'Atrás' : 'Back'}
@@ -602,11 +604,11 @@ export default function OnboardingPage() {
               whileHover={{ scale: 1.02, boxShadow: '0 12px 40px rgba(0,210,185,0.45)' }}
               whileTap={{ scale: 0.97 }}
               className="relative flex-1 flex items-center justify-center gap-2 py-3 rounded-2xl text-sm font-black text-white overflow-hidden"
-              style={{ background: 'linear-gradient(135deg, #1B5E20, #388E3C, #2E7D32)', boxShadow: '0 6px 24px rgba(76,175,80,0.28)' }}
+              style={{ background: `linear-gradient(135deg, ${hex.green.dark}, ${hex.green.hover}, ${hex.green.base})`, boxShadow: `0 6px 24px ${alphaOf('green', 0.28)}` }}
             >
               <motion.div
                 className="absolute inset-0"
-                style={{ background: 'linear-gradient(108deg, transparent 28%, rgba(255,255,255,0.18) 50%, transparent 72%)' }}
+                style={{ background: `linear-gradient(108deg, transparent 28%, ${alpha(hex.neutral.white, 0.18)} 50%, transparent 72%)` }}
                 animate={{ x: ['-120%', '120%'] }}
                 transition={{ duration: 2.5, repeat: Infinity, ease: 'linear', repeatDelay: 2 }}
               />
@@ -623,7 +625,7 @@ export default function OnboardingPage() {
             >
               <motion.div
                 className="absolute inset-0"
-                style={{ background: 'linear-gradient(108deg, transparent 28%, rgba(255,255,255,0.18) 50%, transparent 72%)' }}
+                style={{ background: `linear-gradient(108deg, transparent 28%, ${alpha(hex.neutral.white, 0.18)} 50%, transparent 72%)` }}
                 animate={{ x: ['-120%', '120%'] }}
                 transition={{ duration: 2.5, repeat: Infinity, ease: 'linear', repeatDelay: 2 }}
               />

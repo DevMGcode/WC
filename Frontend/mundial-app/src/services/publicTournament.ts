@@ -39,9 +39,13 @@ function normalizeTeam(
   fallbackName = 'Equipo',
   fallbackShortName = 'EQ'
 ): Team {
+  // Devolvemos el nombre tal como llega (inglés de API-Football). La
+  // traducción se aplica en los componentes que renderean el nombre, donde
+  // sí tenemos acceso al `locale` activo vía `useLocale()`.
+  const rawName = team?.name ?? fallbackName;
   return {
     id: team?.id ?? fallbackId,
-    name: team?.name ?? fallbackName,
+    name: rawName,
     shortName: team?.shortName ?? team?.fifaCode ?? fallbackShortName,
     fifaCode: team?.fifaCode,
     flagUrl: team?.flagUrl,
@@ -62,7 +66,7 @@ function toDate(value?: string | Date): Date {
   return value instanceof Date ? value : new Date(value);
 }
 
-function normalizeFixture(raw: RawFixture, fallbackIndex = 0): FixtureDetail {
+function normalizeFixture(raw: RawFixture, fallbackIndex = 0, fallbackTournamentId?: number): FixtureDetail {
   const fixtureId = raw.id ?? fallbackIndex + 1;
   const homeTeamInput = typeof raw.homeTeam === 'string' ? { name: raw.homeTeam } : raw.homeTeam;
   const awayTeamInput = typeof raw.awayTeam === 'string' ? { name: raw.awayTeam } : raw.awayTeam;
@@ -81,7 +85,7 @@ function normalizeFixture(raw: RawFixture, fallbackIndex = 0): FixtureDetail {
 
   return {
     id: fixtureId,
-    tournamentId: raw.tournamentId ?? 1,
+    tournamentId: raw.tournamentId ?? fallbackTournamentId ?? 0,
     tournamentName: raw.tournamentName,
     stageId: raw.stageId,
     stageName: raw.stageName,
@@ -145,7 +149,7 @@ export async function getTournamentFixtures(tournamentId: number): Promise<Fixtu
       `/tournaments/${tournamentId}/fixtures`
     );
     const list = Array.isArray(response) ? response : (response as any)?.data ?? [];
-    return list.map((fixture: RawFixture, index: number) => normalizeFixture(fixture, index));
+    return list.map((fixture: RawFixture, index: number) => normalizeFixture(fixture, index, tournamentId));
   } catch {
     return [];
   }
@@ -157,6 +161,7 @@ export async function getLiveFixtures(): Promise<FixtureDetail[]> {
       '/tournaments/fixtures/live'
     );
     const list = Array.isArray(response) ? response : (response as any)?.data ?? [];
+    // El API siempre incluye tournamentId en cada fixture; no se necesita fallback hardcodeado
     return list.map((fixture: RawFixture, index: number) => normalizeFixture(fixture, index));
   } catch {
     return [];
@@ -166,6 +171,7 @@ export async function getLiveFixtures(): Promise<FixtureDetail[]> {
 export async function getFixtureById(fixtureId: number): Promise<FixtureDetail | null> {
   try {
     const response = await request<RawFixture>(`/tournaments/fixtures/${fixtureId}`);
+    // tournamentId viene siempre en la respuesta del API; no se necesita fallback hardcodeado
     return normalizeFixture(response, fixtureId - 1);
   } catch {
     return null;
@@ -181,6 +187,7 @@ export async function getAllFixtures(status?: string): Promise<FixtureDetail[]> 
     const tournament = await getCurrentTournament();
     if (!tournament) return [];
 
+    // Se pasa tournament.id para que normalizeFixture use el ID real de la BD
     const fixtures = await getTournamentFixtures(tournament.id);
     if (!status || status === 'ALL') return fixtures;
     return fixtures.filter((f) => f.status === status);
@@ -204,7 +211,26 @@ export async function getTournamentGroups(tournamentId: number): Promise<any[]> 
 
 export async function getUserPredictions(userId: number): Promise<any[]> {
   try {
-    const response = await request<any[]>(`/predictions/user/${userId}`);
+    const response = await request<any[]>(`/api/v1/predictions/user/${userId}`);
+    return Array.isArray(response) ? response : (response as any)?.data ?? [];
+  } catch {
+    return [];
+  }
+}
+
+// ── Scores (public) ─────────────────────────────────────────────────────────
+
+export async function getUserScore(userId: number, tournamentId: number): Promise<any> {
+  try {
+    return await request<any>(`/api/v1/scores/user/${tournamentId}`, { userId });
+  } catch {
+    return null;
+  }
+}
+
+export async function getScoreHistory(userId: number, tournamentId: number): Promise<any[]> {
+  try {
+    const response = await request<any>(`/api/v1/scores/history/${tournamentId}`, { userId });
     return Array.isArray(response) ? response : (response as any)?.data ?? [];
   } catch {
     return [];

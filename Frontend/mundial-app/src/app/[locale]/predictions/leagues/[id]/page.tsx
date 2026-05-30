@@ -2,6 +2,7 @@
 
 import React, { useEffect, useState } from 'react';
 import { useParams, useRouter } from 'next/navigation';
+import { useTranslations } from 'next-intl';
 import { Header } from '@/components/Navigation';
 import { motion, AnimatePresence } from 'framer-motion';
 import { leagueService } from '@/services/predictions';
@@ -10,6 +11,8 @@ import {
   FiShield, FiUsers, FiCopy, FiCheck, FiArrowLeft,
   FiLogOut, FiTrash2, FiRepeat, FiAlertCircle,
 } from 'react-icons/fi';
+import { hex } from '@/lib/design/tokens';
+import { alpha, alphaOf } from '@/lib/design/effects';
 
 /* ── GlowBar ── */
 const GlowBar = ({ value, max = 100, color, height = 4 }: {
@@ -17,7 +20,7 @@ const GlowBar = ({ value, max = 100, color, height = 4 }: {
 }) => {
   const pct = Math.min(100, (value / Math.max(max, 1)) * 100);
   return (
-    <div className="relative w-full rounded-full overflow-hidden" style={{ height, background: 'rgba(255,255,255,0.05)' }}>
+    <div className="relative w-full rounded-full overflow-hidden" style={{ height, background: alpha(hex.neutral.white, 0.05) }}>
       <motion.div
         className="h-full rounded-full"
         style={{ background: `linear-gradient(90deg, ${color}80, ${color})`, boxShadow: `0 0 8px ${color}80` }}
@@ -31,10 +34,12 @@ const GlowBar = ({ value, max = 100, color, height = 4 }: {
 
 const MEDALS = ['🥇', '🥈', '🥉'];
 const MEDAL_COLORS = ['#fbbf24', '#94a3b8', '#f97316'];
+const ROW_FALLBACK_COLOR = alpha(hex.neutral.white, 0.20);
 
 export default function LeagueDetailPage() {
   const params = useParams();
   const router = useRouter();
+  const t      = useTranslations();
   const leagueId = params.id as string;
   const { user } = useAuth();
   const userId = Number(user?.id ?? 0);
@@ -77,7 +82,7 @@ export default function LeagueDetailPage() {
       setActionError('No puedes salir siendo propietario. Transfiere o elimina la liga primero.');
       return;
     }
-    if (!confirm('¿Realmente deseas salir de esta liga?')) return;
+    if (!confirm(t('league.confirmLeave'))) return;
     try {
       setActionLoading(true);
       await leagueService.leaveLeague(leagueId, userId);
@@ -102,7 +107,7 @@ export default function LeagueDetailPage() {
 
   const handleDeleteLeague = async () => {
     setActionError('');
-    if (!confirm('¿Eliminar esta liga? Esta acción no se puede deshacer.')) return;
+    if (!confirm(t('league.confirmDelete'))) return;
     try {
       setActionLoading(true);
       await leagueService.deleteLeague(leagueId, userId);
@@ -116,11 +121,11 @@ export default function LeagueDetailPage() {
   if (loading) {
     return (
       <div className="flex items-center justify-center h-screen"
-        style={{ background: 'radial-gradient(ellipse at 30% 50%, #050D07 0%, #08170D 42%, #06110A 100%)' }}>
+        style={{ background: `radial-gradient(ellipse at 30% 50%, ${hex.bg.primary} 0%, ${hex.bg.secondary} 42%, ${hex.bg.primary} 100%)` }}>
         <div className="flex flex-col items-center gap-4">
           <motion.div className="w-12 h-12 rounded-full border-2 border-green-500/20 border-t-green-500"
             animate={{ rotate: 360 }} transition={{ duration: 0.9, repeat: Infinity, ease: 'linear' }} />
-          <p className="text-[10px] text-green-500/60 tracking-[0.3em] uppercase font-bold">Cargando</p>
+          <p className="text-[10px] text-green-500/60 tracking-[0.3em] uppercase font-bold">{t('league.loading')}</p>
         </div>
       </div>
     );
@@ -129,12 +134,12 @@ export default function LeagueDetailPage() {
   if (!league) {
     return (
       <div className="flex items-center justify-center h-screen"
-        style={{ background: 'radial-gradient(ellipse at 30% 50%, #050D07 0%, #08170D 42%, #06110A 100%)' }}>
+        style={{ background: `radial-gradient(ellipse at 30% 50%, ${hex.bg.primary} 0%, ${hex.bg.secondary} 42%, ${hex.bg.primary} 100%)` }}>
         <div className="text-center">
           <p className="text-orionix-text-secondary mb-4">Liga no encontrada</p>
           <button onClick={() => router.back()}
             className="px-5 py-2 rounded-xl text-sm font-bold text-green-300 border border-green-500/30">
-            ← Volver
+            ← {t('league.back')}
           </button>
         </div>
       </div>
@@ -147,9 +152,9 @@ export default function LeagueDetailPage() {
   const maxPts            = ranking.length > 0 ? Math.max(...ranking.map((r: any) => r.totalPoints), 1) : 1;
 
   const statChips = [
-    { label: 'Máx. Miembros', value: league.maxMembers,                              color: '#22d3ee' },
-    { label: 'Tus Puntos',    value: myScore?.totalPoints ?? 0,                      color: '#34d399' },
-    { label: 'Tu Posición',   value: myScore?.rankPosition ? `#${myScore.rankPosition}` : '#—', color: '#fbbf24' },
+    { label: t('league.maxMembersStat'), value: league.maxMembers,                              color: '#22d3ee' },
+    { label: t('league.yourPoints'),     value: myScore?.totalPoints ?? 0,                      color: '#34d399' },
+    { label: t('league.yourPosition'),   value: myScore?.rankPosition ? `#${myScore.rankPosition}` : '#—', color: '#fbbf24' },
   ];
 
   return (
@@ -169,7 +174,7 @@ export default function LeagueDetailPage() {
         transition={{ duration: 14, repeat: Infinity, delay: 5 }} />
 
       <div className="relative" style={{ zIndex: 10 }}>
-        <Header title={league.name} subtitle="Detalle de Liga" centered />
+        <Header title={league.name} subtitle={t('league.detailTitle')} centered />
       </div>
 
       <div className="relative z-10 px-4 py-6 max-w-3xl mx-auto w-full pb-32">
@@ -183,7 +188,7 @@ export default function LeagueDetailPage() {
           style={{
             background: 'linear-gradient(145deg, rgba(2,8,24,0.98), rgba(4,14,36,0.97))',
             border: '1px solid rgba(34,211,238,0.14)',
-            boxShadow: '0 20px 60px rgba(0,0,0,0.50)',
+            boxShadow: `0 20px 60px ${alpha(hex.neutral.black, 0.50)}`,
           }}
         >
           <div className="absolute inset-x-0 top-0 h-px"
@@ -215,7 +220,7 @@ export default function LeagueDetailPage() {
             <div className="grid grid-cols-3 gap-2 mb-4">
               {statChips.map(({ label, value, color }) => (
                 <div key={label} className="relative overflow-hidden rounded-xl p-3 text-center"
-                  style={{ background: 'rgba(6,17,10,0.80)', border: `1px solid ${color}22` }}>
+                  style={{ background: alpha(hex.bg.primary, 0.80), border: `1px solid ${color}22` }}>
                   <div className="absolute inset-x-0 top-0 h-px"
                     style={{ background: `linear-gradient(90deg, transparent, ${color}60, transparent)` }} />
                   <p className="text-xl font-black" style={{ color, textShadow: `0 0 14px ${color}80` }}>{value}</p>
@@ -239,7 +244,7 @@ export default function LeagueDetailPage() {
               <div>
                 <p className="text-[9px] font-black tracking-[0.25em] uppercase text-left"
                   style={{ color: codeCopied ? 'rgba(52,211,153,0.60)' : 'rgba(251,191,36,0.60)' }}>
-                  Código de liga
+                  {t('league.leagueCodeLabel')}
                 </p>
                 <p className="text-sm font-mono font-black mt-0.5"
                   style={{ color: codeCopied ? '#34d399' : '#fbbf24', letterSpacing: '0.2em' }}>
@@ -253,7 +258,7 @@ export default function LeagueDetailPage() {
                   : <FiCopy size={13} style={{ color: '#fbbf24' }} />}
                 <span className="text-[9px] font-black"
                   style={{ color: codeCopied ? '#34d399' : '#fbbf24' }}>
-                  {codeCopied ? 'Copiado' : 'Copiar'}
+                  {codeCopied ? '✓' : t('league.copy')}
                 </span>
               </div>
             </motion.button>
@@ -269,7 +274,7 @@ export default function LeagueDetailPage() {
           style={{
             background: 'linear-gradient(145deg, rgba(2,8,24,0.98), rgba(4,14,36,0.97))',
             border: '1px solid rgba(251,191,36,0.12)',
-            boxShadow: '0 20px 60px rgba(0,0,0,0.50)',
+            boxShadow: `0 20px 60px ${alpha(hex.neutral.black, 0.50)}`,
           }}
         >
           <div className="absolute inset-x-0 top-0 h-px"
@@ -281,26 +286,26 @@ export default function LeagueDetailPage() {
             <div className="flex items-center gap-2 mb-4">
               <div className="w-[3px] h-5 rounded-full"
                 style={{ background: 'linear-gradient(180deg, #fbbf24, #f59e0b)' }} />
-              <span className="text-[10px] font-black text-orionix-text-secondary tracking-[0.24em] uppercase">Ranking de Liga</span>
+              <span className="text-[10px] font-black text-orionix-text-secondary tracking-[0.24em] uppercase">{t('league.rankingTitle')}</span>
               <span className="text-lg ml-1">🏆</span>
             </div>
 
             {ranking.length === 0 ? (
-              <p className="text-orionix-text-muted text-sm text-center py-6">Sin participantes aún</p>
+              <p className="text-orionix-text-muted text-sm text-center py-6">{t('league.noMembers')}</p>
             ) : (
               <div className="space-y-1.5">
                 {/* Header row */}
                 <div className="grid grid-cols-[32px_1fr_56px_64px_52px] gap-2 px-3 pb-1">
-                  <span className="text-[8px] font-black text-orionix-text-muted uppercase tracking-widest">Pos</span>
-                  <span className="text-[8px] font-black text-orionix-text-muted uppercase tracking-widest">Jugador</span>
-                  <span className="text-[8px] font-black text-orionix-text-muted uppercase tracking-widest text-center">Exactas</span>
-                  <span className="text-[8px] font-black text-orionix-text-muted uppercase tracking-widest text-center">Ganadores</span>
-                  <span className="text-[8px] font-black text-orionix-text-muted uppercase tracking-widest text-right">Pts</span>
+                  <span className="text-[8px] font-black text-orionix-text-muted uppercase tracking-widest">{t('league.position')}</span>
+                  <span className="text-[8px] font-black text-orionix-text-muted uppercase tracking-widest">{t('league.player')}</span>
+                  <span className="text-[8px] font-black text-orionix-text-muted uppercase tracking-widest text-center">{t('league.exactScores')}</span>
+                  <span className="text-[8px] font-black text-orionix-text-muted uppercase tracking-widest text-center">{t('league.winners')}</span>
+                  <span className="text-[8px] font-black text-orionix-text-muted uppercase tracking-widest text-right">{t('league.points')}</span>
                 </div>
 
                 {ranking.map((player: any, idx: number) => {
                   const isMe     = player.userId === userId;
-                  const rowColor = isMe ? '#22d3ee' : (MEDAL_COLORS[idx] ?? 'rgba(255,255,255,0.20)');
+                  const rowColor = isMe ? '#22d3ee' : (MEDAL_COLORS[idx] ?? ROW_FALLBACK_COLOR);
                   return (
                     <motion.div
                       key={player.userId}
@@ -309,8 +314,8 @@ export default function LeagueDetailPage() {
                       transition={{ delay: 0.12 + idx * 0.05 }}
                       className="relative overflow-hidden rounded-xl"
                       style={{
-                        background: isMe ? 'rgba(34,211,238,0.06)' : (idx < 3 ? 'rgba(251,191,36,0.03)' : 'rgba(255,255,255,0.02)'),
-                        border: isMe ? '1px solid rgba(34,211,238,0.20)' : '1px solid rgba(255,255,255,0.04)',
+                        background: isMe ? 'rgba(34,211,238,0.06)' : (idx < 3 ? 'rgba(251,191,36,0.03)' : alpha(hex.neutral.white, 0.02)),
+                        border: isMe ? '1px solid rgba(34,211,238,0.20)' : `1px solid ${alpha(hex.neutral.white, 0.04)}`,
                       }}
                     >
                       {isMe && <div className="absolute inset-x-0 top-0 h-px"
@@ -324,7 +329,7 @@ export default function LeagueDetailPage() {
                         <span className={`text-xs font-bold truncate ${isMe ? 'text-green-300' : 'text-orionix-text-secondary'}`}>
                           {isMe && <span className="text-green-500 mr-0.5">›</span>}
                           {player.fullName || player.username}
-                          {isMe && ' (Tú)'}
+                          {isMe && ` ${t('league.you')}`}
                         </span>
                         <span className="text-xs font-black tabular-nums text-center text-orionix-text-secondary">{player.exactScores}</span>
                         <span className="text-xs font-black tabular-nums text-center text-orionix-text-secondary">{player.winnerHits}</span>
@@ -354,7 +359,7 @@ export default function LeagueDetailPage() {
             style={{
               background: 'linear-gradient(145deg, rgba(2,8,24,0.98), rgba(20,4,4,0.97))',
               border: '1px solid rgba(239,68,68,0.14)',
-              boxShadow: '0 20px 60px rgba(0,0,0,0.50)',
+              boxShadow: `0 20px 60px ${alpha(hex.neutral.black, 0.50)}`,
             }}
           >
             <div className="absolute inset-x-0 top-0 h-px"
@@ -364,7 +369,7 @@ export default function LeagueDetailPage() {
               <div className="flex items-center gap-2 mb-3">
                 <div className="w-[3px] h-5 rounded-full"
                   style={{ background: 'linear-gradient(180deg, #ef4444, #b91c1c)' }} />
-                <span className="text-[10px] font-black text-orionix-text-secondary tracking-[0.24em] uppercase">Gestión de Propiedad</span>
+                <span className="text-[10px] font-black text-orionix-text-secondary tracking-[0.24em] uppercase">{t('league.ownership')}</span>
               </div>
 
               {transferableMembers.length > 0 ? (
@@ -374,11 +379,11 @@ export default function LeagueDetailPage() {
                     value={selectedNewOwnerId}
                     onChange={e => setSelectedNewOwnerId(e.target.value)}
                     className="w-full px-3 py-2.5 rounded-xl text-sm text-orionix-text-secondary font-medium"
-                    style={{ background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.10)', outline: 'none' }}
+                    style={{ background: alpha(hex.neutral.white, 0.04), border: `1px solid ${alpha(hex.neutral.white, 0.10)}`, outline: 'none' }}
                   >
-                    <option value="" style={{ background: '#06110A' }}>Selecciona nuevo propietario…</option>
+                    <option value="" style={{ background: hex.bg.primary }}>Selecciona nuevo propietario…</option>
                     {transferableMembers.map((m: any) => (
-                      <option key={m.userId} value={m.userId} style={{ background: '#06110A' }}>
+                      <option key={m.userId} value={m.userId} style={{ background: hex.bg.primary }}>
                         {m.fullName || m.username}
                       </option>
                     ))}
@@ -388,7 +393,7 @@ export default function LeagueDetailPage() {
                     disabled={actionLoading || !selectedNewOwnerId}
                     whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.97 }}
                     className="w-full py-3 rounded-xl text-sm font-black text-white flex items-center justify-center gap-2 disabled:opacity-40"
-                    style={{ background: 'linear-gradient(135deg, #1B5E20, #388E3C)', boxShadow: '0 4px 20px rgba(76,175,80,0.25)' }}
+                    style={{ background: `linear-gradient(135deg, ${hex.green.dark}, ${hex.green.hover})`, boxShadow: `0 4px 20px ${alphaOf('green', 0.25)}` }}
                   >
                     <FiRepeat size={14} />
                     {actionLoading ? 'Transfiriendo…' : 'Transferir Propiedad'}
@@ -396,7 +401,7 @@ export default function LeagueDetailPage() {
                 </div>
               ) : (
                 <div className="space-y-3">
-                  <p className="text-xs text-orionix-text-muted">Eres el único miembro. Puedes eliminar la liga.</p>
+                  <p className="text-xs text-orionix-text-muted">{t('league.onlyMember')}</p>
                   <motion.button
                     onClick={handleDeleteLeague}
                     disabled={actionLoading}
@@ -405,7 +410,7 @@ export default function LeagueDetailPage() {
                     style={{ background: 'linear-gradient(135deg, #991b1b, #dc2626)', boxShadow: '0 4px 20px rgba(220,38,38,0.25)' }}
                   >
                     <FiTrash2 size={14} />
-                    {actionLoading ? 'Eliminando…' : 'Eliminar Liga'}
+                    {actionLoading ? '…' : t('league.deleteLeague')}
                   </motion.button>
                 </div>
               )}
@@ -433,9 +438,9 @@ export default function LeagueDetailPage() {
             onClick={() => router.back()}
             whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.97 }}
             className="flex-1 py-3 rounded-xl text-sm font-black text-orionix-text-secondary flex items-center justify-center gap-2"
-            style={{ border: '1px solid rgba(255,255,255,0.07)', background: 'rgba(255,255,255,0.02)' }}
+            style={{ border: `1px solid ${alpha(hex.neutral.white, 0.07)}`, background: alpha(hex.neutral.white, 0.02) }}
           >
-            <FiArrowLeft size={14} /> Volver
+            <FiArrowLeft size={14} /> {t('league.back')}
           </motion.button>
           <motion.button
             onClick={handleLeaveLeague}
@@ -444,14 +449,14 @@ export default function LeagueDetailPage() {
             whileTap={!isOwner ? { scale: 0.97 } : {}}
             className="flex-1 py-3 rounded-xl text-sm font-black flex items-center justify-center gap-2"
             style={{
-              background: isOwner ? 'rgba(255,255,255,0.03)' : 'linear-gradient(135deg, rgba(239,68,68,0.15), rgba(239,68,68,0.08))',
-              border: isOwner ? '1px solid rgba(255,255,255,0.06)' : '1px solid rgba(239,68,68,0.28)',
+              background: isOwner ? alpha(hex.neutral.white, 0.03) : 'linear-gradient(135deg, rgba(239,68,68,0.15), rgba(239,68,68,0.08))',
+              border: isOwner ? `1px solid ${alpha(hex.neutral.white, 0.06)}` : '1px solid rgba(239,68,68,0.28)',
               color: isOwner ? 'rgba(100,116,139,0.50)' : '#f87171',
               opacity: isOwner ? 0.55 : 1,
             }}
           >
             <FiLogOut size={14} />
-            {isOwner ? 'Eres propietario' : actionLoading ? 'Saliendo…' : 'Salir de Liga'}
+            {isOwner ? t('league.isOwner') : actionLoading ? '…' : t('league.leaveLeague')}
           </motion.button>
         </div>
       </div>

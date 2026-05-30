@@ -2,6 +2,7 @@
 
 import React, { useState } from 'react';
 import { useRouter } from 'next/navigation';
+import { useTranslations } from 'next-intl';
 import { Header } from '@/components/Navigation';
 import { motion, AnimatePresence } from 'framer-motion';
 import { leagueService } from '@/services/predictions';
@@ -10,9 +11,12 @@ import {
   FiLink, FiArrowLeft, FiLogIn,
   FiAlertCircle, FiCheckCircle, FiInfo,
 } from 'react-icons/fi';
+import { hex } from '@/lib/design/tokens';
+import { alpha, alphaOf } from '@/lib/design/effects';
 
 export default function JoinLeaguePage() {
   const router = useRouter();
+  const t      = useTranslations();
   const { user } = useAuth();
 
   const [leagueCode, setLeagueCode] = useState('');
@@ -24,13 +28,13 @@ export default function JoinLeaguePage() {
     e.preventDefault();
     setError(''); setSuccess(''); setLoading(true);
     try {
-      if (!leagueCode.trim()) { setError('Por favor ingresa un código válido'); setLoading(false); return; }
-      if (!user?.id)          { setError('Debes iniciar sesión para unirte a una liga'); setLoading(false); return; }
+      if (!leagueCode.trim()) { setError(t('league.enterValidCode')); setLoading(false); return; }
+      if (!user?.id)          { setError(t('league.mustLoginJoin')); setLoading(false); return; }
       await leagueService.joinLeague({ userId: Number(user.id), leagueCode: leagueCode.toUpperCase() });
-      setSuccess('¡Te has unido a la liga correctamente!');
+      setSuccess(t('league.joinedSuccessfully'));
       setTimeout(() => router.push('/predictions'), 1500);
     } catch (err: any) {
-      setError(err.message || 'Error al unirse a la liga');
+      setError(err.message || t('league.enterValidCode'));
     } finally { setLoading(false); }
   };
 
@@ -51,7 +55,7 @@ export default function JoinLeaguePage() {
         transition={{ duration: 14, repeat: Infinity, delay: 5 }} />
 
       <div className="relative" style={{ zIndex: 10 }}>
-        <Header title="Unirse a Liga" subtitle="Ingresa el código de una liga" centered />
+        <Header title={t('league.join')} subtitle={t('league.joinPageHint')} centered />
       </div>
 
       <div className="relative z-10 px-4 py-6 max-w-lg mx-auto w-full pb-32">
@@ -66,7 +70,7 @@ export default function JoinLeaguePage() {
             style={{
               background: 'linear-gradient(145deg, rgba(2,8,24,0.98), rgba(4,14,36,0.97))',
               border: '1px solid rgba(34,211,238,0.14)',
-              boxShadow: '0 20px 60px rgba(0,0,0,0.50)',
+              boxShadow: `0 20px 60px ${alpha(hex.neutral.black, 0.50)}`,
             }}>
             <div className="absolute inset-x-0 top-0 h-px"
               style={{ background: 'linear-gradient(90deg, transparent, rgba(34,211,238,0.65), transparent)' }} />
@@ -96,7 +100,7 @@ export default function JoinLeaguePage() {
                   >
                     {/* Glass highlight */}
                     <div className="absolute inset-0 rounded-2xl pointer-events-none"
-                      style={{ background: 'linear-gradient(130deg, rgba(255,255,255,0.08) 0%, rgba(255,255,255,0.04) 40%, transparent 65%)' }} />
+                      style={{ background: `linear-gradient(130deg, ${alpha(hex.neutral.white, 0.08)} 0%, ${alpha(hex.neutral.white, 0.04)} 40%, transparent 65%)` }} />
                     {/* Top line */}
                     <div className="absolute inset-x-0 top-0 h-px rounded-2xl pointer-events-none"
                       style={{ background: 'linear-gradient(90deg, transparent, rgba(34,211,238,0.60), transparent)' }} />
@@ -111,24 +115,24 @@ export default function JoinLeaguePage() {
                   />
                 </div>
                 <p className="text-xs text-orionix-text-muted leading-relaxed">
-                  Pídele el código a quien creó la liga para poder unirte
+                  {t('league.joinPageHintSub')}
                 </p>
               </div>
 
               <form onSubmit={handleSubmit} className="space-y-4">
                 <div>
                   <label className="block text-[9px] font-black tracking-[0.28em] uppercase text-orionix-text-muted mb-2">
-                    Código de Liga
+                    {t('league.leagueCode')}
                   </label>
                   <input
                     type="text"
                     value={leagueCode}
                     onChange={e => setLeagueCode(e.target.value.toUpperCase())}
-                    placeholder="EJ: OFICINA"
+                    placeholder={t('league.leagueCodePlaceholder')}
                     maxLength={8}
                     className="w-full px-4 py-3.5 text-center text-lg font-mono font-black rounded-xl uppercase transition-all"
                     style={{
-                      background: 'rgba(255,255,255,0.03)',
+                      background: alpha(hex.neutral.white, 0.03),
                       border: '1px solid rgba(34,211,238,0.20)',
                       color: '#22d3ee',
                       letterSpacing: '0.22em',
@@ -162,19 +166,19 @@ export default function JoinLeaguePage() {
                     onClick={() => router.back()}
                     whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.97 }}
                     className="flex-1 py-3 rounded-xl text-sm font-black text-orionix-text-secondary flex items-center justify-center gap-2"
-                    style={{ border: '1px solid rgba(255,255,255,0.07)', background: 'rgba(255,255,255,0.02)' }}
+                    style={{ border: `1px solid ${alpha(hex.neutral.white, 0.07)}`, background: alpha(hex.neutral.white, 0.02) }}
                   >
-                    <FiArrowLeft size={13} /> Cancelar
+                    <FiArrowLeft size={13} /> {t('league.cancel')}
                   </motion.button>
                   <motion.button
                     type="submit"
                     disabled={loading || !!success}
                     whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.97 }}
                     className="flex-1 py-3 rounded-xl text-sm font-black text-white flex items-center justify-center gap-2 disabled:opacity-50"
-                    style={{ background: 'linear-gradient(135deg, #1B5E20, #388E3C)', boxShadow: '0 6px 24px rgba(76,175,80,0.30)' }}
+                    style={{ background: `linear-gradient(135deg, ${hex.green.dark}, ${hex.green.hover})`, boxShadow: `0 6px 24px ${alphaOf('green', 0.30)}` }}
                   >
                     <FiLogIn size={13} />
-                    {loading ? 'Uniéndote…' : 'Unirse'}
+                    {loading ? t('league.joining') : t('league.join')}
                   </motion.button>
                 </div>
               </form>
@@ -200,17 +204,16 @@ export default function JoinLeaguePage() {
                 <div className="relative w-8 h-8 rounded-xl flex items-center justify-center"
                   style={{ background: 'linear-gradient(145deg, rgba(251,191,36,0.10), rgba(1,4,14,0.85))', border: '1px solid rgba(251,191,36,0.22)' }}>
                   <div className="absolute inset-0 rounded-xl pointer-events-none"
-                    style={{ background: 'linear-gradient(130deg, rgba(255,255,255,0.08) 0%, transparent 65%)' }} />
+                    style={{ background: `linear-gradient(130deg, ${alpha(hex.neutral.white, 0.08)} 0%, transparent 65%)` }} />
                   <div className="absolute inset-x-0 top-0 h-px rounded-xl pointer-events-none"
                     style={{ background: 'linear-gradient(90deg, transparent, rgba(251,191,36,0.55), transparent)' }} />
                   <FiInfo size={13} style={{ color: '#fbbf24', filter: 'drop-shadow(0 0 4px rgba(251,191,36,0.7))' }} />
                 </div>
               </div>
               <div>
-                <p className="text-[9px] font-black tracking-[0.25em] uppercase text-amber-400/60 mb-1">Tip</p>
+                <p className="text-[9px] font-black tracking-[0.25em] uppercase text-amber-400/60 mb-1">{t('league.joinTipHeader')}</p>
                 <p className="text-xs text-orionix-text-muted leading-relaxed">
-                  El código de una liga está disponible en la página de detalle de la liga.
-                  Comparte el código con tus amigos para que se unan.
+                  {t('league.joinTipBody')}
                 </p>
               </div>
             </div>

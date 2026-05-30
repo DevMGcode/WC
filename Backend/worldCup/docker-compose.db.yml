@@ -1,0 +1,16 @@
+services:
+  postgres:
+    image: postgres:17
+    container_name: mundial2026-postgres
+    environment:
+      POSTGRES_DB: worldcup2026_db
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+    ports:
+      - "5434:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    restart: unless-stopped
+
+volumes:
+  postgres_data:

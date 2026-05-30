@@ -1,6 +1,10 @@
+'use client';
+
 import React from 'react';
 import { Team } from '@/types';
 import Image from 'next/image';
+import { useTranslations } from 'next-intl';
+import { fmtTime, fmtShortDate } from '@/utils/format';
 
 interface TeamCardProps {
   team: Team;
@@ -22,7 +26,7 @@ const teamNameSizes = {
   lg: 'text-base',
 };
 
-export const TeamCard: React.FC<TeamCardProps> = ({
+const TeamCardInner: React.FC<TeamCardProps> = ({
   team,
   size = 'md',
   onClick,
@@ -71,6 +75,7 @@ export const TeamCard: React.FC<TeamCardProps> = ({
     </div>
   );
 };
+export const TeamCard = React.memo(TeamCardInner);
 
 interface FixtureCardProps {
   homeTeam: Team;
@@ -78,33 +83,31 @@ interface FixtureCardProps {
   homeScore?: number;
   awayScore?: number;
   kickoffAt: Date;
-  status: 'SCHEDULED' | 'FINISHED' | 'LIVE' | 'POSTPONED';
+  status: 'SCHEDULED' | 'FINISHED' | 'LIVE' | 'POSTPONED' | 'CANCELLED';
+  elapsedMinutes?: number | null;
   onClick?: () => void;
   showPrediction?: boolean;
   predictions?: { home: number; away: number };
+  /** Locale del usuario para formatear fechas. Si no se pasa, fmtX cae al lang del <html>. */
+  locale?: string;
 }
 
-export const FixtureCard: React.FC<FixtureCardProps> = ({
+const FixtureCardInner: React.FC<FixtureCardProps> = ({
   homeTeam,
   awayTeam,
   homeScore,
   awayScore,
   kickoffAt,
   status,
+  elapsedMinutes,
   onClick,
   showPrediction = false,
   predictions,
+  locale,
 }) => {
+  const t = useTranslations();
   const isLive = status === 'LIVE';
   const isFinished = status === 'FINISHED';
-
-  const formatTime = (date: Date) => {
-    return new Date(date).toLocaleTimeString('es-ES', { hour: '2-digit', minute: '2-digit' });
-  };
-
-  const formatDate = (date: Date) => {
-    return new Date(date).toLocaleDateString('es-ES', { month: 'short', day: 'numeric' });
-  };
 
   return (
     <div
@@ -117,10 +120,11 @@ export const FixtureCard: React.FC<FixtureCardProps> = ({
       <div className={`px-4 py-2 text-center text-white text-sm font-bold ${
         isLive ? 'bg-rose-600 animate-pulse' : isFinished ? 'bg-[#06110A]' : 'bg-green-700'
       }`}>
-        {isLive && '🔴 EN VIVO'}
-        {isFinished && 'FINALIZADO'}
-        {status === 'SCHEDULED' && `${formatDate(kickoffAt)} ${formatTime(kickoffAt)}`}
-        {status === 'POSTPONED' && 'POSPUESTO'}
+        {isLive && `🔴 ${t('status.live')}${elapsedMinutes != null ? ` · ${elapsedMinutes}'` : ''}`}
+        {isFinished && t('status.finished')}
+        {status === 'SCHEDULED' && `${fmtShortDate(kickoffAt, locale)} ${fmtTime(kickoffAt, locale)}`}
+        {status === 'POSTPONED' && t('status.postponed')}
+        {status === 'CANCELLED' && t('status.cancelled')}
       </div>
 
       {/* Contenido */}
@@ -183,5 +187,6 @@ export const FixtureCard: React.FC<FixtureCardProps> = ({
     </div>
   );
 };
+export const FixtureCard = React.memo(FixtureCardInner);
 
 export default { TeamCard, FixtureCard };

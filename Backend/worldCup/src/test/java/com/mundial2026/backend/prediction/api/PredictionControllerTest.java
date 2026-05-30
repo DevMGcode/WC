@@ -5,9 +5,11 @@ import com.mundial2026.backend.prediction.api.dto.CreatePredictionRequest;
 import com.mundial2026.backend.prediction.api.dto.PredictionResponse;
 import com.mundial2026.backend.prediction.api.mapper.PredictionMapper;
 import com.mundial2026.backend.prediction.domain.UserPrediction;
+import com.mundial2026.backend.prediction.repository.UserPredictionRepository;
 import com.mundial2026.backend.prediction.service.PredictionService;
 import com.mundial2026.backend.security.JwtAuthenticationFilter;
 import com.mundial2026.backend.security.JwtTokenProvider;
+import com.mundial2026.backend.security.SecurityUtils;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.security.servlet.SecurityAutoConfiguration;
@@ -58,6 +60,17 @@ class PredictionControllerTest {
     @MockitoBean
     JwtTokenProvider jwtTokenProvider;
 
+    // Dependencias del anti-IDOR del PredictionController
+    @MockitoBean
+    SecurityUtils securityUtils;
+
+    @MockitoBean
+    UserPredictionRepository userPredictionRepository;
+
+    // JwtAuthenticationFilter ahora carga roles desde la BD.
+    @MockitoBean
+    com.mundial2026.backend.user.repository.AppUserRepository appUserRepository;
+
     @Test
     void create_validRequest_returnsCreated() throws Exception {
         CreatePredictionRequest request = new CreatePredictionRequest(
@@ -84,10 +97,13 @@ class PredictionControllerTest {
                 "ACTIVE"                     // status
         );
 
+        // Anti-IDOR: simulamos sesión admin para que el controller no sobreescriba
+        // el userId del body. Caso no-admin se cubre en otro test/abajo.
+        when(securityUtils.isAdmin()).thenReturn(true);
         when(predictionService.create(any(CreatePredictionRequest.class))).thenReturn(prediction);
         when(predictionMapper.toResponse(prediction)).thenReturn(response);
 
-        mockMvc.perform(post("/api/v1/public/predictions")
+        mockMvc.perform(post("/api/v1/predictions")
                         .contentType(APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(request)))
                 .andExpect(status().isCreated())
