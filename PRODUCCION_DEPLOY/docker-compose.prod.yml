@@ -63,9 +63,10 @@ services:
   frontend:
     build:
       context: ../Frontend/mundial-app
-      # Dockerfile vive en PRODUCCION_DEPLOY/ (toda la config de prod junta).
-      # La ruta es relativa al directorio de este compose, no al `context`.
-      dockerfile: ../PRODUCCION_DEPLOY/Dockerfile.frontend.prod
+      # Dockerfile vive en PRODUCCION_DEPLOY/. La ruta es relativa al `context`
+      # (regla de docker compose), así que desde Frontend/mundial-app hay que
+      # subir 2 niveles para llegar a la raíz del repo donde está PRODUCCION_DEPLOY.
+      dockerfile: ../../PRODUCCION_DEPLOY/Dockerfile.frontend.prod
       args:
         NEXT_PUBLIC_API_URL: ${NEXT_PUBLIC_API_URL}
         NEXT_PUBLIC_APP_URL: ${NEXT_PUBLIC_APP_URL}
