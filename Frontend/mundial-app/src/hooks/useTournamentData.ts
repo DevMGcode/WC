@@ -76,13 +76,14 @@ export function useAllFixtures(status?: string, initialData?: FixtureDetail[], r
   });
 }
 
-/** Fixtures en vivo — staleTime corto para datos frescos */
+/** Fixtures en vivo — WebSocket actualiza el caché en tiempo real.
+ *  60s de polling HTTP como fallback si WebSocket no conecta. */
 export function useLiveFixtures() {
   return useQuery({
     queryKey: QUERY_KEYS.fixturesLive,
     queryFn:  getLiveFixtures,
     staleTime:       STALE.live,
-    refetchInterval: LIVE_REFETCH_INTERVAL_MS,
+    refetchInterval: 60_000,
   });
 }
 
@@ -175,7 +176,7 @@ export function useScoreHistory(userId: number | null, tournamentId: number | nu
 }
 
 /** Ranking global del torneo */
-export function useGlobalRanking(tournamentId: number | null, pageSize = RANKING_PAGE.home) {
+export function useGlobalRanking(tournamentId: number | null, pageSize: number = RANKING_PAGE.home) {
   return useQuery({
     queryKey: QUERY_KEYS.globalRanking(tournamentId ?? 0, pageSize),
     queryFn:  async () => {
@@ -204,10 +205,10 @@ export function useUserLeaguesWithRankings(userId: number | null) {
               id: league.id, name: league.name, code: league.code,
               memberCount: league.memberCount, maxMembers: league.maxMembers,
               myRank: myLeagueScore?.rankPosition || 0,
-              myPoints: myLeagueScore?.userScore?.totalPoints || 0,
+              myPoints: myLeagueScore?.totalPoints ?? 0,
               leader: {
-                name: leader?.userId || 'N/A',
-                points: leader?.userScore?.totalPoints || 0,
+                name: leader?.fullName || leader?.username || 'N/A',
+                points: leader?.totalPoints ?? 0,
               },
             };
           } catch { return null; }
