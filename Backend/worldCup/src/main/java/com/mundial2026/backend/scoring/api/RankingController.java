@@ -5,6 +5,7 @@ import com.mundial2026.backend.common.response.PaginatedResponse;
 import com.mundial2026.backend.scoring.api.dto.UserRankPositionResponse;
 import com.mundial2026.backend.scoring.api.dto.UserTournamentScoreResponse;
 import com.mundial2026.backend.scoring.service.ScoringService;
+import com.mundial2026.backend.security.SecurityUtils;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -14,11 +15,12 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 @RestController
-@RequestMapping("/api/v1/public/rankings")
+@RequestMapping("/api/v1/rankings")
 @RequiredArgsConstructor
 public class RankingController {
 
     private final ScoringService scoringService;
+    private final SecurityUtils securityUtils;
 
     @GetMapping("/global/{tournamentId}")
     public ResponseEntity<ApiResponse<PaginatedResponse<UserTournamentScoreResponse>>> getGlobalRanking(
@@ -26,6 +28,7 @@ public class RankingController {
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "10") int pageSize
     ) {
+        // Ranking global es PÚBLICO de verdad: lo ve cualquiera.
         return ResponseEntity.ok(ApiResponse.ok(
                 "Ranking global encontrado",
                 scoringService.getGlobalRanking(tournamentId, page, pageSize)
@@ -35,8 +38,10 @@ public class RankingController {
     @GetMapping("/user/{tournamentId}/position")
     public ResponseEntity<ApiResponse<UserRankPositionResponse>> getUserPosition(
             @PathVariable Long tournamentId,
-            @RequestParam(defaultValue = "3") Long userId
+            @RequestParam Long userId
     ) {
+        // Anti-IDOR: solo el propio usuario o ADMIN
+        securityUtils.requireSelfOrAdmin(userId);
         return ResponseEntity.ok(ApiResponse.ok(
                 "Posición del usuario encontrada",
                 scoringService.getUserRankPosition(tournamentId, userId)

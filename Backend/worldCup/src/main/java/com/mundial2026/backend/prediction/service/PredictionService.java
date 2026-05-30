@@ -38,6 +38,9 @@ public class PredictionService {
         Fixture fixture = fixtureRepository.findById(request.fixtureId())
                 .orElseThrow(() -> new ResourceNotFoundException("Partido no encontrado"));
 
+        if (fixture.getStatus() == com.mundial2026.backend.tournament.domain.FixtureStatus.FINISHED) {
+            throw new BusinessRuleException("La porra ya está bloqueada: el partido ha finalizado");
+        }
         validatePredictionWindow(fixture.getPredictionLockedAt());
 
         UserPrediction prediction = new UserPrediction();
@@ -59,6 +62,9 @@ public class PredictionService {
         UserPrediction prediction = userPredictionRepository.findWithUserAndFixtureById(predictionId)
                 .orElseThrow(() -> new ResourceNotFoundException("Porra no encontrada"));
 
+        if (prediction.getFixture().getStatus() == com.mundial2026.backend.tournament.domain.FixtureStatus.FINISHED) {
+            throw new BusinessRuleException("La porra ya está bloqueada: el partido ha finalizado");
+        }
         validatePredictionWindow(prediction.getLockedAt());
 
         prediction.setPredictedHomeScore(request.predictedHomeScore());

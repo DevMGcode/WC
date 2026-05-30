@@ -20,6 +20,7 @@ import com.mundial2026.backend.tournament.domain.Tournament;
 import com.mundial2026.backend.tournament.repository.TournamentRepository;
 import com.mundial2026.backend.user.domain.AppUser;
 import com.mundial2026.backend.user.repository.AppUserRepository;
+import jakarta.persistence.EntityManager;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -43,6 +44,7 @@ public class LeagueService {
     private final TournamentRepository tournamentRepository;
     private final AppUserRepository appUserRepository;
     private final ScoringService scoringService;
+    private final EntityManager entityManager;
 
     @Transactional
     public LeagueResponse create(CreateLeagueRequest request) {
@@ -58,7 +60,8 @@ public class LeagueService {
         league.setMaxMembers(request.maxMembers());
         league.setCode(generateUniqueCode());
 
-        league = privateLeagueRepository.save(league);
+        league = privateLeagueRepository.saveAndFlush(league);
+        entityManager.refresh(league);
         addMember(league, owner, LeagueMemberRole.OWNER);
 
         return toResponse(league);
@@ -208,7 +211,9 @@ public class LeagueService {
         member.setLeague(league);
         member.setUser(user);
         member.setRole(role.name());
-        return privateLeagueMemberRepository.save(member);
+        member = privateLeagueMemberRepository.saveAndFlush(member);
+        entityManager.refresh(member);
+        return member;
     }
 
     private LeagueResponse toResponse(PrivateLeague league) {
