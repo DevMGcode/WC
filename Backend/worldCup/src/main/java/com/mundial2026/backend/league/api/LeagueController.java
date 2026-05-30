@@ -10,6 +10,7 @@ import com.mundial2026.backend.league.api.dto.LeagueResponse;
 import com.mundial2026.backend.league.api.dto.LeaveLeagueRequest;
 import com.mundial2026.backend.league.api.dto.TransferLeagueOwnershipRequest;
 import com.mundial2026.backend.league.service.LeagueService;
+import com.mundial2026.backend.security.SecurityUtils;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
@@ -25,11 +26,12 @@ import org.springframework.web.bind.annotation.RestController;
 import java.util.List;
 
 @RestController
-@RequestMapping("/api/v1/public/leagues")
+@RequestMapping("/api/v1/leagues")
 @RequiredArgsConstructor
 public class LeagueController {
 
     private final LeagueService leagueService;
+    private final SecurityUtils securityUtils;
 
     @GetMapping
     public ResponseEntity<ApiResponse<List<LeagueResponse>>> findAll() {
@@ -38,8 +40,14 @@ public class LeagueController {
 
     @PostMapping
     public ResponseEntity<ApiResponse<LeagueResponse>> create(@Valid @RequestBody CreateLeagueRequest request) {
+        Long jwtUserId = securityUtils.currentUserId();
+        // Anti-IDOR: ignoramos el userId del body y forzamos el del JWT (excepto admin).
+        CreateLeagueRequest safe = securityUtils.isAdmin()
+                ? request
+                : new CreateLeagueRequest(jwtUserId, request.tournamentId(), request.name(),
+                        request.description(), request.maxMembers(), request.isPublic());
         return ResponseEntity.status(HttpStatus.CREATED)
-                .body(ApiResponse.ok("Liga creada correctamente", leagueService.create(request)));
+                .body(ApiResponse.ok("Liga creada correctamente", leagueService.create(safe)));
     }
 
     @GetMapping("/{id}")
@@ -49,6 +57,8 @@ public class LeagueController {
 
     @GetMapping("/user/{userId}")
     public ResponseEntity<ApiResponse<List<LeagueResponse>>> findByUserId(@PathVariable Long userId) {
+        // Anti-IDOR: solo el dueño o ADMIN pueden listar las ligas de un user
+        securityUtils.requireSelfOrAdmin(userId);
         return ResponseEntity.ok(ApiResponse.ok("Ligas del usuario encontradas", leagueService.findByUserId(userId)));
     }
 
@@ -59,12 +69,20 @@ public class LeagueController {
 
     @PostMapping("/join")
     public ResponseEntity<ApiResponse<LeagueMemberResponse>> join(@Valid @RequestBody JoinLeagueRequest request) {
-        return ResponseEntity.ok(ApiResponse.ok("El usuario se unió a la liga", leagueService.join(request)));
+        Long jwtUserId = securityUtils.currentUserId();
+        JoinLeagueRequest safe = securityUtils.isAdmin()
+                ? request
+                : new JoinLeagueRequest(jwtUserId, request.leagueCode());
+        return ResponseEntity.ok(ApiResponse.ok("El usuario se unió a la liga", leagueService.join(safe)));
     }
 
     @PostMapping("/{id}/leave")
     public ResponseEntity<ApiResponse<Void>> leave(@PathVariable Long id, @Valid @RequestBody LeaveLeagueRequest request) {
-        leagueService.leave(id, request);
+        Long jwtUserId = securityUtils.currentUserId();
+        LeaveLeagueRequest safe = securityUtils.isAdmin()
+                ? request
+                : new LeaveLeagueRequest(jwtUserId);
+        leagueService.leave(id, safe);
         return ResponseEntity.ok(ApiResponse.ok("El usuario salió de la liga", null));
     }
 
@@ -78,6 +96,8 @@ public class LeagueController {
             @PathVariable Long id,
             @Valid @RequestBody TransferLeagueOwnershipRequest request
     ) {
+        // Anti-IDOR: el currentOwnerUserId debe ser el usuario autenticado (o ADMIN)
+        securityUtils.requireSelfOrAdmin(request.currentOwnerUserId());
         return ResponseEntity.ok(ApiResponse.ok(
                 "Propiedad de la liga transferida correctamente",
                 leagueService.transferOwnership(id, request)
@@ -86,6 +106,8 @@ public class LeagueController {
 
     @DeleteMapping("/{id}")
     public ResponseEntity<ApiResponse<Void>> delete(@PathVariable Long id, @Valid @RequestBody DeleteLeagueRequest request) {
+        // Anti-IDOR: el ownerUserId debe ser el usuario autenticado (o ADMIN)
+        securityUtils.requireSelfOrAdmin(request.ownerUserId());
         leagueService.delete(id, request);
         return ResponseEntity.ok(ApiResponse.ok("Liga eliminada correctamente", null));
     }
