@@ -3,6 +3,7 @@
 import React from 'react';
 import { motion } from 'framer-motion';
 import Link from 'next/link';
+import { useLocale } from 'next-intl';
 import { FiCalendar, FiClock, FiChevronRight, FiZap, FiCheck } from 'react-icons/fi';
 import { hex, type BrandColor } from '@/lib/design/tokens';
 import { alpha, alphaOf, borders, gradients } from '@/lib/design/effects';
@@ -26,7 +27,7 @@ export const STATUS_CFG: Record<string, { labelKey: string; color: BrandColor }>
      kickoffAt + 120min < now → FINISHED
      kickoffAt <= now < +120min → LIVE
 ══════════════════════════════════════════ */
-export function getEffectiveStatus(fixture: { status: string; kickoffAt: string }): string {
+export function getEffectiveStatus(fixture: { status: string; kickoffAt: string | Date }): string {
   if (fixture.status === 'FINISHED' || fixture.status === 'LIVE') return fixture.status;
   if (fixture.status === 'SCHEDULED') {
     const kickoff = new Date(fixture.kickoffAt).getTime();
@@ -66,13 +67,14 @@ interface MatchCardProps {
 }
 
 const MatchCard = ({ fixture, index, isFirst, t }: MatchCardProps) => {
+  const locale = useLocale();
   const effectiveStatus = getEffectiveStatus(fixture);
   const isLive     = effectiveStatus === 'LIVE';
   const isFinished = effectiveStatus === 'FINISHED';
   const cfg        = STATUS_CFG[effectiveStatus] ?? STATUS_CFG.SCHEDULED;
 
-  const timeStr = fmtTime(fixture.kickoffAt);
-  const dateStr = fmtDay(fixture.kickoffAt);
+  const timeStr = fmtTime(fixture.kickoffAt, locale);
+  const dateStr = fmtDay(fixture.kickoffAt, locale);
 
   const glow        = alphaOf(cfg.color, 0.60);
   const cardTintBg  = alphaOf(cfg.color, isFinished || isLive ? 0.04 : 0.02);
@@ -146,9 +148,9 @@ const MatchCard = ({ fixture, index, isFirst, t }: MatchCardProps) => {
           </div>
 
           {/* ── TEAMS + SCORE ── */}
-          <div className="flex items-center justify-around px-5 py-6 gap-3">
-            <div className="flex flex-col items-center gap-2.5 flex-1 min-w-0">
-              <FlagBubble url={fixture.homeTeam?.flagUrl} name={fixture.homeTeam?.name} size={62}
+          <div className="flex items-center justify-around px-5 py-7 gap-3">
+            <div className="flex flex-col items-center gap-3 flex-1 min-w-0">
+              <FlagBubble url={fixture.homeTeam?.flagUrl} name={fixture.homeTeam?.name} size={66}
                 color={cfg.color} soft={!isFinished && !isLive} />
               <p className="text-[11px] font-black tracking-widest text-center leading-none truncate w-full uppercase text-orionix-text-secondary">
                 {fixture.homeTeam?.shortName}
@@ -162,24 +164,32 @@ const MatchCard = ({ fixture, index, isFirst, t }: MatchCardProps) => {
                   initial={{ scale: 0.5, opacity: 0 }}
                   animate={{ scale: 1, opacity: 1 }}
                   transition={{ delay: 0.15 + index * 0.03, duration: 0.5, ease: [0.22, 1, 0.36, 1] }}>
-                  <span className="font-black tabular-nums leading-none"
+                  {/* Score box */}
+                  <div className="flex items-center gap-1 px-3 py-2 rounded-2xl"
                     style={{
-                      fontSize: 'clamp(2rem, 5.5vw, 2.8rem)',
-                      color: hex.neutral.white,
-                      textShadow: `0 0 24px ${glow}, 0 0 48px ${alphaOf(cfg.color, 0.31)}`,
+                      background: `linear-gradient(145deg, ${alphaOf(cfg.color, 0.10)}, ${alpha(hex.bg.elevated, 0.85)})`,
+                      border: `1px solid ${alphaOf(cfg.color, 0.22)}`,
+                      boxShadow: `0 4px 24px ${alphaOf(cfg.color, 0.18)}, inset 0 1px 0 ${alphaOf(cfg.color, 0.10)}`,
                     }}>
-                    {fixture.homeScore ?? 0}
-                  </span>
-                  <span className="font-black"
-                    style={{ color: alpha(hex.neutral.white, 0.12), fontSize: 'clamp(1.5rem,4vw,2.2rem)' }}>–</span>
-                  <span className="font-black tabular-nums leading-none"
-                    style={{
-                      fontSize: 'clamp(2rem, 5.5vw, 2.8rem)',
-                      color: hex.neutral.white,
-                      textShadow: `0 0 24px ${glow}, 0 0 48px ${alphaOf(cfg.color, 0.31)}`,
-                    }}>
-                    {fixture.awayScore ?? 0}
-                  </span>
+                    <span className="font-black tabular-nums leading-none"
+                      style={{
+                        fontSize: 'clamp(2.2rem, 6vw, 3.2rem)',
+                        color: hex.neutral.white,
+                        textShadow: `0 0 28px ${glow}, 0 0 56px ${alphaOf(cfg.color, 0.38)}`,
+                      }}>
+                      {fixture.homeScore ?? 0}
+                    </span>
+                    <span className="font-black mx-1"
+                      style={{ color: alpha(hex.neutral.white, 0.15), fontSize: 'clamp(1.6rem,4.5vw,2.4rem)' }}>–</span>
+                    <span className="font-black tabular-nums leading-none"
+                      style={{
+                        fontSize: 'clamp(2.2rem, 6vw, 3.2rem)',
+                        color: hex.neutral.white,
+                        textShadow: `0 0 28px ${glow}, 0 0 56px ${alphaOf(cfg.color, 0.38)}`,
+                      }}>
+                      {fixture.awayScore ?? 0}
+                    </span>
+                  </div>
                 </motion.div>
               ) : (
                 <div className="flex flex-col items-center gap-1.5">
@@ -214,8 +224,8 @@ const MatchCard = ({ fixture, index, isFirst, t }: MatchCardProps) => {
               )}
             </div>
 
-            <div className="flex flex-col items-center gap-2.5 flex-1 min-w-0">
-              <FlagBubble url={fixture.awayTeam?.flagUrl} name={fixture.awayTeam?.name} size={62}
+            <div className="flex flex-col items-center gap-3 flex-1 min-w-0">
+              <FlagBubble url={fixture.awayTeam?.flagUrl} name={fixture.awayTeam?.name} size={66}
                 color={cfg.color} soft={!isFinished && !isLive} />
               <p className="text-[11px] font-black tracking-widest text-center leading-none truncate w-full uppercase text-orionix-text-secondary">
                 {fixture.awayTeam?.shortName}
@@ -308,4 +318,4 @@ const MatchCard = ({ fixture, index, isFirst, t }: MatchCardProps) => {
   );
 };
 
-export default MatchCard;
+export default React.memo(MatchCard);

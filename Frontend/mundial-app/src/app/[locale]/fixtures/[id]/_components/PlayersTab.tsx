@@ -2,8 +2,10 @@
 
 import React, { useEffect, useState } from 'react';
 import { motion } from 'framer-motion';
+import { useTranslations } from 'next-intl';
 import { hex } from '@/lib/design/tokens';
 import { alpha, alphaOf } from '@/lib/design/effects';
+import { apiFetch } from '@/lib/apiFetch';
 
 interface MatchPlayer {
   playerId: number; playerName: string; teamId: number; teamName: string;
@@ -64,13 +66,14 @@ function PlayerTable({ players, accent }: { players: MatchPlayer[]; accent: stri
 }
 
 export default function PlayersTab({ fixtureId, homeTeamId, awayTeamId }: { fixtureId: number; homeTeamId: number; awayTeamId: number }) {
+  const t = useTranslations();
   const [players, setPlayers] = useState<MatchPlayer[]>([]);
   const [loading, setLoading] = useState(true);
   const [empty,   setEmpty]   = useState(false);
   const [teamTab, setTeamTab] = useState<'home' | 'away'>('home');
 
   useEffect(() => {
-    fetch(`/api/v1/public/fixtures/${fixtureId}/players`)
+    apiFetch(`/api/v1/public/fixtures/${fixtureId}/players`)
       .then(r => r.ok ? r.json() : null)
       .then(d => {
         const data = d?.data ?? [];
@@ -92,8 +95,8 @@ export default function PlayersTab({ fixtureId, homeTeamId, awayTeamId }: { fixt
   if (empty || players.length === 0) return (
     <div className="flex flex-col items-center justify-center py-16 gap-3">
       <span className="text-4xl">👤</span>
-      <p className="text-sm font-bold" style={{ color: alpha(hex.text.secondary, 0.5) }}>Estadísticas de jugadores no disponibles</p>
-      <p className="text-[10px] tracking-widest uppercase" style={{ color: alpha(hex.text.secondary, 0.3) }}>Disponibles tras finalizar el partido</p>
+      <p className="text-sm font-bold" style={{ color: alpha(hex.text.secondary, 0.5) }}>{t('fixture.playersNotAvailable')}</p>
+      <p className="text-[10px] tracking-widest uppercase" style={{ color: alpha(hex.text.secondary, 0.3) }}>{t('fixture.playersHint')}</p>
     </div>
   );
 

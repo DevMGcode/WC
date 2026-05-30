@@ -3,8 +3,10 @@
 import React, { useEffect, useState } from 'react';
 import Image from 'next/image';
 import { motion } from 'framer-motion';
+import { useTranslations } from 'next-intl';
 import { hex } from '@/lib/design/tokens';
 import { alpha } from '@/lib/design/effects';
+import { apiFetch } from '@/lib/apiFetch';
 
 interface H2HFixture {
   externalId: string; kickoffUtc: string; homeTeamId: number; homeTeamName: string;
@@ -77,13 +79,14 @@ function MatchRow({ match, i }: { match: H2HFixture; i: number }) {
 export default function HeadToHeadTab({
   homeTeamId, awayTeamId, homeTeamName, awayTeamName,
 }: { homeTeamId: number; awayTeamId: number; homeTeamName: string; awayTeamName: string }) {
+  const t = useTranslations();
   const [matches, setMatches] = useState<H2HFixture[]>([]);
   const [loading, setLoading] = useState(true);
   const [empty,   setEmpty]   = useState(false);
 
   useEffect(() => {
     if (!homeTeamId || !awayTeamId) { setEmpty(true); setLoading(false); return; }
-    fetch(`/api/v1/public/fixtures/headtohead?team1=${homeTeamId}&team2=${awayTeamId}&last=10`)
+    apiFetch(`/api/v1/public/fixtures/headtohead?team1=${homeTeamId}&team2=${awayTeamId}&last=10`)
       .then(r => r.ok ? r.json() : null)
       .then(d => {
         const data: H2HFixture[] = d?.data ?? [];
@@ -105,7 +108,7 @@ export default function HeadToHeadTab({
   if (empty || matches.length === 0) return (
     <div className="flex flex-col items-center justify-center py-16 gap-3">
       <span className="text-4xl">🔁</span>
-      <p className="text-sm font-bold" style={{ color: alpha(hex.text.secondary, 0.5) }}>Sin historial entre estos equipos</p>
+      <p className="text-sm font-bold" style={{ color: alpha(hex.text.secondary, 0.5) }}>{t('fixture.h2hNone')}</p>
       <p className="text-[10px] tracking-widest uppercase" style={{ color: alpha(hex.text.secondary, 0.3) }}>No hay enfrentamientos previos registrados</p>
     </div>
   );
