@@ -3,6 +3,7 @@ package com.mundial2026.backend.user.api;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.mundial2026.backend.security.JwtAuthenticationFilter;
 import com.mundial2026.backend.security.JwtTokenProvider;
+import com.mundial2026.backend.security.SecurityUtils;
 import com.mundial2026.backend.user.api.dto.UserResponse;
 import com.mundial2026.backend.user.api.mapper.UserMapper;
 import com.mundial2026.backend.user.domain.AppUser;
@@ -56,11 +57,21 @@ class UserControllerTest {
     @MockitoBean
     JwtTokenProvider jwtTokenProvider;
 
+    // SecurityUtils centraliza la validación anti-IDOR. Lo mockeamos para que
+    // requireSelfOrAdmin(...) sea no-op en estos tests (cuando se necesite
+    // validar el caso "acceso denegado" haz: doThrow(...).when(securityUtils)).
+    @MockitoBean
+    SecurityUtils securityUtils;
+
+    // JwtAuthenticationFilter ahora carga roles desde la BD.
+    @MockitoBean
+    com.mundial2026.backend.user.repository.AppUserRepository appUserRepository;
+
     @Test
     void count_returnsOk() throws Exception {
         when(userService.count()).thenReturn(7L);
 
-        mockMvc.perform(get("/api/v1/public/users/count"))
+        mockMvc.perform(get("/api/v1/users/count"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.success").value(true))
                 .andExpect(jsonPath("$.data").value(7));
@@ -92,7 +103,7 @@ class UserControllerTest {
         when(userService.findById(3L)).thenReturn(user);
         when(userMapper.toResponse(user)).thenReturn(response);
 
-        mockMvc.perform(get("/api/v1/public/users/3"))
+        mockMvc.perform(get("/api/v1/users/3"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.success").value(true))
                 .andExpect(jsonPath("$.data.username").value("jaime"));

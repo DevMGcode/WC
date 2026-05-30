@@ -22,6 +22,8 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.mockito.junit.jupiter.MockitoSettings;
+import org.mockito.quality.Strictness;
 import org.springframework.context.ApplicationEventPublisher;
 
 import java.time.Instant;
@@ -37,6 +39,7 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
+@MockitoSettings(strictness = Strictness.LENIENT)  // Permite stubs no usados (test legacy)
 class FixtureSyncServiceTest {
 
     @Mock private MatchDataPort matchDataPort;
@@ -73,12 +76,14 @@ class FixtureSyncServiceTest {
 
         groupStage = new Stage();
         groupStage.setId(10L);
-        groupStage.setCode("GROUP");
+        // El servicio mapStageCode("Group Stage - X") devuelve "GROUPS" (no "GROUP").
+        groupStage.setCode("GROUPS");
         groupStage.setTournament(tournament);
 
         r16Stage = new Stage();
         r16Stage.setId(11L);
-        r16Stage.setCode("R16");
+        // El servicio mapStageCode("Round of 16") devuelve "OCTAVOS" (en español).
+        r16Stage.setCode("OCTAVOS");
         r16Stage.setTournament(tournament);
 
         groupA = new GroupStage();
@@ -130,7 +135,7 @@ class FixtureSyncServiceTest {
     void persist_skipsWhenTeamMissing() {
         when(matchDataPort.fetchLiveMatches()).thenReturn(List.of(extMatch("868053", 1, 0, MatchStatus.LIVE)));
         when(tournamentRepository.findByCode("WC2026")).thenReturn(Optional.of(tournament));
-        when(stageRepository.findByTournamentIdAndCode(1L, "GROUP")).thenReturn(Optional.of(groupStage));
+        when(stageRepository.findByTournamentIdAndCode(1L, "GROUPS")).thenReturn(Optional.of(groupStage));
         when(groupStageRepository.findByTournamentIdAndCode(1L, "A")).thenReturn(Optional.of(groupA));
         when(teamRepository.findByExternalProviderId(16L)).thenReturn(Optional.of(mexico));
         when(teamRepository.findByExternalProviderId(2384L)).thenReturn(Optional.empty());
@@ -201,7 +206,8 @@ class FixtureSyncServiceTest {
                 "Azteca", "Round of 16");
         when(matchDataPort.fetchLiveMatches()).thenReturn(List.of(r16));
         when(tournamentRepository.findByCode("WC2026")).thenReturn(Optional.of(tournament));
-        when(stageRepository.findByTournamentIdAndCode(1L, "R16")).thenReturn(Optional.of(r16Stage));
+        // mapStageCode("Round of 16") = "OCTAVOS".
+        when(stageRepository.findByTournamentIdAndCode(1L, "OCTAVOS")).thenReturn(Optional.of(r16Stage));
         when(teamRepository.findByExternalProviderId(16L)).thenReturn(Optional.of(mexico));
         when(teamRepository.findByExternalProviderId(2384L)).thenReturn(Optional.of(usa));
         when(fixtureRepository.findByExternalProviderId(900000L)).thenReturn(Optional.empty());
@@ -212,7 +218,7 @@ class FixtureSyncServiceTest {
         ArgumentCaptor<Fixture> captor = ArgumentCaptor.forClass(Fixture.class);
         verify(fixtureRepository).save(captor.capture());
         Fixture saved = captor.getValue();
-        assertThat(saved.getStage().getCode()).isEqualTo("R16");
+        assertThat(saved.getStage().getCode()).isEqualTo("OCTAVOS");
         assertThat(saved.getGroupStage()).isNull();
     }
 
@@ -236,7 +242,8 @@ class FixtureSyncServiceTest {
 
     private void whenStandardDepsResolve() {
         when(tournamentRepository.findByCode("WC2026")).thenReturn(Optional.of(tournament));
-        when(stageRepository.findByTournamentIdAndCode(1L, "GROUP")).thenReturn(Optional.of(groupStage));
+        // mapStageCode("Group Stage - A") = "GROUPS" según FixtureSyncService.
+        when(stageRepository.findByTournamentIdAndCode(1L, "GROUPS")).thenReturn(Optional.of(groupStage));
         when(groupStageRepository.findByTournamentIdAndCode(1L, "A")).thenReturn(Optional.of(groupA));
         when(teamRepository.findByExternalProviderId(16L)).thenReturn(Optional.of(mexico));
         when(teamRepository.findByExternalProviderId(2384L)).thenReturn(Optional.of(usa));

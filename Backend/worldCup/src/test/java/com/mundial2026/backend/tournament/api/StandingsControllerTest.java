@@ -28,6 +28,8 @@ class StandingsControllerTest {
 
     @MockitoBean private StandingsService standingsService;
     @MockitoBean private JwtTokenProvider jwtTokenProvider;
+    // JwtAuthenticationFilter ahora carga roles desde la BD.
+    @MockitoBean private com.mundial2026.backend.user.repository.AppUserRepository appUserRepository;
 
     @Test
     void findAll_returns200WithList() throws Exception {

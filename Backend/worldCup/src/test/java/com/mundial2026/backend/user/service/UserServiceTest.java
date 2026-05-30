@@ -40,6 +40,9 @@ class UserServiceTest {
     @BeforeEach
     void setUp() {
         ReflectionTestUtils.setField(userService, "frontendUrl", "http://localhost:3000");
+        // Mantener verificación de email habilitada por defecto en los tests,
+        // igual que en producción (`app.email.verification-required: true`).
+        ReflectionTestUtils.setField(userService, "emailVerificationRequired", true);
     }
 
     // ── create ────────────────────────────────────────────────────────────────
@@ -103,23 +106,29 @@ class UserServiceTest {
         assertThat(result.getEmail()).isEqualTo("alice@test.com");
     }
 
+    /**
+     * Anti-enumeración: cuando el email NO existe, devolvemos el MISMO mensaje
+     * genérico "Credenciales inválidas" que cuando la contraseña es incorrecta.
+     * Un atacante no debe poder distinguir ambos casos para enumerar emails.
+     */
     @Test
-    void authenticate_unknownEmail_throwsResourceNotFound() {
+    void authenticate_unknownEmail_throwsGenericInvalidCredentials() {
         when(appUserRepository.findByEmail("ghost@test.com")).thenReturn(Optional.empty());
 
         assertThatThrownBy(() -> userService.authenticate("ghost@test.com", "pass"))
-                .isInstanceOf(ResourceNotFoundException.class);
+                .isInstanceOf(BusinessRuleException.class)
+                .hasMessageContaining("Credenciales inválidas");
     }
 
     @Test
-    void authenticate_wrongPassword_throwsBusinessRule() {
+    void authenticate_wrongPassword_throwsGenericInvalidCredentials() {
         AppUser user = buildActiveVerifiedUser("alice@test.com", "$hashed");
         when(appUserRepository.findByEmail("alice@test.com")).thenReturn(Optional.of(user));
         when(passwordEncoder.matches("wrong", "$hashed")).thenReturn(false);
 
         assertThatThrownBy(() -> userService.authenticate("alice@test.com", "wrong"))
                 .isInstanceOf(BusinessRuleException.class)
-                .hasMessageContaining("Contraseña incorrecta");
+                .hasMessageContaining("Credenciales inválidas");
     }
 
     @Test
