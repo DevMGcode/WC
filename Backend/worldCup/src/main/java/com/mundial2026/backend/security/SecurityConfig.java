@@ -4,6 +4,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.http.HttpMethod;
 import org.springframework.security.config.Customizer;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.http.SessionCreationPolicy;
@@ -43,17 +44,36 @@ public class SecurityConfig {
             .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
             .authorizeHttpRequests(auth -> auth
                 .requestMatchers(
-                    "/actuator/**",
+                    "/actuator/health",
+                    "/actuator/info",
                     "/swagger-ui.html",
                     "/swagger-ui/**",
                     "/api-docs/**",
-                    "/api/v1/public/**",
-                    "/api/v1/auth/login",
-                    "/api/v1/auth/forgot-password",
-                    "/api/v1/auth/refresh",
-                    "/api/v1/auth/verify-email"
+                    "/ws/**",
+
+                    // Auth endpoints (login, registro, recuperación, verificación)
+                    "/api/v1/auth/**",
+
+                    // Endpoints REALMENTE públicos del torneo (no exponen datos privados):
+                    "/api/v1/public/tournaments",
+                    "/api/v1/public/tournaments/**",
+                    "/api/v1/public/players/**",
+                    "/api/v1/public/fixtures/**",
+                    "/api/v1/public/teams",
+                    "/api/v1/public/standings/**",
+
+                    // Sub-endpoints públicos dentro de rutas privadas (stats globales / ranking global):
+                    "/api/v1/rankings/global/**",
+                    "/api/v1/predictions/count",
+                    "/api/v1/users/count"
                 ).permitAll()
-                .anyRequest().permitAll()
+                // Signup: POST /api/v1/users (sin auth, creación de cuenta)
+                .requestMatchers(HttpMethod.POST, "/api/v1/users").permitAll()
+                // Endpoints administrativos: requieren rol ADMIN
+                .requestMatchers("/api/v1/admin/**").hasRole("ADMIN")
+                // El resto (predictions, leagues, scores, rankings/user, users/{id}, etc.)
+                // requiere autenticación; los controllers validan ownership con SecurityUtils.
+                .anyRequest().authenticated()
             )
             .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class);
 

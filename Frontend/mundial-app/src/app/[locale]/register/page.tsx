@@ -5,8 +5,6 @@ import { useRouter } from 'next/navigation';
 import Image from 'next/image';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useAuth } from '@/contexts/AuthContext';
-import { hex } from '@/lib/design/tokens';
-import { alpha, alphaOf } from '@/lib/design/effects';
 
 /* ─── Floating neon particle ─── */
 const Particle = ({ index }: { index: number }) => {
@@ -15,9 +13,9 @@ const Particle = ({ index }: { index: number }) => {
   const delay = (index * 0.28) % 6;
   const duration = 8 + (index % 6);
   const cols: [string, string][] = [
-    [alphaOf('green', 0.9),          `0 0 10px ${alphaOf('green', 1)},0 0 24px ${alphaOf('green', 0.5)}`],
-    [alpha(hex.green.hover, 0.9),    `0 0 10px ${alpha(hex.green.hover, 1)},0 0 24px ${alpha(hex.green.hover, 0.5)}`],
-    [alpha(hex.green.soft, 0.8),      `0 0 8px ${alpha(hex.green.soft, 1)},0 0 20px ${alpha(hex.green.soft, 0.4)}`],
+    ['rgba(76,175,80,0.9)',  '0 0 10px rgba(76,175,80,1),0 0 24px rgba(76,175,80,0.5)'],
+    ['rgba(56,142,60,0.9)',  '0 0 10px rgba(56,142,60,1),0 0 24px rgba(56,142,60,0.5)'],
+    ['rgba(102,187,106,0.8)','0 0 8px rgba(102,187,106,1),0 0 20px rgba(102,187,106,0.4)'],
   ];
   const [bg, shadow] = cols[index % cols.length];
   return (
@@ -57,15 +55,6 @@ export default function RegisterPage() {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState('');
   const [success, setSuccess] = useState(false);
-
-  // ── Pre-computed input style fragments ──────────────────────────────────────
-  const inputFocusBg     = alphaOf('green', 0.06);
-  const inputFocusBorder = `1px solid ${alphaOf('green', 0.45)}`;
-  const inputFocusShadow = `0 0 0 3px ${alphaOf('green', 0.08)}`;
-  const inputBlurBg      = alpha(hex.neutral.white, 0.04);
-  const inputBlurBorder  = `1px solid ${alpha(hex.neutral.white, 0.08)}`;
-  const labelFocusColor  = alphaOf('green', 0.90);
-  const iconFocusColor   = alphaOf('green', 0.80);
 
   useEffect(() => {
     document.body.classList.add('login-route');
@@ -192,7 +181,7 @@ export default function RegisterPage() {
   return (
     <div
       className="min-h-screen w-full flex items-center justify-center relative overflow-hidden"
-      style={{ background: `radial-gradient(ellipse at 25% 60%, ${hex.bg.primary} 0%, ${hex.bg.secondary} 45%, ${hex.bg.primary} 100%)` }}
+      style={{ background: 'radial-gradient(ellipse at 25% 60%, #06110A 0%, #0B1B12 45%, #06110A 100%)' }}
     >
       {/* Particles */}
       <div className="absolute inset-0 overflow-hidden pointer-events-none">
@@ -201,16 +190,16 @@ export default function RegisterPage() {
 
       {/* Ambient orbs */}
       <div className="absolute top-[-15%] right-[-5%] w-[38vw] h-[38vw] rounded-full pointer-events-none"
-        style={{ background: `radial-gradient(circle, ${alpha(hex.green.hover, 0.09)} 0%, transparent 70%)`, filter: 'blur(55px)' }} />
+        style={{ background: 'radial-gradient(circle, rgba(56,142,60,0.09) 0%, transparent 70%)', filter: 'blur(55px)' }} />
       <div className="absolute bottom-[-10%] left-[-5%] w-[32vw] h-[32vw] rounded-full pointer-events-none"
-        style={{ background: `radial-gradient(circle, ${alpha(hex.green.base, 0.07)} 0%, transparent 70%)`, filter: 'blur(50px)' }} />
+        style={{ background: 'radial-gradient(circle, rgba(46,125,50,0.07) 0%, transparent 70%)', filter: 'blur(50px)' }} />
 
       {/* Aurora slash 1 */}
       <motion.div
         className="absolute pointer-events-none"
         style={{
           top: '-40%', left: '-20%', width: '65%', height: '200%',
-          background: `linear-gradient(105deg, transparent 0%, ${alpha(hex.green.hover, 0.03)} 40%, ${alphaOf('green', 0.055)} 55%, transparent 100%)`,
+          background: 'linear-gradient(105deg, transparent 0%, rgba(56,142,60,0.03) 40%, rgba(76,175,80,0.055) 55%, transparent 100%)',
           transform: 'skewX(-18deg)',
         }}
         animate={{ x: ['-10%', '110%'], opacity: [0, 1, 1, 0] }}
@@ -220,7 +209,7 @@ export default function RegisterPage() {
         className="absolute pointer-events-none"
         style={{
           top: '-40%', left: '-20%', width: '55%', height: '200%',
-          background: `linear-gradient(105deg, transparent 0%, ${alpha(hex.green.base, 0.025)} 40%, ${alpha(hex.green.hover, 0.04)} 55%, transparent 100%)`,
+          background: 'linear-gradient(105deg, transparent 0%, rgba(46,125,50,0.025) 40%, rgba(56,142,60,0.04) 55%, transparent 100%)',
           transform: 'skewX(-18deg)',
         }}
         animate={{ x: ['-10%', '120%'], opacity: [0, 1, 1, 0] }}
@@ -240,27 +229,27 @@ export default function RegisterPage() {
           <motion.div
             className="absolute inset-0"
             style={{
-              background: `conic-gradient(from 0deg, transparent 0%, ${alphaOf('green', 0.5)} 20%, transparent 40%, ${alpha(hex.green.hover, 0.4)} 60%, transparent 80%)`,
+              background: 'conic-gradient(from 0deg, transparent 0%, rgba(76,175,80,0.5) 20%, transparent 40%, rgba(56,142,60,0.4) 60%, transparent 80%)',
             }}
             animate={{ rotate: [0, 360] }}
             transition={{ duration: 8, repeat: Infinity, ease: 'linear' }}
           />
           <div className="absolute inset-[1px] rounded-2xl"
-            style={{ background: `linear-gradient(145deg, ${hex.bg.primary}, ${hex.bg.secondary})` }} />
+            style={{ background: 'linear-gradient(145deg, #06110A, #0B1B12)' }} />
         </div>
 
         <div
           className="relative rounded-2xl p-8"
           style={{
-            background: `linear-gradient(145deg, ${alpha(hex.bg.primary, 0.97)}, ${alpha(hex.bg.secondary, 0.95)})`,
-            border: `1px solid ${alphaOf('green', 0.14)}`,
-            boxShadow: `0 24px 64px ${alpha(hex.neutral.black, 0.55)}, inset 0 1px 0 ${alpha(hex.neutral.white, 0.04)}`,
+            background: 'linear-gradient(145deg, rgba(6,17,10,0.97), rgba(11,27,18,0.95))',
+            border: '1px solid rgba(76,175,80,0.14)',
+            boxShadow: '0 24px 64px rgba(0,0,0,0.55), inset 0 1px 0 rgba(255,255,255,0.04)',
           }}
         >
           {/* Header */}
           <div className="flex items-center gap-4 mb-7">
             <div className="w-12 h-12 rounded-xl overflow-hidden flex-shrink-0"
-              style={{ background: `linear-gradient(135deg, ${hex.bg.secondary}, ${hex.bg.soft})`, border: `1px solid ${alphaOf('green', 0.20)}` }}>
+              style={{ background: 'linear-gradient(135deg,#0B1B12,#162D1D)', border: '1px solid rgba(76,175,80,0.2)' }}>
               <Image src="/logotipo_Orionix_Gol_transparente.png" alt="Orionix" width={48} height={48} className="w-full h-full object-contain" />
             </div>
             <div className="flex-1 min-w-0">
@@ -270,7 +259,7 @@ export default function RegisterPage() {
               <p className="text-xs mt-0.5 text-orionix-text-muted">Únete y comienza a predecir</p>
             </div>
             <span className="text-[10px] font-bold px-2 py-0.5 rounded-full flex-shrink-0"
-              style={{ background: alpha(hex.gold.base, 0.10), color: hex.gold.base, border: `1px solid ${alpha(hex.gold.base, 0.25)}` }}>
+              style={{ background: 'rgba(212,175,55,0.10)', color: '#D4AF37', border: '1px solid rgba(212,175,55,0.25)' }}>
               BETA
             </span>
           </div>
@@ -299,7 +288,7 @@ export default function RegisterPage() {
                 initial={{ opacity: 0, scale: 0.94 }}
                 animate={{ opacity: 1, scale: 1 }}
                 className="mb-4 px-4 py-3 rounded-xl text-xs font-medium flex items-center gap-2"
-                style={{ background: alpha(hex.green.hover, 0.10), border: `1px solid ${alpha(hex.green.hover, 0.25)}`, color: hex.green.bright }}
+                style={{ background: 'rgba(56,142,60,0.1)', border: '1px solid rgba(56,142,60,0.25)', color: '#4CAF50' }}
               >
                 <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
                   <polyline points="20 6 9 17 4 12" />
@@ -316,12 +305,12 @@ export default function RegisterPage() {
               {fields.slice(0, 2).map(f => (
                 <div key={f.id}>
                   <label className="block text-[10px] font-semibold tracking-widest uppercase mb-1.5"
-                    style={{ color: focused === f.id ? labelFocusColor : 'rgba(148,163,184,0.7)' }}>
+                    style={{ color: focused === f.id ? 'rgba(76,175,80,0.9)' : 'rgba(148,163,184,0.7)' }}>
                     {f.label}
                   </label>
                   <div className="relative">
                     <span className="absolute left-3 top-1/2 -translate-y-1/2"
-                      style={{ color: focused === f.id ? iconFocusColor : 'rgba(100,116,139,0.7)' }}>
+                      style={{ color: focused === f.id ? 'rgba(76,175,80,0.8)' : 'rgba(100,116,139,0.7)' }}>
                       {f.icon}
                     </span>
                     <input
@@ -336,10 +325,10 @@ export default function RegisterPage() {
                       autoComplete="off"
                       className="w-full pl-8 pr-3 py-2.5 rounded-xl text-sm text-white placeholder-orionix-text-muted transition-all duration-200"
                       style={{
-                        background: focused === f.id ? inputFocusBg : inputBlurBg,
-                        border: focused === f.id ? inputFocusBorder : inputBlurBorder,
+                        background: focused === f.id ? 'rgba(76,175,80,0.06)' : 'rgba(255,255,255,0.04)',
+                        border: `1px solid ${focused === f.id ? 'rgba(76,175,80,0.45)' : 'rgba(255,255,255,0.08)'}`,
                         outline: 'none',
-                        boxShadow: focused === f.id ? inputFocusShadow : 'none',
+                        boxShadow: focused === f.id ? '0 0 0 3px rgba(76,175,80,0.08)' : 'none',
                       }}
                     />
                   </div>
@@ -351,12 +340,12 @@ export default function RegisterPage() {
             {fields.slice(2).map(f => (
               <div key={f.id} className="mb-3">
                 <label className="block text-[10px] font-semibold tracking-widest uppercase mb-1.5"
-                  style={{ color: focused === f.id ? labelFocusColor : 'rgba(148,163,184,0.7)' }}>
+                  style={{ color: focused === f.id ? 'rgba(76,175,80,0.9)' : 'rgba(148,163,184,0.7)' }}>
                   {f.label}
                 </label>
                 <div className="relative">
                   <span className="absolute left-3 top-1/2 -translate-y-1/2"
-                    style={{ color: focused === f.id ? iconFocusColor : hex.text.muted }}>
+                    style={{ color: focused === f.id ? 'rgba(76,175,80,0.8)' : 'rgba(110,124,114,0.7)' }}>
                     {f.icon}
                   </span>
                   <input
@@ -371,10 +360,10 @@ export default function RegisterPage() {
                     autoComplete={f.type === 'password' ? 'new-password' : 'off'}
                     className="w-full pl-8 pr-3 py-2.5 rounded-xl text-sm text-white placeholder-orionix-text-muted transition-all duration-200"
                     style={{
-                      background: focused === f.id ? inputFocusBg : inputBlurBg,
-                      border: focused === f.id ? inputFocusBorder : inputBlurBorder,
+                      background: focused === f.id ? 'rgba(76,175,80,0.06)' : 'rgba(255,255,255,0.04)',
+                      border: `1px solid ${focused === f.id ? 'rgba(76,175,80,0.45)' : 'rgba(255,255,255,0.08)'}`,
                       outline: 'none',
-                      boxShadow: focused === f.id ? inputFocusShadow : 'none',
+                      boxShadow: focused === f.id ? '0 0 0 3px rgba(76,175,80,0.08)' : 'none',
                     }}
                   />
                 </div>
@@ -388,12 +377,12 @@ export default function RegisterPage() {
               className="w-full mt-2 py-3 rounded-xl font-bold text-sm tracking-widest uppercase relative overflow-hidden"
               style={{
                 background: isLoading || success
-                  ? alphaOf('green', 0.30)
-                  : `linear-gradient(90deg, ${hex.green.dark} 0%, ${hex.green.hover} 100%)`,
+                  ? 'rgba(76,175,80,0.3)'
+                  : 'linear-gradient(90deg, #1B5E20 0%, #388E3C 100%)',
                 color: '#ffffff',
                 border: 'none',
                 cursor: isLoading || success ? 'not-allowed' : 'pointer',
-                boxShadow: isLoading || success ? 'none' : `0 6px 28px ${alphaOf('green', 0.35)}`,
+                boxShadow: isLoading || success ? 'none' : '0 6px 28px rgba(76,175,80,0.35)',
                 letterSpacing: '0.15em',
               }}
               whileHover={!isLoading && !success ? { scale: 1.015 } : {}}
@@ -403,7 +392,7 @@ export default function RegisterPage() {
               {!isLoading && !success && (
                 <motion.span
                   className="absolute inset-0 pointer-events-none"
-                  style={{ background: `linear-gradient(90deg, transparent 0%, ${alpha(hex.neutral.white, 0.18)} 50%, transparent 100%)` }}
+                  style={{ background: 'linear-gradient(90deg, transparent 0%, rgba(255,255,255,0.18) 50%, transparent 100%)' }}
                   animate={{ x: ['-100%', '200%'] }}
                   transition={{ duration: 2.4, repeat: Infinity, ease: 'linear', repeatDelay: 1.5 }}
                 />
@@ -427,12 +416,12 @@ export default function RegisterPage() {
 
           {/* Footer */}
           <div className="mt-5 pt-4 flex items-center justify-center"
-            style={{ borderTop: `1px solid ${alpha(hex.neutral.white, 0.06)}` }}>
+            style={{ borderTop: '1px solid rgba(255,255,255,0.06)' }}>
             <span className="text-xs text-orionix-text-muted">¿Ya tienes cuenta?</span>
             <button
               onClick={() => router.push('/login')}
               className="ml-1.5 text-xs font-semibold transition-colors duration-200 flex items-center gap-1"
-              style={{ color: alphaOf('green', 0.85) }}
+              style={{ color: 'rgba(76,175,80,0.85)' }}
             >
               Inicia sesión
               <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
