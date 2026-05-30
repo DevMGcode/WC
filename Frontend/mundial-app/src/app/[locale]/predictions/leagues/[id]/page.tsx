@@ -2,6 +2,7 @@
 
 import React, { useEffect, useState } from 'react';
 import { useParams, useRouter } from 'next/navigation';
+import { useTranslations } from 'next-intl';
 import { Header } from '@/components/Navigation';
 import { motion, AnimatePresence } from 'framer-motion';
 import { leagueService } from '@/services/predictions';
@@ -38,6 +39,7 @@ const ROW_FALLBACK_COLOR = alpha(hex.neutral.white, 0.20);
 export default function LeagueDetailPage() {
   const params = useParams();
   const router = useRouter();
+  const t      = useTranslations();
   const leagueId = params.id as string;
   const { user } = useAuth();
   const userId = Number(user?.id ?? 0);
@@ -80,7 +82,7 @@ export default function LeagueDetailPage() {
       setActionError('No puedes salir siendo propietario. Transfiere o elimina la liga primero.');
       return;
     }
-    if (!confirm('¿Realmente deseas salir de esta liga?')) return;
+    if (!confirm(t('league.confirmLeave'))) return;
     try {
       setActionLoading(true);
       await leagueService.leaveLeague(leagueId, userId);
@@ -105,7 +107,7 @@ export default function LeagueDetailPage() {
 
   const handleDeleteLeague = async () => {
     setActionError('');
-    if (!confirm('¿Eliminar esta liga? Esta acción no se puede deshacer.')) return;
+    if (!confirm(t('league.confirmDelete'))) return;
     try {
       setActionLoading(true);
       await leagueService.deleteLeague(leagueId, userId);
@@ -123,7 +125,7 @@ export default function LeagueDetailPage() {
         <div className="flex flex-col items-center gap-4">
           <motion.div className="w-12 h-12 rounded-full border-2 border-green-500/20 border-t-green-500"
             animate={{ rotate: 360 }} transition={{ duration: 0.9, repeat: Infinity, ease: 'linear' }} />
-          <p className="text-[10px] text-green-500/60 tracking-[0.3em] uppercase font-bold">Cargando</p>
+          <p className="text-[10px] text-green-500/60 tracking-[0.3em] uppercase font-bold">{t('league.loading')}</p>
         </div>
       </div>
     );
@@ -137,7 +139,7 @@ export default function LeagueDetailPage() {
           <p className="text-orionix-text-secondary mb-4">Liga no encontrada</p>
           <button onClick={() => router.back()}
             className="px-5 py-2 rounded-xl text-sm font-bold text-green-300 border border-green-500/30">
-            ← Volver
+            ← {t('league.back')}
           </button>
         </div>
       </div>
@@ -150,9 +152,9 @@ export default function LeagueDetailPage() {
   const maxPts            = ranking.length > 0 ? Math.max(...ranking.map((r: any) => r.totalPoints), 1) : 1;
 
   const statChips = [
-    { label: 'Máx. Miembros', value: league.maxMembers,                              color: '#22d3ee' },
-    { label: 'Tus Puntos',    value: myScore?.totalPoints ?? 0,                      color: '#34d399' },
-    { label: 'Tu Posición',   value: myScore?.rankPosition ? `#${myScore.rankPosition}` : '#—', color: '#fbbf24' },
+    { label: t('league.maxMembersStat'), value: league.maxMembers,                              color: '#22d3ee' },
+    { label: t('league.yourPoints'),     value: myScore?.totalPoints ?? 0,                      color: '#34d399' },
+    { label: t('league.yourPosition'),   value: myScore?.rankPosition ? `#${myScore.rankPosition}` : '#—', color: '#fbbf24' },
   ];
 
   return (
@@ -172,7 +174,7 @@ export default function LeagueDetailPage() {
         transition={{ duration: 14, repeat: Infinity, delay: 5 }} />
 
       <div className="relative" style={{ zIndex: 10 }}>
-        <Header title={league.name} subtitle="Detalle de Liga" centered />
+        <Header title={league.name} subtitle={t('league.detailTitle')} centered />
       </div>
 
       <div className="relative z-10 px-4 py-6 max-w-3xl mx-auto w-full pb-32">
@@ -242,7 +244,7 @@ export default function LeagueDetailPage() {
               <div>
                 <p className="text-[9px] font-black tracking-[0.25em] uppercase text-left"
                   style={{ color: codeCopied ? 'rgba(52,211,153,0.60)' : 'rgba(251,191,36,0.60)' }}>
-                  Código de liga
+                  {t('league.leagueCodeLabel')}
                 </p>
                 <p className="text-sm font-mono font-black mt-0.5"
                   style={{ color: codeCopied ? '#34d399' : '#fbbf24', letterSpacing: '0.2em' }}>
@@ -256,7 +258,7 @@ export default function LeagueDetailPage() {
                   : <FiCopy size={13} style={{ color: '#fbbf24' }} />}
                 <span className="text-[9px] font-black"
                   style={{ color: codeCopied ? '#34d399' : '#fbbf24' }}>
-                  {codeCopied ? 'Copiado' : 'Copiar'}
+                  {codeCopied ? '✓' : t('league.copy')}
                 </span>
               </div>
             </motion.button>
@@ -284,21 +286,21 @@ export default function LeagueDetailPage() {
             <div className="flex items-center gap-2 mb-4">
               <div className="w-[3px] h-5 rounded-full"
                 style={{ background: 'linear-gradient(180deg, #fbbf24, #f59e0b)' }} />
-              <span className="text-[10px] font-black text-orionix-text-secondary tracking-[0.24em] uppercase">Ranking de Liga</span>
+              <span className="text-[10px] font-black text-orionix-text-secondary tracking-[0.24em] uppercase">{t('league.rankingTitle')}</span>
               <span className="text-lg ml-1">🏆</span>
             </div>
 
             {ranking.length === 0 ? (
-              <p className="text-orionix-text-muted text-sm text-center py-6">Sin participantes aún</p>
+              <p className="text-orionix-text-muted text-sm text-center py-6">{t('league.noMembers')}</p>
             ) : (
               <div className="space-y-1.5">
                 {/* Header row */}
                 <div className="grid grid-cols-[32px_1fr_56px_64px_52px] gap-2 px-3 pb-1">
-                  <span className="text-[8px] font-black text-orionix-text-muted uppercase tracking-widest">Pos</span>
-                  <span className="text-[8px] font-black text-orionix-text-muted uppercase tracking-widest">Jugador</span>
-                  <span className="text-[8px] font-black text-orionix-text-muted uppercase tracking-widest text-center">Exactas</span>
-                  <span className="text-[8px] font-black text-orionix-text-muted uppercase tracking-widest text-center">Ganadores</span>
-                  <span className="text-[8px] font-black text-orionix-text-muted uppercase tracking-widest text-right">Pts</span>
+                  <span className="text-[8px] font-black text-orionix-text-muted uppercase tracking-widest">{t('league.position')}</span>
+                  <span className="text-[8px] font-black text-orionix-text-muted uppercase tracking-widest">{t('league.player')}</span>
+                  <span className="text-[8px] font-black text-orionix-text-muted uppercase tracking-widest text-center">{t('league.exactScores')}</span>
+                  <span className="text-[8px] font-black text-orionix-text-muted uppercase tracking-widest text-center">{t('league.winners')}</span>
+                  <span className="text-[8px] font-black text-orionix-text-muted uppercase tracking-widest text-right">{t('league.points')}</span>
                 </div>
 
                 {ranking.map((player: any, idx: number) => {
@@ -327,7 +329,7 @@ export default function LeagueDetailPage() {
                         <span className={`text-xs font-bold truncate ${isMe ? 'text-green-300' : 'text-orionix-text-secondary'}`}>
                           {isMe && <span className="text-green-500 mr-0.5">›</span>}
                           {player.fullName || player.username}
-                          {isMe && ' (Tú)'}
+                          {isMe && ` ${t('league.you')}`}
                         </span>
                         <span className="text-xs font-black tabular-nums text-center text-orionix-text-secondary">{player.exactScores}</span>
                         <span className="text-xs font-black tabular-nums text-center text-orionix-text-secondary">{player.winnerHits}</span>
@@ -367,7 +369,7 @@ export default function LeagueDetailPage() {
               <div className="flex items-center gap-2 mb-3">
                 <div className="w-[3px] h-5 rounded-full"
                   style={{ background: 'linear-gradient(180deg, #ef4444, #b91c1c)' }} />
-                <span className="text-[10px] font-black text-orionix-text-secondary tracking-[0.24em] uppercase">Gestión de Propiedad</span>
+                <span className="text-[10px] font-black text-orionix-text-secondary tracking-[0.24em] uppercase">{t('league.ownership')}</span>
               </div>
 
               {transferableMembers.length > 0 ? (
@@ -399,7 +401,7 @@ export default function LeagueDetailPage() {
                 </div>
               ) : (
                 <div className="space-y-3">
-                  <p className="text-xs text-orionix-text-muted">Eres el único miembro. Puedes eliminar la liga.</p>
+                  <p className="text-xs text-orionix-text-muted">{t('league.onlyMember')}</p>
                   <motion.button
                     onClick={handleDeleteLeague}
                     disabled={actionLoading}
@@ -408,7 +410,7 @@ export default function LeagueDetailPage() {
                     style={{ background: 'linear-gradient(135deg, #991b1b, #dc2626)', boxShadow: '0 4px 20px rgba(220,38,38,0.25)' }}
                   >
                     <FiTrash2 size={14} />
-                    {actionLoading ? 'Eliminando…' : 'Eliminar Liga'}
+                    {actionLoading ? '…' : t('league.deleteLeague')}
                   </motion.button>
                 </div>
               )}
@@ -438,7 +440,7 @@ export default function LeagueDetailPage() {
             className="flex-1 py-3 rounded-xl text-sm font-black text-orionix-text-secondary flex items-center justify-center gap-2"
             style={{ border: `1px solid ${alpha(hex.neutral.white, 0.07)}`, background: alpha(hex.neutral.white, 0.02) }}
           >
-            <FiArrowLeft size={14} /> Volver
+            <FiArrowLeft size={14} /> {t('league.back')}
           </motion.button>
           <motion.button
             onClick={handleLeaveLeague}
@@ -454,7 +456,7 @@ export default function LeagueDetailPage() {
             }}
           >
             <FiLogOut size={14} />
-            {isOwner ? 'Eres propietario' : actionLoading ? 'Saliendo…' : 'Salir de Liga'}
+            {isOwner ? t('league.isOwner') : actionLoading ? '…' : t('league.leaveLeague')}
           </motion.button>
         </div>
       </div>
