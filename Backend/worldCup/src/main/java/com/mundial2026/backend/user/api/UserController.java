@@ -1,6 +1,7 @@
 package com.mundial2026.backend.user.api;
 
 import com.mundial2026.backend.common.response.ApiResponse;
+import com.mundial2026.backend.security.SecurityUtils;
 import com.mundial2026.backend.user.api.dto.ChangePasswordRequest;
 import com.mundial2026.backend.user.api.dto.CreateUserRequest;
 import com.mundial2026.backend.user.api.dto.UpdateUserProfileRequest;
@@ -15,12 +16,13 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
-@RequestMapping("/api/v1/public/users")
+@RequestMapping("/api/v1/users")
 @RequiredArgsConstructor
 public class UserController {
 
     private final UserService userService;
     private final UserMapper userMapper;
+    private final SecurityUtils securityUtils;
 
     @PostMapping
     public ResponseEntity<ApiResponse<UserResponse>> create(@Valid @RequestBody CreateUserRequest request) {
@@ -36,6 +38,8 @@ public class UserController {
 
     @GetMapping("/{id}")
     public ResponseEntity<ApiResponse<UserResponse>> findById(@PathVariable Long id) {
+        // Anti-IDOR: solo el propio usuario o ADMIN pueden ver datos completos
+        securityUtils.requireSelfOrAdmin(id);
         return ResponseEntity.ok(ApiResponse.ok(
                 "Usuario encontrado",
                 userMapper.toResponse(userService.findById(id))
@@ -46,6 +50,8 @@ public class UserController {
     public ResponseEntity<ApiResponse<UserResponse>> updateProfile(
             @PathVariable Long id,
             @Valid @RequestBody UpdateUserProfileRequest request) {
+        // Anti-IDOR: solo el propio usuario o ADMIN pueden modificar el perfil
+        securityUtils.requireSelfOrAdmin(id);
         AppUser user = userService.updateProfile(id, request);
         return ResponseEntity.ok(ApiResponse.ok(
                 "Perfil actualizado correctamente",
@@ -57,6 +63,8 @@ public class UserController {
     public ResponseEntity<ApiResponse<UserResponse>> changePassword(
             @PathVariable Long id,
             @Valid @RequestBody ChangePasswordRequest request) {
+        // Anti-IDOR: solo el propio usuario puede cambiar su password (ni ADMIN debería)
+        securityUtils.requireSelfOrAdmin(id);
         AppUser user = userService.changePassword(id, request);
         return ResponseEntity.ok(ApiResponse.ok(
                 "Contraseña cambiada correctamente",

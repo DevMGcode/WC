@@ -32,6 +32,9 @@ public class UserService {
     @Value("${app.frontend-url:http://localhost:3000}")
     private String frontendUrl;
 
+    @Value("${app.email.verification-required:true}")
+    private boolean emailVerificationRequired;
+
     @Transactional
     public AppUser create(CreateUserRequest request) {
         if (appUserRepository.existsByUsername(request.username())) {
@@ -64,12 +67,26 @@ public class UserService {
         String token = UUID.randomUUID().toString().replace("-", "");
         user.setVerificationToken(token);
 
+        if (!emailVerificationRequired) {
+            user.setEmailVerified(true);
+            user.setVerificationToken(null);
+        }
+
         AppUser saved = appUserRepository.save(user);
-        try {
-            String verifyUrl = frontendUrl + "/api/v1/auth/verify-email?token=" + token;
-            emailService.sendVerificationEmail(saved.getEmail(), saved.getUsername(), verifyUrl);
-        } catch (Exception e) {
-            log.warn("[UserService] Verification email failed for {}: {}", saved.getEmail(), e.getMessage());
+
+        if (emailVerificationRequired) {
+            try {
+                String verifyUrl = frontendUrl + "/api/v1/auth/verify-email?token=" + token;
+                emailService.sendVerificationEmail(saved.getEmail(), saved.getUsername(), verifyUrl);
+            } catch (Exception e) {
+                log.warn("[UserService] Verification email failed for {}: {}", saved.getEmail(), e.getMessage());
+            }
+        } else {
+            try {
+                emailService.sendWelcomeEmail(saved.getEmail(), saved.getUsername());
+            } catch (Exception e) {
+                log.warn("[UserService] Welcome email failed for {}: {}", saved.getEmail(), e.getMessage());
+            }
         }
         return saved;
     }
@@ -87,18 +104,21 @@ public class UserService {
 
     @Transactional(readOnly = true)
     public AppUser authenticate(String email, String password) {
+        // Anti-enumeración: mismo mensaje genérico tanto si el email NO existe
+        // como si el password es incorrecto. Un atacante no puede distinguir
+        // entre los dos casos para enumerar emails registrados.
         AppUser user = appUserRepository.findByEmail(email)
-                .orElseThrow(() -> new ResourceNotFoundException("Usuario no encontrado con email=" + email));
-        
+                .orElseThrow(() -> new BusinessRuleException("Credenciales inválidas"));
+
         if (!passwordEncoder.matches(password, user.getPasswordHash())) {
-            throw new BusinessRuleException("Contraseña incorrecta");
+            throw new BusinessRuleException("Credenciales inválidas");
         }
-        
+
         if (!user.getStatus().name().equals("ACTIVE")) {
             throw new BusinessRuleException("Usuario no está activo");
         }
 
-        if (!Boolean.TRUE.equals(user.getEmailVerified())) {
+        if (emailVerificationRequired && !Boolean.TRUE.equals(user.getEmailVerified())) {
             throw new BusinessRuleException("EMAIL_NOT_VERIFIED");
         }
 

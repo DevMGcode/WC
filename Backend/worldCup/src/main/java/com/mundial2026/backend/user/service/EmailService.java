@@ -1,16 +1,13 @@
 package com.mundial2026.backend.user.service;
 
-import jakarta.annotation.PostConstruct;
 import jakarta.mail.internet.MimeMessage;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.core.io.ClassPathResource;
 import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.mail.javamail.MimeMessageHelper;
 import org.springframework.stereotype.Service;
 
-import java.util.Base64;
 
 @Slf4j
 @Service
@@ -22,28 +19,22 @@ public class EmailService {
     @Value("${spring.mail.username:}")
     private String fromAddress;
 
-    private String logoBase64;
+    @Value("${app.frontend-url:http://localhost:3000}")
+    private String frontendUrl;
 
-    @PostConstruct
-    private void loadLogoBase64() {
-        try {
-            ClassPathResource logo = new ClassPathResource("static/orionix_logo.png");
-            logoBase64 = Base64.getEncoder().encodeToString(logo.getInputStream().readAllBytes());
-            log.info("[Email] Logo loaded ({} chars base64)", logoBase64.length());
-        } catch (Exception e) {
-            log.warn("[Email] Logo unavailable, falling back to CID: {}", e.getMessage());
-        }
-    }
+    private static final String LOGO_GITHUB_URL =
+        "https://raw.githubusercontent.com/DevMGcode/WC/main/Frontend/mundial-app/public/logotipo_Orionix_Gol.png";
 
     private String logoImgSrc() {
-        return logoBase64 != null ? "data:image/png;base64," + logoBase64 : "cid:orionixLogo";
+        // En prod usa el dominio propio; en dev usa GitHub (accesible por Gmail)
+        if (frontendUrl.startsWith("https://")) {
+            return frontendUrl + "/logotipo_Orionix_Gol.png";
+        }
+        return LOGO_GITHUB_URL;
     }
 
-    private void addLogoIfCid(MimeMessageHelper helper) throws Exception {
-        if (logoBase64 == null) {
-            ClassPathResource logo = new ClassPathResource("static/orionix_logo.png");
-            helper.addInline("orionixLogo", logo);
-        }
+    private void addLogoIfCid(MimeMessageHelper helper) {
+        // Logo se sirve via URL pública, no se adjunta inline
     }
 
     public void sendVerificationEmail(String toEmail, String username, String verifyUrl) {
@@ -234,7 +225,7 @@ public class EmailService {
                                 Tu cuenta en <strong style="color:#38bdf8;">Orionix Gol</strong> est&#225; lista.<br>
                                 Ya puedes hacer tus predicciones del Mundial 2026 y competir con amigos.
                               </p>
-                              <table width="100%%" cellpadding="0" cellspacing="0" style="margin-bottom:16px;">
+                              <table width="100%%" cellpadding="0" cellspacing="0" style="margin-bottom:24px;">
                                 <tr>
                                   <td style="background:linear-gradient(145deg,rgba(16,185,129,0.08),rgba(4,12,28,0.85));
                                              border:1.5px solid rgba(16,185,129,0.25);border-radius:14px;
@@ -242,6 +233,18 @@ public class EmailService {
                                     <p style="margin:0;color:rgba(148,163,184,0.85);font-size:13px;line-height:1.65;">
                                       &#9917; Predice resultados &middot; &#127942; Sube en el ranking &middot; &#127757; Sigue todos los partidos
                                     </p>
+                                  </td>
+                                </tr>
+                              </table>
+                              <table width="100%%" cellpadding="0" cellspacing="0" style="margin-bottom:20px;">
+                                <tr>
+                                  <td align="center">
+                                    <a href="%s" target="_blank"
+                                       style="display:inline-block;background:linear-gradient(90deg,#16a34a,#22c55e);
+                                              color:#ffffff;font-size:14px;font-weight:700;text-decoration:none;
+                                              padding:14px 36px;border-radius:10px;letter-spacing:0.05em;">
+                                      Ir a Orionix Gol &#8594;
+                                    </a>
                                   </td>
                                 </tr>
                               </table>
@@ -271,7 +274,7 @@ public class EmailService {
               </table>
             </body>
             </html>
-            """).formatted(logoImgSrc(), username);
+            """).formatted(logoImgSrc(), username, frontendUrl);
     }
 
     private String buildHtml(String tempPassword) {
