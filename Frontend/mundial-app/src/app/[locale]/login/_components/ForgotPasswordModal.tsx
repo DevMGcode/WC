@@ -1,6 +1,7 @@
 'use client';
 import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
+import { useTranslations } from 'next-intl';
 import { hex } from '@/lib/design/tokens';
 import { alpha, alphaOf } from '@/lib/design/effects';
 
@@ -10,6 +11,7 @@ interface ForgotPasswordModalProps {
 }
 
 export default function ForgotPasswordModal({ show, onClose }: ForgotPasswordModalProps) {
+  const t = useTranslations();
   const [fpEmail,   setFpEmail]   = useState('');
   const [fpLoading, setFpLoading] = useState(false);
   const [fpError,   setFpError]   = useState('');
@@ -17,7 +19,7 @@ export default function ForgotPasswordModal({ show, onClose }: ForgotPasswordMod
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!fpEmail) { setFpError('Ingresa tu correo electrónico.'); return; }
+    if (!fpEmail) { setFpError(t('forgot.emailRequired')); return; }
     setFpLoading(true); setFpError('');
     try {
       const res  = await fetch('/api/v1/auth/forgot-password', {
@@ -27,9 +29,9 @@ export default function ForgotPasswordModal({ show, onClose }: ForgotPasswordMod
       });
       const data = await res.json();
       if (res.ok && data.success) setFpSuccess(true);
-      else setFpError(data.message || 'No se pudo procesar la solicitud.');
+      else setFpError(data.message || t('forgot.connectionError'));
     } catch {
-      setFpError('Error de conexión. Intenta de nuevo.');
+      setFpError(t('forgot.connectionError'));
     } finally {
       setFpLoading(false);
     }
@@ -72,8 +74,8 @@ export default function ForgotPasswordModal({ show, onClose }: ForgotPasswordMod
               {/* Header */}
               <div className="flex items-center justify-between mb-5">
                 <div>
-                  <h2 className="text-lg font-bold text-white">Recuperar contraseña</h2>
-                  <p className="text-xs mt-0.5 text-orionix-text-muted">Te enviamos una contraseña temporal al correo</p>
+                  <h2 className="text-lg font-bold text-white">{t('forgot.title')}</h2>
+                  <p className="text-xs mt-0.5 text-orionix-text-muted">{t('forgot.subtitle')}</p>
                 </div>
                 <button onClick={handleClose} disabled={fpLoading} className="transition-colors text-orionix-text-muted hover:text-white">
                   <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -93,11 +95,11 @@ export default function ForgotPasswordModal({ show, onClose }: ForgotPasswordMod
                       </svg>
                     </div>
                   </div>
-                  <p className="text-sm font-semibold mb-1 text-orionix-green-soft">¡Correo enviado!</p>
-                  <p className="text-xs text-orionix-text-muted">Revisa tu bandeja de entrada e inicia sesión con la contraseña temporal.</p>
+                  <p className="text-sm font-semibold mb-1 text-orionix-green-soft">{t('forgot.sentTitle')}</p>
+                  <p className="text-xs text-orionix-text-muted">{t('forgot.sentBody')}</p>
                   <button onClick={handleClose} className="mt-5 px-6 py-2 rounded-xl text-sm font-bold text-white"
                     style={{ background: `linear-gradient(90deg, ${hex.green.dark}, ${hex.green.base})`, boxShadow: `0 4px 16px ${alphaOf('green', 0.25)}` }}>
-                    Entendido
+                    {t('common.close')}
                   </button>
                 </motion.div>
               ) : (
@@ -139,7 +141,7 @@ export default function ForgotPasswordModal({ show, onClose }: ForgotPasswordMod
                       <span className="flex items-center justify-center gap-2">
                         <motion.span className="inline-block w-4 h-4 rounded-full border-2 border-white/30 border-t-white"
                           animate={{ rotate: 360 }} transition={{ duration: 0.7, repeat: Infinity, ease: 'linear' }} />
-                        Enviando...
+                        {t('common.sending')}
                       </span>
                     ) : (
                       <span className="flex items-center justify-center gap-2">
