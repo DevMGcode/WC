@@ -1,0 +1,258 @@
+AWSTemplateFormatVersion: "2010-09-09"
+Transform: AWS::Serverless-2016-10-31
+Description: World Cup app - EC2 instance hosting front, back and DB via Docker Compose
+
+Parameters:
+  EnvironmentName:
+    Type: String
+    Default: prod
+    AllowedValues: [dev, staging, prod]
+
+  InstanceType:
+    Type: String
+    Default: t2.medium
+
+  KeyPairName:
+    Type: AWS::EC2::KeyPair::KeyName
+    Description: EC2 Key Pair for SSH access
+
+  AllowedSSHCidr:
+    Type: String
+    Default: "0.0.0.0/0"
+    Description: CIDR block allowed to SSH (restrict in production)
+
+  VolumeSize:
+    Type: Number
+    Default: 30
+    Description: Root volume size in GB
+
+Mappings:
+  RegionMap:
+    us-east-1:
+      # Amazon Linux 2023 AMI (HVM, x86_64)
+      AMI: ami-0f9fc25dd2506cf6d
+
+Resources:
+
+  # ── Networking ──────────────────────────────────────────────────────────────
+
+  VPC:
+    Type: AWS::EC2::VPC
+    Properties:
+      CidrBlock: 10.0.0.0/16
+      EnableDnsHostnames: true
+      EnableDnsSupport: true
+      Tags:
+        - Key: Name
+          Value: !Sub "wc-vpc-${EnvironmentName}"
+
+  InternetGateway:
+    Type: AWS::EC2::InternetGateway
+    Properties:
+      Tags:
+        - Key: Name
+          Value: !Sub "wc-igw-${EnvironmentName}"
+
+  VPCGatewayAttachment:
+    Type: AWS::EC2::VPCGatewayAttachment
+    Properties:
+      VpcId: !Ref VPC
+      InternetGatewayId: !Ref InternetGateway
+
+  PublicSubnet:
+    Type: AWS::EC2::Subnet
+    Properties:
+      VpcId: !Ref VPC
+      CidrBlock: 10.0.1.0/24
+      AvailabilityZone: us-east-1a
+      MapPublicIpOnLaunch: true
+      Tags:
+        - Key: Name
+          Value: !Sub "wc-subnet-public-${EnvironmentName}"
+
+  RouteTable:
+    Type: AWS::EC2::RouteTable
+    Properties:
+      VpcId: !Ref VPC
+      Tags:
+        - Key: Name
+          Value: !Sub "wc-rt-public-${EnvironmentName}"
+
+  DefaultRoute:
+    Type: AWS::EC2::Route
+    DependsOn: VPCGatewayAttachment
+    Properties:
+      RouteTableId: !Ref RouteTable
+      DestinationCidrBlock: 0.0.0.0/0
+      GatewayId: !Ref InternetGateway
+
+  SubnetRouteTableAssociation:
+    Type: AWS::EC2::SubnetRouteTableAssociation
+    Properties:
+      SubnetId: !Ref PublicSubnet
+      RouteTableId: !Ref RouteTable
+
+  # ── Security Group ───────────────────────────────────────────────────────────
+
+  AppSecurityGroup:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      GroupDescription: World Cup app - allow HTTP/HTTPS/SSH
+      VpcId: !Ref VPC
+      SecurityGroupIngress:
+        - IpProtocol: tcp
+          FromPort: 22
+          ToPort: 22
+          CidrIp: !Ref AllowedSSHCidr
+          Description: SSH
+        - IpProtocol: tcp
+          FromPort: 80
+          ToPort: 80
+          CidrIp: 0.0.0.0/0
+          Description: HTTP
+        - IpProtocol: tcp
+          FromPort: 443
+          ToPort: 443
+          CidrIp: 0.0.0.0/0
+          Description: HTTPS
+      SecurityGroupEgress:
+        - IpProtocol: -1
+          CidrIp: 0.0.0.0/0
+      Tags:
+        - Key: Name
+          Value: !Sub "wc-sg-${EnvironmentName}"
+
+  # ── IAM Role for EC2 (SSM + CloudWatch) ────────────────────────────────
+
+  EC2Role:
+    Type: AWS::IAM::Role
+    Properties:
+      RoleName: !Sub "wc-ec2-role-${EnvironmentName}"
+      AssumeRolePolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service: ec2.amazonaws.com
+            Action: sts:AssumeRole
+      ManagedPolicyArns:
+        - arn:aws:iam::aws:policy/AmazonSSMManagedInstanceCore
+        - arn:aws:iam::aws:policy/CloudWatchAgentServerPolicy
+      Tags:
+        - Key: Name
+          Value: !Sub "wc-ec2-role-${EnvironmentName}"
+
+  EC2InstanceProfile:
+    Type: AWS::IAM::InstanceProfile
+    Properties:
+      InstanceProfileName: !Sub "wc-ec2-profile-${EnvironmentName}"
+      Roles:
+        - !Ref EC2Role
+
+  # ── Elastic IP ───────────────────────────────────────────────────────────────
+
+  ElasticIP:
+    Type: AWS::EC2::EIP
+    DependsOn: VPCGatewayAttachment
+    Properties:
+      Domain: vpc
+      Tags:
+        - Key: Name
+          Value: !Sub "wc-eip-${EnvironmentName}"
+
+  EIPAssociation:
+    Type: AWS::EC2::EIPAssociation
+    Properties:
+      InstanceId: !Ref AppInstance
+      AllocationId: !GetAtt ElasticIP.AllocationId
+
+  # ── EC2 Instance ─────────────────────────────────────────────────────────────
+
+  AppInstance:
+    Type: AWS::EC2::Instance
+    Properties:
+      InstanceType: !Ref InstanceType
+      ImageId: !FindInMap [RegionMap, !Ref AWS::Region, AMI]
+      KeyName: !Ref KeyPairName
+      IamInstanceProfile: !Ref EC2InstanceProfile
+      SubnetId: !Ref PublicSubnet
+      SecurityGroupIds:
+        - !Ref AppSecurityGroup
+      BlockDeviceMappings:
+        - DeviceName: /dev/xvda
+          Ebs:
+            VolumeSize: !Ref VolumeSize
+            VolumeType: gp3
+            DeleteOnTermination: true
+            Encrypted: true
+      UserData:
+        Fn::Base64: !Sub |
+          #!/bin/bash
+          set -euo pipefail
+          exec > >(tee /var/log/user-data.log | logger -t user-data) 2>&1
+
+          echo "=== Updating system ==="
+          dnf update -y
+
+          echo "=== Installing Docker ==="
+          dnf install -y docker
+          systemctl enable docker
+          systemctl start docker
+          usermod -aG docker ec2-user
+
+          echo "=== Installing Docker Compose v2 ==="
+          DOCKER_CONFIG=/usr/local/lib/docker
+          mkdir -p $DOCKER_CONFIG/cli-plugins
+          curl -SL "https://github.com/docker/compose/releases/latest/download/docker-compose-linux-x86_64" \
+            -o $DOCKER_CONFIG/cli-plugins/docker-compose
+          chmod +x $DOCKER_CONFIG/cli-plugins/docker-compose
+          ln -sf $DOCKER_CONFIG/cli-plugins/docker-compose /usr/local/bin/docker-compose
+
+          echo "=== Installing utilities ==="
+          dnf install -y git htop curl unzip jq
+
+          echo "=== Installing AWS CLI v2 ==="
+          curl -s "https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip" -o /tmp/awscliv2.zip
+          unzip -q /tmp/awscliv2.zip -d /tmp
+          /tmp/aws/install
+          rm -rf /tmp/aws /tmp/awscliv2.zip
+
+          echo "=== Creating app directory ==="
+          mkdir -p /opt/app
+          chown ec2-user:ec2-user /opt/app
+
+          echo "=== Bootstrap complete ==="
+      Tags:
+        - Key: Name
+          Value: !Sub "wc-server-${EnvironmentName}"
+        - Key: Environment
+          Value: !Ref EnvironmentName
+
+# ── Outputs ──────────────────────────────────────────────────────────────────
+
+Outputs:
+  PublicIP:
+    Description: Elastic IP of the app server
+    Value: !Ref ElasticIP
+    Export:
+      Name: !Sub "wc-${EnvironmentName}-public-ip"
+
+  PublicDNS:
+    Description: Public DNS of the app server
+    Value: !GetAtt AppInstance.PublicDnsName
+
+  InstanceId:
+    Description: EC2 Instance ID
+    Value: !Ref AppInstance
+    Export:
+      Name: !Sub "wc-${EnvironmentName}-instance-id"
+
+  SSHCommand:
+    Description: SSH command to connect to the instance
+    Value: !Sub "ssh -i ${KeyPairName}.pem ec2-user@${ElasticIP}"
+
+  VpcId:
+    Description: VPC ID
+    Value: !Ref VPC
+    Export:
+      Name: !Sub "wc-${EnvironmentName}-vpc-id"
