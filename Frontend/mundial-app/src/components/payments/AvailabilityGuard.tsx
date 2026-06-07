@@ -6,7 +6,7 @@ import { hex }                 from '@/lib/design/tokens';
 import { alpha }               from '@/lib/design/effects';
 import { authService }         from '@/services/auth';
 import { detectDistributionChannel } from '@/lib/payments/utils';
-import { PaymentMethodSelector }     from './PaymentMethodSelector';
+import { MercadoPagoCheckout }       from './MercadoPagoCheckout';
 import { UnavailableNotice }         from './UnavailableNotice';
 import type { AvailabilityResponse, ProductDetails } from '@/lib/payments/types';
 
@@ -101,5 +101,5 @@ export function AvailabilityGuard({ productDetails, amount }: AvailabilityGuardP
     );
   }
 
-  return <PaymentMethodSelector productDetails={productDetails} amount={amount} />;
+  return <MercadoPagoCheckout productDetails={productDetails} amount={amount} />;
 }

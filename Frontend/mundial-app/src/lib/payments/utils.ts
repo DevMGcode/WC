@@ -20,21 +20,3 @@ export function detectDistributionChannel(): string {
 
   return 'web';
 }
-
-// Intenta abrir el deeplink de Binance Pay. Si la app no está instalada,
-// hace fallback a la URL web después de 2.5 s.
-export async function openBinancePayDeeplink(
-  deeplink: string,
-  fallbackUrl: string
-): Promise<void> {
-  return new Promise((resolve) => {
-    const start = Date.now();
-    window.location.href = deeplink;
-
-    setTimeout(() => {
-      // Si la pestaña no perdió foco, la app no está instalada → fallback
-      if (Date.now() - start < 3000) window.location.href = fallbackUrl;
-      resolve();
-    }, 2500);
-  });
-}

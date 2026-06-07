@@ -15,10 +15,10 @@ export default function CheckoutResultPage() {
   const router  = useRouter();
   const { isAuthenticated, loading } = useAuth();
 
-  const orderId  = params.get('orderId')  ?? '—';
-  const gateway  = params.get('gateway')  ?? '—'; // 'pay' | 'connect'
-  const status   = params.get('status')   ?? 'failed'; // 'success' | 'failed'
-  const isOk     = status === 'success';
+  const orderId  = params.get('preferenceId') ?? params.get('orderId') ?? '—';
+  const provider = params.get('provider') ?? 'MERCADO_PAGO';
+  const status   = params.get('status')   ?? 'failed'; // 'success' | 'failed' | 'pending'
+  const isOk     = status === 'success' || status === 'approved';
 
   useEffect(() => {
     if (!loading && !isAuthenticated) router.push('/login');
@@ -27,9 +27,7 @@ export default function CheckoutResultPage() {
   const accentColor = isOk ? hex.green.bright : hex.status.danger;
   const accentGlow  = isOk ? alphaOf('green', 0.55) : `${hex.status.danger}55`;
 
-  const gatewayLabel =
-    gateway === 'connect' ? 'Binance Connect' :
-    gateway === 'pay'     ? 'Binance Pay' : gateway;
+  const gatewayLabel = provider === 'MERCADO_PAGO' ? 'Mercado Pago' : provider;
 
   return (
     <div className="w-full relative min-h-screen">

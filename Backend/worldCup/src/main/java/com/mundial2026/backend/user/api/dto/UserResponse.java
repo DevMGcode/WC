@@ -17,6 +17,7 @@ public record UserResponse(
         String status,
         Boolean emailVerified,
         Set<String> roles,
-        OffsetDateTime createdAt
+        OffsetDateTime createdAt,
+        Boolean isPremium
 ) {
 }

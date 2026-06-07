@@ -96,7 +96,10 @@ public class SecurityConfig {
                     // Sub-endpoints públicos dentro de rutas privadas (stats globales / ranking global):
                     "/api/v1/rankings/global/**",
                     "/api/v1/predictions/count",
-                    "/api/v1/users/count"
+                    "/api/v1/users/count",
+
+                    // Webhooks de proveedores de pago (validados por firma HMAC, no por JWT)
+                    "/api/v1/public/payments/**"
                 ).permitAll()
                 // El resto (predictions, leagues, scores, rankings/user, users/{id}, etc.)
                 // requiere autenticación; los controllers validan ownership con SecurityUtils.

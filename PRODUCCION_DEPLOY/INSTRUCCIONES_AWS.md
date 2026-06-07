@@ -1,9 +1,44 @@
-# Despliegue en Azure — Orionix Gol
+# Despliegue en AWS — Orionix Gol
+
+> 📝 **Nota:** La infraestructura migró de Azure a **AWS EC2**. El stack
+> Docker es agnóstico, así que los pasos a partir de "Conectarse e instalar
+> Docker" son idénticos. Solo cambia el proveedor donde aprovisionas la VM.
 
 ## Requisitos previos
-- Cuenta de Azure activa
-- Dominio propio (opcional, Azure da uno gratis)
+- Cuenta de AWS activa (con tarjeta para el free tier)
+- Par de llaves SSH (.pem)
+- Dominio propio o usar el DNS público de EC2 (`ec2-XX-XX-XX-XX.compute.amazonaws.com`)
 - Git instalado en tu máquina local
+
+---
+
+## PASO 1 — Crear la VM en AWS (EC2)
+
+1. AWS Console → **EC2 → Launch Instance**.
+2. Configuración recomendada:
+   - **AMI:** Ubuntu Server 22.04 LTS (free tier elegible)
+   - **Instance type:** `t3.small` (2 vCPU, 2 GB RAM) — ~$15/mes
+     o `t3.medium` (2 vCPU, 4 GB RAM) — ~$30/mes (recomendado para Spring Boot)
+   - **Key pair:** crea o reutiliza una `.pem`
+   - **Security group (firewall):** permite puertos
+     - 22 (SSH) — restringe a tu IP
+     - 80 (HTTP) — abierto al mundo
+     - 443 (HTTPS) — abierto al mundo
+   - **Storage:** 20 GB gp3 mínimo
+
+3. Una vez creada, anota la **IP pública** o el **DNS público** de la instancia.
+
+---
+
+## PASO 2 — Conectarse a la VM e instalar Docker
+
+```bash
+# Conectarse por SSH (cambia la ruta de la .pem y la IP)
+chmod 400 ~/.ssh/tu-llave.pem
+ssh -i ~/.ssh/tu-llave.pem ubuntu@<IP_PUBLICA_VM>
+
+# Instalar Docker
+curl -fsSL https://get.docker.com | sh
 
 ---
 
@@ -221,15 +256,71 @@ docker exec orionix-postgres pg_dump -U postgres worldcup2026_db > backup_$(date
 
 ---
 
-## Si usas el dominio gratuito de Azure
+## Si usas el dominio gratuito de AWS (EC2 Public DNS)
 
-Si no tienes dominio propio, Azure da uno así:
-`orionixgol.eastus.cloudapp.azure.com`
+Si no tienes dominio propio, AWS da uno así:
+`ec2-XX-XX-XX-XX.compute-1.amazonaws.com`
 
-Para configurarlo:
-1. Portal Azure → VM → **Configuración IP** → **Etiqueta de nombre DNS**
-2. Escribe `orionixgol` → el dominio queda como `orionixgol.eastus.cloudapp.azure.com`
-3. Usa ese dominio en todas las variables `<CAMBIAR_tu-dominio>`
+- Aparece en la consola EC2 → Instance → **Public IPv4 DNS**.
+- Sirve para pruebas, pero **NO recomendado para producción** porque cambia
+  si reinicias la instancia (asigna **Elastic IP** para que sea estable).
+- Para SSL con Let's Encrypt necesitas un dominio propio (Let's Encrypt
+  rechaza los dominios `*.amazonaws.com`).
+
+**Recomendación:** compra un dominio (Namecheap, Cloudflare, Route 53 — ~$10/año)
+y apuntalo a la Elastic IP de tu EC2.
+
+---
+
+## 💳 Configurar Mercado Pago en producción (post-deploy)
+
+Una vez la VM está corriendo y el dominio responde por HTTPS:
+
+### 1. Verifica que las variables están en `.env.prod`
+```
+MERCADO_PAGO_MODE=real
+MERCADO_PAGO_ACCESS_TOKEN=APP_USR-...
+MERCADO_PAGO_PUBLIC_KEY=APP_USR-...
+MERCADO_PAGO_NOTIFICATION_URL=https://tu-dominio.com/api/v1/public/payments/mercadopago/webhook
+```
+
+### 2. Configura el webhook en el panel de Mercado Pago
+1. Ve a https://www.mercadopago.com.co/developers/panel
+2. Entra a tu aplicación → menú **"Webhooks"**.
+3. Click **"Configurar notificaciones"** o **"Crear webhook"**.
+4. **URL del webhook:**
+   ```
+   https://tu-dominio.com/api/v1/public/payments/mercadopago/webhook
+   ```
+5. **Eventos a notificar:** marca solo **`Payments`** (los demás no aplican).
+6. Mercado Pago te da un **Secret** — cópialo.
+7. Pégalo en `.env.prod`:
+   ```
+   MERCADO_PAGO_WEBHOOK_SECRET=tu-secret-de-mp
+   ```
+8. Redeploy del backend:
+   ```bash
+   docker compose -f docker-compose.prod.yml --env-file .env.prod up -d --build backend
+   ```
+
+### 3. Prueba el flujo end-to-end
+1. Entra a `https://tu-dominio.com/checkout` desde un navegador normal.
+2. Paga con tu propia tarjeta real ($20.000 COP).
+3. Verifica que:
+   - Volviste a `/checkout/result?status=success`.
+   - Tu usuario aparece como `isPremium: true` (consulta `GET /api/v1/users/{id}`).
+   - En la BD: `SELECT * FROM subscription WHERE user_id = X` muestra `status='ACTIVE'`.
+   - En el panel MP ves el pago.
+4. **Si recibiste el pago pero el Premium NO se activó** → revisa los logs:
+   ```bash
+   docker logs orionix-backend --tail 100 | grep -i mercadopago
+   ```
+   El error más común es webhook que no llega (firewall) o firma inválida (secret mal pegado).
+
+### 4. Retirar la plata a Nequi/banco
+- Entra a https://www.mercadopago.com.co
+- **"Retirar dinero"** → elige Nequi o tu banco asociado
+- Llega en minutos (Nequi) o 1-3 días (banco)
 
 ---
 

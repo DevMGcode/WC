@@ -45,6 +45,14 @@ services:
       MAIL_PASSWORD: ${MAIL_PASSWORD}
       EMAIL_VERIFICATION_REQUIRED: ${EMAIL_VERIFICATION_REQUIRED}
       FRONTEND_URL: ${FRONTEND_URL}
+      # ── Mercado Pago (pasarela de pago) ──────────────────────────────────
+      MERCADO_PAGO_MODE: ${MERCADO_PAGO_MODE}
+      MERCADO_PAGO_ACCESS_TOKEN: ${MERCADO_PAGO_ACCESS_TOKEN}
+      MERCADO_PAGO_PUBLIC_KEY: ${MERCADO_PAGO_PUBLIC_KEY}
+      MERCADO_PAGO_CLIENT_ID: ${MERCADO_PAGO_CLIENT_ID}
+      MERCADO_PAGO_CLIENT_SECRET: ${MERCADO_PAGO_CLIENT_SECRET}
+      MERCADO_PAGO_WEBHOOK_SECRET: ${MERCADO_PAGO_WEBHOOK_SECRET}
+      MERCADO_PAGO_NOTIFICATION_URL: ${MERCADO_PAGO_NOTIFICATION_URL}
     networks:
       - internal
     depends_on:
@@ -76,6 +84,7 @@ services:
         # enviará eventos a GlitchTip ni registrará visitas en GA4.
         NEXT_PUBLIC_GLITCHTIP_DSN: ${NEXT_PUBLIC_GLITCHTIP_DSN}
         NEXT_PUBLIC_GA_ID: ${NEXT_PUBLIC_GA_ID}
+        NEXT_PUBLIC_MP_PUBLIC_KEY: ${NEXT_PUBLIC_MP_PUBLIC_KEY}
         INTERNAL_API_BASE_URL: http://backend:8080
     image: orionix-frontend:prod
     container_name: orionix-frontend
