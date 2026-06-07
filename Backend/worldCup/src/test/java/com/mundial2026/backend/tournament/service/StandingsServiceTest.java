@@ -90,11 +90,15 @@ class StandingsServiceTest {
 
     private ExternalStanding std(String group, int rank, long teamId, String name, int points, int gf, int ga) {
         return new ExternalStanding(group, rank, teamId, name, null,
-                3, 2, 1, 0, gf, ga, gf - ga, points, "WWD", null, Instant.now());
+                3, 2, 1, 0, gf, ga, gf - ga, points, "WWD", null, Instant.now(),
+                null, null, null, null, null, null,
+                null, null, null, null, null, null);
     }
 
     private ExternalStanding stdNullGa(String group, int rank, long teamId, String name) {
         return new ExternalStanding(group, rank, teamId, name, null,
-                3, 1, 0, 2, 3, null, null, 3, "LLD", null, Instant.now());
+                3, 1, 0, 2, 3, null, null, 3, "LLD", null, Instant.now(),
+                null, null, null, null, null, null,
+                null, null, null, null, null, null);
     }
 }

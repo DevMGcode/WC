@@ -1,6 +1,8 @@
 package com.mundial2026.backend.tournament.api;
 
 import com.mundial2026.backend.common.response.ApiResponse;
+import com.mundial2026.backend.security.SecurityUtils;
+import com.mundial2026.backend.subscription.service.PremiumGuard;
 import com.mundial2026.backend.tournament.api.dto.FixturePredictionResponse;
 import com.mundial2026.backend.tournament.api.dto.HeadToHeadFixtureResponse;
 import com.mundial2026.backend.tournament.api.dto.LineupResponse;
@@ -41,6 +43,8 @@ public class FixtureExtrasController {
     private final MatchStatisticsService matchStatisticsService;
     private final MatchPlayerStatsService matchPlayerStatsService;
     private final FixtureRepository fixtureRepository;
+    private final SecurityUtils securityUtils;
+    private final PremiumGuard premiumGuard;
 
     /** Resuelve el externalProviderId dado el ID interno. Retorna null si no existe o no tiene ID externo. */
     private Long resolveExternalId(Long fixtureId) {
@@ -64,25 +68,31 @@ public class FixtureExtrasController {
                 fixturePredictionService.findByFixture(extId)));
     }
 
+    /** Head-to-head entre dos equipos: exclusivo Premium. */
     @GetMapping("/headtohead")
     public ResponseEntity<ApiResponse<List<HeadToHeadFixtureResponse>>> headToHead(
             @RequestParam Long team1,
             @RequestParam Long team2,
             @RequestParam(required = false) Integer last) {
+        premiumGuard.requirePremium(securityUtils.currentUser(), "ver head-to-head entre equipos");
         return ResponseEntity.ok(ApiResponse.ok("Head-to-head",
                 headToHeadService.findBetween(team1, team2, last)));
     }
 
+    /** Estadísticas detalladas del partido (posesión, tiros, esquinas, etc.): exclusivo Premium. */
     @GetMapping("/{fixtureId}/statistics")
     public ResponseEntity<ApiResponse<List<MatchStatisticResponse>>> statistics(@PathVariable Long fixtureId) {
+        premiumGuard.requirePremium(securityUtils.currentUser(), "ver estadísticas detalladas del partido");
         Long extId = resolveExternalId(fixtureId);
         if (extId == null) return ResponseEntity.ok(ApiResponse.ok("Match statistics", Collections.emptyList()));
         return ResponseEntity.ok(ApiResponse.ok("Match statistics",
                 matchStatisticsService.findByFixture(extId)));
     }
 
+    /** Estadísticas individuales de jugadores por partido: exclusivo Premium. */
     @GetMapping("/{fixtureId}/players")
     public ResponseEntity<ApiResponse<List<MatchPlayerStatResponse>>> players(@PathVariable Long fixtureId) {
+        premiumGuard.requirePremium(securityUtils.currentUser(), "ver estadísticas de jugadores por partido");
         Long extId = resolveExternalId(fixtureId);
         if (extId == null) return ResponseEntity.ok(ApiResponse.ok("Match player stats", Collections.emptyList()));
         return ResponseEntity.ok(ApiResponse.ok("Match player stats",

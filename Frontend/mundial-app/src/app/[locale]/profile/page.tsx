@@ -20,17 +20,8 @@ import SettingsTab       from './_components/SettingsTab';
 import EditProfileModal  from './_components/EditProfileModal';
 import ChangePasswordModal from './_components/ChangePasswordModal';
 import LogoutModal       from './_components/LogoutModal';
-
-const ALL_TEAMS = [
-  { id: 1, name: 'Argentina', shortName: 'ARG', flagUrl: 'https://flagcdn.com/ar.svg' },
-  { id: 2, name: 'Brasil',    shortName: 'BRA', flagUrl: 'https://flagcdn.com/br.svg' },
-  { id: 3, name: 'España',    shortName: 'ESP', flagUrl: 'https://flagcdn.com/es.svg' },
-  { id: 4, name: 'Alemania',  shortName: 'ALE', flagUrl: 'https://flagcdn.com/de.svg' },
-  { id: 5, name: 'Francia',   shortName: 'FRA', flagUrl: 'https://flagcdn.com/fr.svg' },
-  { id: 6, name: 'México',    shortName: 'MEX', flagUrl: 'https://flagcdn.com/mx.svg' },
-  { id: 7, name: 'Colombia',  shortName: 'COL', flagUrl: 'https://flagcdn.com/co.svg' },
-  { id: 8, name: 'Uruguay',   shortName: 'URU', flagUrl: 'https://flagcdn.com/uy.svg' },
-];
+import { favoriteTeamsService, type FavoriteTeam, type PublicTeam } from '@/services/favoriteTeams';
+import { usePremium } from '@/hooks/usePremium';
 
 export default function ProfilePage() {
   const router   = useRouter();
@@ -39,7 +30,13 @@ export default function ProfilePage() {
   const t = useTranslations();
 
   const [user, setUser]                   = useState<any>(null);
-  const [favoriteTeams, setFavoriteTeams] = useState<any[]>([]);
+  const { isPremium }                     = usePremium();
+
+  // Favoritos múltiples conectados al backend
+  const [favoriteTeams, setFavoriteTeams] = useState<FavoriteTeam[]>([]);
+  const [allTeams,      setAllTeams]      = useState<PublicTeam[]>([]);
+  const [favsLoading,   setFavsLoading]   = useState(true);
+  const [favsError,     setFavsError]     = useState<string | null>(null);
   const [activeTab, setActiveTab]         = useState<'PROFILE' | 'FAVORITES' | 'SETTINGS'>(
     () => (typeof window !== 'undefined' ? (sessionStorage.getItem('profile-tab') as any) || 'PROFILE' : 'PROFILE')
   );
@@ -125,11 +122,72 @@ export default function ProfilePage() {
       };
       fetchStats();
     }
-    setFavoriteTeams([
-      { id: 1, name: 'Argentina', shortName: 'ARG', flagUrl: 'https://flagcdn.com/ar.svg' },
-      { id: 2, name: 'Colombia',  shortName: 'COL', flagUrl: 'https://flagcdn.com/co.svg' },
-    ]);
   }, [authUser, authLoading, isAuthenticated, router]);
+
+  // Cargar equipos disponibles + favoritos del usuario
+  useEffect(() => {
+    if (!authUser?.id) return;
+    let cancelled = false;
+    const fetchFavorites = async () => {
+      setFavsLoading(true);
+      setFavsError(null);
+      try {
+        const [favs, teams] = await Promise.all([
+          favoriteTeamsService.list(authUser.id),
+          favoriteTeamsService.listAllTeams(),
+        ]);
+        if (cancelled) return;
+        setFavoriteTeams(favs);
+        setAllTeams(teams);
+      } catch (e: any) {
+        if (!cancelled) setFavsError(e?.message || 'No se pudieron cargar los favoritos');
+      } finally {
+        if (!cancelled) setFavsLoading(false);
+      }
+    };
+    fetchFavorites();
+    return () => { cancelled = true; };
+  }, [authUser?.id]);
+
+  // ── Handlers favoritos ───────────────────────────────────────────────────
+
+  const handleAddFavorite = async (teamId: number) => {
+    if (!authUser?.id) return;
+    setFavsError(null);
+    try {
+      const added = await favoriteTeamsService.add(authUser.id, teamId);
+      // Recargar la lista para que el orden y principal queden bien
+      const refreshed = await favoriteTeamsService.list(authUser.id);
+      setFavoriteTeams(refreshed);
+      void added;
+    } catch (e: any) {
+      setFavsError(e?.message || 'No se pudo agregar el equipo');
+    }
+  };
+
+  const handleRemoveFavorite = async (teamId: number) => {
+    if (!authUser?.id) return;
+    setFavsError(null);
+    try {
+      await favoriteTeamsService.remove(authUser.id, teamId);
+      const refreshed = await favoriteTeamsService.list(authUser.id);
+      setFavoriteTeams(refreshed);
+    } catch (e: any) {
+      setFavsError(e?.message || 'No se pudo quitar el equipo');
+    }
+  };
+
+  const handleSetPrimaryFavorite = async (teamId: number) => {
+    if (!authUser?.id) return;
+    setFavsError(null);
+    try {
+      await favoriteTeamsService.setPrimary(authUser.id, teamId);
+      const refreshed = await favoriteTeamsService.list(authUser.id);
+      setFavoriteTeams(refreshed);
+    } catch (e: any) {
+      setFavsError(e?.message || 'No se pudo marcar como principal');
+    }
+  };
 
   // ── Handlers ──────────────────────────────────────────────────────────────
 
@@ -310,8 +368,13 @@ export default function ProfilePage() {
           {activeTab === 'FAVORITES' && (
             <FavoritesTab
               favoriteTeams={favoriteTeams}
-              setFavoriteTeams={setFavoriteTeams}
-              allTeams={ALL_TEAMS}
+              allTeams={allTeams}
+              isPremium={isPremium}
+              isLoading={favsLoading}
+              errorMsg={favsError}
+              onAdd={handleAddFavorite}
+              onRemove={handleRemoveFavorite}
+              onSetPrimary={handleSetPrimaryFavorite}
               t={t}
             />
           )}

@@ -33,6 +33,16 @@ import {
 
 const fetchJson = (url: string) => fetch(url).then(r => r.ok ? r.json() : null).then(d => d?.data ?? null);
 
+/** Fetch que añade el JWT si el usuario está autenticado (para que el backend conozca el plan). */
+const fetchJsonAuth = (url: string) => {
+  const headers: HeadersInit = {};
+  if (typeof window !== 'undefined') {
+    const token = window.localStorage.getItem('authToken');
+    if (token) (headers as Record<string,string>).Authorization = `Bearer ${token}`;
+  }
+  return fetch(url, { headers }).then(r => r.ok ? r.json() : null).then(d => d?.data ?? null);
+};
+
 // ─── Query Keys ────────────────────────────────────────────────────────────
 // Claves únicas para el caché. Cambiando el key se invalida el caché.
 export const QUERY_KEYS = {
@@ -43,8 +53,8 @@ export const QUERY_KEYS = {
   tournamentFixtures: (tid: number) => ['tournament', tid, 'fixtures'] as const,
   groups:           (tid: number) => ['tournament', tid, 'groups']    as const,
   teams:            ['teams']                           as const,
-  topScorers:       ['stats', 'topscorers']             as const,
-  topAssists:       ['stats', 'topassists']             as const,
+  topScorers:       (limit?: number, teamId?: number) => ['stats', 'topscorers', limit ?? 'def', teamId ?? 'all'] as const,
+  topAssists:       (limit?: number, teamId?: number) => ['stats', 'topassists', limit ?? 'def', teamId ?? 'all'] as const,
   userPredictions:  (userId: number) => ['predictions', 'user', userId] as const,
   userScore:        (userId: number, tid: number) => ['scores', 'user', userId, tid] as const,
   scoreHistory:     (userId: number, tid: number) => ['scores', 'history', userId, tid] as const,
@@ -87,20 +97,33 @@ export function useLiveFixtures() {
   });
 }
 
-/** Goleadores del torneo — endpoint público, cachea 5 min */
-export function useTopScorers() {
+/**
+ * Goleadores del torneo. Endpoint soft-auth:
+ *   - Anónimo o Free → top 10
+ *   - Premium → hasta 50 + filtro opcional por equipo
+ * Manda el JWT si el usuario está logueado.
+ */
+export function useTopScorers(opts?: { limit?: number; teamId?: number }) {
+  const qs = new URLSearchParams();
+  if (opts?.limit)  qs.set('limit',  String(opts.limit));
+  if (opts?.teamId) qs.set('teamId', String(opts.teamId));
+  const suffix = qs.toString() ? `?${qs}` : '';
   return useQuery({
-    queryKey: QUERY_KEYS.topScorers,
-    queryFn:  () => fetchJson('/api/v1/public/players/topscorers'),
+    queryKey: QUERY_KEYS.topScorers(opts?.limit, opts?.teamId),
+    queryFn:  () => fetchJsonAuth(`/api/v1/public/players/topscorers${suffix}`),
     staleTime: STALE.scorers,
   });
 }
 
-/** Asistencias del torneo — endpoint público, cachea 5 min */
-export function useTopAssists() {
+/** Asistencias del torneo — exclusivo Premium. */
+export function useTopAssists(opts?: { limit?: number; teamId?: number }) {
+  const qs = new URLSearchParams();
+  if (opts?.limit)  qs.set('limit',  String(opts.limit));
+  if (opts?.teamId) qs.set('teamId', String(opts.teamId));
+  const suffix = qs.toString() ? `?${qs}` : '';
   return useQuery({
-    queryKey: QUERY_KEYS.topAssists,
-    queryFn:  () => fetchJson('/api/v1/public/players/topassists'),
+    queryKey: QUERY_KEYS.topAssists(opts?.limit, opts?.teamId),
+    queryFn:  () => fetchJsonAuth(`/api/v1/public/players/topassists${suffix}`),
     staleTime: STALE.scorers,
   });
 }

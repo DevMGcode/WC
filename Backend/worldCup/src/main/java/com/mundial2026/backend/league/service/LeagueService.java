@@ -16,6 +16,7 @@ import com.mundial2026.backend.league.domain.PrivateLeagueMember;
 import com.mundial2026.backend.league.repository.PrivateLeagueMemberRepository;
 import com.mundial2026.backend.league.repository.PrivateLeagueRepository;
 import com.mundial2026.backend.scoring.service.ScoringService;
+import com.mundial2026.backend.subscription.service.PremiumGuard;
 import com.mundial2026.backend.tournament.domain.Tournament;
 import com.mundial2026.backend.tournament.repository.TournamentRepository;
 import com.mundial2026.backend.user.domain.AppUser;
@@ -45,10 +46,17 @@ public class LeagueService {
     private final AppUserRepository appUserRepository;
     private final ScoringService scoringService;
     private final EntityManager entityManager;
+    private final PremiumGuard premiumGuard;
 
     @Transactional
     public LeagueResponse create(CreateLeagueRequest request) {
         AppUser owner = findUser(request.userId());
+
+        // ── Gate Free/Premium ──────────────────────────────────────────────
+        // Crear ligas privadas es exclusivo Premium.
+        premiumGuard.requirePremium(owner, "crear ligas privadas");
+        // ── Fin del gate ───────────────────────────────────────────────────
+
         Tournament tournament = findTournament(request.tournamentId());
 
         PrivateLeague league = new PrivateLeague();
@@ -102,6 +110,30 @@ public class LeagueService {
                 .orElseThrow(() -> new ResourceNotFoundException("Liga no encontrada con código=" + request.leagueCode()));
 
         ensureCanJoin(league, user.getId());
+
+        // ── Gate Free/Premium ──────────────────────────────────────────────
+        // Premium: puede unirse a ligas ilimitadas.
+        // Free:    solo a UNA liga, y solo si el dueño es Premium.
+        if (!premiumGuard.isPremium(user)) {
+            // El dueño de la liga debe ser Premium (es la "invitación")
+            if (!premiumGuard.isPremium(league.getOwner())) {
+                throw new BusinessRuleException(
+                        "Solo puedes unirte a ligas creadas por usuarios Premium. " +
+                        "Hazte Premium para unirte a cualquier liga sin restricción."
+                );
+            }
+
+            // Máximo de ligas para Free
+            long alreadyJoined = privateLeagueMemberRepository.countByUserId(user.getId());
+            if (alreadyJoined >= PremiumGuard.FREE_MAX_LEAGUES) {
+                throw new BusinessRuleException(
+                        "Como usuario gratuito solo puedes estar en " +
+                        PremiumGuard.FREE_MAX_LEAGUES + " liga. " +
+                        "Hazte Premium para unirte a más."
+                );
+            }
+        }
+        // ── Fin del gate ───────────────────────────────────────────────────
 
         PrivateLeagueMember member = addMember(league, user, LeagueMemberRole.MEMBER);
         return toMemberResponse(member);
@@ -241,7 +273,8 @@ public class LeagueService {
                 member.getUser().getUsername(),
                 member.getUser().getFirstName() + " " + member.getUser().getLastName(),
                 member.getRole(),
-                member.getJoinedAt()
+                member.getJoinedAt(),
+                premiumGuard.isPremium(member.getUser().getId())
         );
     }
 

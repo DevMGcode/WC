@@ -59,8 +59,8 @@ export const Navigation: React.FC = () => {
       }
       if (originalHref === '/scorers') {
         await Promise.all([
-          queryClient.prefetchQuery({ queryKey: QUERY_KEYS.topScorers, queryFn: () => fetchJson('/api/v1/public/players/topscorers'), staleTime: STALE.scorers }),
-          queryClient.prefetchQuery({ queryKey: QUERY_KEYS.topAssists,  queryFn: () => fetchJson('/api/v1/public/players/topassists'),  staleTime: STALE.scorers }),
+          queryClient.prefetchQuery({ queryKey: QUERY_KEYS.topScorers(), queryFn: () => fetchJson('/api/v1/public/players/topscorers'), staleTime: STALE.scorers }),
+          queryClient.prefetchQuery({ queryKey: QUERY_KEYS.topAssists(),  queryFn: () => fetchJson('/api/v1/public/players/topassists'),  staleTime: STALE.scorers }),
         ]);
       }
     } catch {

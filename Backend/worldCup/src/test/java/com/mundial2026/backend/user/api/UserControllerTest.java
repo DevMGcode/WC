@@ -97,7 +97,9 @@ class UserControllerTest {
                 "ACTIVE",
                 true,
                 Set.of("USER"),
-                OffsetDateTime.now()
+                OffsetDateTime.now(),
+                false,
+                null
         );
 
         when(userService.findById(3L)).thenReturn(user);

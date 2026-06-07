@@ -21,5 +21,8 @@ public interface PrivateLeagueMemberRepository extends JpaRepository<PrivateLeag
 
     long countByLeagueId(Long leagueId);
 
+    /** Cuántas ligas tiene un usuario (para limitar al plan FREE). */
+    long countByUserId(Long userId);
+
     void deleteByLeagueIdAndUserId(Long leagueId, Long userId);
 }

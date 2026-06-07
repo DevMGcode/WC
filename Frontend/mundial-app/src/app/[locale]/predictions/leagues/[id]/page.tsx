@@ -13,6 +13,7 @@ import {
 } from 'react-icons/fi';
 import { hex } from '@/lib/design/tokens';
 import { alpha, alphaOf } from '@/lib/design/effects';
+import { PremiumBadge } from '@/components/premium/PremiumBadge';
 
 /* ── GlowBar ── */
 const GlowBar = ({ value, max = 100, color, height = 4 }: {
@@ -326,10 +327,11 @@ export default function LeagueDetailPage() {
                             ? MEDALS[idx]
                             : <span className="text-orionix-text-muted text-xs font-bold">{idx + 1}</span>}
                         </span>
-                        <span className={`text-xs font-bold truncate ${isMe ? 'text-green-300' : 'text-orionix-text-secondary'}`}>
+                        <span className={`text-xs font-bold truncate flex items-center gap-1.5 ${isMe ? 'text-green-300' : 'text-orionix-text-secondary'}`}>
                           {isMe && <span className="text-green-500 mr-0.5">›</span>}
-                          {player.fullName || player.username}
-                          {isMe && ` ${t('league.you')}`}
+                          <span className="truncate">{player.fullName || player.username}</span>
+                          <PremiumBadge isPremium={player.isPremium} />
+                          {isMe && <span className="text-orionix-text-muted">{t('league.you')}</span>}
                         </span>
                         <span className="text-xs font-black tabular-nums text-center text-orionix-text-secondary">{player.exactScores}</span>
                         <span className="text-xs font-black tabular-nums text-center text-orionix-text-secondary">{player.winnerHits}</span>

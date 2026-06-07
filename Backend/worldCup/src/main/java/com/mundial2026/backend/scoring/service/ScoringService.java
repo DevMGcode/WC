@@ -8,6 +8,7 @@ import com.mundial2026.backend.prediction.repository.UserPredictionRepository;
 import com.mundial2026.backend.scoring.api.dto.PredictionScoreResponse;
 import com.mundial2026.backend.scoring.api.dto.UserRankPositionResponse;
 import com.mundial2026.backend.scoring.api.dto.UserTournamentScoreResponse;
+import com.mundial2026.backend.subscription.service.PremiumGuard;
 import com.mundial2026.backend.tournament.domain.Fixture;
 import com.mundial2026.backend.tournament.domain.FixtureStatus;
 import com.mundial2026.backend.user.domain.AppUser;
@@ -30,6 +31,7 @@ public class ScoringService {
 
     private final UserPredictionRepository userPredictionRepository;
     private final AppUserRepository appUserRepository;
+    private final PremiumGuard premiumGuard;
 
     @Transactional(readOnly = true)
     public UserTournamentScoreResponse getUserScore(Long tournamentId, Long userId) {
@@ -98,7 +100,8 @@ public class ScoringService {
                     score.winnerHits(),
                     score.bonusPoints(),
                     score.matchesScored(),
-                    score.lastScoredAt()
+                    score.lastScoredAt(),
+                    premiumGuard.isPremium(score.userId())
             ));
         }
 
@@ -121,7 +124,8 @@ public class ScoringService {
                     entry.winnerHits(),
                     entry.bonusPoints(),
                     entry.matchesScored(),
-                    entry.lastScoredAt()
+                    entry.lastScoredAt(),
+                    entry.isPremium()
             ));
         }
 
@@ -156,7 +160,7 @@ public class ScoringService {
         }
 
         List<UserTournamentScoreResponse> ranking = accumulatorMap.values().stream()
-                .map(ScoreAccumulator::toResponse)
+                .map(acc -> acc.toResponse(premiumGuard.isPremium(acc.user.getId())))
                 .sorted(Comparator
                         .comparing(UserTournamentScoreResponse::totalPoints, Comparator.nullsLast(Comparator.reverseOrder()))
                         .thenComparing(UserTournamentScoreResponse::exactScores, Comparator.nullsLast(Comparator.reverseOrder()))
@@ -178,7 +182,8 @@ public class ScoringService {
                     entry.bonusPoints(),
                     entry.matchesScored(),
                     i + 1,
-                    entry.lastScoredAt()
+                    entry.lastScoredAt(),
+                    entry.isPremium()
             ));
         }
 
@@ -223,7 +228,8 @@ public class ScoringService {
                 0,
                 0,
                 1,
-                OffsetDateTime.now()
+                OffsetDateTime.now(),
+                premiumGuard.isPremium(user.getId())
         );
     }
 
@@ -267,7 +273,7 @@ public class ScoringService {
             this.tournamentId = tournamentId;
         }
 
-        private UserTournamentScoreResponse toResponse() {
+        private UserTournamentScoreResponse toResponse(boolean isPremium) {
             return new UserTournamentScoreResponse(
                     user.getId(),
                     user.getUsername(),
@@ -279,7 +285,8 @@ public class ScoringService {
                     bonusPoints,
                     matchesScored,
                     0,
-                    lastScoredAt
+                    lastScoredAt,
+                    isPremium
             );
         }
     }

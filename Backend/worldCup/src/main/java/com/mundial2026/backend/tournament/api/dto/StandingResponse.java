@@ -18,6 +18,18 @@ public record StandingResponse(
         Integer points,
         String form,
         String description,
-        Instant lastUpdate
+        Instant lastUpdate,
+        Integer homePlayed,
+        Integer homeWon,
+        Integer homeDrawn,
+        Integer homeLost,
+        Integer homeGoalsFor,
+        Integer homeGoalsAgainst,
+        Integer awayPlayed,
+        Integer awayWon,
+        Integer awayDrawn,
+        Integer awayLost,
+        Integer awayGoalsFor,
+        Integer awayGoalsAgainst
 ) {
 }

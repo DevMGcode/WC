@@ -53,11 +53,19 @@ public class FixtureSyncService {
 
     @Transactional
     public SyncResult syncAllTournamentFixtures() {
+        return syncAllTournamentFixtures(0);
+    }
+
+    @Transactional
+    public SyncResult syncAllTournamentFixtures(int season) {
         // API-Football exposes the team→group association through /standings,
         // NOT through /fixtures (where `leagueRound` is the matchday: "Group Stage - 1/2/3").
         // We fetch standings once and build a team→groupCode map for the whole sync.
-        Map<Long, String> teamToGroup = buildTeamGroupMap();
-        return persist(apiFootballClient.fetchTournamentFixtures(), teamToGroup);
+        Map<Long, String> teamToGroup = buildTeamGroupMap(season);
+        List<ExternalMatch> fixtures = season > 0
+                ? apiFootballClient.fetchTournamentFixtures(season)
+                : apiFootballClient.fetchTournamentFixtures();
+        return persist(fixtures, teamToGroup);
     }
 
     @Transactional
@@ -71,9 +79,11 @@ public class FixtureSyncService {
      * by hitting the /standings endpoint once. Falls back to an empty map if the
      * call fails so the fixture sync can still proceed.
      */
-    private Map<Long, String> buildTeamGroupMap() {
+    private Map<Long, String> buildTeamGroupMap(int season) {
         try {
-            List<ExternalStanding> standings = apiFootballClient.fetchStandings();
+            List<ExternalStanding> standings = season > 0
+                    ? apiFootballClient.fetchStandings(season)
+                    : apiFootballClient.fetchStandings();
             Map<Long, String> map = new HashMap<>();
             for (ExternalStanding s : standings) {
                 String groupCode = parseGroupLetter(s.groupName());
@@ -81,8 +91,8 @@ public class FixtureSyncService {
                     map.put(s.teamId(), groupCode);
                 }
             }
-            log.info("Built team→group map from /standings: {} teams across {} groups",
-                    map.size(), map.values().stream().distinct().count());
+            log.info("Built team→group map from /standings: season={}, {} teams across {} groups",
+                    season > 0 ? season : "default", map.size(), map.values().stream().distinct().count());
             return map;
         } catch (Exception e) {
             log.warn("Could not fetch standings to build team→group map; fixtures will be saved without group_stage_id. cause={}",

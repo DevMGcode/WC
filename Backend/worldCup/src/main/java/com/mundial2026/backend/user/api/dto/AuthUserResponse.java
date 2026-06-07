@@ -7,6 +7,7 @@ public record AuthUserResponse(
         String email,
         String displayName,
         String status,
-        OffsetDateTime createdAt
+        OffsetDateTime createdAt,
+        Boolean isPremium
 ) {
 }

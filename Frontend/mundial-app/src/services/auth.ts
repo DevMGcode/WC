@@ -9,6 +9,10 @@ export interface AuthUser {
   displayName: string;
   status: 'ACTIVE' | 'BLOCKED' | 'PENDING';
   createdAt: string;
+  // Campos de monetización — requieren migración en backend
+  country?:      string; // ISO 3166-1 alpha-2, ej. "CO"
+  isPremium?:    boolean;
+  premiumUntil?: string | null;
 }
 
 export interface AuthResponse {
