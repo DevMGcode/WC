@@ -5,6 +5,8 @@ import com.mundial2026.backend.common.exception.ResourceNotFoundException;
 import com.mundial2026.backend.user.api.dto.ChangePasswordRequest;
 import com.mundial2026.backend.user.api.dto.CreateUserRequest;
 import com.mundial2026.backend.user.api.dto.UpdateUserProfileRequest;
+import com.mundial2026.backend.tournament.domain.Team;
+import com.mundial2026.backend.tournament.repository.TeamRepository;
 import com.mundial2026.backend.user.domain.AppUser;
 import com.mundial2026.backend.user.domain.RoleEntity;
 import com.mundial2026.backend.user.repository.AppUserRepository;
@@ -26,6 +28,7 @@ public class UserService {
 
     private final AppUserRepository appUserRepository;
     private final RoleRepository roleRepository;
+    private final TeamRepository teamRepository;
     private final PasswordEncoder passwordEncoder;
     private final EmailService emailService;
 
@@ -215,6 +218,19 @@ public class UserService {
         // Actualizar la contraseña
         user.setPasswordHash(passwordEncoder.encode(request.newPassword()));
 
+        return appUserRepository.save(user);
+    }
+
+    /**
+     * Establece el equipo favorito del usuario.
+     * Relevante para el plan FREE: determina qué 3 partidos puede predecir gratis.
+     */
+    @Transactional
+    public AppUser setFavoriteTeam(Long userId, Long teamId) {
+        AppUser user = findById(userId);
+        Team team = teamRepository.findById(teamId)
+                .orElseThrow(() -> new ResourceNotFoundException("Equipo no encontrado con id=" + teamId));
+        user.setFavoriteTeam(team);
         return appUserRepository.save(user);
     }
 }

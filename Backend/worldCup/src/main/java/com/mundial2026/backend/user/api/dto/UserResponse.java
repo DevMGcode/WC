@@ -18,6 +18,7 @@ public record UserResponse(
         Boolean emailVerified,
         Set<String> roles,
         OffsetDateTime createdAt,
-        Boolean isPremium
+        Boolean isPremium,
+        Long favoriteTeamId
 ) {
 }

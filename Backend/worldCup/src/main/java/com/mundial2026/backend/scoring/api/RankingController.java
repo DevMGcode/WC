@@ -6,6 +6,7 @@ import com.mundial2026.backend.scoring.api.dto.UserRankPositionResponse;
 import com.mundial2026.backend.scoring.api.dto.UserTournamentScoreResponse;
 import com.mundial2026.backend.scoring.service.ScoringService;
 import com.mundial2026.backend.security.SecurityUtils;
+import com.mundial2026.backend.subscription.service.PremiumGuard;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -21,6 +22,7 @@ public class RankingController {
 
     private final ScoringService scoringService;
     private final SecurityUtils securityUtils;
+    private final PremiumGuard premiumGuard;
 
     @GetMapping("/global/{tournamentId}")
     public ResponseEntity<ApiResponse<PaginatedResponse<UserTournamentScoreResponse>>> getGlobalRanking(
@@ -28,7 +30,9 @@ public class RankingController {
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "10") int pageSize
     ) {
-        // Ranking global es PÚBLICO de verdad: lo ve cualquiera.
+        // Gate Premium: el ranking global es exclusivo del Pase Mundial.
+        premiumGuard.requirePremium(securityUtils.currentUser(), "ver el ranking global");
+
         return ResponseEntity.ok(ApiResponse.ok(
                 "Ranking global encontrado",
                 scoringService.getGlobalRanking(tournamentId, page, pageSize)

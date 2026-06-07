@@ -1,5 +1,6 @@
 package com.mundial2026.backend.user.domain;
 
+import com.mundial2026.backend.tournament.domain.Team;
 import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.Setter;
@@ -69,6 +70,16 @@ public class AppUser {
 
     @Column(name = "email_verification_token", length = 64)
     private String verificationToken;
+
+    /**
+     * Equipo favorito del usuario.
+     * Lo usa el plan FREE para determinar qué 3 partidos puede predecir gratis
+     * (los de fase de grupos del equipo). El plan PREMIUM lo ignora — puede
+     * predecir todos los partidos.
+     */
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "favorite_team_id")
+    private Team favoriteTeam;
 
     @Column(name = "created_at", insertable = false, updatable = false)
     private OffsetDateTime createdAt;

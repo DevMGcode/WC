@@ -14,6 +14,8 @@ import {
 } from 'react-icons/fi';
 import { hex } from '@/lib/design/tokens';
 import { alpha, alphaOf } from '@/lib/design/effects';
+import { usePremium } from '@/hooks/usePremium';
+import { PremiumGate } from '@/components/premium/PremiumGate';
 
 /* ── Shared input style helper ── */
 const inputStyle: React.CSSProperties = {
@@ -23,7 +25,65 @@ const inputStyle: React.CSSProperties = {
   outline: 'none',
 };
 
+/**
+ * Página /predictions/create-league
+ * Gate Premium: crear ligas es exclusivo Premium. Free ve paywall.
+ *
+ * El wrapper externo es liviano (solo decide qué renderizar).
+ * El componente interno CreateLeagueForm solo se monta para Premium —
+ * esto evita inconsistencias de hooks entre renders.
+ */
 export default function CreateLeaguePage() {
+  const { isPremium, isLoading: premiumLoading } = usePremium();
+
+  if (premiumLoading) {
+    return (
+      <div className="w-full relative min-h-screen">
+        <div className="relative z-10">
+          <Header title="Orionix Gol" subtitle="Crear liga privada" centered />
+        </div>
+        <div className="flex items-center justify-center py-24">
+          <motion.div
+            className="w-10 h-10 rounded-full border-2"
+            style={{
+              borderColor: alphaOf('green', 0.20),
+              borderTopColor: hex.green.bright,
+            }}
+            animate={{ rotate: 360 }}
+            transition={{ duration: 0.9, repeat: Infinity, ease: 'linear' }}
+          />
+        </div>
+      </div>
+    );
+  }
+
+  if (!isPremium) {
+    return (
+      <div className="w-full relative min-h-screen">
+        <div className="relative z-10">
+          <Header title="Orionix Gol" subtitle="Crear liga privada" centered />
+        </div>
+        <div className="relative z-10 max-w-2xl mx-auto px-4 sm:px-6 py-12 pb-32">
+          <PremiumGate
+            feature="crear ligas privadas"
+            description="Crea ligas privadas ilimitadas con tus amigos y compite por el mejor pronosticador del Mundial. Esta funcionalidad es exclusiva del Pase Mundial 2026."
+          >
+            <div />
+          </PremiumGate>
+        </div>
+      </div>
+    );
+  }
+
+  return <CreateLeagueForm />;
+}
+
+/**
+ * Componente real con el formulario de creación.
+ * Solo se monta cuando el usuario es Premium — así sus hooks no se mezclan
+ * con la lógica del gate.
+ */
+function CreateLeagueForm() {
   const router = useRouter();
   const t      = useTranslations();
   const { user } = useAuth();

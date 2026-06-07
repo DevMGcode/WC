@@ -4,6 +4,7 @@ import com.mundial2026.backend.common.response.ApiResponse;
 import com.mundial2026.backend.security.SecurityUtils;
 import com.mundial2026.backend.user.api.dto.ChangePasswordRequest;
 import com.mundial2026.backend.user.api.dto.CreateUserRequest;
+import com.mundial2026.backend.user.api.dto.SetFavoriteTeamRequest;
 import com.mundial2026.backend.user.api.dto.UpdateUserProfileRequest;
 import com.mundial2026.backend.user.api.dto.UserResponse;
 import com.mundial2026.backend.user.api.mapper.UserMapper;
@@ -55,6 +56,19 @@ public class UserController {
         AppUser user = userService.updateProfile(id, request);
         return ResponseEntity.ok(ApiResponse.ok(
                 "Perfil actualizado correctamente",
+                userMapper.toResponse(user)
+        ));
+    }
+
+    @PutMapping("/{id}/favorite-team")
+    public ResponseEntity<ApiResponse<UserResponse>> setFavoriteTeam(
+            @PathVariable Long id,
+            @Valid @RequestBody SetFavoriteTeamRequest request) {
+        // Anti-IDOR: solo el propio usuario o ADMIN
+        securityUtils.requireSelfOrAdmin(id);
+        AppUser user = userService.setFavoriteTeam(id, request.teamId());
+        return ResponseEntity.ok(ApiResponse.ok(
+                "Equipo favorito actualizado",
                 userMapper.toResponse(user)
         ));
     }

@@ -68,6 +68,15 @@ public class SecurityConfig {
                 // Signup: POST /api/v1/users (sin auth, creación de cuenta)
                 .requestMatchers(HttpMethod.POST, "/api/v1/users").permitAll()
 
+                // Stats Premium-only que viven bajo /public por simetría con el resto del módulo
+                // tournament — pero requieren JWT + suscripción Premium (validado en controller).
+                .requestMatchers(HttpMethod.GET,
+                        "/api/v1/public/players/topassists",
+                        "/api/v1/public/fixtures/*/statistics",
+                        "/api/v1/public/fixtures/*/players",
+                        "/api/v1/public/fixtures/headtohead"
+                ).authenticated()
+
                 // ─────────────────────────────────────────────────────────────
                 // PERMIT ALL para GETs públicos. Ya filtramos arriba las
                 // mutaciones, así que estos matchers solo aplican a GET (y al
@@ -93,8 +102,7 @@ public class SecurityConfig {
                     "/api/v1/public/teams",
                     "/api/v1/public/standings/**",
 
-                    // Sub-endpoints públicos dentro de rutas privadas (stats globales / ranking global):
-                    "/api/v1/rankings/global/**",
+                    // Sub-endpoints públicos dentro de rutas privadas (counts globales):
                     "/api/v1/predictions/count",
                     "/api/v1/users/count",
 

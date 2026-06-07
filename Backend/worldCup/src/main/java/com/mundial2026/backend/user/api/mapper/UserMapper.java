@@ -31,7 +31,8 @@ public class UserMapper {
                 user.getEmailVerified(),
                 user.getRoles().stream().map(role -> role.getCode()).collect(Collectors.toSet()),
                 user.getCreatedAt(),
-                subscriptionService.isPremium(user.getId())
+                subscriptionService.isPremium(user.getId()),
+                user.getFavoriteTeam() != null ? user.getFavoriteTeam().getId() : null
         );
     }
 
