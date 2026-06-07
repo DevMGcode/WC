@@ -1,0 +1,40 @@
+package com.mundial2026.backend.tournament.repository;
+
+import com.mundial2026.backend.tournament.domain.Venue;
+import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Query;
+
+import java.util.Optional;
+
+/**
+ * Repository for {@link Venue}.
+ *
+ * <p><b>Por qué dos lookups distintos:</b> API-Football devuelve {@code venue.id=null}
+ * para estadios que no participan en ninguna liga regular indexada en su sistema.
+ * Confirmado contra datos reales:
+ * <ul>
+ *   <li>Mundial 2018 Rusia: 14/64 fixtures con {@code venue.id=null} (Luzhniki, etc.)</li>
+ *   <li>Mundial 2022 Qatar: 56/64 (87% — casi todos los estadios qataríes)</li>
+ *   <li>Mundial 2026 US/CAN/MX: 38/72 (los 8 estadios estilo NFL de EE.UU.)</li>
+ * </ul>
+ *
+ * <p>Por eso necesitamos <b>dos rutas de upsert</b>:
+ * <ol>
+ *   <li>{@link #findByExternalProviderId(Long)} — preferida cuando el id existe.</li>
+ *   <li>{@link #findByNameAndCityIgnoreCase(String, String)} — fallback para venues
+ *       sin id. Comparación case-insensitive para tolerar variaciones del proveedor.</li>
+ * </ol>
+ */
+public interface VenueRepository extends JpaRepository<Venue, Long> {
+
+    Optional<Venue> findByExternalProviderId(Long externalProviderId);
+
+    /**
+     * Lookup case-insensitive por (name, city). Solo se usa cuando el venue viene
+     * sin {@code external_provider_id}. Para venues con id, preferir {@link #findByExternalProviderId}.
+     */
+    @Query("SELECT v FROM Venue v " +
+           "WHERE LOWER(v.name) = LOWER(:name) " +
+           "  AND LOWER(v.cityName) = LOWER(:city)")
+    Optional<Venue> findByNameAndCityIgnoreCase(String name, String city);
+}
