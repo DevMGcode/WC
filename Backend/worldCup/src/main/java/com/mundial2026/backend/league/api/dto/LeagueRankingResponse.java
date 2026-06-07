@@ -12,6 +12,7 @@ public record LeagueRankingResponse(
         Integer winnerHits,
         Integer bonusPoints,
         Integer matchesScored,
-        OffsetDateTime lastScoredAt
+        OffsetDateTime lastScoredAt,
+        Boolean isPremium
 ) {
 }

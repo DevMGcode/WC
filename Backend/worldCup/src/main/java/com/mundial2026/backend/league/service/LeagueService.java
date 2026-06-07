@@ -273,7 +273,8 @@ public class LeagueService {
                 member.getUser().getUsername(),
                 member.getUser().getFirstName() + " " + member.getUser().getLastName(),
                 member.getRole(),
-                member.getJoinedAt()
+                member.getJoinedAt(),
+                premiumGuard.isPremium(member.getUser().getId())
         );
     }
 

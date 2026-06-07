@@ -9,6 +9,7 @@ public record LeagueMemberResponse(
         String username,
         String fullName,
         String role,
-        OffsetDateTime joinedAt
+        OffsetDateTime joinedAt,
+        Boolean isPremium
 ) {
 }

@@ -9,6 +9,8 @@ import { hex } from '@/lib/design/tokens';
 import { alpha, alphaOf, borders, surfaces } from '@/lib/design/effects';
 import { useTranslations } from 'next-intl';
 import { useTopScorers, useTopAssists } from '@/hooks/useTournamentData';
+import { usePremium } from '@/hooks/usePremium';
+import { PremiumGate } from '@/components/premium/PremiumGate';
 
 interface PlayerStat {
   playerId: number;
@@ -169,12 +171,20 @@ function Skeleton() {
 export default function ScorersClient() {
   const t = useTranslations();
   const [tab, setTab] = useState<Tab>('goals');
+  const { isPremium } = usePremium();
 
-  const { data: rawScorers = [], isLoading: loadingScorers, isError: errScorers } = useTopScorers();
-  const { data: rawAssists = [], isLoading: loadingAssists, isError: errAssists  } = useTopAssists();
+  // Free → top 10, Premium → top 50. El backend igual fuerza el cap, pero pedimos
+  // explícitamente el número correcto para no traer datos extras y agilizar el cache.
+  const desiredLimit = isPremium ? 50 : 10;
+  const { data: rawScorers, isLoading: loadingScorers, isError: errScorers } = useTopScorers({ limit: desiredLimit });
+  // Top asistentes lo intentamos solo si es Premium (Free igual recibiría 422)
+  const { data: rawAssists, isLoading: loadingAssists, isError: errAssists  } = useTopAssists(
+    isPremium ? { limit: 50 } : undefined
+  );
 
-  const scorers = rawScorers as PlayerStat[];
-  const assists = rawAssists as PlayerStat[];
+  // Defensivo: nullish coalescing porque el endpoint puede devolver null si está vacío o 422
+  const scorers = (rawScorers ?? []) as PlayerStat[];
+  const assists = (rawAssists ?? []) as PlayerStat[];
 
   const loading = loadingScorers || loadingAssists;
   const error   = (errScorers || errAssists) ? t('common.connectionError') : '';
@@ -245,8 +255,40 @@ export default function ScorersClient() {
           })}
         </motion.div>
 
-        {/* ── Content ── */}
-        {loading ? (
+        {/* ── Banner de plan ── */}
+        <motion.div
+          initial={{ opacity: 0, y: 6 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.15 }}
+          className="mb-4 flex items-center gap-2 rounded-xl px-3 py-2"
+          style={{
+            background: isPremium ? alpha(hex.gold.base, 0.08) : alpha(hex.neutral.white, 0.04),
+            border: isPremium ? `1px solid ${alpha(hex.gold.base, 0.30)}` : `1px solid ${alpha(hex.neutral.white, 0.08)}`,
+          }}
+        >
+          <FiAward size={12} style={{ color: isPremium ? hex.gold.base : alpha(hex.text.secondary, 0.55) }} />
+          <p className="text-[11px] tracking-wide" style={{ color: isPremium ? hex.gold.base : hex.text.secondary }}>
+            {tab === 'goals' ? (
+              isPremium
+                ? <>Mostrando <strong>Top 50</strong> goleadores con tu Pase Mundial.</>
+                : <>Mostrando <strong>Top 10</strong> del plan gratuito. Hazte Premium para ver hasta <strong>Top 50</strong> + filtros por equipo.</>
+            ) : (
+              isPremium
+                ? <>Mostrando <strong>Top 50</strong> asistentes con tu Pase Mundial.</>
+                : <>Top asistentes es <strong>exclusivo del Pase Mundial</strong>.</>
+            )}
+          </p>
+        </motion.div>
+
+        {/* ── Si Free intenta ver asistentes, mostramos paywall ── */}
+        {tab === 'assists' && !isPremium ? (
+          <PremiumGate
+            feature="el top asistentes del Mundial"
+            description="Las estadísticas de asistencias son exclusivas del Pase Mundial. Desbloquea el ranking completo y filtros por equipo."
+          >
+            <div />
+          </PremiumGate>
+        ) : loading ? (
           <Skeleton />
         ) : error ? (
           <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }}
