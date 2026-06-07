@@ -27,6 +27,7 @@ import TourButton from '@/components/Tour/TourButton';
 import { getTourSteps } from '@/components/Tour/tourSteps';
 import { hex } from '@/lib/design/tokens';
 import { alpha, alphaOf, surfaces } from '@/lib/design/effects';
+import { usePremium } from '@/hooks/usePremium';
 
 /* ══════════════════════════════════════════
    TYPES
@@ -269,6 +270,7 @@ export default function PredictionsPage() {
   const t            = useTranslations();
   const locale       = useLocale();
   const { user }     = useAuth();
+  const { isPremium } = usePremium();
 
   const initialTab = (() => {
     const tab = searchParams.get('tab')?.toLowerCase();
@@ -878,17 +880,24 @@ export default function PredictionsPage() {
                   <p className="text-sm mb-5" style={{ color: hex.text.secondary }}>{t('predictions.competeFriends')}</p>
                   <div className="grid grid-cols-2 gap-3">
                     <motion.button
-                      whileHover={{ scale: 1.02, boxShadow: `0 6px 22px ${alphaOf('green', 0.25)}` }}
+                      whileHover={{ scale: 1.02, boxShadow: `0 6px 22px ${isPremium ? alphaOf('green', 0.25) : alpha(hex.gold.base, 0.25)}` }}
                       whileTap={{ scale: 0.97 }}
-                      onClick={() => { setShowLeagueModal(false); router.push('/predictions/create-league'); }}
+                      onClick={() => {
+                        setShowLeagueModal(false);
+                        router.push(isPremium ? '/predictions/create-league' : '/premium');
+                      }}
                       className="flex items-center justify-center gap-2 py-3 rounded-xl font-black tracking-[0.08em] uppercase"
                       style={{
-                        background: `linear-gradient(135deg, ${alphaOf('green', 0.18)}, ${alpha(hex.bg.elevated, 0.90)})`,
-                        border: `1px solid ${alphaOf('green', 0.32)}`,
-                        color: hex.green.bright,
+                        background: isPremium
+                          ? `linear-gradient(135deg, ${alphaOf('green', 0.18)}, ${alpha(hex.bg.elevated, 0.90)})`
+                          : `linear-gradient(135deg, ${alpha(hex.gold.base, 0.14)}, ${alpha(hex.bg.elevated, 0.90)})`,
+                        border: `1px solid ${isPremium ? alphaOf('green', 0.32) : alpha(hex.gold.base, 0.42)}`,
+                        color: isPremium ? hex.green.bright : hex.gold.base,
                         fontSize: '14px',
                       }}>
-                      <FiPlus size={15} /> {t('predictions.createLeague')}
+                      {isPremium ? <FiPlus size={15} /> : <FiZap size={15} />}
+                      {t('predictions.createLeague')}
+                      {!isPremium && <span className="text-[9px] ml-1 px-1.5 py-0.5 rounded-full" style={{ background: hex.gold.base, color: hex.neutral.black }}>PRO</span>}
                     </motion.button>
                     <motion.button
                       whileHover={{ scale: 1.02, boxShadow: `0 6px 22px ${alpha(hex.green.hover, 0.22)}` }}
@@ -941,8 +950,15 @@ export default function PredictionsPage() {
               </div>
               <div className="space-y-3">
                 {[
-                  { label: t('predictions.createLeague'), icon: <FiPlus size={15} />, color: hex.green.bright, glow: alphaOf('green', 0.55), route: '/predictions/create-league' },
-                  { label: t('predictions.joinLeague'),   icon: <FiLogIn size={15} />, color: hex.green.hover,  glow: alpha(hex.green.hover, 0.55), route: '/predictions/join-league' },
+                  {
+                    label: t('predictions.createLeague'),
+                    icon: isPremium ? <FiPlus size={15} /> : <FiZap size={15} />,
+                    color: isPremium ? hex.green.bright : hex.gold.base,
+                    glow: isPremium ? alphaOf('green', 0.55) : alpha(hex.gold.base, 0.55),
+                    route: isPremium ? '/predictions/create-league' : '/premium',
+                    premiumOnly: !isPremium,
+                  },
+                  { label: t('predictions.joinLeague'),   icon: <FiLogIn size={15} />, color: hex.green.hover,  glow: alpha(hex.green.hover, 0.55), route: '/predictions/join-league', premiumOnly: false },
                 ].map((opt) => (
                   <motion.button key={opt.label}
                     whileHover={{ scale: 1.02 }}
@@ -959,6 +975,12 @@ export default function PredictionsPage() {
                     <div className="absolute inset-x-0 top-0 h-px"
                       style={{ background: `linear-gradient(90deg, transparent, ${opt.color}55, transparent)` }} />
                     {opt.icon} {opt.label}
+                    {opt.premiumOnly && (
+                      <span className="ml-auto text-[9px] px-1.5 py-0.5 rounded-full"
+                        style={{ background: hex.gold.base, color: hex.neutral.black, letterSpacing: '0.1em' }}>
+                        PRO
+                      </span>
+                    )}
                   </motion.button>
                 ))}
               </div>

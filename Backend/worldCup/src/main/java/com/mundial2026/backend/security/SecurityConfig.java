@@ -100,6 +100,7 @@ public class SecurityConfig {
                     "/api/v1/public/players/**",
                     "/api/v1/public/fixtures/**",
                     "/api/v1/public/teams",
+                    "/api/v1/public/teams/**",
                     "/api/v1/public/standings/**",
 
                     // Sub-endpoints públicos dentro de rutas privadas (counts globales):
