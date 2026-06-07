@@ -94,10 +94,14 @@ public class ApiFootballClient implements MatchDataPort, TeamDataPort, Standings
     }
 
     public List<ExternalMatch> fetchTournamentFixtures() {
+        return fetchTournamentFixtures(props.season());
+    }
+
+    public List<ExternalMatch> fetchTournamentFixtures(int season) {
         ApiFootballEnvelope<FixtureItem> envelope = call(uri -> uri
                         .path("/fixtures")
                         .queryParam("league", props.leagueId())
-                        .queryParam("season", props.season())
+                        .queryParam("season", season)
                         .build(),
                 fixtureItemType());
         return mapper.toDomainList(envelope.response());
@@ -105,10 +109,14 @@ public class ApiFootballClient implements MatchDataPort, TeamDataPort, Standings
 
     @Override
     public List<ExternalTeam> fetchTournamentTeams() {
+        return fetchTournamentTeams(props.season());
+    }
+
+    public List<ExternalTeam> fetchTournamentTeams(int season) {
         ApiFootballEnvelope<TeamItem> envelope = call(uri -> uri
                         .path("/teams")
                         .queryParam("league", props.leagueId())
-                        .queryParam("season", props.season())
+                        .queryParam("season", season)
                         .build(),
                 teamItemType());
         return mapper.toTeamList(envelope.response());
@@ -116,10 +124,14 @@ public class ApiFootballClient implements MatchDataPort, TeamDataPort, Standings
 
     @Override
     public List<ExternalStanding> fetchStandings() {
+        return fetchStandings(props.season());
+    }
+
+    public List<ExternalStanding> fetchStandings(int season) {
         ApiFootballEnvelope<StandingsResponse> envelope = call(uri -> uri
                         .path("/standings")
                         .queryParam("league", props.leagueId())
-                        .queryParam("season", props.season())
+                        .queryParam("season", season)
                         .build(),
                 standingsResponseType());
         return mapper.toStandingsList(envelope.response());

@@ -92,4 +92,8 @@ tournament:
   sync:
     enabled: "${SYNC_ENABLED:true}"
     live-poll-ms: "${LIVE_POLL_MS:5000}"
+    # Set to true once API-Football enables events/lineups/stats coverage for the active season.
+    # For 2026, the API returns empty arrays — polling wastes daily quota with no data gain.
+    events-enabled: "${SYNC_EVENTS_ENABLED:false}"
+    event-poll-ms: "${EVENT_POLL_MS:15000}"
     csv-bootstrap-path: classpath:data/fixtures-bootstrap.csv

@@ -17,6 +17,7 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import java.util.List;
@@ -83,13 +84,15 @@ public class ApiFootballDiagnosticsController {
     }
 
     @PostMapping("/sync/teams")
-    public ResponseEntity<ApiResponse<TeamSyncService.SyncResult>> syncTeams() {
-        return ResponseEntity.ok(ApiResponse.ok("Teams synced", teamSyncService.syncAll()));
+    public ResponseEntity<ApiResponse<TeamSyncService.SyncResult>> syncTeams(
+            @RequestParam(defaultValue = "2026") int season) {
+        return ResponseEntity.ok(ApiResponse.ok("Teams synced (season=" + season + ")", teamSyncService.syncAll(season)));
     }
 
     @PostMapping("/sync/fixtures")
-    public ResponseEntity<ApiResponse<FixtureSyncService.SyncResult>> syncFixtures() {
-        return ResponseEntity.ok(ApiResponse.ok("Fixtures synced", fixtureSyncService.syncAllTournamentFixtures()));
+    public ResponseEntity<ApiResponse<FixtureSyncService.SyncResult>> syncFixtures(
+            @RequestParam(defaultValue = "2026") int season) {
+        return ResponseEntity.ok(ApiResponse.ok("Fixtures synced (season=" + season + ")", fixtureSyncService.syncAllTournamentFixtures(season)));
     }
 
     @PostMapping("/sync/fixtures/live")

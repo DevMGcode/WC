@@ -1,6 +1,7 @@
 package com.mundial2026.backend.tournament.integration.sync;
 
 import com.mundial2026.backend.tournament.domain.Team;
+import com.mundial2026.backend.tournament.integration.apifootball.ApiFootballClient;
 import com.mundial2026.backend.tournament.integration.port.ExternalTeam;
 import com.mundial2026.backend.tournament.integration.port.TeamDataPort;
 import com.mundial2026.backend.tournament.repository.TeamRepository;
@@ -16,12 +17,21 @@ public class TeamSyncService {
 
     private final TeamDataPort teamDataPort;
     private final TeamRepository teamRepository;
+    private final ApiFootballClient apiFootballClient;
 
     @Transactional
     public SyncResult syncAll() {
+        return syncAll(0);
+    }
+
+    @Transactional
+    public SyncResult syncAll(int season) {
+        Iterable<ExternalTeam> teams = season > 0
+                ? apiFootballClient.fetchTournamentTeams(season)
+                : teamDataPort.fetchTournamentTeams();
         long inserted = 0;
         long updated = 0;
-        for (ExternalTeam ext : teamDataPort.fetchTournamentTeams()) {
+        for (ExternalTeam ext : teams) {
             if (ext.externalId() == null) {
                 continue;
             }
@@ -34,7 +44,7 @@ public class TeamSyncService {
                 updated++;
             }
         }
-        log.info("Team sync done: inserted={}, updated={}", inserted, updated);
+        log.info("Team sync done: season={}, inserted={}, updated={}", season > 0 ? season : "default", inserted, updated);
         return new SyncResult(inserted, updated);
     }
 

@@ -56,7 +56,19 @@ public class StandingsService {
                 e.points(),
                 e.form(),
                 e.description(),
-                e.lastUpdate()
+                e.lastUpdate(),
+                e.homePlayed(),
+                e.homeWon(),
+                e.homeDrawn(),
+                e.homeLost(),
+                e.homeGoalsFor(),
+                e.homeGoalsAgainst(),
+                e.awayPlayed(),
+                e.awayWon(),
+                e.awayDrawn(),
+                e.awayLost(),
+                e.awayGoalsFor(),
+                e.awayGoalsAgainst()
         );
     }
 }

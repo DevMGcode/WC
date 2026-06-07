@@ -24,6 +24,7 @@ export default function ConfigTab() {
   const [restoring,       setRestoring]       = useState(false);
   const [confirmRestore,  setConfirmRestore]  = useState(false);
   const [recalculating,   setRecalculating]   = useState(false);
+  const [selectedSeason,  setSelectedSeason]  = useState(2026);
   const [message,         setMessage]         = useState('');
   const [error,           setError]           = useState('');
 
@@ -44,35 +45,35 @@ export default function ConfigTab() {
     finally { setStatusLoading(false); }
   };
 
-  const syncTeams = async () => {
+  const syncTeams = async (season: number) => {
     setSyncingTeams(true); setTeamResult(null); setError(''); setMessage('');
     try {
-      const res  = await apiFetch('/api/v1/admin/apifootball/sync/teams', { method: 'POST' });
+      const res  = await apiFetch(`/api/v1/admin/apifootball/sync/teams?season=${season}`, { method: 'POST' });
       const data = await res.json();
       if (!res.ok) { setError(data?.message || 'Error al sincronizar equipos'); return; }
       const td = data?.data ?? {};
-      setTeamResult({ created: td.created ?? 0, updated: td.updated ?? 0, errors: td.errors ?? [] });
+      setTeamResult({ created: td.inserted ?? td.created ?? 0, updated: td.updated ?? 0, errors: td.errors ?? [] });
     } catch { setError('Error de conexión'); }
     finally { setSyncingTeams(false); }
   };
 
-  const syncFixtures = async () => {
+  const syncFixtures = async (season: number) => {
     setSyncingFixtures(true); setFixtureResult(null); setError(''); setMessage('');
     try {
-      const res  = await apiFetch('/api/v1/admin/apifootball/sync/fixtures', { method: 'POST' });
+      const res  = await apiFetch(`/api/v1/admin/apifootball/sync/fixtures?season=${season}`, { method: 'POST' });
       const data = await res.json();
       if (!res.ok) { setError(data?.message || 'Error al sincronizar partidos'); return; }
       const fd = data?.data ?? {};
-      setFixtureResult({ created: fd.created ?? 0, updated: fd.updated ?? 0, errors: fd.errors ?? [] });
+      setFixtureResult({ created: fd.inserted ?? fd.created ?? 0, updated: fd.updated ?? 0, errors: fd.errors ?? [] });
     } catch { setError('Error de conexión'); }
     finally { setSyncingFixtures(false); }
   };
 
   const syncAll = async () => {
     setError(''); setMessage('');
-    await syncTeams();
-    await syncFixtures();
-    setMessage('Sincronización completa: equipos y partidos actualizados');
+    await syncTeams(selectedSeason);
+    await syncFixtures(selectedSeason);
+    setMessage(`Sincronización completa — Mundial ${selectedSeason}: equipos y partidos actualizados`);
   };
 
   const syncLive = async () => {
@@ -234,17 +235,55 @@ export default function ConfigTab() {
       <div className="rounded-2xl p-5 relative overflow-hidden"
         style={{ background: surfaces.card(), border: `1px solid ${alpha(hex.green.hover, 0.18)}`, backdropFilter: 'blur(20px)' }}>
         <div className="absolute inset-x-0 top-0 h-px" style={{ background: `linear-gradient(90deg,transparent,${alpha(hex.green.hover, 0.5)},transparent)` }} />
-        <div className="flex items-start justify-between gap-4 mb-3">
-          <div className="min-w-0">
-            <p className="text-sm font-black text-white tracking-wide">Sincronizar desde API Football</p>
-            <p className="text-[10px] mt-0.5" style={{ color: alpha(hex.text.secondary, 0.45) }}>
-              Importa equipos y todos los partidos del Mundial 2026 con resultados en vivo
-            </p>
+        {/* Header */}
+        <div className="mb-4">
+          <p className="text-sm font-black text-white tracking-wide">Sincronizar desde API Football</p>
+          <p className="text-[10px] mt-0.5" style={{ color: alpha(hex.text.secondary, 0.45) }}>
+            Importa equipos y todos los partidos del Mundial {selectedSeason} con resultados en vivo
+          </p>
+        </div>
+
+        {/* Year selector + sync button */}
+        <div className="flex items-center justify-between gap-3 mb-3">
+          {/* Season pills */}
+          <div className="flex items-center gap-2">
+            <span className="text-[9px] font-black tracking-[0.18em] uppercase" style={{ color: alpha(hex.text.secondary, 0.38) }}>Año</span>
+            <div className="flex gap-1.5">
+              {([2018, 2022, 2026] as const).map(yr => {
+                const sel = selectedSeason === yr;
+                return (
+                  <motion.button
+                    key={yr}
+                    onClick={() => !isSyncing && setSelectedSeason(yr)}
+                    disabled={isSyncing}
+                    whileHover={!isSyncing ? { scale: 1.07 } : {}}
+                    whileTap={!isSyncing ? { scale: 0.93 } : {}}
+                    className="flex items-center gap-1 px-2.5 py-1 rounded-lg text-[11px] font-black"
+                    style={{
+                      background: sel ? alpha(hex.green.hover, 0.20) : alpha(hex.neutral.white, 0.05),
+                      border: `1px solid ${sel ? alpha(hex.green.hover, 0.60) : alpha(hex.neutral.white, 0.10)}`,
+                      color: sel ? hex.green.hover : alpha(hex.text.secondary, 0.45),
+                    }}
+                  >
+                    {yr}
+                    {yr < 2026 && (
+                      <span className="text-[7px] px-1 rounded"
+                        style={{ background: alpha(hex.gold.base, 0.15), color: hex.gold.base }}>
+                        hist
+                      </span>
+                    )}
+                    {yr === 2026 && sel && <span style={{ color: hex.green.hover }}>★</span>}
+                  </motion.button>
+                );
+              })}
+            </div>
           </div>
+
+          {/* Sync button */}
           <motion.button onClick={syncAll} disabled={isSyncing}
             className="flex items-center gap-2 px-4 py-2.5 rounded-xl text-[11px] font-black tracking-widest uppercase shrink-0"
-            style={{ background: alpha(hex.green.hover, 0.12), border: `1px solid ${alpha(hex.green.hover, 0.35)}`, color: hex.green.hover, boxShadow: isSyncing ? 'none' : `0 0 16px ${alpha(hex.green.hover, 0.15)}` }}
-            whileHover={!isSyncing ? { scale: 1.03, boxShadow: `0 0 24px ${alpha(hex.green.hover, 0.28)}` } : {}}
+            style={{ background: alpha(hex.green.hover, 0.12), border: `1px solid ${alpha(hex.green.hover, 0.35)}`, color: hex.green.hover }}
+            whileHover={!isSyncing ? { scale: 1.03 } : {}}
             whileTap={!isSyncing ? { scale: 0.97 } : {}}>
             <motion.span animate={isSyncing ? { rotate: 360 } : {}} transition={{ duration: 1, repeat: Infinity, ease: 'linear' }}>
               <FiRefreshCw size={13} />

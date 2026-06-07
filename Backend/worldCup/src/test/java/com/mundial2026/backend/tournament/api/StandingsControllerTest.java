@@ -80,6 +80,8 @@ class StandingsControllerTest {
 
     private StandingResponse row(String group, int rank, String name) {
         return new StandingResponse(group, rank, 1L, name, null,
-                3, 2, 1, 0, 5, 1, 4, 7, "WWD", null, Instant.now());
+                3, 2, 1, 0, 5, 1, 4, 7, "WWD", null, Instant.now(),
+                null, null, null, null, null, null,
+                null, null, null, null, null, null);
     }
 }

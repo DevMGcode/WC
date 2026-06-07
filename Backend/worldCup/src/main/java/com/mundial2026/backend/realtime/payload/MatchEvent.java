@@ -21,6 +21,8 @@ public record MatchEvent(
         OWN_GOAL,
         PENALTY_GOAL,
         PENALTY_MISSED,
+        SHOOTOUT_GOAL,
+        SHOOTOUT_MISSED,
         YELLOW_CARD,
         RED_CARD,
         SUBSTITUTION,

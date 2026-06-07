@@ -18,6 +18,20 @@ public record ExternalStanding(
         Integer points,
         String form,
         String description,
-        Instant lastUpdate
+        Instant lastUpdate,
+        // Home breakdown — null in 2022 (API-Football returns all-null for that season)
+        Integer homePlayed,
+        Integer homeWon,
+        Integer homeDrawn,
+        Integer homeLost,
+        Integer homeGoalsFor,
+        Integer homeGoalsAgainst,
+        // Away breakdown — null in 2022
+        Integer awayPlayed,
+        Integer awayWon,
+        Integer awayDrawn,
+        Integer awayLost,
+        Integer awayGoalsFor,
+        Integer awayGoalsAgainst
 ) {
 }
