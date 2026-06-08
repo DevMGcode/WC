@@ -1,5 +1,6 @@
 package com.mundial2026.backend.subscription.service;
 
+import com.mundial2026.backend.common.exception.BusinessRuleException;
 import com.mundial2026.backend.subscription.domain.PaymentProvider;
 import com.mundial2026.backend.subscription.domain.Subscription;
 import com.mundial2026.backend.subscription.domain.SubscriptionStatus;
@@ -12,6 +13,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
+import java.time.Duration;
 import java.time.OffsetDateTime;
 import java.util.Optional;
 
@@ -31,6 +33,7 @@ public class SubscriptionService {
 
     private final SubscriptionRepository subscriptionRepository;
     private final AppUserRepository userRepository;
+    private final MercadoPagoGateway mercadoPagoGateway;
 
     /**
      * Plan único actualmente disponible: Pase Mundial 2026.
@@ -82,7 +85,7 @@ public class SubscriptionService {
 
         // Si ya hay una ACTIVE vigente, no permitimos crear otra (evita doble cobro)
         if (isPremium(userId)) {
-            throw new IllegalStateException("El usuario ya tiene una suscripción Premium activa.");
+            throw new BusinessRuleException("El usuario ya tiene una suscripción Premium activa.");
         }
 
         Subscription sub = new Subscription();
@@ -142,7 +145,7 @@ public class SubscriptionService {
      * que justamente es el `subscriptionId`.
      */
     @Transactional
-    public Subscription activateById(Long subscriptionId) {
+    public Subscription activateById(Long subscriptionId, String paymentId) {
         Subscription sub = subscriptionRepository.findById(subscriptionId)
                 .orElseThrow(() -> new IllegalArgumentException("Suscripción no encontrada: " + subscriptionId));
 
@@ -154,10 +157,11 @@ public class SubscriptionService {
         sub.setStatus(SubscriptionStatus.ACTIVE);
         sub.setStartedAt(OffsetDateTime.now());
         sub.setExpiresAt(MUNDIAL_PASS_EXPIRES_AT);
+        sub.setPaymentId(paymentId);
 
         Subscription saved = subscriptionRepository.save(sub);
-        log.info("Suscripción ACTIVADA por ID id={} userId={} expiresAt={}",
-                saved.getId(), saved.getUser().getId(), saved.getExpiresAt());
+        log.info("Suscripción ACTIVADA por ID id={} userId={} paymentId={} expiresAt={}",
+                saved.getId(), saved.getUser().getId(), paymentId, saved.getExpiresAt());
         return saved;
     }
 
@@ -201,5 +205,54 @@ public class SubscriptionService {
                     subscriptionRepository.save(sub);
                     log.info("Suscripción CANCELADA id={} userId={}", sub.getId(), userId);
                 });
+    }
+
+    /**
+     * Solicita el reembolso de la suscripción activa del usuario.
+     * Reglas:
+     *   - El usuario debe tener una suscripción ACTIVE.
+     *   - El pago debe haberse confirmado hace menos de 24 horas (started_at).
+     *   - Debe existir un payment_id numérico almacenado (solo disponible en pagos reales).
+     * Si las condiciones se cumplen, llama a MP para reembolsar y marca la suscripción REFUNDED.
+     */
+    @Transactional
+    public void requestRefund(Long userId) {
+        Subscription sub = subscriptionRepository
+                .findActiveByUserId(userId, OffsetDateTime.now())
+                .orElseThrow(() -> {
+                    boolean yaReembolsada = subscriptionRepository
+                            .findFirstByUserIdAndStatus(userId, SubscriptionStatus.REFUNDED)
+                            .isPresent();
+                    return new BusinessRuleException(yaReembolsada
+                            ? "Esta suscripción ya fue reembolsada."
+                            : "No tienes una suscripción Premium activa para reembolsar.");
+                });
+
+        if (sub.getStartedAt() == null) {
+            throw new BusinessRuleException("La suscripción no tiene fecha de activación registrada.");
+        }
+
+        long horasDesdeActivacion = Duration.between(sub.getStartedAt(), OffsetDateTime.now()).toHours();
+        if (horasDesdeActivacion > 24) {
+            throw new BusinessRuleException(
+                    "El período de reembolso de 24 horas ya expiró. La suscripción fue activada hace "
+                    + horasDesdeActivacion + " horas.");
+        }
+
+        if (sub.getPaymentId() == null || sub.getPaymentId().isBlank()) {
+            throw new BusinessRuleException("No se encontró el ID de pago necesario para procesar el reembolso.");
+        }
+
+        try {
+            mercadoPagoGateway.refund(sub.getPaymentId());
+        } catch (IllegalArgumentException | IllegalStateException e) {
+            throw new BusinessRuleException("No se pudo procesar el reembolso: " + e.getMessage());
+        }
+
+        sub.setStatus(SubscriptionStatus.REFUNDED);
+        sub.setRefundedAt(OffsetDateTime.now());
+        subscriptionRepository.save(sub);
+
+        log.info("Suscripción REEMBOLSADA id={} userId={} paymentId={}", sub.getId(), userId, sub.getPaymentId());
     }
 }

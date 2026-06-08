@@ -6,13 +6,23 @@ import com.mundial2026.backend.user.domain.AppUser;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
+import org.springframework.context.annotation.Lazy;
 import org.springframework.stereotype.Service;
 
 import java.util.UUID;
 
 /**
  * Mock para desarrollo sin credenciales reales.
- * Devuelve un preferenceId aleatorio y URLs apuntando a una página interna.
+ *
+ * <p>Devuelve un preferenceId aleatorio y URLs apuntando a una página interna.
+ *
+ * <p><b>Atajo de testing:</b> tras crear la preferencia, también activa la
+ * suscripción directamente. En producción esto lo hace el webhook real de MP,
+ * pero en modo mock no hay webhook — sin este atajo el desarrollador tendría
+ * que correr {@code UPDATE subscription SET status='ACTIVE'} cada vez que
+ * prueba el flujo. Esto NO afecta el modo {@code real}: ese gateway nace
+ * en otro bean ({@link MercadoPagoRealGateway}) que mantiene PENDING hasta
+ * que el webhook auténtico llegue.
  */
 @Slf4j
 @Service
@@ -30,6 +40,13 @@ public class MercadoPagoMockGateway implements MercadoPagoGateway {
     @Value("${app.payments.mercado-pago.public-key:TEST-MOCK-PUBLIC-KEY}")
     private String publicKey;
 
+    // @Lazy evita un ciclo: SubscriptionService → MercadoPagoGateway → SubscriptionService.
+    private final SubscriptionService subscriptionService;
+
+    public MercadoPagoMockGateway(@Lazy SubscriptionService subscriptionService) {
+        this.subscriptionService = subscriptionService;
+    }
+
     @Override
     public MercadoPagoPreferenceResponse createPreference(
             AppUser user,
@@ -42,13 +59,26 @@ public class MercadoPagoMockGateway implements MercadoPagoGateway {
         log.info("[MOCK MercadoPago] Preferencia creada preferenceId={} userId={} amount={} subscriptionId={}",
                 preferenceId, user.getId(), request.amount(), subscriptionId);
 
+        // Auto-activación del lado mock: simula el webhook que en producción
+        // pasaría la sub de PENDING → ACTIVE después del pago APPROVED.
+        try {
+            subscriptionService.activateById(subscriptionId, preferenceId);
+            log.info("[MOCK MercadoPago] Suscripción id={} auto-activada (atajo de modo mock)", subscriptionId);
+        } catch (Exception ex) {
+            log.warn("[MOCK MercadoPago] No se pudo auto-activar sub id={}: {}", subscriptionId, ex.getMessage());
+        }
+
         return new MercadoPagoPreferenceResponse(preferenceId, fakeUrl, fakeUrl, publicKey);
     }
 
     @Override
     public PaymentStatus fetchPaymentStatus(String paymentId) {
-        // En modo mock, asumimos que todos los pagos se aprueban
         log.info("[MOCK MercadoPago] Consulta de pago paymentId={} → APPROVED (simulado)", paymentId);
         return new PaymentStatus("approved", paymentId, true, false);
+    }
+
+    @Override
+    public void refund(String paymentId) {
+        log.info("[MOCK MercadoPago] Reembolso simulado paymentId={} → OK", paymentId);
     }
 }

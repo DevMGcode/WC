@@ -15,7 +15,7 @@
 import React, { useState, useMemo, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useParams } from 'next/navigation';
-import { FiAward, FiBarChart2, FiShield } from 'react-icons/fi';
+import { FiAward, FiBarChart2, FiShield, FiUsers } from 'react-icons/fi';
 import Image from 'next/image';
 import { Header } from '@/components/Navigation';
 import { Bracket } from '@/components/BracketChampions';  // 🛡️ PROTECTED
@@ -32,6 +32,8 @@ import GroupCard, { EQBars } from './_components/GroupCard';
 import { localizeTeamName } from '@/lib/i18n/teamNames';
 import KnockoutCard, { ChampionBanner, ROUND_META, ROUND_I18N, ROUND_GRID } from './_components/KnockoutCard';
 import BracketBg from './_components/BracketBg';
+import TeamsTab from './_components/TeamsTab';
+import { usePremium } from '@/hooks/usePremium';
 import type { Group, Match, BracketData, KnockoutRound, Team } from './_components/types';
 
 /* ══════════════════════════════════════════
@@ -103,7 +105,8 @@ export default function GroupsClient({ initialTournament, initialGroups, initial
 }) {
   const t      = useTranslations();
   const locale = useLocale();
-  const [activeTab,    setActiveTab]    = useState<'grupos' | 'eliminatorias'>('grupos');
+  const [activeTab,    setActiveTab]    = useState<'grupos' | 'eliminatorias' | 'equipos'>('grupos');
+  const { isPremium } = usePremium();
   const [activeRound,  setActiveRound]  = useState<KnockoutRound>('octavos');
   const [bestDefense,  setBestDefense]  = useState<any[]>([]);
 
@@ -194,6 +197,7 @@ export default function GroupsClient({ initialTournament, initialGroups, initial
           {([
             { key: 'grupos'        as const, label: t('groups.title'),    icon: <FiBarChart2 size={13} />, brand: 'green' as BrandColor, colorHex: hex.green.bright },
             { key: 'eliminatorias' as const, label: t('groups.knockout'), icon: <FiAward size={13} />,    brand: 'gold'  as BrandColor, colorHex: hex.gold.muted   },
+            { key: 'equipos'       as const, label: 'Equipos',            icon: <FiUsers size={13} />,    brand: 'green' as BrandColor, colorHex: hex.green.muted  },
           ]).map(({ key, label, icon, brand, colorHex }) => {
             const isActive = activeTab === key;
             const glow = alphaOf(brand, 0.55);
@@ -438,6 +442,18 @@ export default function GroupsClient({ initialTournament, initialGroups, initial
                 </div>
 
                 {champion && <ChampionBanner winner={champion} t={t} />}
+              </motion.div>
+            )}
+
+            {/* ═══════ EQUIPOS ═══════ */}
+            {activeTab === 'equipos' && (
+              <motion.div key="equipos"
+                initial={{ opacity: 0, y: 14 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -8 }}
+                transition={{ duration: 0.32 }}>
+                <TeamsTab
+                  groups={groups}
+                  isPremium={isPremium}
+                  locale={locale} />
               </motion.div>
             )}
 

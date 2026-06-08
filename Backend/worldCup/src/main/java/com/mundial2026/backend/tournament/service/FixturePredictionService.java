@@ -23,7 +23,12 @@ public class FixturePredictionService {
     private final PredictionDataPort predictionDataPort;
     private final FixtureRepository fixtureRepository;
 
-    @Cacheable(value = CacheConfig.FIXTURE_PREDICTIONS, key = "#fixtureExternalId", unless = "#result.isEmpty()")
+    // unless null-safe: el proxy del @Cacheable puede evaluar #result cuando aún
+    // no se ha asignado (ej. en algunos paths de Spring Cache). Sin el null-check
+    // explícito, el SpEL falla con EL1011E "isEmpty() on null context object" y
+    // devuelve HTTP 500 al cliente.
+    @Cacheable(value = CacheConfig.FIXTURE_PREDICTIONS, key = "#fixtureExternalId",
+               unless = "#result == null || #result.isEmpty()")
     public Optional<FixturePredictionResponse> findByFixture(Long fixtureExternalId) {
         if (!isWithinUsefulWindow(fixtureExternalId)) {
             return Optional.empty();

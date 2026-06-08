@@ -17,9 +17,10 @@ import { motion } from 'framer-motion';
 import { useRouter } from 'next/navigation';
 import dynamic from 'next/dynamic';
 import {
-  FiActivity, FiCrosshair, FiAward, FiBarChart2,
+  FiActivity, FiCrosshair, FiAward, FiBarChart2, FiZap, FiArrowRight,
 } from 'react-icons/fi';
 import { useAuth } from '@/contexts/AuthContext';
+import { usePremium } from '@/hooks/usePremium';
 import { Header } from '@/components/Navigation';
 import { useTranslations, useLocale } from 'next-intl';
 import {
@@ -39,6 +40,7 @@ import { alpha, alphaOf, gradients } from '@/lib/design/effects';
 import { TabSkeleton } from '@/components/PageSkeleton';
 
 import { KPIChip } from './home/_components/HomeUtils';
+import PremiumOnboardingModal from '@/components/premium/PremiumOnboardingModal';
 
 // Lazy load de secciones pesadas — se descargan en paralelo pero no bloquean el render inicial
 const HomeCountdown   = dynamic(() => import('./home/_components/HomeCountdown'),   { loading: () => <TabSkeleton /> });
@@ -55,6 +57,7 @@ export default function HomePage() {
   const t      = useTranslations();
   const locale = useLocale();
   const { user, loading: authLoading, isAuthenticated } = useAuth();
+  const { isPremium } = usePremium();
 
   const [countdown, setCountdown]           = useState({ days: 0, hours: 0, minutes: 0, seconds: 0 });
   const [mundialStarted, setMundialStarted] = useState(false);
@@ -196,6 +199,9 @@ export default function HomePage() {
       {/* ═══ DASHBOARD CONTENT ═══ */}
       <div className="relative z-10 px-4 sm:px-6 py-5 max-w-6xl mx-auto w-full pb-32">
 
+        {/* Modal de bienvenida Premium — solo Free, una vez por sesión */}
+        <PremiumOnboardingModal enabled={isAuthenticated && !isPremium} locale={locale} />
+
         {/* Loading bar */}
         {loading && (
           <div className="w-full h-[2px] rounded-full overflow-hidden mb-3"
@@ -234,6 +240,28 @@ export default function HomePage() {
             <p className="text-[13px] mt-1.5 tracking-wide text-orionix-text-secondary" suppressHydrationWarning>
               {fmtTodayHeader(new Date(), locale)}
             </p>
+            {/* CTA "Pásate a Premium" — solo Free. Conversión visible al entrar al dashboard. */}
+            {!isPremium && (
+              <motion.button
+                onClick={() => router.push(`/${locale}/premium`)}
+                initial={{ opacity: 0, y: 6 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.4, delay: 0.3 }}
+                whileHover={{ scale: 1.03, y: -1 }}
+                whileTap={{ scale: 0.98 }}
+                className="mt-3 inline-flex items-center gap-2 px-3.5 py-2 rounded-xl font-black tracking-wider uppercase text-[11px] sm:text-[12px]"
+                style={{
+                  background: `linear-gradient(135deg, ${hex.gold.base} 0%, ${hex.gold.muted} 100%)`,
+                  color: hex.neutral.black,
+                  boxShadow: `0 6px 18px ${alphaOf('gold', 0.45)}, inset 0 1px 0 ${alpha(hex.neutral.white, 0.35)}`,
+                  border: `1px solid ${alphaOf('gold', 0.65)}`,
+                }}
+                title="Hazte Premium y desbloquea todo el Mundial">
+                <FiZap size={13} style={{ fill: hex.neutral.black }} />
+                <span>Pásate a Premium</span>
+                <FiArrowRight size={13} />
+              </motion.button>
+            )}
           </div>
 
           <div className="flex flex-col items-end gap-1.5">

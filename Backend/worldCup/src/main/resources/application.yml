@@ -92,8 +92,9 @@ tournament:
   sync:
     enabled: "${SYNC_ENABLED:true}"
     live-poll-ms: "${LIVE_POLL_MS:5000}"
-    # Set to true once API-Football enables events/lineups/stats coverage for the active season.
-    # For 2026, the API returns empty arrays — polling wastes daily quota with no data gain.
-    events-enabled: "${SYNC_EVENTS_ENABLED:false}"
+    # El polling de eventos se gobierna automáticamente por CoverageService
+    # (consulta a /leagues coverage.events). Pre-Mundial la API devuelve false
+    # → cero llamadas. El día del kick-off el proveedor flipea a true → arranca
+    # solo sin intervención manual ni redeploy.
     event-poll-ms: "${EVENT_POLL_MS:15000}"
     csv-bootstrap-path: classpath:data/fixtures-bootstrap.csv

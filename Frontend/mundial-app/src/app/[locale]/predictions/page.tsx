@@ -12,6 +12,7 @@ import {
 } from 'react-icons/fi';
 import { Header } from '@/components/Navigation';
 import ShareButton from '@/components/ShareButton';
+import { PremiumBadge } from '@/components/premium/PremiumBadge';
 import {
   useCurrentTournament,
   useTournamentFixtures,
@@ -344,6 +345,7 @@ export default function PredictionsPage() {
       user:        score.fullName || score.username,
       points:      score.totalPoints ?? 0,
       predictions: score.matchesScored ?? 0,
+      isPremium:   score.isPremium === true,
     })),
     [rankingItems]
   );
@@ -667,8 +669,11 @@ export default function PredictionsPage() {
                             {mc.label}
                           </motion.div>
                           {/* Nombre podio: text-sm = 14px */}
-                          <p className="text-sm font-black text-center truncate w-full leading-tight"
-                            style={{ color: mc.color, textShadow: `0 0 12px ${mc.glow}` }}>{player.user}</p>
+                          <div className="flex items-center justify-center gap-1.5 w-full">
+                            <p className="text-sm font-black text-center truncate leading-tight"
+                              style={{ color: mc.color, textShadow: `0 0 12px ${mc.glow}` }}>{player.user}</p>
+                            <PremiumBadge isPremium={player.isPremium} iconOnly />
+                          </div>
                           <motion.p className="text-3xl font-black tabular-nums mt-1.5"
                             style={{ color: mc.color, textShadow: `0 0 18px ${mc.glow}` }}
                             animate={{ textShadow: [`0 0 8px ${mc.glow}50`, `0 0 24px ${mc.glow}`, `0 0 8px ${mc.glow}50`] }}
@@ -715,8 +720,11 @@ export default function PredictionsPage() {
                           </span>
                           <div className="flex-1 min-w-0">
                             {/* Nombre: text-sm = 14px */}
-                            <p className="text-sm font-black truncate"
-                              style={{ color: isMe ? hex.green.bright : alpha(hex.neutral.white, 0.80) }}>{player.user}</p>
+                            <div className="flex items-center gap-1.5">
+                              <p className="text-sm font-black truncate"
+                                style={{ color: isMe ? hex.green.bright : alpha(hex.neutral.white, 0.80) }}>{player.user}</p>
+                              <PremiumBadge isPremium={player.isPremium} iconOnly />
+                            </div>
                             <div className="mt-1.5">
                               <GlowBar value={player.points} max={maxRankPts} color={isMe ? hex.green.bright : '#475569'} />
                             </div>
