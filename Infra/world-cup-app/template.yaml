@@ -228,6 +228,33 @@ Resources:
         - Key: Environment
           Value: !Ref EnvironmentName
 
+# ── Networking ──────────────────────────────────────────────────────────────
+
+  OrionixGolHostedZone:
+    Type: AWS::Route53::HostedZone
+    Properties:
+      Name: orionixgol.com
+
+  OrionixGolRecordA:
+    Type: AWS::Route53::RecordSet
+    Properties:
+      HostedZoneId: !Ref OrionixGolHostedZone
+      Name: orionixgol.com
+      Type: A
+      TTL: 300
+      ResourceRecords:
+        - !Ref ElasticIP
+
+  OrionixGolWwwRecord:
+    Type: AWS::Route53::RecordSet
+    Properties:
+      HostedZoneId: !Ref OrionixGolHostedZone
+      Name: www.orionixgol.com
+      Type: A
+      TTL: 300
+      ResourceRecords:
+        - !Ref ElasticIP
+
 # ── Outputs ──────────────────────────────────────────────────────────────────
 
 Outputs:
@@ -256,3 +283,11 @@ Outputs:
     Value: !Ref VPC
     Export:
       Name: !Sub "wc-${EnvironmentName}-vpc-id"
+
+  HostedZoneId:
+    Description: Route53 Hosted Zone ID
+    Value: !Ref OrionixGolHostedZone
+
+  NameServers:
+    Description: Name servers to configure in Namecheap
+    Value: !Join [ ", ", !GetAtt OrionixGolHostedZone.NameServers ]
