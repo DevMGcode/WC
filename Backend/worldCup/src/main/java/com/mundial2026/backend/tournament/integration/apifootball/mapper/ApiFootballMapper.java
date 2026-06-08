@@ -117,9 +117,9 @@ public class ApiFootballMapper {
 
     public ExternalStanding toStanding(StandingsResponse.StandingEntry e) {
         StandingsResponse.TeamRef team = e.team();
-        StandingsResponse.Stats all = e.all();
-        Integer gf = all != null && all.goals() != null ? all.goals().goalsFor() : null;
-        Integer ga = all != null && all.goals() != null ? all.goals().against() : null;
+        StandingsResponse.Stats all  = e.all();
+        StandingsResponse.Stats home = e.home();
+        StandingsResponse.Stats away = e.away();
         return new ExternalStanding(
                 stripLeaguePrefix(e.group()),
                 e.rank(),
@@ -130,13 +130,25 @@ public class ApiFootballMapper {
                 all != null ? all.win() : null,
                 all != null ? all.draw() : null,
                 all != null ? all.lose() : null,
-                gf,
-                ga,
+                all != null && all.goals() != null ? all.goals().goalsFor() : null,
+                all != null && all.goals() != null ? all.goals().against() : null,
                 e.goalsDiff(),
                 e.points(),
                 e.form(),
                 e.description(),
-                e.update()
+                e.update(),
+                home != null ? home.played() : null,
+                home != null ? home.win() : null,
+                home != null ? home.draw() : null,
+                home != null ? home.lose() : null,
+                home != null && home.goals() != null ? home.goals().goalsFor() : null,
+                home != null && home.goals() != null ? home.goals().against() : null,
+                away != null ? away.played() : null,
+                away != null ? away.win() : null,
+                away != null ? away.draw() : null,
+                away != null ? away.lose() : null,
+                away != null && away.goals() != null ? away.goals().goalsFor() : null,
+                away != null && away.goals() != null ? away.goals().against() : null
         );
     }
 

@@ -6,6 +6,10 @@ export interface User {
   status: 'ACTIVE' | 'BLOCKED' | 'PENDING';
   createdAt: Date;
   updatedAt?: Date;
+  // Campos de monetización — requieren migración en backend
+  country?:        string; // ISO 3166-1 alpha-2, ej. "CO"
+  isPremium?:      boolean;
+  premiumUntil?:   Date | null; // null = sin fecha de expiración (acceso de por vida)
 }
 
 // Alineado con tabla tournament

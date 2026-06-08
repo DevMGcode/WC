@@ -18,4 +18,17 @@ public record ExternalMatchEvent(
         return fixtureId + ":" + elapsedMinute + ":" + extraMinute
                 + ":" + teamId + ":" + playerId + ":" + type + ":" + detail;
     }
+
+    /**
+     * Penalty shootout events are regular "Goal"/"Missed Penalty" entries in the API-Football
+     * response — the only way to distinguish them from in-match penalties is by checking
+     * comments == "Penalty Shootout" (observed in 2022 World Cup data).
+     */
+    public boolean isPenaltyShootout() {
+        return "Penalty Shootout".equals(comments);
+    }
+
+    public boolean isMissedShootoutPenalty() {
+        return isPenaltyShootout() && "Missed Penalty".equals(detail);
+    }
 }

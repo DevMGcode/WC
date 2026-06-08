@@ -57,7 +57,7 @@ class AuthControllerTest {
     void login_validCredentials_returns200WithTokens() throws Exception {
         AppUser user = buildUser("alice");
         AuthUserResponse authUser = new AuthUserResponse("1", "alice@test.com",
-                "Alice Smith", "ACTIVE", OffsetDateTime.now());
+                "Alice Smith", "ACTIVE", OffsetDateTime.now(), false);
 
         when(userService.authenticate("alice@test.com", "pass123")).thenReturn(user);
         when(tokenProvider.generateAccessToken("alice")).thenReturn("access-tok");

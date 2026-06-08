@@ -6,6 +6,7 @@ import com.mundial2026.backend.prediction.api.dto.CreatePredictionRequest;
 import com.mundial2026.backend.prediction.api.dto.UpdatePredictionRequest;
 import com.mundial2026.backend.prediction.domain.UserPrediction;
 import com.mundial2026.backend.prediction.repository.UserPredictionRepository;
+import com.mundial2026.backend.subscription.service.PremiumGuard;
 import com.mundial2026.backend.tournament.domain.Fixture;
 import com.mundial2026.backend.tournament.repository.FixtureRepository;
 import com.mundial2026.backend.user.domain.AppUser;
@@ -24,6 +25,7 @@ public class PredictionService {
     private final UserPredictionRepository userPredictionRepository;
     private final AppUserRepository appUserRepository;
     private final FixtureRepository fixtureRepository;
+    private final PremiumGuard premiumGuard;
 
     @Transactional
     public UserPrediction create(CreatePredictionRequest request) {
@@ -42,6 +44,42 @@ public class PredictionService {
             throw new BusinessRuleException("La porra ya está bloqueada: el partido ha finalizado");
         }
         validatePredictionWindow(fixture.getPredictionLockedAt());
+
+        // ── Gate Free/Premium ──────────────────────────────────────────────
+        // Premium predice cualquier partido sin límite.
+        // Free predice solo hasta 3 partidos de fase de grupos de su equipo favorito.
+        if (!premiumGuard.isPremium(user)) {
+            // 1. Debe tener equipo favorito seteado
+            if (user.getFavoriteTeam() == null) {
+                throw new BusinessRuleException(
+                        "Para predecir gratis primero elige tu equipo favorito en tu perfil. " +
+                        "O hazte Premium para predecir todos los partidos."
+                );
+            }
+
+            // 2. El partido debe ser de fase de grupos del equipo favorito
+            String stageCode = fixture.getStage() != null ? fixture.getStage().getCode() : null;
+            Long homeId = fixture.getHomeTeam() != null ? fixture.getHomeTeam().getId() : null;
+            Long awayId = fixture.getAwayTeam() != null ? fixture.getAwayTeam().getId() : null;
+
+            if (!premiumGuard.canFreeUserPredictFixture(user, homeId, awayId, stageCode)) {
+                throw new BusinessRuleException(
+                        "Como usuario gratuito solo puedes predecir partidos de fase de grupos " +
+                        "de tu equipo favorito. Hazte Premium para predecir todos los partidos."
+                );
+            }
+
+            // 3. Máximo 3 predicciones para Free
+            long already = userPredictionRepository.countByUserId(user.getId());
+            if (already >= PremiumGuard.FREE_MAX_PREDICTIONS) {
+                throw new BusinessRuleException(
+                        "Como usuario gratuito ya alcanzaste el máximo de " +
+                        PremiumGuard.FREE_MAX_PREDICTIONS + " predicciones. " +
+                        "Hazte Premium para seguir prediciendo."
+                );
+            }
+        }
+        // ── Fin del gate ───────────────────────────────────────────────────
 
         UserPrediction prediction = new UserPrediction();
         prediction.setUser(user);

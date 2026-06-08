@@ -13,6 +13,7 @@ public record UserTournamentScoreResponse(
         Integer bonusPoints,
         Integer matchesScored,
         Integer rankPosition,
-        OffsetDateTime lastScoredAt
+        OffsetDateTime lastScoredAt,
+        Boolean isPremium
 ) {
 }

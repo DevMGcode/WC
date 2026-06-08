@@ -13,6 +13,9 @@ public interface UserPredictionRepository extends JpaRepository<UserPrediction, 
 
     Optional<UserPrediction> findByUserIdAndFixtureId(Long userId, Long fixtureId);
 
+    /** Cuántas predicciones lleva un usuario en total (para limitar al plan FREE). */
+    long countByUserId(Long userId);
+
     @EntityGraph(attributePaths = {"user", "fixture"})
     Optional<UserPrediction> findWithUserAndFixtureById(Long id);
 

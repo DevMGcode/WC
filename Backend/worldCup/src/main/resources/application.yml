@@ -67,6 +67,16 @@ app:
   frontend-url: "${FRONTEND_URL:http://localhost:3000}"
   email:
     verification-required: "${EMAIL_VERIFICATION_REQUIRED:true}"
+  payments:
+    # Modo de operación: "mock" (default, sin credenciales) | "real"
+    mercado-pago:
+      mode: "${MERCADO_PAGO_MODE:mock}"
+      access-token:   "${MERCADO_PAGO_ACCESS_TOKEN:}"
+      public-key:     "${MERCADO_PAGO_PUBLIC_KEY:}"
+      webhook-secret: "${MERCADO_PAGO_WEBHOOK_SECRET:}"
+      # URL pública del backend donde Mercado Pago notifica los pagos.
+      # En local, expón tu backend con ngrok (https://ngrok.com) y pega aquí la URL.
+      notification-url: "${MERCADO_PAGO_NOTIFICATION_URL:}"
 
 apifootball:
   base-url: "${APIFOOTBALL_BASE_URL:https://v3.football.api-sports.io}"
@@ -82,4 +92,8 @@ tournament:
   sync:
     enabled: "${SYNC_ENABLED:true}"
     live-poll-ms: "${LIVE_POLL_MS:5000}"
+    # Set to true once API-Football enables events/lineups/stats coverage for the active season.
+    # For 2026, the API returns empty arrays — polling wastes daily quota with no data gain.
+    events-enabled: "${SYNC_EVENTS_ENABLED:false}"
+    event-poll-ms: "${EVENT_POLL_MS:15000}"
     csv-bootstrap-path: classpath:data/fixtures-bootstrap.csv

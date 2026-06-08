@@ -134,6 +134,13 @@
             <artifactId>postgresql</artifactId>
             <scope>test</scope>
         </dependency>
+
+        <!-- Mercado Pago SDK oficial (cobros con Checkout Pro, Nequi, PSE, tarjeta) -->
+        <dependency>
+            <groupId>com.mercadopago</groupId>
+            <artifactId>sdk-java</artifactId>
+            <version>2.5.0</version>
+        </dependency>
     </dependencies>
 
     <build>

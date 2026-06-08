@@ -8,6 +8,8 @@ import { hex } from '@/lib/design/tokens';
 import { alpha, alphaOf, surfaces } from '@/lib/design/effects';
 import { EQBars, Ring, GlowBar, SectionLabel } from './ui';
 import { fmtMonthYear } from '@/utils/format';
+import { PremiumBadge } from '@/components/premium/PremiumBadge';
+import { usePremium } from '@/hooks/usePremium';
 
 interface Stats {
   predictions: number;
@@ -27,6 +29,7 @@ interface ProfileTabProps {
 
 export default function ProfileTab({ user, stats, t, onEditProfile, onChangePassword, onLogout }: ProfileTabProps) {
   const locale = useLocale();
+  const { isPremium } = usePremium();
   const accuracyPct = stats.predictions > 0
     ? Math.round((stats.acertadas / stats.predictions) * 100) : 0;
 
@@ -76,12 +79,15 @@ export default function ProfileTab({ user, stats, t, onEditProfile, onChangePass
           </div>
 
           <div className="flex-1 min-w-0">
-            <p
-              className="font-black text-xl sm:text-2xl leading-tight text-transparent bg-clip-text"
-              style={{ backgroundImage: `linear-gradient(90deg, ${hex.accent.slateLight}, ${hex.accent.slate})` }}
-            >
-              {user.displayName}
-            </p>
+            <div className="flex items-center gap-2 flex-wrap">
+              <p
+                className="font-black text-xl sm:text-2xl leading-tight text-transparent bg-clip-text"
+                style={{ backgroundImage: `linear-gradient(90deg, ${hex.accent.slateLight}, ${hex.accent.slate})` }}
+              >
+                {user.displayName}
+              </p>
+              <PremiumBadge isPremium={isPremium} size="md" />
+            </div>
             <p className="text-xs mt-0.5 truncate text-orionix-text-muted">{user.email}</p>
             <div className="flex items-center gap-1.5 mt-2">
               <FiCalendar size={10} style={{ color: alphaOf('green', 0.60) }} />
