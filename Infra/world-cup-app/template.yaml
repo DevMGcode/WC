@@ -228,7 +228,7 @@ Resources:
         - Key: Environment
           Value: !Ref EnvironmentName
 
-# ── Networking ──────────────────────────────────────────────────────────────
+# ── DNS ──────────────────────────────────────────────────────────────
 
   OrionixGolHostedZone:
     Type: AWS::Route53::HostedZone
