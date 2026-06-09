@@ -184,12 +184,12 @@ export default function HomePage() {
                 </div>
                 <div className="absolute inset-0 rounded-full" style={{ border: `1px solid ${alphaOf('green', 0.30)}` }} />
               </div>
-              <div className="hidden sm:block">
-                <p className="text-[14px] font-black text-transparent bg-clip-text leading-none"
+              <div className="min-w-0 flex-1">
+                <p className="text-[14px] font-black text-transparent bg-clip-text leading-none truncate"
                   style={{ backgroundImage: `linear-gradient(90deg, ${hex.green.soft}, ${hex.green.bright})` }}>
                   {user?.displayName}
                 </p>
-                <p className="text-[11px] leading-none mt-0.5 text-orionix-text-muted">{user?.email}</p>
+                <p className="text-[11px] leading-none mt-0.5 text-orionix-text-muted truncate">{user?.email}</p>
               </div>
             </div>
           }
@@ -197,7 +197,7 @@ export default function HomePage() {
       </div>
 
       {/* ═══ DASHBOARD CONTENT ═══ */}
-      <div className="relative z-10 px-4 sm:px-6 py-5 max-w-6xl mx-auto w-full pb-32">
+      <div className="relative z-10 px-4 sm:px-6 py-5 max-w-6xl mx-auto w-full pb-44 md:pb-32">
 
         {/* Modal de bienvenida Premium — solo Free, una vez por sesión */}
         <PremiumOnboardingModal enabled={isAuthenticated && !isPremium} locale={locale} />

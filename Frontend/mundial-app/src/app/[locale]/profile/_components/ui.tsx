@@ -1,6 +1,7 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
+import { createPortal } from 'react-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { FiAlertTriangle, FiCheck, FiEye, FiEyeOff } from 'react-icons/fi';
 import { hex } from '@/lib/design/tokens';
@@ -177,29 +178,39 @@ export const Toggle = ({ checked, onChange, color = hex.green.bright }: {
 
 export const DarkModal = ({ children, onClose, width = 'w-[min(420px,90vw)]' }: {
   children: React.ReactNode; onClose: () => void; width?: string;
-}) => (
+}) => {
+  const [mounted, setMounted] = useState(false);
+  useEffect(() => { setMounted(true); }, []);
+  if (!mounted) return null;
+
+  return createPortal(
   <>
     <motion.div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-40" onClick={onClose}
       initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} />
-    <motion.div
-      className={`fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 z-50 ${width}`}
-      initial={{ opacity: 0, scale: 0.92, y: 12 }}
-      animate={{ opacity: 1, scale: 1, y: 0 }}
-      exit={{ opacity: 0, scale: 0.92, y: 12 }}
-      transition={{ type: 'spring', stiffness: 420, damping: 32 }}
-      style={{
-        background: surfaces.card(),
-        border: `1px solid ${alphaOf('green', 0.22)}`,
-        borderRadius: '1.25rem',
-        boxShadow: `0 32px 80px ${alpha(hex.neutral.black, 0.70)}, 0 0 0 1px ${alpha(hex.neutral.white, 0.03)}, inset 0 1px 0 ${alpha(hex.neutral.white, 0.04)}`,
-      }}
-    >
-      <div className="absolute inset-x-0 top-0 h-px rounded-t-[1.25rem]"
-        style={{ background: `linear-gradient(90deg, transparent, ${alphaOf('green', 0.60)}, transparent)` }} />
-      {children}
-    </motion.div>
-  </>
-);
+    {/* Outer wrapper: centra con flex (no transform). z-50 + pointer-events controlado */}
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 pointer-events-none">
+      <motion.div
+        className={`relative pointer-events-auto ${width}`}
+        initial={{ opacity: 0, scale: 0.92, y: 12 }}
+        animate={{ opacity: 1, scale: 1, y: 0 }}
+        exit={{ opacity: 0, scale: 0.92, y: 12 }}
+        transition={{ type: 'spring', stiffness: 420, damping: 32 }}
+        style={{
+          background: surfaces.card(),
+          border: `1px solid ${alphaOf('green', 0.22)}`,
+          borderRadius: '1.25rem',
+          boxShadow: `0 32px 80px ${alpha(hex.neutral.black, 0.70)}, 0 0 0 1px ${alpha(hex.neutral.white, 0.03)}, inset 0 1px 0 ${alpha(hex.neutral.white, 0.04)}`,
+        }}
+      >
+        <div className="absolute inset-x-0 top-0 h-px rounded-t-[1.25rem]"
+          style={{ background: `linear-gradient(90deg, transparent, ${alphaOf('green', 0.60)}, transparent)` }} />
+        {children}
+      </motion.div>
+    </div>
+  </>,
+  document.body
+  );
+};
 
 export const ModalAlert = ({ message, type }: { message: string; type: 'error' | 'success' }) => (
   <motion.div

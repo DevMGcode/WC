@@ -193,7 +193,7 @@ export default function GroupsClient({ initialTournament, initialGroups, initial
                  boxShadow: `0 4px 32px ${alpha(hex.neutral.black, 0.55)}` }}>
         <div className="absolute inset-x-0 bottom-0 h-px"
           style={{ background: `linear-gradient(90deg, transparent, ${alphaOf('green', 0.25)}, ${alphaOf('gold', 0.15)}, transparent)` }} />
-        <div className="max-w-7xl mx-auto px-4 py-2 flex items-center gap-2">
+        <div className="max-w-7xl mx-auto px-4 py-2 flex items-center gap-2 overflow-x-auto">
           {([
             { key: 'grupos'        as const, label: t('groups.title'),    icon: <FiBarChart2 size={13} />, brand: 'green' as BrandColor, colorHex: hex.green.bright },
             { key: 'eliminatorias' as const, label: t('groups.knockout'), icon: <FiAward size={13} />,    brand: 'gold'  as BrandColor, colorHex: hex.gold.muted   },
@@ -203,7 +203,7 @@ export default function GroupsClient({ initialTournament, initialGroups, initial
             const glow = alphaOf(brand, 0.55);
             return (
               <motion.button key={key} onClick={() => setActiveTab(key)}
-                className="relative flex items-center gap-2 px-4 py-2 rounded-xl overflow-hidden"
+                className="relative flex items-center gap-2 px-4 py-2 rounded-xl overflow-hidden flex-shrink-0"
                 style={{ background: isActive ? `linear-gradient(135deg, ${alphaOf(brand, 0.085)}, ${alpha(hex.bg.primary, 0.85)})` : 'transparent',
                   border: `1px solid ${isActive ? alphaOf(brand, 0.19) : 'transparent'}`,
                   outline: 'none', cursor: 'pointer' }}
@@ -213,15 +213,17 @@ export default function GroupsClient({ initialTournament, initialGroups, initial
                     style={{ background: gradients.divider(brand, 0.65) }} />
                 )}
                 <span style={{ color: isActive ? colorHex : alpha(hex.text.muted, 0.60), filter: isActive ? `drop-shadow(0 0 5px ${glow})` : 'none', display: 'flex' }}>{icon}</span>
-                <span className="text-[11px] font-black tracking-[0.10em]"
+                <span className="text-[11px] font-black tracking-[0.10em] whitespace-nowrap"
                   style={{ color: isActive ? colorHex : alpha(hex.text.muted, 0.60), textShadow: isActive ? `0 0 10px ${glow}` : 'none' }}>
                   {label}
                 </span>
               </motion.button>
             );
           })}
-          <div className="flex-1" />
-          <EQBars color={alphaOf('green', 0.30)} count={7} maxH={14} />
+          <div className="flex-1 min-w-2" />
+          <div className="flex items-center shrink-0">
+            <EQBars color={alphaOf('green', 0.30)} count={7} maxH={14} />
+          </div>
         </div>
       </div>
 

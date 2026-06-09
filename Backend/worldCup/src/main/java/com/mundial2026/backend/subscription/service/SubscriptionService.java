@@ -217,6 +217,10 @@ public class SubscriptionService {
      */
     @Transactional
     public void requestRefund(Long userId) {
+        if (subscriptionRepository.findFirstByUserIdAndStatus(userId, SubscriptionStatus.REFUNDED).isPresent()) {
+            throw new BusinessRuleException("Solo se permite un reembolso por cuenta.");
+        }
+
         Subscription sub = subscriptionRepository
                 .findActiveByUserId(userId, OffsetDateTime.now())
                 .orElseThrow(() -> {
