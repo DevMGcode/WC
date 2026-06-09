@@ -523,5 +523,42 @@
     "back": "رجوع",
     "isOwner": "أنت المالك",
     "loading": "جارٍ التحميل"
+  },
+  "onboarding": {
+    "welcome": "مرحباً",
+    "step1": {
+      "title": "اختر لغتك",
+      "subtitle": "يمكنك تغييرها لاحقاً في ملفك الشخصي"
+    },
+    "step2": {
+      "label": "الفرق",
+      "selected": "{count} محدد",
+      "title": "الفرق المفضلة",
+      "subtitle": "اختر الفرق التي تريد متابعتها"
+    },
+    "step3": {
+      "label": "الإشعارات",
+      "title": "ابقَ على اطلاع",
+      "subtitle": "اضبط التنبيهات التي تريد تلقيها",
+      "matchReminders": "تذكيرات المباريات",
+      "realTimeResults": "نتائج فورية",
+      "leagueUpdates": "تحديثات الدوري",
+      "newsUpdates": "الأخبار والتحديثات"
+    },
+    "step4": {
+      "title": "كل شيء جاهز!",
+      "subtitle": "تم إعداد حسابك وهو جاهز",
+      "language": "اللغة",
+      "favoriteTeams": "الفرق المفضلة",
+      "selected": "{count} محدد",
+      "none": "لا شيء",
+      "activeNotifications": "الإشعارات النشطة"
+    },
+    "nav": {
+      "back": "رجوع",
+      "next": "التالي",
+      "start": "ابدأ",
+      "skip": "تخطي الإعداد"
+    }
   }
 }

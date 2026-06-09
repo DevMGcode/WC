@@ -15,9 +15,14 @@ export const metadata: Metadata = {
   authors: [{ name: 'Orionix Gol' }],
   viewport: 'width=device-width, initial-scale=1.0, viewport-fit=cover',
   themeColor: '#22d3ee',
+  manifest: '/manifest.json',
   icons: {
-    icon: '/Logo_Pestaña.png',
-    apple: '/Logo_Pestaña.png',
+    icon: [
+      { url: '/icons/manifest-icon-192.maskable.png', sizes: '192x192', type: 'image/png' },
+      { url: '/icons/manifest-icon-512.maskable.png', sizes: '512x512', type: 'image/png' },
+    ],
+    apple: '/icons/apple-icon-180.png',
+    shortcut: '/Logo_Pestaña.png',
   },
   openGraph: {
     type: 'website',
@@ -44,7 +49,7 @@ export const metadata: Metadata = {
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="es" suppressHydrationWarning>
+    <html lang="es" translate="no" suppressHydrationWarning>
       <head>
         <link rel="preconnect" href="https://fonts.googleapis.com" />
         <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
