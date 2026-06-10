@@ -84,9 +84,4 @@ public class MercadoPagoMockGateway implements MercadoPagoGateway {
     public void refund(String paymentId) {
         log.info("[MOCK MercadoPago] Reembolso simulado paymentId={} → OK", paymentId);
     }
-
-    @Override
-    public void refund(String paymentId) {
-        log.info("[MOCK MercadoPago] Reembolso simulado paymentId={} → OK", paymentId);
-    }
 }
