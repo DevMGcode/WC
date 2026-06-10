@@ -146,12 +146,12 @@ export default function HomePage() {
       <div className="fixed rounded-full pointer-events-none" style={{
         width: 800, height: 800, top: -280, left: -200,
         background: `radial-gradient(circle, ${alphaOf('success', 0.06)} 0%, transparent 60%)`,
-        filter: 'blur(80px)', zIndex: 0,
+        filter: 'blur(80px)', zIndex: 0, willChange: 'transform', transform: 'translateZ(0)',
       }} />
       <div className="fixed rounded-full pointer-events-none" style={{
         width: 600, height: 600, bottom: -150, right: -150,
         background: `radial-gradient(circle, ${alphaOf('gold', 0.04)} 0%, transparent 60%)`,
-        filter: 'blur(80px)', zIndex: 0,
+        filter: 'blur(80px)', zIndex: 0, willChange: 'transform', transform: 'translateZ(0)',
       }} />
 
       {/* Pitch grid */}

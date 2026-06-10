@@ -111,10 +111,12 @@ export default function GroupsClient({ initialTournament, initialGroups, initial
   const [bestDefense,  setBestDefense]  = useState<any[]>([]);
 
   useEffect(() => {
+    let active = true;
     apiFetch('/api/v1/public/standings/best-defense')
       .then(r => r.ok ? r.json() : null)
-      .then(d => { if (d?.data) setBestDefense(d.data); })
+      .then(d => { if (active && d?.data) setBestDefense(d.data); })
       .catch(() => {});
+    return () => { active = false; };
   }, []);
 
   const { data: tournament }                                       = useCurrentTournament(initialTournament);
@@ -126,8 +128,6 @@ export default function GroupsClient({ initialTournament, initialGroups, initial
   const groups: Group[] = useMemo(() =>
     rawGroups.length > 0
       ? rawGroups.map((g: any) => ({
-          // Reconstruimos el nombre usando i18n + el code (A,B,C…) en lugar del
-          // `name` que viene del backend ya en español ("Grupo A").
           id: g.id, name: `${t('groups.groupLabel')} ${g.code ?? g.name?.replace(/^grupo\s+/i, '') ?? ''}`.trim(),
           standings: (g.standings ?? []).map((s: any) => ({
             position: s.position,
@@ -138,7 +138,8 @@ export default function GroupsClient({ initialTournament, initialGroups, initial
           })),
         }))
       : MOCK_GROUPS,
-    [rawGroups, locale, t]
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [rawGroups]
   );
 
   const bracketsData: BracketData = useMemo(() => {
@@ -154,17 +155,15 @@ export default function GroupsClient({ initialTournament, initialGroups, initial
   return (
     <div className="w-full relative">
 
-      {/* Ambient orbs */}
-      <motion.div className="fixed rounded-full pointer-events-none"
+      {/* Ambient orbs — CSS puro (sin JS Framer Motion loop) */}
+      <div className="animate-orb fixed rounded-full pointer-events-none"
         style={{ width: 650, height: 650, top: -200, left: -130,
           background: gradients.cornerGlow('success', 0.07).replace('circle,', 'circle at center,'),
-          filter: 'blur(75px)', zIndex: 0 }}
-        animate={{ scale: [1, 1.18, 1], opacity: [0.5, 0.85, 0.5] }} transition={{ duration: 12, repeat: Infinity }} />
-      <motion.div className="fixed rounded-full pointer-events-none"
+          filter: 'blur(75px)', zIndex: 0 }} />
+      <div className="animate-orb-slow fixed rounded-full pointer-events-none"
         style={{ width: 500, height: 500, bottom: -80, right: -80,
           background: gradients.cornerGlow('green', 0.06).replace('circle,', 'circle at center,'),
-          filter: 'blur(65px)', zIndex: 0 }}
-        animate={{ scale: [1, 1.22, 1], opacity: [0.4, 0.75, 0.4] }} transition={{ duration: 14, repeat: Infinity, delay: 4 }} />
+          filter: 'blur(65px)', zIndex: 0 }} />
 
       {/* Tech grid */}
       <svg className="fixed inset-0 w-full h-full pointer-events-none opacity-[0.022]" style={{ zIndex: 0 }} xmlns="http://www.w3.org/2000/svg">

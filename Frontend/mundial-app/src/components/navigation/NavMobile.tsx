@@ -18,6 +18,50 @@ interface NavMobileProps {
   t: (key: string) => string;
 }
 
+const MobileNavItem = React.memo(function MobileNavItem({
+  item, isActive, locale,
+}: { item: NavItem; isActive: boolean; locale: string }) {
+  return (
+    <Link href={item.href} prefetch={true}>
+      <motion.div
+        className="relative flex flex-col items-center gap-1 py-2.5 rounded-2xl overflow-hidden"
+        whileTap={{ scale: 0.88 }}
+        style={{
+          background: isActive ? item.bgRgba : 'transparent',
+          border: `1px solid ${isActive ? item.accentHex + '28' : 'transparent'}`,
+          transition: 'all 0.25s ease',
+        }}
+      >
+        {isActive && (
+          <motion.div
+            layoutId="mobileBar"
+            className="absolute -top-px left-1/2 -translate-x-1/2 rounded-full"
+            style={{ width: 22, height: 2, background: item.accentHex, boxShadow: `0 0 10px ${item.glowRgba}, 0 0 20px ${item.glowRgba}` }}
+            transition={{ type: 'spring', stiffness: 380, damping: 30 }}
+          />
+        )}
+        <span
+          className="text-[18px] leading-none"
+          style={{
+            color: isActive ? item.accentHex : alpha(hex.neutral.white, 0.20),
+            filter: isActive ? `drop-shadow(0 0 6px ${item.accentHex})` : 'none',
+          }}
+        >
+          {item.icon}
+        </span>
+        <span className="text-[9px] font-black tracking-[0.05em] leading-none"
+          style={{
+            color: isActive ? item.accentHex : alpha(hex.neutral.white, 0.18),
+            textShadow: isActive ? `0 0 8px ${item.glowRgba}` : 'none',
+            transition: 'all 0.25s',
+          }}>
+          {item.label}
+        </span>
+      </motion.div>
+    </Link>
+  );
+}, (prev, next) => prev.isActive === next.isActive);
+
 export const NavMobile: React.FC<NavMobileProps> = ({
   navItems, mobileVisible, setMobileVisible, activeItem, pathname, locale, t,
 }) => {
@@ -41,48 +85,14 @@ export const NavMobile: React.FC<NavMobileProps> = ({
 
           <div className="grid px-2 pt-2 pb-[max(0.6rem,env(safe-area-inset-bottom))]"
             style={{ gridTemplateColumns: `repeat(${navItems.length}, 1fr)` }}>
-            {navItems.map((item) => {
-              const isActive = pathname === item.href || (item.originalHref === '/' && pathname === `/${locale}`);
-              return (
-                <Link key={item.href} href={item.href} prefetch={true}>
-                  <motion.div
-                    className="relative flex flex-col items-center gap-1 py-2.5 rounded-2xl overflow-hidden"
-                    whileTap={{ scale: 0.88 }}
-                    style={{
-                      background: isActive ? item.bgRgba : 'transparent',
-                      border: `1px solid ${isActive ? item.accentHex + '28' : 'transparent'}`,
-                      transition: 'all 0.25s ease',
-                    }}
-                  >
-                    {isActive && (
-                      <motion.div
-                        layoutId="mobileBar"
-                        className="absolute -top-px left-1/2 -translate-x-1/2 rounded-full"
-                        style={{ width: 22, height: 2, background: item.accentHex, boxShadow: `0 0 10px ${item.glowRgba}, 0 0 20px ${item.glowRgba}` }}
-                        transition={{ type: 'spring', stiffness: 380, damping: 30 }}
-                      />
-                    )}
-                    <span
-                      className="text-[18px] leading-none"
-                      style={{
-                        color: isActive ? item.accentHex : alpha(hex.neutral.white, 0.20),
-                        filter: isActive ? `drop-shadow(0 0 6px ${item.accentHex})` : 'none',
-                      }}
-                    >
-                      {item.icon}
-                    </span>
-                    <span className="text-[9px] font-black tracking-[0.05em] leading-none"
-                      style={{
-                        color: isActive ? item.accentHex : alpha(hex.neutral.white, 0.18),
-                        textShadow: isActive ? `0 0 8px ${item.glowRgba}` : 'none',
-                        transition: 'all 0.25s',
-                      }}>
-                      {item.label}
-                    </span>
-                  </motion.div>
-                </Link>
-              );
-            })}
+            {navItems.map((item) => (
+              <MobileNavItem
+                key={item.href}
+                item={item}
+                isActive={pathname === item.href || (item.originalHref === '/' && pathname === `/${locale}`)}
+                locale={locale}
+              />
+            ))}
           </div>
         </div>
       </motion.nav>

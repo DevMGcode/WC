@@ -1,8 +1,15 @@
-import type { Metadata } from 'next';
+import type { Metadata, Viewport } from 'next';
 import './globals.css';
 import ServiceWorkerRegistration from '@/components/ServiceWorkerRegistration';
 
 const APP_URL = process.env.NEXT_PUBLIC_APP_URL ?? 'https://orionixgol.azurewebsites.net';
+
+export const viewport: Viewport = {
+  width: 'device-width',
+  initialScale: 1,
+  viewportFit: 'cover',
+  themeColor: '#22d3ee',
+};
 
 export const metadata: Metadata = {
   metadataBase: new URL(APP_URL),
@@ -13,8 +20,6 @@ export const metadata: Metadata = {
   description: 'Predice los resultados del Mundial de Fútbol 2026, compite en ligas privadas y sigue el ranking en tiempo real.',
   keywords: ['mundial 2026', 'predicciones fútbol', 'world cup 2026', 'porra mundial', 'ligas privadas'],
   authors: [{ name: 'Orionix Gol' }],
-  viewport: 'width=device-width, initial-scale=1.0, viewport-fit=cover',
-  themeColor: '#22d3ee',
   manifest: '/manifest.json',
   icons: {
     icon: [

@@ -25,10 +25,18 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   // Runs only on client after hydration completes
   useEffect(() => {
-    const token = authService.getToken();
-    const saved  = authService.getUser();
-    if (token && saved) setUser(saved);
-    setLoading(false);
+    try {
+      const token = authService.getToken();
+      const saved  = authService.getUser();
+      if (token && saved) setUser(saved);
+    } catch {
+      try {
+        window.localStorage.removeItem('authToken');
+        window.localStorage.removeItem('user');
+      } catch {}
+    } finally {
+      setLoading(false);
+    }
   }, []);
 
   // Escucha cambios de usuario disparados por otros componentes (ej. /auth/refresh

@@ -13,6 +13,117 @@ import type { NavItem as NavItemType } from './navConfig';
 const W_OPEN      = 210;
 const W_COLLAPSED = 68;
 
+interface NavItemProps {
+  item: NavItemType;
+  isActive: boolean;
+  isHov: boolean;
+  collapsed: boolean;
+  locale: string;
+  t: (key: string) => string;
+  setHovered: (v: string | null) => void;
+  prefetchRouteData: (href: string) => void;
+}
+
+const NavItemRow = React.memo(function NavItemRow({
+  item, isActive, isHov, collapsed, locale, t, setHovered, prefetchRouteData,
+}: NavItemProps) {
+  const toLocalHref = (h: string) => h === '/' ? `/${locale}` : `/${locale}${h}`;
+  return (
+    <Link
+      href={toLocalHref(item.originalHref)}
+      prefetch={true}
+      className="block"
+      onMouseEnter={() => { setHovered(item.href); prefetchRouteData(item.originalHref); }}
+      onMouseLeave={() => setHovered(null)}
+    >
+      <motion.div
+        className="relative flex items-center rounded-xl select-none"
+        style={{
+          padding: '11px 10px',
+          gap: collapsed ? 0 : 11,
+          justifyContent: collapsed ? 'center' : 'flex-start',
+          background: isActive
+            ? item.bgRgba
+            : isHov
+              ? alpha(hex.neutral.white, 0.05)
+              : 'transparent',
+          border: `1px solid ${isActive ? item.accentHex + '30' : isHov ? alpha(hex.neutral.white, 0.06) : 'transparent'}`,
+          boxShadow: isActive ? `inset 0 0 22px ${item.glowRgba}15, 0 4px 16px ${alpha(hex.neutral.black, 0.30)}` : 'none',
+          transition: 'background 0.22s, border-color 0.22s, box-shadow 0.22s',
+          overflow: 'visible',
+        }}
+        whileHover={{ x: collapsed ? 0 : 4 }}
+        whileTap={{ scale: 0.97 }}
+        transition={{ type: 'spring', stiffness: 500, damping: 32 }}
+      >
+        {isActive && <ActiveOrb color={item.bgRgba} />}
+        {isActive && (
+          <motion.div
+            layoutId="sidebarBar"
+            className="absolute left-0 top-2 bottom-2 rounded-full"
+            style={{
+              width: 3,
+              background: `linear-gradient(180deg, ${item.accentHex}, ${item.accentHex}cc)`,
+              boxShadow: `0 0 10px ${item.glowRgba}, 0 0 24px ${item.glowRgba}`,
+            }}
+            transition={{ type: 'spring', stiffness: 380, damping: 30 }}
+          />
+        )}
+        <div
+          className="relative z-10 flex items-center justify-center w-8 h-8 rounded-xl shrink-0"
+          style={{
+            background: isActive ? item.bgRgba : isHov ? alpha(hex.neutral.white, 0.06) : alpha(hex.neutral.white, 0.03),
+            border: `1px solid ${isActive ? item.accentHex + '35' : isHov ? alpha(hex.neutral.white, 0.08) : alpha(hex.neutral.white, 0.04)}`,
+            color: isActive ? item.accentHex : isHov ? alpha(hex.neutral.white, 0.70) : alpha(hex.neutral.white, 0.45),
+            boxShadow: isActive ? `0 0 14px ${item.glowRgba}, inset 0 1px 0 ${alpha(hex.neutral.white, 0.08)}` : 'none',
+            transition: 'all 0.22s ease',
+          }}
+        >
+          {item.icon}
+        </div>
+        <AnimatePresence initial={false}>
+          {!collapsed && (
+            <motion.span
+              className="relative z-10 text-sm font-bold flex-1 leading-none whitespace-nowrap"
+              style={{
+                color: isActive ? item.accentHex : isHov ? alpha(hex.neutral.white, 0.80) : alpha(hex.neutral.white, 0.55),
+                textShadow: isActive ? `0 0 16px ${item.glowRgba}` : 'none',
+                transition: 'color 0.22s, text-shadow 0.22s',
+              }}
+              initial={{ opacity: 0, x: -10 }}
+              animate={{ opacity: 1, x: 0 }}
+              exit={{ opacity: 0, x: -10 }}
+              transition={{ duration: 0.18 }}
+            >
+              {item.label}
+            </motion.span>
+          )}
+        </AnimatePresence>
+        <AnimatePresence initial={false}>
+          {!collapsed && isActive && (
+            <motion.span className="relative z-10 shrink-0"
+              initial={{ opacity: 0, x: -6 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -6 }}
+              transition={{ duration: 0.18 }}
+              style={{ color: item.accentHex + '80' }}
+            >
+              <FiChevronRight size={13} />
+            </motion.span>
+          )}
+        </AnimatePresence>
+        <AnimatePresence>
+          {collapsed && isHov && (
+            <NavTooltip label={item.label} accentHex={item.accentHex} glowRgba={item.glowRgba} />
+          )}
+        </AnimatePresence>
+      </motion.div>
+    </Link>
+  );
+}, (prev, next) =>
+  prev.isActive === next.isActive &&
+  prev.isHov    === next.isHov    &&
+  prev.collapsed === next.collapsed
+);
+
 interface NavSidebarProps {
   navItems: NavItemType[];
   hovered: string | null;
@@ -138,8 +249,8 @@ export const NavSidebar: React.FC<NavSidebarProps> = ({
                     <div className="relative shrink-0">
                       <motion.div className="absolute inset-0 rounded-full"
                         style={{ background: alphaOf('green', 0.28), filter: 'blur(12px)' }}
-                        animate={{ scale: [0.8, 1.4, 0.8], opacity: [0.3, 0.75, 0.3] }}
-                        transition={{ duration: 3.2, repeat: Infinity }} />
+                        animate={collapsed ? { scale: 0.8, opacity: 0.3 } : { scale: [0.8, 1.4, 0.8], opacity: [0.3, 0.75, 0.3] }}
+                        transition={collapsed ? { duration: 0 } : { duration: 3.2, repeat: Infinity }} />
                       <Image src="/Logo_Pestaña.png" alt="Orionix Gol" width={38} height={38} className="relative z-10 w-[38px] h-[38px] object-contain" />
                     </div>
                     <div className="flex flex-col min-w-0 overflow-hidden">
@@ -192,125 +303,19 @@ export const NavSidebar: React.FC<NavSidebarProps> = ({
             )}
           </AnimatePresence>
 
-          {navItems.map((item) => {
-            const isActive = pathname === item.href || (item.originalHref === '/' && pathname === `/${locale}`);
-            const isHov    = hovered === item.href;
-
-            return (
-              <Link
-                key={item.href}
-                href={item.href}
-                prefetch={true}
-                className="block"
-                onMouseEnter={() => { setHovered(item.href); prefetchRouteData(item.originalHref); }}
-                onMouseLeave={() => setHovered(null)}
-              >
-                <motion.div
-                  className="relative flex items-center rounded-xl select-none"
-                  style={{
-                    padding: '11px 10px',
-                    gap: collapsed ? 0 : 11,
-                    justifyContent: collapsed ? 'center' : 'flex-start',
-                    background: isActive
-                      ? item.bgRgba
-                      : isHov
-                        ? alpha(hex.neutral.white, 0.05)
-                        : 'transparent',
-                    border: `1px solid ${isActive ? item.accentHex + '30' : isHov ? alpha(hex.neutral.white, 0.06) : 'transparent'}`,
-                    boxShadow: isActive ? `inset 0 0 22px ${item.glowRgba}15, 0 4px 16px ${alpha(hex.neutral.black, 0.30)}` : 'none',
-                    transition: 'background 0.22s, border-color 0.22s, box-shadow 0.22s',
-                    overflow: 'visible',
-                  }}
-                  whileHover={{ x: collapsed ? 0 : 4 }}
-                  whileTap={{ scale: 0.97 }}
-                  transition={{ type: 'spring', stiffness: 500, damping: 32 }}
-                >
-                  {/* Active orb */}
-                  {isActive && <ActiveOrb color={item.bgRgba} />}
-
-                  {/* Active left bar */}
-                  {isActive && (
-                    <motion.div
-                      layoutId="sidebarBar"
-                      className="absolute left-0 top-2 bottom-2 rounded-full"
-                      style={{
-                        width: 3,
-                        background: `linear-gradient(180deg, ${item.accentHex}, ${item.accentHex}cc)`,
-                        boxShadow: `0 0 10px ${item.glowRgba}, 0 0 24px ${item.glowRgba}`,
-                      }}
-                      transition={{ type: 'spring', stiffness: 380, damping: 30 }}
-                    />
-                  )}
-
-                  {/* Icon container — 32×32 para íconos más visibles */}
-                  <div
-                    className="relative z-10 flex items-center justify-center w-8 h-8 rounded-xl shrink-0"
-                    style={{
-                      background: isActive
-                        ? item.bgRgba
-                        : isHov
-                          ? alpha(hex.neutral.white, 0.06)
-                          : alpha(hex.neutral.white, 0.03),
-                      border: `1px solid ${isActive ? item.accentHex + '35' : isHov ? alpha(hex.neutral.white, 0.08) : alpha(hex.neutral.white, 0.04)}`,
-                      color: isActive
-                        ? item.accentHex
-                        : isHov
-                          ? alpha(hex.neutral.white, 0.70)
-                          : alpha(hex.neutral.white, 0.45),
-                      boxShadow: isActive ? `0 0 14px ${item.glowRgba}, inset 0 1px 0 ${alpha(hex.neutral.white, 0.08)}` : 'none',
-                      transition: 'all 0.22s ease',
-                    }}
-                  >
-                    {item.icon}
-                  </div>
-
-                  {/* Label — 14px (text-sm) mínimo para legibilidad con miopía */}
-                  <AnimatePresence initial={false}>
-                    {!collapsed && (
-                      <motion.span
-                        className="relative z-10 text-sm font-bold flex-1 leading-none whitespace-nowrap"
-                        style={{
-                          color: isActive
-                            ? item.accentHex
-                            : isHov
-                              ? alpha(hex.neutral.white, 0.80)
-                              : alpha(hex.neutral.white, 0.55),
-                          textShadow: isActive ? `0 0 16px ${item.glowRgba}` : 'none',
-                          transition: 'color 0.22s, text-shadow 0.22s',
-                        }}
-                        initial={{ opacity: 0, x: -10 }}
-                        animate={{ opacity: 1, x: 0 }}
-                        exit={{ opacity: 0, x: -10 }}
-                        transition={{ duration: 0.18 }}
-                      >
-                        {item.label}
-                      </motion.span>
-                    )}
-                  </AnimatePresence>
-
-                  {/* Chevron activo */}
-                  <AnimatePresence initial={false}>
-                    {!collapsed && isActive && (
-                      <motion.span className="relative z-10 shrink-0"
-                        initial={{ opacity: 0, x: -6 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -6 }}
-                        transition={{ duration: 0.18 }}
-                        style={{ color: item.accentHex + '80' }}
-                      >
-                        <FiChevronRight size={13} />
-                      </motion.span>
-                    )}
-                  </AnimatePresence>
-
-                  {/* Tooltip collapsed */}
-                  <AnimatePresence>
-                    {collapsed && isHov && (
-                      <NavTooltip label={item.label} accentHex={item.accentHex} glowRgba={item.glowRgba} />
-                    )}
-                  </AnimatePresence>
-                </motion.div>
-              </Link>
-            );
-          })}
+          {navItems.map((item) => (
+            <NavItemRow
+              key={item.href}
+              item={item}
+              isActive={pathname === item.href || (item.originalHref === '/' && pathname === `/${locale}`)}
+              isHov={hovered === item.href}
+              collapsed={collapsed}
+              locale={locale}
+              t={t}
+              setHovered={setHovered}
+              prefetchRouteData={prefetchRouteData}
+            />
+          ))}
         </nav>
 
         {/* ── Separador ── */}
