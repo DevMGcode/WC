@@ -214,11 +214,11 @@ const RecentResults = ({ fixtures, predictions, t }: RecentResultsProps) => {
 
                   {/* Prediction result */}
                   {pred ? (
-                    <div className="flex items-center justify-between mt-3.5 pt-3.5"
+                    <div className="flex items-center justify-between gap-2 mt-3.5 pt-3.5"
                       style={{ borderTop: `1px solid ${alpha(hex.neutral.white, 0.07)}` }}>
-                      <div>
-                        {/* "MI PREDICCIÓN" — 11px */}
-                        <p className="text-[11px] uppercase tracking-[0.20em] mb-1.5" style={{ color: hex.text.muted }}>
+                      <div className="min-w-0">
+                        {/* "TU PORRA" — 11px — tracking compacto en mobile para no romper */}
+                        <p className="text-[11px] uppercase tracking-[0.08em] sm:tracking-[0.20em] mb-1.5 whitespace-nowrap" style={{ color: hex.text.muted }}>
                           {t('home.myPrediction')}
                         </p>
                         {/* Score predicho: 24px (single) / 20px (multi) */}
@@ -229,11 +229,11 @@ const RecentResults = ({ fixtures, predictions, t }: RecentResultsProps) => {
                         </p>
                       </div>
                       {pr && (
-                        <div className="text-right">
-                          {/* Badge resultado: 12px */}
-                          <div className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg mb-1"
+                        <div className="text-right min-w-0 shrink-0">
+                          {/* Badge resultado: 11px mobile / 12px sm+, whitespace-nowrap */}
+                          <div className="inline-flex items-center gap-1.5 px-2 sm:px-3 py-1 sm:py-1.5 rounded-lg mb-1"
                             style={{ background: `${pr.color}18`, border: `1px solid ${pr.color}40` }}>
-                            <span className="text-[12px] font-black" style={{ color: pr.color }}>{pr.label}</span>
+                            <span className="text-[11px] sm:text-[12px] font-black whitespace-nowrap" style={{ color: pr.color }}>{pr.label}</span>
                           </div>
                           {/* Puntos: 20px (single) / 16px (multi) */}
                           <p className={`font-black mt-0.5 ${isSingle ? 'text-xl' : 'text-base'}`}

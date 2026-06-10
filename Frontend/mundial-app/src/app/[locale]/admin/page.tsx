@@ -199,7 +199,7 @@ export default function AdminPage() {
         <div className="px-4 py-5 max-w-5xl mx-auto pb-32">
 
           {/* Main tabs */}
-          <div className="flex gap-2 mb-5 p-2 rounded-2xl"
+          <div className="flex gap-2 mb-5 p-2 rounded-2xl overflow-x-auto"
             style={{
               background: `linear-gradient(135deg, ${alpha(hex.bg.primary, 0.85)} 0%, ${alpha(hex.bg.secondary, 0.80)} 100%)`,
               border: `1px solid ${alphaOf('green', 0.14)}`,
@@ -211,7 +211,7 @@ export default function AdminPage() {
               return (
                 <motion.button key={tab.key} onClick={() => setActiveTab(tab.key)}
                   whileHover={{ scale: 1.02, y: -1 }} whileTap={{ scale: 0.96 }}
-                  className="relative flex-1 py-3 px-3 rounded-xl font-black text-[12px] flex items-center justify-center gap-2.5 overflow-hidden"
+                  className="relative flex-shrink-0 sm:flex-1 py-3 px-3 rounded-xl font-black text-[12px] flex items-center justify-center gap-2.5 overflow-hidden whitespace-nowrap"
                   style={{
                     color: isActive ? hex.neutral.white : `${tab.accent}99`,
                     fontFamily: 'var(--font-display)', letterSpacing: '0.07em',

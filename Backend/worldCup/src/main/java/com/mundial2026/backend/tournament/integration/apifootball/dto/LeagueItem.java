@@ -1,6 +1,7 @@
 package com.mundial2026.backend.tournament.integration.apifootball.dto;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import com.fasterxml.jackson.annotation.JsonProperty;
 
 import java.time.LocalDate;
 import java.util.List;
@@ -36,9 +37,9 @@ public record LeagueItem(LeagueBlock league, CountryBlock country, List<SeasonBl
             FixturesCoverage fixtures,
             Boolean standings,
             Boolean players,
-            Boolean topScorers,
-            Boolean topAssists,
-            Boolean topCards,
+            @JsonProperty("top_scorers") Boolean topScorers,
+            @JsonProperty("top_assists") Boolean topAssists,
+            @JsonProperty("top_cards")   Boolean topCards,
             Boolean injuries,
             Boolean predictions,
             Boolean odds
@@ -49,8 +50,8 @@ public record LeagueItem(LeagueBlock league, CountryBlock country, List<SeasonBl
     public record FixturesCoverage(
             Boolean events,
             Boolean lineups,
-            Boolean statisticsFixtures,
-            Boolean statisticsPlayers
+            @JsonProperty("statistics_fixtures") Boolean statisticsFixtures,
+            @JsonProperty("statistics_players")  Boolean statisticsPlayers
     ) {
     }
 }

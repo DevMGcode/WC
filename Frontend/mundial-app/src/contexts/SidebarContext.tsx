@@ -1,6 +1,6 @@
 'use client';
 
-import { createContext, useContext, useState, useEffect, useCallback, ReactNode } from 'react';
+import { createContext, useContext, useState, useEffect, useCallback, useRef, ReactNode } from 'react';
 
 interface SidebarCtx {
   collapsed: boolean;
@@ -16,6 +16,7 @@ const SidebarContext = createContext<SidebarCtx>({
 
 export function SidebarProvider({ children }: { children: ReactNode }) {
   const [collapsed, setCollapsedState] = useState(false);
+  const persistTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   useEffect(() => {
     try {
@@ -24,18 +25,27 @@ export function SidebarProvider({ children }: { children: ReactNode }) {
     } catch {}
   }, []);
 
+  const persist = useCallback((v: boolean) => {
+    if (persistTimer.current) clearTimeout(persistTimer.current);
+    persistTimer.current = setTimeout(() => {
+      try { localStorage.setItem('nav-collapsed', JSON.stringify(v)); } catch {}
+    }, 300);
+  }, []);
+
+  useEffect(() => () => { if (persistTimer.current) clearTimeout(persistTimer.current); }, []);
+
   const setCollapsed = useCallback((v: boolean) => {
     setCollapsedState(v);
-    try { localStorage.setItem('nav-collapsed', JSON.stringify(v)); } catch {}
-  }, []);
+    persist(v);
+  }, [persist]);
 
   const toggle = useCallback(() => {
     setCollapsedState(prev => {
       const next = !prev;
-      try { localStorage.setItem('nav-collapsed', JSON.stringify(next)); } catch {}
+      persist(next);
       return next;
     });
-  }, []);
+  }, [persist]);
 
   return (
     <SidebarContext.Provider value={{ collapsed, toggle, setCollapsed }}>

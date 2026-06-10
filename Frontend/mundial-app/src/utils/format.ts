@@ -11,8 +11,11 @@
 const DEFAULT_LOCALE = 'es-ES';
 
 // TZ fija del torneo para evitar mismatches SSR/cliente (Bug hydration).
-// Ajustar si la sede principal del torneo cambia.
-const TOURNAMENT_TZ = 'America/New_York';
+// Usamos CDMX porque es la sede del partido inaugural (MEX vs RSA, 11-jun-2026)
+// y coincide con lo que muestran FIFA, Google y la TV mexicana. El usuario en
+// Bogotá, BA, Madrid, etc. verá la hora local de la sede del partido — patrón
+// estándar en apps deportivas (ESPN, FotMob).
+const TOURNAMENT_TZ = 'America/Mexico_City';
 
 /** Detecta el locale activo desde <html lang="…"> en cliente; SSR → 'es-ES'. */
 function activeLocale(override?: string): string {

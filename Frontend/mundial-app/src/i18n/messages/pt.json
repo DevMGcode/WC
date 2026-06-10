@@ -523,5 +523,42 @@
     "back": "Voltar",
     "isOwner": "Você é o proprietário",
     "loading": "Carregando"
+  },
+  "onboarding": {
+    "welcome": "Bem-vindo",
+    "step1": {
+      "title": "Selecione seu idioma",
+      "subtitle": "Você pode alterá-lo depois no seu perfil"
+    },
+    "step2": {
+      "label": "Times",
+      "selected": "{count} selecionados",
+      "title": "Times favoritos",
+      "subtitle": "Selecione os times que você quer seguir"
+    },
+    "step3": {
+      "label": "Notificações",
+      "title": "Fique por dentro",
+      "subtitle": "Configure quais alertas você quer receber",
+      "matchReminders": "Lembretes de partidas",
+      "realTimeResults": "Resultados em tempo real",
+      "leagueUpdates": "Atualizações de ligas",
+      "newsUpdates": "Notícias e novidades"
+    },
+    "step4": {
+      "title": "Tudo pronto!",
+      "subtitle": "Sua conta está configurada e pronta",
+      "language": "Idioma",
+      "favoriteTeams": "Times favoritos",
+      "selected": "{count} selecionados",
+      "none": "Nenhum",
+      "activeNotifications": "Notificações ativas"
+    },
+    "nav": {
+      "back": "Voltar",
+      "next": "Próximo",
+      "start": "Começar",
+      "skip": "Pular configuração"
+    }
   }
 }

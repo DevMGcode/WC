@@ -15,11 +15,30 @@ import java.util.List;
 @RequiredArgsConstructor
 public class StandingsService {
 
+    /**
+     * API-Football, para el Mundial 2026 (formato 48 equipos), devuelve una
+     * fila auxiliar con groupName="Ranking of third-placed teams" que lista
+     * los 12 mejores 3ros lugares (de los cuales 8 clasifican). Esa fila
+     * NO es un grupo real y dispara duplicados si se mezcla con los grupos
+     * A-L (ej. en "mejor defensa" o en cualquier listado plano).
+     *
+     * 2018 y 2022 no devuelven esta fila — el filtro es no-op para esas
+     * temporadas, así que es retrocompatible.
+     */
+    private static final String THIRD_PLACED_RANKING_GROUP = "Ranking of third-placed teams";
+
     private final StandingsDataPort standingsDataPort;
+
+    /** Filtra la fila auxiliar "Ranking of third-placed teams" que solo aparece en 2026. */
+    private static boolean isRealGroup(ExternalStanding s) {
+        return s.groupName() != null
+            && !THIRD_PLACED_RANKING_GROUP.equalsIgnoreCase(s.groupName().trim());
+    }
 
     @Cacheable(CacheConfig.STANDINGS)
     public List<StandingResponse> findAll() {
         return standingsDataPort.fetchStandings().stream()
+                .filter(StandingsService::isRealGroup)
                 .map(this::toResponse)
                 .toList();
     }

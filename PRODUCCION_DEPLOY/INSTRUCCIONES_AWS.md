@@ -324,6 +324,63 @@ MERCADO_PAGO_NOTIFICATION_URL=https://tu-dominio.com/api/v1/public/payments/merc
 
 ---
 
+## PWA (Progressive Web App) en producción
+
+La PWA está lista en el código. En producción funciona automáticamente una vez que el sitio tiene HTTPS.
+
+### Qué está implementado
+
+| Archivo | Ubicación | Función |
+|---|---|---|
+| `manifest.json` | `Frontend/public/manifest.json` | Define nombre, íconos, colores, display standalone |
+| `sw.js` | `Frontend/public/sw.js` | Service Worker — requerido para instalación |
+| `ServiceWorkerRegistration.tsx` | `Frontend/src/components/` | Registra el SW en el cliente |
+| Íconos | `Frontend/public/icons/` | 180×180, 192×192, 512×512 |
+
+### Comportamiento por plataforma
+
+| Plataforma | Instalación | Notas |
+|---|---|---|
+| Android (Chrome/Edge) | Banner automático "Agregar a pantalla de inicio" | Aparece después de visitar el sitio 2+ veces |
+| iOS (Safari) | Manual: Compartir → "Agregar a pantalla de inicio" | Safari no muestra banner automático |
+| Desktop (Chrome/Edge) | Ícono en barra de direcciones o `...` → Aplicaciones | Funciona igual en producción |
+
+### No se requiere ningún paso extra en el deploy
+
+El `manifest.json` y `sw.js` están en `public/` y se sirven estáticos por Next.js standalone. Nginx ya está configurado para servir archivos estáticos del frontend. Con HTTPS activo (Paso 6), el Service Worker se registra automáticamente.
+
+### Si el ícono de instalación no aparece en producción
+
+```bash
+# Verificar que el manifest se sirve correctamente
+curl https://tu-dominio.com/manifest.json
+
+# Verificar que el SW se sirve
+curl https://tu-dominio.com/sw.js
+
+# En DevTools del navegador → Application → Manifest
+# → debe mostrar: nombre, íconos y "display: standalone"
+```
+
+### Actualización de íconos o manifest en producción
+
+```bash
+# Después de cambiar iconos/manifest, solo rebuildear el frontend
+docker compose -f docker-compose.prod.yml --env-file .env.prod up -d --build frontend
+```
+
+### Probar en celular antes del deploy (ngrok)
+
+```bash
+# En tu máquina local con Docker corriendo en dev:
+ngrok http 3000
+
+# Abrí la URL https://xxxx.ngrok-free.app en el celular
+# Chrome/Edge mostrará el banner de instalación automáticamente
+```
+
+---
+
 ## Diferencias clave Dev vs Producción
 
 | | Dev | Producción |

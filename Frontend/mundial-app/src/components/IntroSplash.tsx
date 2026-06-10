@@ -10,7 +10,7 @@ import { alpha, alphaOf } from '@/lib/design/effects';
 
 const SPLASH_DURATION_MS   = 2500;
 const SPLASH_EXIT_DELAY_MS = 600;
-const PROGRESS_TICK_MS     = 40;
+const PROGRESS_TICK_MS     = 100;
 
 const getProgress = (ms: number) => Math.min(100, Math.floor((ms / SPLASH_DURATION_MS) * 100));
 

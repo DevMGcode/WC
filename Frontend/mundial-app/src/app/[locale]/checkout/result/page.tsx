@@ -24,6 +24,42 @@ export default function CheckoutResultPage() {
     if (!loading && !isAuthenticated) router.push('/login');
   }, [loading, isAuthenticated, router]);
 
+  // Si el pago fue exitoso, refrescar el JWT para que incluya isPremium=true.
+  // El backend lee subscriptionService.isPremium(userId) al emitir el token,
+  // así que el nuevo access token reflejará la sub recién activada sin
+  // requerir logout/login. Patrón estándar (Spotify, Netflix, Stripe).
+  useEffect(() => {
+    if (!isOk || !isAuthenticated) return;
+    if (typeof window === 'undefined') return;
+
+    const refreshToken = window.localStorage.getItem('refreshToken');
+    if (!refreshToken) return;
+
+    let cancelled = false;
+    (async () => {
+      try {
+        const resp = await fetch('/api/v1/auth/refresh', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ refreshToken }),
+        });
+        if (!resp.ok) return;
+        const json = await resp.json();
+        const data = json?.data;
+        if (cancelled || !data) return;
+        if (data.accessToken)  window.localStorage.setItem('authToken',    data.accessToken);
+        if (data.refreshToken) window.localStorage.setItem('refreshToken', data.refreshToken);
+        if (data.user) {
+          // Notificar al resto de la app que el usuario cambió (sidebar, hooks, etc.)
+          window.dispatchEvent(new CustomEvent('auth:user-updated', { detail: data.user }));
+        }
+      } catch {
+        // Silencioso — el usuario aún puede hacer logout/login manual si esto falla.
+      }
+    })();
+    return () => { cancelled = true; };
+  }, [isOk, isAuthenticated]);
+
   const accentColor = isOk ? hex.green.bright : hex.status.danger;
   const accentGlow  = isOk ? alphaOf('green', 0.55) : `${hex.status.danger}55`;
 

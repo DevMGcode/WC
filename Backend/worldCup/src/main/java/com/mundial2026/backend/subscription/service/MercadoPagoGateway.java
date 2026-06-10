@@ -27,6 +27,12 @@ public interface MercadoPagoGateway {
     PaymentStatus fetchPaymentStatus(String paymentId);
 
     /**
+     * Solicita un reembolso total del pago indicado.
+     * Lanza excepción si MP rechaza el reembolso.
+     */
+    void refund(String paymentId);
+
+    /**
      * Estado normalizado del pago consultado a Mercado Pago.
      * - APPROVED:  pago confirmado → activar suscripción
      * - REJECTED:  pago rechazado → marcar FAILED

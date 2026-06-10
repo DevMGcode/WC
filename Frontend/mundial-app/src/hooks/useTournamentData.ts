@@ -55,6 +55,7 @@ export const QUERY_KEYS = {
   teams:            ['teams']                           as const,
   topScorers:       (limit?: number, teamId?: number) => ['stats', 'topscorers', limit ?? 'def', teamId ?? 'all'] as const,
   topAssists:       (limit?: number, teamId?: number) => ['stats', 'topassists', limit ?? 'def', teamId ?? 'all'] as const,
+  teamSquad:        (teamId: number) => ['team', teamId, 'squad'] as const,
   userPredictions:  (userId: number) => ['predictions', 'user', userId] as const,
   userScore:        (userId: number, tid: number) => ['scores', 'user', userId, tid] as const,
   scoreHistory:     (userId: number, tid: number) => ['scores', 'history', userId, tid] as const,
@@ -112,6 +113,34 @@ export function useTopScorers(opts?: { limit?: number; teamId?: number }) {
     queryKey: QUERY_KEYS.topScorers(opts?.limit, opts?.teamId),
     queryFn:  () => fetchJsonAuth(`/api/v1/public/players/topscorers${suffix}`),
     staleTime: STALE.scorers,
+  });
+}
+
+/**
+ * Plantilla nacional de un equipo. Endpoint soft-auth en backend:
+ *   - Free / Anónimo → 11 jugadores
+ *   - Premium        → plantilla completa
+ *
+ * NOTA: API-Football no expone "lista oficial del Mundial" — devuelve la
+ * plantilla actual del seleccionado nacional. Se aclara al usuario en el
+ * tooltip del modal.
+ */
+export interface SquadPlayer {
+  teamId: number;
+  teamName: string;
+  playerId: number;
+  playerName: string;
+  shirtNumber: number | null;
+  position: string | null;
+  age: number | null;
+  photoUrl: string | null;
+}
+export function useTeamSquad(teamId: number | null, enabled = true) {
+  return useQuery<SquadPlayer[] | null>({
+    queryKey: teamId ? QUERY_KEYS.teamSquad(teamId) : ['team', 'none', 'squad'],
+    queryFn:  () => fetchJsonAuth(`/api/v1/public/teams/${teamId}/squad`),
+    staleTime: 1000 * 60 * 30, // 30 min: la plantilla cambia poco día a día
+    enabled: enabled && teamId != null,
   });
 }
 

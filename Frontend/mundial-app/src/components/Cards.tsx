@@ -3,8 +3,10 @@
 import React from 'react';
 import { Team } from '@/types';
 import Image from 'next/image';
-import { useTranslations } from 'next-intl';
+import { useTranslations, useLocale } from 'next-intl';
 import { fmtTime, fmtShortDate } from '@/utils/format';
+import LocalTimeHint from './LocalTimeHint';
+import { localizeTeamName } from '@/lib/i18n/teamNames';
 
 interface TeamCardProps {
   team: Team;
@@ -106,6 +108,10 @@ const FixtureCardInner: React.FC<FixtureCardProps> = ({
   locale,
 }) => {
   const t = useTranslations();
+  const activeLocale = useLocale();
+  const effectiveLocale = locale ?? activeLocale;
+  const homeLocalized = localizeTeamName(homeTeam.name, effectiveLocale);
+  const awayLocalized = localizeTeamName(awayTeam.name, effectiveLocale);
   const isLive = status === 'LIVE';
   const isFinished = status === 'FINISHED';
 
@@ -122,7 +128,15 @@ const FixtureCardInner: React.FC<FixtureCardProps> = ({
       }`}>
         {isLive && `🔴 ${t('status.live')}${elapsedMinutes != null ? ` · ${elapsedMinutes}'` : ''}`}
         {isFinished && t('status.finished')}
-        {status === 'SCHEDULED' && `${fmtShortDate(kickoffAt, locale)} ${fmtTime(kickoffAt, locale)}`}
+        {status === 'SCHEDULED' && (
+          <>
+            <div>
+              {fmtShortDate(kickoffAt, locale)} {fmtTime(kickoffAt, locale)}
+              <span style={{ opacity: 0.7, fontSize: '0.75em', marginLeft: 4 }}>CDMX</span>
+            </div>
+            <LocalTimeHint date={kickoffAt} locale={locale} />
+          </>
+        )}
         {status === 'POSTPONED' && t('status.postponed')}
         {status === 'CANCELLED' && t('status.cancelled')}
       </div>
@@ -146,6 +160,7 @@ const FixtureCardInner: React.FC<FixtureCardProps> = ({
               )}
             </div>
             <p className="text-sm font-bold text-center text-white">{homeTeam.shortName}</p>
+            <p className="text-[10px] text-center text-white/60 mt-0.5 truncate max-w-[80px]">{homeLocalized}</p>
           </div>
 
           {/* Score / VS */}
@@ -181,6 +196,7 @@ const FixtureCardInner: React.FC<FixtureCardProps> = ({
               )}
             </div>
             <p className="text-sm font-bold text-center text-white">{awayTeam.shortName}</p>
+            <p className="text-[10px] text-center text-white/60 mt-0.5 truncate max-w-[80px]">{awayLocalized}</p>
           </div>
         </div>
       </div>

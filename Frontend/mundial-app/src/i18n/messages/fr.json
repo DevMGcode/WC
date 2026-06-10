@@ -523,5 +523,42 @@
     "back": "Retour",
     "isOwner": "Tu es le propriétaire",
     "loading": "Chargement"
+  },
+  "onboarding": {
+    "welcome": "Bienvenue",
+    "step1": {
+      "title": "Choisissez votre langue",
+      "subtitle": "Vous pouvez la modifier plus tard dans votre profil"
+    },
+    "step2": {
+      "label": "Équipes",
+      "selected": "{count} sélectionnés",
+      "title": "Équipes favorites",
+      "subtitle": "Sélectionnez les équipes que vous voulez suivre"
+    },
+    "step3": {
+      "label": "Notifications",
+      "title": "Restez informé",
+      "subtitle": "Configurez les alertes que vous souhaitez recevoir",
+      "matchReminders": "Rappels de matchs",
+      "realTimeResults": "Résultats en temps réel",
+      "leagueUpdates": "Mises à jour des ligues",
+      "newsUpdates": "Actualités"
+    },
+    "step4": {
+      "title": "Tout est prêt !",
+      "subtitle": "Votre compte est configuré et prêt",
+      "language": "Langue",
+      "favoriteTeams": "Équipes favorites",
+      "selected": "{count} sélectionnés",
+      "none": "Aucune",
+      "activeNotifications": "Notifications actives"
+    },
+    "nav": {
+      "back": "Retour",
+      "next": "Suivant",
+      "start": "Commencer",
+      "skip": "Ignorer la configuration"
+    }
   }
 }

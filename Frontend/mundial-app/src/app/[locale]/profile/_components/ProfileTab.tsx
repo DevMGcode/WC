@@ -1,8 +1,8 @@
 'use client';
 
-import React from 'react';
-import { motion } from 'framer-motion';
-import { FiEdit3, FiActivity, FiCrosshair, FiAward, FiBarChart2, FiCalendar, FiLock, FiLogOut } from 'react-icons/fi';
+import React, { useState } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
+import { FiEdit3, FiActivity, FiCrosshair, FiAward, FiBarChart2, FiCalendar, FiLock, FiLogOut, FiRotateCcw, FiShield, FiAlertCircle, FiCheckCircle, FiX } from 'react-icons/fi';
 import { useLocale } from 'next-intl';
 import { hex } from '@/lib/design/tokens';
 import { alpha, alphaOf, surfaces } from '@/lib/design/effects';
@@ -10,6 +10,9 @@ import { EQBars, Ring, GlowBar, SectionLabel } from './ui';
 import { fmtMonthYear } from '@/utils/format';
 import { PremiumBadge } from '@/components/premium/PremiumBadge';
 import { usePremium } from '@/hooks/usePremium';
+import { apiFetch } from '@/lib/apiFetch';
+
+type RefundState = 'idle' | 'confirming' | 'loading' | 'success' | 'error';
 
 interface Stats {
   predictions: number;
@@ -32,6 +35,27 @@ export default function ProfileTab({ user, stats, t, onEditProfile, onChangePass
   const { isPremium } = usePremium();
   const accuracyPct = stats.predictions > 0
     ? Math.round((stats.acertadas / stats.predictions) * 100) : 0;
+
+  const [refundState, setRefundState] = useState<RefundState>('idle');
+  const [refundError, setRefundError] = useState('');
+
+  async function handleRefund() {
+    if (refundState === 'idle') { setRefundState('confirming'); return; }
+    if (refundState !== 'confirming') return;
+    setRefundState('loading');
+    setRefundError('');
+    try {
+      const res = await apiFetch('/api/v1/payments/refund', { method: 'POST' });
+      if (!res.ok) {
+        const body = await res.json().catch(() => ({}));
+        throw new Error(body?.message || `Error ${res.status}`);
+      }
+      setRefundState('success');
+    } catch (err: unknown) {
+      setRefundError(err instanceof Error ? err.message : 'Error desconocido');
+      setRefundState('error');
+    }
+  }
 
   return (
     <motion.div
@@ -198,6 +222,124 @@ export default function ProfileTab({ user, stats, t, onEditProfile, onChangePass
           </div>
         </div>
       </div>
+
+      {/* Suscripción Premium — solo visible si el usuario es Premium */}
+      <AnimatePresence>
+        {isPremium && (
+          <motion.div
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -8 }}
+            transition={{ duration: 0.28 }}
+            className="relative overflow-hidden rounded-3xl p-5"
+            style={{
+              background: `linear-gradient(145deg, ${alpha(hex.gold.base, 0.06)}, ${alpha(hex.bg.primary, 0.98)})`,
+              border: `1px solid ${alpha(hex.gold.base, 0.20)}`,
+              backdropFilter: 'blur(28px)',
+              boxShadow: `0 24px 60px ${alpha(hex.neutral.black, 0.45)}, inset 0 1px 0 ${alpha(hex.neutral.white, 0.02)}`,
+            }}
+          >
+            <div className="absolute inset-x-0 top-0 h-px"
+              style={{ background: `linear-gradient(90deg, transparent, ${alpha(hex.gold.base, 0.50)}, transparent)` }} />
+
+            <SectionLabel color={hex.gold.base}>
+              <span className="flex items-center gap-1.5">
+                <FiShield size={11} />
+                Suscripción Premium
+              </span>
+            </SectionLabel>
+
+            {/* Estado: success */}
+            {refundState === 'success' && (
+              <motion.div
+                initial={{ opacity: 0, scale: 0.95 }}
+                animate={{ opacity: 1, scale: 1 }}
+                className="flex items-start gap-3 px-4 py-3.5 rounded-2xl"
+                style={{ background: alpha(hex.green.bright, 0.08), border: `1px solid ${alpha(hex.green.bright, 0.25)}` }}
+              >
+                <FiCheckCircle size={16} style={{ color: hex.green.bright, flexShrink: 0, marginTop: 1 }} />
+                <div>
+                  <p className="text-sm font-bold" style={{ color: hex.green.bright }}>Reembolso solicitado</p>
+                  <p className="text-xs mt-0.5 text-orionix-text-muted">El monto será acreditado en los próximos días hábiles. Tu acceso Premium permanece activo hasta que se procese.</p>
+                </div>
+              </motion.div>
+            )}
+
+            {/* Estado: error */}
+            {refundState === 'error' && (
+              <motion.div
+                initial={{ opacity: 0, scale: 0.95 }}
+                animate={{ opacity: 1, scale: 1 }}
+                className="flex items-start gap-3 px-4 py-3.5 rounded-2xl mb-3"
+                style={{ background: alpha(hex.accent.red, 0.08), border: `1px solid ${alpha(hex.accent.red, 0.25)}` }}
+              >
+                <FiAlertCircle size={16} style={{ color: hex.accent.redSoft, flexShrink: 0, marginTop: 1 }} />
+                <div className="flex-1 min-w-0">
+                  <p className="text-sm font-bold" style={{ color: hex.accent.redSoft }}>No se pudo procesar el reembolso</p>
+                  <p className="text-xs mt-0.5 text-orionix-text-muted">{refundError}</p>
+                </div>
+                <button onClick={() => setRefundState('idle')} style={{ color: `${hex.accent.redSoft}80` }}>
+                  <FiX size={14} />
+                </button>
+              </motion.div>
+            )}
+
+            {/* Botón de reembolso — oculto si ya fue exitoso */}
+            {refundState !== 'success' && (
+              <div className="space-y-2">
+                {refundState === 'confirming' && (
+                  <motion.p
+                    initial={{ opacity: 0, y: -4 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    className="text-xs px-1 text-orionix-text-muted"
+                  >
+                    ¿Confirmas que deseas reembolsar el Pase Mundial? Solo es posible dentro de las 24 horas desde la activación.
+                  </motion.p>
+                )}
+                <div className="flex gap-2">
+                  <motion.button
+                    onClick={handleRefund}
+                    disabled={refundState === 'loading'}
+                    whileHover={refundState !== 'loading' ? { x: 4 } : {}}
+                    whileTap={refundState !== 'loading' ? { scale: 0.98 } : {}}
+                    className="flex-1 flex items-center justify-between px-4 py-3.5 rounded-2xl transition-all text-left disabled:opacity-50 disabled:cursor-not-allowed"
+                    style={{
+                      background: alpha(hex.gold.base, 0.07),
+                      border: `1px solid ${alpha(hex.gold.base, 0.22)}`,
+                    }}
+                  >
+                    <div className="flex items-center gap-3">
+                      <span style={{ color: hex.gold.base }}>
+                        {refundState === 'loading'
+                          ? <motion.span animate={{ rotate: 360 }} transition={{ duration: 1, repeat: Infinity, ease: 'linear' }} style={{ display: 'inline-block' }}><FiRotateCcw size={15} /></motion.span>
+                          : <FiRotateCcw size={15} />}
+                      </span>
+                      <span className="text-sm font-bold" style={{ color: hex.gold.base }}>
+                        {refundState === 'loading' ? 'Procesando...' : refundState === 'confirming' ? 'Sí, solicitar reembolso' : 'Solicitar reembolso'}
+                      </span>
+                    </div>
+                    {refundState !== 'loading' && <span style={{ color: `${hex.gold.base}60`, fontSize: 12 }}>›</span>}
+                  </motion.button>
+
+                  {refundState === 'confirming' && (
+                    <motion.button
+                      initial={{ opacity: 0, scale: 0.9 }}
+                      animate={{ opacity: 1, scale: 1 }}
+                      onClick={() => setRefundState('idle')}
+                      whileHover={{ scale: 1.04 }}
+                      whileTap={{ scale: 0.96 }}
+                      className="px-4 rounded-2xl"
+                      style={{ background: alpha(hex.accent.red, 0.07), border: `1px solid ${alpha(hex.accent.red, 0.20)}` }}
+                    >
+                      <FiX size={15} style={{ color: hex.accent.redSoft }} />
+                    </motion.button>
+                  )}
+                </div>
+              </div>
+            )}
+          </motion.div>
+        )}
+      </AnimatePresence>
 
       {/* Account actions */}
       <div

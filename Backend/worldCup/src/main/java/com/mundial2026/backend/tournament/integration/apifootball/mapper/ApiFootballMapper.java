@@ -67,9 +67,19 @@ public class ApiFootballMapper {
                         .map(FixtureItem.StatusBlock::shortCode)
                         .orElse(null)),
                 fixture != null ? fixture.date() : null,
+                // venueExternalId puede ser null (estadios sin liga regular indexada,
+                // ej. los de EE.UU. 2026, Qatar 2022, parte de 2018).
+                Optional.ofNullable(fixture)
+                        .map(FixtureItem.FixtureBlock::venue)
+                        .map(FixtureItem.VenueBlock::id)
+                        .orElse(null),
                 Optional.ofNullable(fixture)
                         .map(FixtureItem.FixtureBlock::venue)
                         .map(FixtureItem.VenueBlock::name)
+                        .orElse(null),
+                Optional.ofNullable(fixture)
+                        .map(FixtureItem.FixtureBlock::venue)
+                        .map(FixtureItem.VenueBlock::city)
                         .orElse(null),
                 league != null ? league.round() : null
         );

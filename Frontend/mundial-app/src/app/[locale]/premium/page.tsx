@@ -37,7 +37,7 @@ const FEATURES: FeatureRow[] = [
   { feature: 'Estadísticas detalladas del partido', free: false, premium: true },
   { feature: 'Stats de jugadores por partido', free: false, premium: true },
   { feature: 'Head-to-head entre equipos', free: false, premium: true },
-  { feature: 'Plantilla completa (suplentes + cuerpo)', free: false, premium: true },
+  { feature: 'Plantilla nacional completa (titulares + suplentes)', free: false, premium: true },
   { feature: 'Sin anuncios', free: false, premium: true, highlight: true },
   { feature: 'Insignia "PRO" en rankings', free: false, premium: true },
 ];

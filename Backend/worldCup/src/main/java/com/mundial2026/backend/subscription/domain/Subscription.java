@@ -48,8 +48,14 @@ public class Subscription {
     @Column(name = "expires_at")
     private OffsetDateTime expiresAt;
 
+    @Column(name = "payment_id", length = 30)
+    private String paymentId;
+
     @Column(name = "cancelled_at")
     private OffsetDateTime cancelledAt;
+
+    @Column(name = "refunded_at")
+    private OffsetDateTime refundedAt;
 
     @Column(name = "created_at", insertable = false, updatable = false)
     private OffsetDateTime createdAt;

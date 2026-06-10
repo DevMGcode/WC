@@ -27,7 +27,7 @@ import FixturesFilterBar, { type FilterKey } from './_components/FixturesFilterB
 /* ══════════════════════════════════════════
    EQ BARS — decorativo
 ══════════════════════════════════════════ */
-const EQBars = ({ color, count = 7, maxH = 14 }: { color: string; count?: number; maxH?: number }) => {
+const EQBars = React.memo(function EQBars({ color, count = 7, maxH = 14 }: { color: string; count?: number; maxH?: number }) {
   const seq = [6, 14, 9, 18, 11, 16, 7, 13, 10, 17, 8, 15, 12];
   return (
     <div className="flex items-end gap-[2.5px]" style={{ height: maxH }}>
@@ -44,14 +44,14 @@ const EQBars = ({ color, count = 7, maxH = 14 }: { color: string; count?: number
       })}
     </div>
   );
-};
+});
 
 /* ══════════════════════════════════════════
    KPI CHIP — con estado vacío/activo diferenciado
 ══════════════════════════════════════════ */
-const KPIChip = ({
+const KPIChip = React.memo(function KPIChip({
   icon, value, label, color, delay = 0,
-}: { icon: React.ReactNode; value: number | string; label: string; color: BrandColor; delay?: number }) => {
+}: { icon: React.ReactNode; value: number | string; label: string; color: BrandColor; delay?: number }) {
   const isEmpty = value === 0 || value === '0';
   // Cuando vacío: misma estructura visible, solo sin glow/animación
   const opacityMult  = isEmpty ? 0.85 : 1;
@@ -129,7 +129,7 @@ const KPIChip = ({
       )}
     </motion.div>
   );
-};
+});
 
 /* ══════════════════════════════════════════
    PAGE
@@ -178,19 +178,15 @@ export default function FixturesClient({ initialFixtures }: { initialFixtures?: 
         background: `radial-gradient(ellipse at 18% 28%, ${hex.bg.elevated} 0%, ${hex.bg.secondary} 45%, ${hex.bg.primary} 100%)`,
       }}>
 
-      {/* Ambient orbs — más definidos para separar fondo de cards */}
-      <motion.div className="fixed rounded-full pointer-events-none"
+      {/* Ambient orbs — CSS puro (sin JS Framer Motion loop) */}
+      <div className="animate-orb fixed rounded-full pointer-events-none"
         style={{ width: 700, height: 700, top: -200, left: -150,
                  background: `radial-gradient(circle, ${alphaOf('success', 0.09)} 0%, transparent 65%)`,
-                 filter: 'blur(70px)', zIndex: 0 }}
-        animate={{ scale: [1, 1.18, 1], opacity: [0.5, 0.85, 0.5] }}
-        transition={{ duration: 12, repeat: Infinity }} />
-      <motion.div className="fixed rounded-full pointer-events-none"
+                 filter: 'blur(70px)', zIndex: 0 }} />
+      <div className="animate-orb-slow fixed rounded-full pointer-events-none"
         style={{ width: 500, height: 500, bottom: -80, right: -80,
                  background: `radial-gradient(circle, ${alphaOf('green', 0.07)} 0%, transparent 65%)`,
-                 filter: 'blur(65px)', zIndex: 0 }}
-        animate={{ scale: [1, 1.22, 1], opacity: [0.4, 0.75, 0.4] }}
-        transition={{ duration: 14, repeat: Infinity, delay: 4 }} />
+                 filter: 'blur(65px)', zIndex: 0 }} />
 
       <div className="relative z-10">
         <Header title="⚽ Orionix Gol" subtitle={t('fixtures.subtitle')} centered />

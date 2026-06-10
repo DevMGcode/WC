@@ -13,6 +13,7 @@ const nextConfig = {
   output: 'standalone',
   experimental: {
     instrumentationHook: true,
+    optimizePackageImports: ['framer-motion', 'react-icons', '@react-three/fiber', '@react-three/drei'],
   },
   images: {
     remotePatterns: [
@@ -23,7 +24,7 @@ const nextConfig = {
     ],
   },
   env: {
-    NEXT_PUBLIC_API_URL: process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8080/api',
+    NEXT_PUBLIC_API_URL: process.env.NEXT_PUBLIC_API_URL || '/api',
   },
   async headers() {
     return [

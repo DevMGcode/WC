@@ -244,29 +244,30 @@ export default function RegisterPage() {
         </div>
 
         <div
-          className="relative rounded-2xl p-8"
+          className="relative rounded-2xl p-5 sm:p-8"
           style={{
             background: 'linear-gradient(145deg, rgba(6,17,10,0.97), rgba(11,27,18,0.95))',
             border: '1px solid rgba(76,175,80,0.14)',
             boxShadow: '0 24px 64px rgba(0,0,0,0.55), inset 0 1px 0 rgba(255,255,255,0.04)',
           }}
         >
-          {/* Header */}
-          <div className="flex items-center gap-4 mb-7">
-            <div className="w-12 h-12 rounded-xl overflow-hidden flex-shrink-0"
-              style={{ background: 'linear-gradient(135deg,#0B1B12,#162D1D)', border: '1px solid rgba(76,175,80,0.2)' }}>
-              <Image src="/logotipo_Orionix_Gol_transparente.png" alt="Orionix" width={48} height={48} className="w-full h-full object-contain" />
-            </div>
-            <div className="flex-1 min-w-0">
-              <h1 className="text-xl font-bold text-white" style={{ fontFamily: 'var(--font-display)', letterSpacing: '0.01em' }}>
-                {t('register.title')}
-              </h1>
-              <p className="text-xs mt-0.5 text-orionix-text-muted">{t('register.subtitle')}</p>
-            </div>
-            <span className="text-[10px] font-bold px-2 py-0.5 rounded-full flex-shrink-0"
+          {/* Header — vertical centrado en mobile, horizontal desde sm: */}
+          <div className="flex flex-col sm:flex-row items-center sm:items-center gap-3 sm:gap-4 mb-7 text-center sm:text-left relative">
+            {/* BETA badge en esquina superior derecha en mobile */}
+            <span className="absolute top-0 right-0 sm:static sm:order-3 text-[10px] font-bold px-2 py-0.5 rounded-full flex-shrink-0"
               style={{ background: 'rgba(212,175,55,0.10)', color: '#D4AF37', border: '1px solid rgba(212,175,55,0.25)' }}>
               BETA
             </span>
+            <div className="w-16 h-16 sm:w-12 sm:h-12 rounded-xl overflow-hidden flex-shrink-0 sm:order-1"
+              style={{ background: 'linear-gradient(135deg,#0B1B12,#162D1D)', border: '1px solid rgba(76,175,80,0.2)' }}>
+              <Image src="/logotipo_Orionix_Gol_transparente.png" alt="Orionix" width={64} height={64} className="w-full h-full object-contain" />
+            </div>
+            <div className="flex-1 min-w-0 sm:order-2">
+              <h1 className="text-2xl sm:text-xl font-bold text-white" style={{ fontFamily: 'var(--font-display)', letterSpacing: '0.01em' }}>
+                {t('register.title')}
+              </h1>
+              <p className="text-xs mt-1 sm:mt-0.5 text-orionix-text-muted">{t('register.subtitle')}</p>
+            </div>
           </div>
 
           {/* Error */}
@@ -317,8 +318,8 @@ export default function RegisterPage() {
 
           {/* Form */}
           <form onSubmit={handleSubmit} className="space-y-0">
-            {/* Two-column row for name */}
-            <div className="grid grid-cols-2 gap-3 mb-3">
+            {/* Two-column row for name — 1 columna en mobile chico para no truncar placeholders */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-3">
               {fields.slice(0, 2).map(f => (
                 <div key={f.id}>
                   <label className="block text-[10px] font-semibold tracking-widest uppercase mb-1.5"
@@ -391,7 +392,7 @@ export default function RegisterPage() {
             <motion.button
               type="submit"
               disabled={isLoading || success}
-              className="w-full mt-2 py-3 rounded-xl font-bold text-sm tracking-widest uppercase relative overflow-hidden"
+              className="w-full !mt-6 sm:!mt-3 py-3 rounded-xl font-bold text-sm tracking-widest uppercase relative overflow-hidden"
               style={{
                 background: isLoading || success
                   ? 'rgba(76,175,80,0.3)'

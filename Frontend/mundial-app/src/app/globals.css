@@ -282,6 +282,18 @@ html {
   );
 }
 
+/* Orbes de fondo — animación compositor-only (solo transform+opacity, sin JS) */
+@keyframes orb-pulse {
+  0%, 100% { opacity: 0.50; transform: scale(1)    translateZ(0); }
+  50%       { opacity: 0.85; transform: scale(1.18) translateZ(0); }
+}
+@keyframes orb-pulse-slow {
+  0%, 100% { opacity: 0.40; transform: scale(1)    translateZ(0); }
+  50%       { opacity: 0.75; transform: scale(1.22) translateZ(0); }
+}
+.animate-orb        { animation: orb-pulse      12s ease-in-out infinite; will-change: transform, opacity; }
+.animate-orb-slow   { animation: orb-pulse-slow 14s ease-in-out infinite 4s; will-change: transform, opacity; }
+
 /* Animaciones de fondo 3D */
 @keyframes float {
   0%, 100% {

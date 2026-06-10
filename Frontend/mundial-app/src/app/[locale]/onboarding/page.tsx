@@ -1,14 +1,17 @@
 'use client';
 
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
+import { createPortal } from 'react-dom';
 import Image from 'next/image';
 import { useRouter } from 'next/navigation';
+import { useTranslations, useLocale } from 'next-intl';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
   FiGlobe, FiCheck, FiBell, FiHeart, FiArrowRight, FiArrowLeft,
-  FiZap, FiCalendar, FiBarChart2, FiStar, FiPlus,
+  FiZap, FiCalendar, FiBarChart2, FiStar, FiPlus, FiChevronDown,
 } from 'react-icons/fi';
 import { getTeams } from '@/services/publicTournament';
+import { locales, localeConfig, type Locale } from '@/i18n/locales';
 import { hex } from '@/lib/design/tokens';
 import { alpha, alphaOf } from '@/lib/design/effects';
 
@@ -37,6 +40,150 @@ const EQBars = ({ color, count = 7, maxH = 14 }: { color: string; count?: number
         );
       })}
     </div>
+  );
+};
+
+/* ── Dropdown de idioma (7 idiomas desde locales.ts) ── */
+const LanguageDropdown = ({ language, onSelect }: { language: string; onSelect: (code: string) => void }) => {
+  const [open, setOpen] = useState(false);
+  const [mounted, setMounted] = useState(false);
+  const [coords, setCoords] = useState<{ top: number; left: number; width: number } | null>(null);
+  const btnRef = useRef<HTMLButtonElement>(null);
+  const menuRef = useRef<HTMLDivElement>(null);
+  const activeCfg = localeConfig[language as keyof typeof localeConfig];
+  const CYAN = '#22d3ee';
+
+  useEffect(() => { setMounted(true); }, []);
+
+  // Re-calcular posición al abrir, scroll y resize
+  useEffect(() => {
+    if (!open) return;
+    const update = () => {
+      const r = btnRef.current?.getBoundingClientRect();
+      if (r) setCoords({ top: r.bottom + 8, left: r.left, width: r.width });
+    };
+    update();
+    window.addEventListener('scroll', update, true);
+    window.addEventListener('resize', update);
+    return () => {
+      window.removeEventListener('scroll', update, true);
+      window.removeEventListener('resize', update);
+    };
+  }, [open]);
+
+  // Click fuera
+  useEffect(() => {
+    const handler = (e: MouseEvent) => {
+      if (
+        btnRef.current && !btnRef.current.contains(e.target as Node) &&
+        menuRef.current && !menuRef.current.contains(e.target as Node)
+      ) setOpen(false);
+    };
+    if (open) document.addEventListener('mousedown', handler);
+    return () => document.removeEventListener('mousedown', handler);
+  }, [open]);
+
+  return (
+    <>
+      <button
+        ref={btnRef}
+        type="button"
+        onClick={() => setOpen(!open)}
+        className="w-full flex items-center justify-between px-4 py-3.5 rounded-2xl transition-all"
+        style={{
+          background: open ? 'rgba(34,211,238,0.08)' : alpha(hex.neutral.white, 0.02),
+          border: `1px solid ${open ? 'rgba(34,211,238,0.30)' : alpha(hex.neutral.white, 0.06)}`,
+          outline: 'none',
+          cursor: 'pointer',
+          direction: 'ltr',
+        }}
+      >
+        <div className="flex items-center gap-3">
+          <span
+            className="text-[10px] font-black tracking-widest uppercase w-9 text-center py-1 rounded-lg shrink-0"
+            style={{ background: 'rgba(34,211,238,0.12)', border: '1px solid rgba(34,211,238,0.28)', color: CYAN }}
+          >
+            {language.toUpperCase()}
+          </span>
+          <div className="text-left">
+            <p className="text-sm font-bold text-white leading-none">{activeCfg?.label ?? language}</p>
+            <p className="text-[9px] uppercase tracking-widest mt-0.5" style={{ color: 'rgba(34,211,238,0.55)' }}>
+              Idioma · Language
+            </p>
+          </div>
+        </div>
+        <motion.div animate={{ rotate: open ? 180 : 0 }} transition={{ duration: 0.2 }}>
+          <FiChevronDown size={15} style={{ color: open ? CYAN : 'rgba(255,255,255,0.25)' }} />
+        </motion.div>
+      </button>
+
+      {mounted && createPortal(
+        <AnimatePresence>
+          {open && coords && (
+            <motion.div
+              ref={menuRef}
+              initial={{ opacity: 0, y: -6, scale: 0.98 }}
+              animate={{ opacity: 1, y: 0, scale: 1 }}
+              exit={{ opacity: 0, y: -4, scale: 0.98 }}
+              transition={{ duration: 0.16, ease: [0.22, 1, 0.36, 1] }}
+              className="fixed rounded-2xl max-h-[60vh] overflow-y-auto"
+              style={{
+                top: coords.top,
+                left: coords.left,
+                width: coords.width,
+                zIndex: 9999,
+                background: `linear-gradient(160deg, ${alpha(hex.bg.primary, 0.99)} 0%, ${alpha(hex.bg.secondary, 0.99)} 100%)`,
+                border: '1px solid rgba(34,211,238,0.20)',
+                boxShadow: `0 20px 56px ${alpha(hex.neutral.black, 0.70)}`,
+                backdropFilter: 'blur(28px)',
+              }}
+            >
+              <div className="h-px w-full" style={{ background: 'linear-gradient(90deg, transparent, rgba(34,211,238,0.45), transparent)' }} />
+              <div className="py-1">
+                {locales.map((code, idx) => {
+                  const cfg = localeConfig[code];
+                  const isActive = language === code;
+                  const isLast = idx === locales.length - 1;
+                  return (
+                    <button
+                      key={code}
+                      type="button"
+                      onClick={() => { onSelect(code); setOpen(false); }}
+                      className="w-full flex items-center justify-between px-4 py-2.5 transition-colors"
+                      style={{
+                        background: isActive ? 'rgba(34,211,238,0.09)' : 'transparent',
+                        borderBottom: isLast ? 'none' : `1px solid ${alpha(hex.neutral.white, 0.04)}`,
+                        cursor: 'pointer',
+                        outline: 'none',
+                        direction: 'ltr',
+                      }}
+                    >
+                      <div className="flex items-center gap-3">
+                        <span
+                          className="text-[9px] font-black tracking-widest uppercase w-9 text-center py-1 rounded-lg shrink-0"
+                          style={{
+                            background: isActive ? 'rgba(34,211,238,0.12)' : alpha(hex.neutral.white, 0.04),
+                            border: `1px solid ${isActive ? 'rgba(34,211,238,0.28)' : alpha(hex.neutral.white, 0.07)}`,
+                            color: isActive ? CYAN : 'rgba(34,211,238,0.45)',
+                          }}
+                        >
+                          {code.toUpperCase()}
+                        </span>
+                        <p className="text-sm font-semibold leading-none" style={{ color: isActive ? '#e2e8f0' : 'rgba(226,232,240,0.75)' }}>
+                          {cfg.label}
+                        </p>
+                      </div>
+                      {isActive && <FiCheck size={14} style={{ color: CYAN }} />}
+                    </button>
+                  );
+                })}
+              </div>
+            </motion.div>
+          )}
+        </AnimatePresence>,
+        document.body
+      )}
+    </>
   );
 };
 
@@ -108,8 +255,9 @@ const DarkCard = ({ children, accentColor = '#22d3ee' }: { children: React.React
 ══════════════════════════════════════════ */
 export default function OnboardingPage() {
   const router = useRouter();
+  const locale = useLocale() as Locale;
+  const t = useTranslations('onboarding');
   const [step, setStep] = useState(1);
-  const [language, setLanguage] = useState<'es' | 'en'>('es');
   const [selectedTeams, setSelectedTeams] = useState<number[]>([]);
   const [notifications, setNotifications] = useState({
     fixtureReminders:    true,
@@ -147,17 +295,17 @@ export default function OnboardingPage() {
   const handleFinish = () => {
     localStorage.setItem('onboardingCompleted', 'true');
     localStorage.setItem('selectedTeams', JSON.stringify(selectedTeams));
-    localStorage.setItem('language', language);
-    router.push('/');
+    localStorage.setItem('language', locale);
+    router.push(`/${locale}`);
   };
 
   const TOTAL_STEPS = 4;
 
   const notifItems = [
-    { key: 'fixtureReminders',    label: language === 'es' ? 'Recordatorios de partidos' : 'Match reminders',   icon: <FiCalendar size={14} />,  color: '#22d3ee' },
-    { key: 'resultNotifications', label: language === 'es' ? 'Resultados en tiempo real' : 'Real-time results', icon: <FiZap size={14} />,       color: '#fbbf24' },
-    { key: 'leagueUpdates',       label: language === 'es' ? 'Actualizaciones de ligas'  : 'League updates',    icon: <FiBarChart2 size={14} />,  color: '#34d399' },
-    { key: 'newsUpdates',         label: language === 'es' ? 'Noticias y novedades'      : 'News & updates',    icon: <FiBell size={14} />,      color: '#f472b6' },
+    { key: 'fixtureReminders',    label: t('step3.matchReminders'),   icon: <FiCalendar size={14} />,  color: '#22d3ee' },
+    { key: 'resultNotifications', label: t('step3.realTimeResults'),  icon: <FiZap size={14} />,       color: '#fbbf24' },
+    { key: 'leagueUpdates',       label: t('step3.leagueUpdates'),    icon: <FiBarChart2 size={14} />, color: '#34d399' },
+    { key: 'newsUpdates',         label: t('step3.newsUpdates'),      icon: <FiBell size={14} />,      color: '#f472b6' },
   ] as const;
 
   return (
@@ -287,55 +435,23 @@ export default function OnboardingPage() {
                     {/* Step label */}
                     <div className="flex items-center gap-2 mb-5">
                       <div className="w-[3px] h-5 rounded-full" style={{ background: 'linear-gradient(180deg, #22d3ee, #10b981)' }} />
-                      <span className="text-[10px] font-black text-orionix-text-secondary tracking-[0.24em] uppercase">Bienvenido</span>
+                      <span className="text-[10px] font-black text-orionix-text-secondary tracking-[0.24em] uppercase">{t('welcome')}</span>
                       <div className="flex-1" />
                       <EQBars color="rgba(34,211,238,0.40)" count={5} maxH={12} />
                     </div>
 
                     <h1 className="text-2xl font-black text-white mb-1 leading-tight">
-                      {language === 'es' ? 'Selecciona tu idioma' : 'Select your language'}
+                      {t('step1.title')}
                     </h1>
                     <p className="text-[11px] text-orionix-text-muted mb-6 tracking-wide">
-                      {language === 'es' ? 'Puedes cambiarlo después en tu perfil' : 'You can change it later in your profile'}
+                      {t('step1.subtitle')}
                     </p>
 
-                    <div className="space-y-2.5">
-                      {[
-                        { code: 'es' as const, label: 'Español', sub: 'Español (España)' },
-                        { code: 'en' as const, label: 'English', sub: 'English (US)' },
-                      ].map(lang => {
-                        const active = language === lang.code;
-                        return (
-                          <motion.button
-                            key={lang.code}
-                            onClick={() => setLanguage(lang.code)}
-                            whileHover={{ x: 3 }}
-                            whileTap={{ scale: 0.98 }}
-                            className="w-full flex items-center justify-between px-4 py-3.5 rounded-2xl text-left transition-all"
-                            style={{
-                              background: active ? 'rgba(34,211,238,0.08)' : alpha(hex.neutral.white, 0.02),
-                              border: `1px solid ${active ? 'rgba(34,211,238,0.30)' : alpha(hex.neutral.white, 0.06)}`,
-                              boxShadow: active ? '0 0 16px rgba(34,211,238,0.08)' : 'none',
-                            }}
-                          >
-                            <div className="flex items-center gap-3">
-                              <FiGlobe size={15} style={{ color: active ? '#22d3ee' : 'rgba(100,116,139,0.5)' }} />
-                              <div>
-                                <p className="text-sm font-black" style={{ color: active ? '#e2e8f0' : '#64748b' }}>{lang.label}</p>
-                                <p className="text-[10px]" style={{ color: 'rgba(100,116,139,0.45)' }}>{lang.sub}</p>
-                              </div>
-                            </div>
-                            <AnimatePresence>
-                              {active && (
-                                <motion.span initial={{ scale: 0, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} exit={{ scale: 0, opacity: 0 }}>
-                                  <FiCheck size={14} style={{ color: '#22d3ee' }} />
-                                </motion.span>
-                              )}
-                            </AnimatePresence>
-                          </motion.button>
-                        );
-                      })}
-                    </div>
+                    {/* Dropdown idioma — redirige al locale elegido para que next-intl actualice textos */}
+                    <LanguageDropdown
+                      language={locale}
+                      onSelect={(code) => router.push(`/${code}/onboarding`)}
+                    />
                   </div>
                 </DarkCard>
               </motion.div>
@@ -355,7 +471,7 @@ export default function OnboardingPage() {
                     <div className="flex items-center gap-2 mb-5">
                       <div className="w-[3px] h-5 rounded-full" style={{ background: 'linear-gradient(180deg, #f472b6, #ec4899)' }} />
                       <span className="text-[10px] font-black text-orionix-text-secondary tracking-[0.24em] uppercase">
-                        {language === 'es' ? 'Equipos' : 'Teams'}
+                        {t('step2.label')}
                       </span>
                       {selectedTeams.length > 0 && (
                         <motion.span
@@ -363,18 +479,16 @@ export default function OnboardingPage() {
                           className="px-2 py-0.5 rounded-full text-[8px] font-black"
                           style={{ background: alpha(hex.accent.pink, 0.15), border: `1px solid ${alpha(hex.accent.pink, 0.30)}`, color: hex.accent.pink }}
                         >
-                          {selectedTeams.length} seleccionados
+                          {t('step2.selected', { count: selectedTeams.length })}
                         </motion.span>
                       )}
                     </div>
 
                     <h2 className="text-xl font-black text-white mb-1">
-                      {language === 'es' ? 'Equipos favoritos' : 'Favorite teams'}
+                      {t('step2.title')}
                     </h2>
                     <p className="text-[11px] text-orionix-text-muted mb-5 tracking-wide">
-                      {language === 'es'
-                        ? 'Selecciona los equipos que quieres seguir'
-                        : 'Select the teams you want to follow'}
+                      {t('step2.subtitle')}
                     </p>
 
                     <div className="grid grid-cols-3 gap-2.5">
@@ -444,19 +558,17 @@ export default function OnboardingPage() {
                     <div className="flex items-center gap-2 mb-5">
                       <div className="w-[3px] h-5 rounded-full" style={{ background: 'linear-gradient(180deg, #fbbf24, #f59e0b)' }} />
                       <span className="text-[10px] font-black text-orionix-text-secondary tracking-[0.24em] uppercase">
-                        {language === 'es' ? 'Notificaciones' : 'Notifications'}
+                        {t('step3.label')}
                       </span>
                       <div className="flex-1" />
                       <EQBars color="rgba(251,191,36,0.40)" count={5} maxH={12} />
                     </div>
 
                     <h2 className="text-xl font-black text-white mb-1">
-                      {language === 'es' ? 'Mantente al día' : 'Stay up to date'}
+                      {t('step3.title')}
                     </h2>
                     <p className="text-[11px] text-orionix-text-muted mb-5 tracking-wide">
-                      {language === 'es'
-                        ? 'Configura qué alertas quieres recibir'
-                        : 'Configure which alerts you want to receive'}
+                      {t('step3.subtitle')}
                     </p>
 
                     <div className="space-y-2">
@@ -524,32 +636,32 @@ export default function OnboardingPage() {
                     <div className="flex items-center gap-2 justify-center mb-2">
                       <div className="w-[3px] h-5 rounded-full" style={{ background: 'linear-gradient(180deg, #34d399, #10b981)' }} />
                       <h2 className="text-2xl font-black text-white">
-                        {language === 'es' ? '¡Todo listo!' : 'All set!'}
+                        {t('step4.title')}
                       </h2>
                     </div>
                     <p className="text-[11px] text-orionix-text-muted mb-6 tracking-wide">
-                      {language === 'es' ? 'Tu cuenta está configurada y lista' : 'Your account is set up and ready'}
+                      {t('step4.subtitle')}
                     </p>
 
                     {/* Summary chips */}
                     <div className="flex flex-col gap-2 text-left mb-2">
                       {[
                         {
-                          label: language === 'es' ? 'Idioma' : 'Language',
-                          value: language === 'es' ? 'Español' : 'English',
+                          label: t('step4.language'),
+                          value: localeConfig[locale].label,
                           color: '#22d3ee',
                           icon: <FiGlobe size={12} />,
                         },
                         {
-                          label: language === 'es' ? 'Equipos favoritos' : 'Favorite teams',
+                          label: t('step4.favoriteTeams'),
                           value: selectedTeams.length > 0
-                            ? `${selectedTeams.length} ${language === 'es' ? 'seleccionados' : 'selected'}`
-                            : language === 'es' ? 'Ninguno' : 'None',
+                            ? t('step4.selected', { count: selectedTeams.length })
+                            : t('step4.none'),
                           color: '#f472b6',
                           icon: <FiHeart size={12} />,
                         },
                         {
-                          label: language === 'es' ? 'Notificaciones activas' : 'Active notifications',
+                          label: t('step4.activeNotifications'),
                           value: `${Object.values(notifications).filter(Boolean).length}/4`,
                           color: '#fbbf24',
                           icon: <FiBell size={12} />,
@@ -593,7 +705,7 @@ export default function OnboardingPage() {
               style={{ border: `1px solid ${alpha(hex.neutral.white, 0.08)}`, background: alpha(hex.neutral.white, 0.03) }}
             >
               <FiArrowLeft size={14} />
-              {language === 'es' ? 'Atrás' : 'Back'}
+              {t('nav.back')}
             </motion.button>
           )}
 
@@ -612,7 +724,7 @@ export default function OnboardingPage() {
                 animate={{ x: ['-120%', '120%'] }}
                 transition={{ duration: 2.5, repeat: Infinity, ease: 'linear', repeatDelay: 2 }}
               />
-              <span className="relative">{language === 'es' ? 'Siguiente' : 'Next'}</span>
+              <span className="relative">{t('nav.next')}</span>
               <FiArrowRight size={14} className="relative" />
             </motion.button>
           ) : (
@@ -630,7 +742,7 @@ export default function OnboardingPage() {
                 transition={{ duration: 2.5, repeat: Infinity, ease: 'linear', repeatDelay: 2 }}
               />
               <FiZap size={14} className="relative" />
-              <span className="relative">{language === 'es' ? 'Comenzar' : 'Get Started'}</span>
+              <span className="relative">{t('nav.start')}</span>
             </motion.button>
           )}
         </motion.div>
@@ -643,7 +755,7 @@ export default function OnboardingPage() {
           onClick={handleFinish}
           className="text-[10px] font-bold text-orionix-text-muted hover:text-orionix-text-secondary transition-colors tracking-[0.18em] uppercase"
         >
-          {language === 'es' ? 'Omitir configuración' : 'Skip setup'}
+          {t('nav.skip')}
         </motion.button>
 
       </div>
