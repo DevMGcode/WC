@@ -302,6 +302,72 @@ class UserServiceTest {
                 .isInstanceOf(ResourceNotFoundException.class);
     }
 
+    // ── password reset (S4) ─────────────────────────────────────────────────────
+
+    /** Anti-enumeración: email inexistente → no lanza, devuelve null, no toca BD. */
+    @Test
+    void requestPasswordReset_unknownEmail_returnsNullSilently() {
+        when(appUserRepository.findByEmail("ghost@test.com")).thenReturn(Optional.empty());
+
+        String url = userService.requestPasswordReset("ghost@test.com");
+
+        assertThat(url).isNull();
+        verify(appUserRepository, org.mockito.Mockito.never()).save(any());
+    }
+
+    /** Anti-DoS: el password actual NO cambia; solo se setea un token temporal. */
+    @Test
+    void requestPasswordReset_existingEmail_setsTokenWithoutChangingPassword() {
+        AppUser user = buildActiveVerifiedUser("alice@test.com", "$original");
+        when(appUserRepository.findByEmail("alice@test.com")).thenReturn(Optional.of(user));
+        when(appUserRepository.save(any(AppUser.class))).thenAnswer(inv -> inv.getArgument(0));
+
+        String url = userService.requestPasswordReset("alice@test.com");
+
+        assertThat(url).contains("/reset-password?token=");
+        assertThat(user.getPasswordResetToken()).isNotBlank();
+        assertThat(user.getPasswordResetExpiresAt()).isAfter(java.time.OffsetDateTime.now());
+        // El hash original permanece intacto
+        assertThat(user.getPasswordHash()).isEqualTo("$original");
+    }
+
+    @Test
+    void resetPasswordWithToken_validToken_changesPasswordAndClearsToken() {
+        AppUser user = buildActiveVerifiedUser("alice@test.com", "$old");
+        user.setPasswordResetToken("tok123");
+        user.setPasswordResetExpiresAt(java.time.OffsetDateTime.now().plusMinutes(30));
+        when(appUserRepository.findByPasswordResetToken("tok123")).thenReturn(Optional.of(user));
+        when(passwordEncoder.encode("nuevaClave")).thenReturn("$new");
+        when(appUserRepository.save(any(AppUser.class))).thenAnswer(inv -> inv.getArgument(0));
+
+        userService.resetPasswordWithToken("tok123", "nuevaClave");
+
+        assertThat(user.getPasswordHash()).isEqualTo("$new");
+        assertThat(user.getPasswordResetToken()).isNull();
+        assertThat(user.getPasswordResetExpiresAt()).isNull();
+    }
+
+    @Test
+    void resetPasswordWithToken_invalidToken_throws() {
+        when(appUserRepository.findByPasswordResetToken("bad")).thenReturn(Optional.empty());
+
+        assertThatThrownBy(() -> userService.resetPasswordWithToken("bad", "x123456"))
+                .isInstanceOf(BusinessRuleException.class);
+    }
+
+    @Test
+    void resetPasswordWithToken_expiredToken_throws() {
+        AppUser user = buildActiveVerifiedUser("alice@test.com", "$old");
+        user.setPasswordResetToken("tok");
+        user.setPasswordResetExpiresAt(java.time.OffsetDateTime.now().minusMinutes(1));
+        when(appUserRepository.findByPasswordResetToken("tok")).thenReturn(Optional.of(user));
+
+        assertThatThrownBy(() -> userService.resetPasswordWithToken("tok", "x123456"))
+                .isInstanceOf(BusinessRuleException.class)
+                .hasMessageContaining("expiró");
+        assertThat(user.getPasswordHash()).isEqualTo("$old");
+    }
+
     // ── helpers ───────────────────────────────────────────────────────────────
 
     private CreateUserRequest buildCreateRequest(String username, String email) {

@@ -5,6 +5,7 @@ import com.mundial2026.backend.security.SecurityUtils;
 import com.mundial2026.backend.subscription.api.dto.AvailabilityResponse;
 import com.mundial2026.backend.subscription.api.dto.MercadoPagoPreferenceRequest;
 import com.mundial2026.backend.subscription.api.dto.MercadoPagoPreferenceResponse;
+import com.mundial2026.backend.subscription.api.dto.ProductDetailsDto;
 import com.mundial2026.backend.subscription.domain.PaymentProvider;
 import com.mundial2026.backend.subscription.domain.Subscription;
 import com.mundial2026.backend.subscription.service.MercadoPagoGateway;
@@ -16,6 +17,8 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+
+import java.math.BigDecimal;
 
 /**
  * Endpoints de pago consumidos por el frontend.
@@ -67,20 +70,41 @@ public class PaymentController {
             @Valid @RequestBody MercadoPagoPreferenceRequest request
     ) {
         AppUser user = securityUtils.currentUser();
-        log.info("Creando preferencia Mercado Pago userId={} amount={} {}",
-                user.getId(), request.amount(), request.productDetails().fiatCurrency());
 
-        // 1. Crear suscripción PENDING en BD
+        // SEGURIDAD: el precio NO se toma del cliente. El frontend puede manipular
+        // `amount` (p.ej. ?amount=1) para pagar menos. Usamos el precio canónico
+        // del servidor y saneamos el productDetails para que el item cobrado coincida.
+        final BigDecimal price    = SubscriptionService.MUNDIAL_PASS_PRICE;
+        final String     currency = SubscriptionService.MUNDIAL_PASS_CURRENCY;
+
+        var pd = request.productDetails();
+        ProductDetailsDto sanitizedDetails = new ProductDetailsDto(
+                pd != null ? pd.id() : null,
+                pd != null ? pd.name() : "Pase Mundial 2026",
+                pd != null ? pd.description() : null,
+                1,                 // cantidad fija: 1 Pase
+                price,             // precio del servidor
+                currency,          // moneda del servidor
+                pd != null ? pd.cryptoCurrency() : null,
+                pd != null ? pd.type() : "DIGITAL"
+        );
+        MercadoPagoPreferenceRequest sanitizedRequest =
+                new MercadoPagoPreferenceRequest(price, sanitizedDetails);
+
+        log.info("Creando preferencia Mercado Pago userId={} amount={} {} (precio fijado por servidor)",
+                user.getId(), price, currency);
+
+        // 1. Crear suscripción PENDING en BD con el precio del servidor
         Subscription pending = subscriptionService.createPending(
                 user.getId(),
                 PaymentProvider.MERCADO_PAGO,
-                request.amount(),
-                request.productDetails().fiatCurrency()
+                price,
+                currency
         );
 
         // 2. Crear la preferencia en Mercado Pago (mock o real, según config)
         MercadoPagoPreferenceResponse preference = mercadoPagoGateway.createPreference(
-                user, pending.getId(), request
+                user, pending.getId(), sanitizedRequest
         );
 
         // 3. Asociar el preferenceId a la suscripción para conciliar el webhook

@@ -81,7 +81,7 @@ export const Navigation: React.FC = () => {
     return () => window.removeEventListener('scroll', onScroll);
   }, []);
 
-  const authRoutes = ['/login', '/register', '/onboarding', '/privacy'];
+  const authRoutes = ['/login', '/register', '/onboarding', '/privacy', '/reset-password'];
   if (!mounted || authRoutes.some(r => pathname.endsWith(r))) return null;
 
   const toLocalHref = (h: string) => h === '/' ? `/${locale}` : `/${locale}${h}`;

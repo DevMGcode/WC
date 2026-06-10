@@ -6,6 +6,7 @@ import com.mundial2026.backend.prediction.api.dto.CreatePredictionRequest;
 import com.mundial2026.backend.prediction.api.dto.UpdatePredictionRequest;
 import com.mundial2026.backend.prediction.domain.UserPrediction;
 import com.mundial2026.backend.prediction.repository.UserPredictionRepository;
+import com.mundial2026.backend.subscription.service.PremiumGuard;
 import com.mundial2026.backend.tournament.domain.Fixture;
 import com.mundial2026.backend.tournament.domain.Team;
 import com.mundial2026.backend.tournament.domain.Tournament;
@@ -32,6 +33,7 @@ class PredictionServiceTest {
     @Mock UserPredictionRepository userPredictionRepository;
     @Mock AppUserRepository appUserRepository;
     @Mock FixtureRepository fixtureRepository;
+    @Mock PremiumGuard premiumGuard;
 
     @InjectMocks PredictionService predictionService;
 
@@ -45,6 +47,7 @@ class PredictionServiceTest {
         when(appUserRepository.findById(1L)).thenReturn(Optional.of(buildUser(1L)));
         when(fixtureRepository.findById(10L)).thenReturn(Optional.of(buildOpenFixture(10L)));
         when(userPredictionRepository.save(any(UserPrediction.class))).thenAnswer(inv -> inv.getArgument(0));
+        when(premiumGuard.isPremium(any(AppUser.class))).thenReturn(true);
 
         UserPrediction result = predictionService.create(req);
 
@@ -62,6 +65,7 @@ class PredictionServiceTest {
         when(appUserRepository.findById(1L)).thenReturn(Optional.of(buildUser(1L)));
         when(fixtureRepository.findById(10L)).thenReturn(Optional.of(fixture));
         when(userPredictionRepository.save(any(UserPrediction.class))).thenAnswer(inv -> inv.getArgument(0));
+        when(premiumGuard.isPremium(any(AppUser.class))).thenReturn(true);
 
         UserPrediction result = predictionService.create(req);
 
@@ -76,6 +80,7 @@ class PredictionServiceTest {
         when(appUserRepository.findById(1L)).thenReturn(Optional.of(buildUser(1L)));
         when(fixtureRepository.findById(10L)).thenReturn(Optional.of(buildOpenFixture(10L)));
         when(userPredictionRepository.save(any(UserPrediction.class))).thenAnswer(inv -> inv.getArgument(0));
+        when(premiumGuard.isPremium(any(AppUser.class))).thenReturn(true);
 
         UserPrediction result = predictionService.create(req);
 

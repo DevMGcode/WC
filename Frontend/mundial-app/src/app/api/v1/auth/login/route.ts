@@ -1,5 +1,10 @@
 import { NextRequest, NextResponse } from 'next/server';
 
+// Host interno del backend. En Docker es http://backend:8080 (nombre del servicio);
+// en local sin Docker, http://localhost:8080. NUNCA hardcodear localhost: dentro
+// del contenedor "localhost" es el propio contenedor del frontend, no el backend.
+const INTERNAL_API_BASE_URL = process.env.INTERNAL_API_BASE_URL || 'http://localhost:8080';
+
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
@@ -14,7 +19,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Llamar al backend real
-    const backendResponse = await fetch('http://localhost:8080/api/v1/auth/login', {
+    const backendResponse = await fetch(`${INTERNAL_API_BASE_URL}/api/v1/auth/login`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',

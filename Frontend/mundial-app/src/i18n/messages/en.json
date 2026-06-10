@@ -371,11 +371,24 @@
   },
   "forgot": {
     "title": "Reset password",
-    "subtitle": "We sent a temporary password to your email",
+    "subtitle": "We'll send you a link to reset it",
     "emailRequired": "Enter your email address.",
     "connectionError": "Connection error. Please try again.",
-    "sentTitle": "Email sent!",
-    "sentBody": "Check your inbox and sign in with the temporary password."
+    "sentTitle": "Check your email",
+    "sentBody": "If the email is registered, you'll receive a link to reset your password. The link expires in 1 hour."
+  },
+  "reset": {
+    "title": "New password",
+    "subtitle": "Choose a secure password for your account",
+    "newPassword": "New password",
+    "confirmPassword": "Confirm password",
+    "submit": "Reset password",
+    "passwordMin": "At least 6 characters",
+    "passwordMismatch": "Passwords do not match.",
+    "invalidLink": "Invalid or expired link. Request a new one.",
+    "successTitle": "Password updated!",
+    "successBody": "You can now sign in with your new password.",
+    "goToLogin": "Go to sign in"
   },
   "register": {
     "password": "Password",

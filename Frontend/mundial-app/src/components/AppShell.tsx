@@ -4,7 +4,7 @@ import { usePathname } from 'next/navigation';
 import { useState, useEffect, ReactNode } from 'react';
 import { useSidebar } from '@/contexts/SidebarContext';
 
-const AUTH_ROUTES = ['/login', '/register', '/onboarding', '/privacy'];
+const AUTH_ROUTES = ['/login', '/register', '/onboarding', '/privacy', '/reset-password'];
 
 const PREMIUM_BG = [
   'radial-gradient(circle, rgba(76,175,80,0.042) 1px, transparent 1px)',

@@ -1,5 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server';
 
+// Host interno del backend (absoluto). En el servidor NO sirve NEXT_PUBLIC_API_URL
+// porque en Docker vale "/api" (relativo) y fetch del lado servidor exige URL absoluta.
+const INTERNAL_API_BASE_URL = process.env.INTERNAL_API_BASE_URL || 'http://localhost:8080';
+
 // Proxy que reenvía la creación de Preference al backend Spring Boot.
 // El backend valida el JWT, crea la suscripción PENDING y la Preference real en Mercado Pago.
 export async function POST(request: NextRequest) {
@@ -12,7 +16,7 @@ export async function POST(request: NextRequest) {
     const body = await request.json();
 
     const backendResponse = await fetch(
-      `${process.env.NEXT_PUBLIC_API_URL}/v1/payments/mercadopago/preference`,
+      `${INTERNAL_API_BASE_URL}/api/v1/payments/mercadopago/preference`,
       {
         method:  'POST',
         headers: {

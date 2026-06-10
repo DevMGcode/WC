@@ -74,7 +74,10 @@ public class MercadoPagoMockGateway implements MercadoPagoGateway {
     @Override
     public PaymentStatus fetchPaymentStatus(String paymentId) {
         log.info("[MOCK MercadoPago] Consulta de pago paymentId={} → APPROVED (simulado)", paymentId);
-        return new PaymentStatus("approved", paymentId, true, false);
+        // El mock "paga" exactamente el precio canónico del servidor para que la
+        // conciliación anti-fraude del webhook pase en pruebas locales.
+        return new PaymentStatus("approved", paymentId, true, false,
+                SubscriptionService.MUNDIAL_PASS_PRICE, SubscriptionService.MUNDIAL_PASS_CURRENCY);
     }
 
     @Override
