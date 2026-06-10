@@ -67,6 +67,10 @@ class UserControllerTest {
     @MockitoBean
     com.mundial2026.backend.user.repository.AppUserRepository appUserRepository;
 
+    // UserController ahora gestiona equipos favoritos (límite Free/Premium).
+    @MockitoBean
+    com.mundial2026.backend.user.service.UserFavoriteTeamService favoriteTeamService;
+
     @Test
     void count_returnsOk() throws Exception {
         when(userService.count()).thenReturn(7L);

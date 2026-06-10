@@ -8,6 +8,7 @@ import com.mundial2026.backend.prediction.repository.UserPredictionRepository;
 import com.mundial2026.backend.scoring.api.dto.PredictionScoreResponse;
 import com.mundial2026.backend.scoring.api.dto.UserRankPositionResponse;
 import com.mundial2026.backend.scoring.api.dto.UserTournamentScoreResponse;
+import com.mundial2026.backend.subscription.service.PremiumGuard;
 import com.mundial2026.backend.tournament.domain.Fixture;
 import com.mundial2026.backend.tournament.domain.FixtureStatus;
 import com.mundial2026.backend.tournament.domain.Tournament;
@@ -33,6 +34,7 @@ class ScoringServiceTest {
 
     @Mock UserPredictionRepository userPredictionRepository;
     @Mock AppUserRepository appUserRepository;
+    @Mock PremiumGuard premiumGuard;
 
     @InjectMocks ScoringService scoringService;
 
