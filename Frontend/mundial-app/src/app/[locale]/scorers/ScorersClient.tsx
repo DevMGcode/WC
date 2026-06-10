@@ -11,6 +11,7 @@ import { useTranslations } from 'next-intl';
 import { useTopScorers, useTopAssists } from '@/hooks/useTournamentData';
 import { usePremium } from '@/hooks/usePremium';
 import { PremiumGate } from '@/components/premium/PremiumGate';
+import { AdsterraBanner } from '@/components/ads';
 
 interface PlayerStat {
   playerId: number;
@@ -347,6 +348,9 @@ export default function ScorersClient() {
             </motion.div>
           </AnimatePresence>
         )}
+
+        {/* ── PUBLICIDAD (solo Free) ── */}
+        <AdsterraBanner slot="rect300x250" className="mt-8" />
       </div>
     </div>
   );

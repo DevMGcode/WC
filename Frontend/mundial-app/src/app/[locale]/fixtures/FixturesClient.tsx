@@ -23,6 +23,7 @@ import { Surface, StatusDot } from '@/components/ui';
 
 import MatchCard, { getEffectiveStatus } from './_components/MatchCard';
 import FixturesFilterBar, { type FilterKey } from './_components/FixturesFilterBar';
+import { AdsterraNative, AdsterraBanner } from '@/components/ads';
 
 /* ══════════════════════════════════════════
    EQ BARS — decorativo
@@ -271,8 +272,9 @@ export default function FixturesClient({ initialFixtures }: { initialFixtures?: 
           </div>
         ) : grouped.length > 0 ? (
           <div className="space-y-8">
-            {grouped.map(({ key, label, items }) => (
-              <motion.div key={key}
+            {grouped.map(({ key, label, items }, gi) => (
+              <React.Fragment key={key}>
+              <motion.div
                 initial={{ opacity: 0, y: 10 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.4 }}>
@@ -319,6 +321,10 @@ export default function FixturesClient({ initialFixtures }: { initialFixtures?: 
                   </AnimatePresence>
                 </div>
               </motion.div>
+
+              {/* Banner nativo (solo Free) — integrado al feed tras el primer día */}
+              {gi === 0 && grouped.length > 1 && <AdsterraNative />}
+              </React.Fragment>
             ))}
           </div>
         ) : (
@@ -350,6 +356,12 @@ export default function FixturesClient({ initialFixtures }: { initialFixtures?: 
           </motion.div>
         )}
       </div>
+
+      {/* Raíl lateral desktop (solo Free, pantallas muy anchas) */}
+      <div className="hidden 2xl:block fixed right-6 top-28 z-10">
+        <AdsterraBanner slot="sky160x600" />
+      </div>
+
       <TourButton steps={getTourSteps(locale, 'calendar')} />
     </div>
   );

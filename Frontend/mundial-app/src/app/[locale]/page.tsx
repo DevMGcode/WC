@@ -41,6 +41,7 @@ import { TabSkeleton } from '@/components/PageSkeleton';
 
 import { KPIChip } from './home/_components/HomeUtils';
 import PremiumOnboardingModal from '@/components/premium/PremiumOnboardingModal';
+import { AdsterraBanner } from '@/components/ads';
 
 // Lazy load de secciones pesadas — se descargan en paralelo pero no bloquean el render inicial
 const HomeCountdown   = dynamic(() => import('./home/_components/HomeCountdown'),   { loading: () => <TabSkeleton /> });
@@ -331,6 +332,9 @@ export default function HomePage() {
 
         {/* ── ROW 4 — QUICK ACCESS BENTO ── */}
         <QuickAccessBento t={t} />
+
+        {/* ── PUBLICIDAD (solo Free) ── */}
+        <AdsterraBanner slot="rect300x250" className="mt-8" />
       </div>
 
       <TourButton steps={getTourSteps(locale, 'dashboard')} />
