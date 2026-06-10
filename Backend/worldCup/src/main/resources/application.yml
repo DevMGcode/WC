@@ -64,9 +64,24 @@ springdoc:
 
 app:
   security:
-    jwt-secret: "${JWT_SECRET:change-this-secret-key-change-this-secret-key}"
+    # Sin default usable: si JWT_SECRET no está definido la app NO arranca
+    # (validado en JwtTokenProvider). Genera uno con: openssl rand -base64 48
+    jwt-secret: "${JWT_SECRET:}"
     jwt-expiration-ms: 86400000
     jwt-refresh-expiration-ms: 604800000
+    # Password inicial del admin sembrado (admin@example.com). En producción,
+    # define ADMIN_INITIAL_PASSWORD para reemplazar el password "admin" por defecto.
+    admin-initial-password: "${ADMIN_INITIAL_PASSWORD:}"
+    # En producción ponlo en "true": si el admin sigue con el password por defecto
+    # la app NO arranca (en vez de solo advertir).
+    fail-on-default-admin: "${FAIL_ON_DEFAULT_ADMIN:false}"
+    # Solo "true" si la app corre detrás de un proxy confiable (nginx) que setea
+    # X-Forwarded-For. Si no, el rate limiter usa la IP de conexión directa.
+    trust-proxy: "${TRUST_PROXY:false}"
+    cors:
+      # En producción ponlo en "false": deshabilita los orígenes dev (localhost,
+      # ngrok) y solo permite el dominio real (app.frontend-url).
+      allow-dev-origins: "${CORS_ALLOW_DEV_ORIGINS:true}"
   frontend-url: "${FRONTEND_URL:http://localhost:3000}"
   email:
     verification-required: "${EMAIL_VERIFICATION_REQUIRED:true}"

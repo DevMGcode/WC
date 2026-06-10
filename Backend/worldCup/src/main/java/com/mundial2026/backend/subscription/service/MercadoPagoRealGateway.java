@@ -152,10 +152,11 @@ public class MercadoPagoRealGateway implements MercadoPagoGateway {
             boolean rejected = "rejected".equalsIgnoreCase(status)
                     || "cancelled".equalsIgnoreCase(status);
 
-            log.info("MercadoPago: pago consultado paymentId={} status={} externalReference={}",
-                    paymentId, status, externalRef);
+            log.info("MercadoPago: pago consultado paymentId={} status={} externalReference={} amount={} {}",
+                    paymentId, status, externalRef, payment.getTransactionAmount(), payment.getCurrencyId());
 
-            return new PaymentStatus(status, externalRef, approved, rejected);
+            return new PaymentStatus(status, externalRef, approved, rejected,
+                    payment.getTransactionAmount(), payment.getCurrencyId());
 
         } catch (MPApiException e) {
             log.error("MercadoPago fetchPayment API error: status={} body={}", e.getStatusCode(), e.getApiResponse().getContent());

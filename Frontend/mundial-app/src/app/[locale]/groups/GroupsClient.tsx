@@ -28,6 +28,7 @@ import { hex, type BrandColor } from '@/lib/design/tokens';
 import { alpha, alphaOf, borders, gradients } from '@/lib/design/effects';
 import { apiFetch } from '@/lib/apiFetch';
 
+import { AdsterraBanner } from '@/components/ads';
 import GroupCard, { EQBars } from './_components/GroupCard';
 import { localizeTeamName } from '@/lib/i18n/teamNames';
 import KnockoutCard, { ChampionBanner, ROUND_META, ROUND_I18N, ROUND_GRID } from './_components/KnockoutCard';
@@ -460,6 +461,9 @@ export default function GroupsClient({ initialTournament, initialGroups, initial
 
           </AnimatePresence>
         )}
+
+        {/* ── PUBLICIDAD (solo Free) ── */}
+        <AdsterraBanner slot="rect300x250" className="mt-8" />
       </div>
       <TourButton steps={getTourSteps(locale, 'groups')} />
     </div>

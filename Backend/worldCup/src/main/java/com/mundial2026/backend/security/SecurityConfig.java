@@ -29,6 +29,14 @@ public class SecurityConfig {
     @Value("${app.frontend-url:http://localhost:3000}")
     private String frontendUrl;
 
+    /**
+     * Orígenes dev (localhost, túneles ngrok). Solo se habilitan cuando
+     * app.security.cors.allow-dev-origins=true (default true en dev).
+     * En producción ponlo en "false" para que SOLO se permita el dominio real.
+     */
+    @Value("${app.security.cors.allow-dev-origins:true}")
+    private boolean allowDevOrigins;
+
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         http
@@ -122,15 +130,21 @@ public class SecurityConfig {
     @Bean
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration configuration = new CorsConfiguration();
-        List<String> patterns = new ArrayList<>(
-            Arrays.asList(
-                "http://localhost:3000",
-                "http://127.0.0.1:3000",
-                "https://*.ngrok-free.dev",
-                "https://*.ngrok-free.app",
-                "https://*.ngrok.io"
-            )
-        );
+        List<String> patterns = new ArrayList<>();
+
+        // Orígenes de desarrollo (localhost + túneles ngrok). Con allowCredentials(true)
+        // un wildcard ngrok permitiría a cualquier subdominio *.ngrok hacer peticiones
+        // con credenciales — aceptable en dev, peligroso en producción. Por eso van
+        // detrás del flag y NO se incluyen cuando allow-dev-origins=false.
+        if (allowDevOrigins) {
+            patterns.add("http://localhost:3000");
+            patterns.add("http://127.0.0.1:3000");
+            patterns.add("https://*.ngrok-free.dev");
+            patterns.add("https://*.ngrok-free.app");
+            patterns.add("https://*.ngrok.io");
+        }
+
+        // El dominio real de producción siempre se permite.
         if (frontendUrl != null && !frontendUrl.contains("localhost")) {
             patterns.add(frontendUrl);
         }

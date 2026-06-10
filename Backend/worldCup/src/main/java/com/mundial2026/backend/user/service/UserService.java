@@ -18,7 +18,8 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.security.SecureRandom;
+import java.time.Duration;
+import java.time.OffsetDateTime;
 import java.util.UUID;
 
 @Slf4j
@@ -179,25 +180,55 @@ public class UserService {
         return appUserRepository.save(user);
     }
 
-    @Transactional
-    public String resetPassword(String email) {
-        AppUser user = appUserRepository.findByEmail(email)
-                .orElseThrow(() -> new ResourceNotFoundException("No existe una cuenta con ese email"));
+    /** Validez del token de recuperación de contraseña. */
+    private static final Duration RESET_TOKEN_TTL = Duration.ofHours(1);
 
-        String tempPassword = generateTempPassword();
-        user.setPasswordHash(passwordEncoder.encode(tempPassword));
+    /**
+     * Inicia la recuperación de contraseña SIN cambiar el password actual.
+     *
+     * Anti-enumeración: si el email NO existe, no hace nada y devuelve null
+     * (el controller responde siempre el mismo mensaje genérico).
+     *
+     * Anti-DoS: a diferencia del reset directo anterior, el password real del
+     * usuario NO se modifica. Solo se genera un token temporal; la contraseña
+     * cambia únicamente cuando el usuario confirma con ese token.
+     *
+     * @return el enlace de reset si el email existe (para enviarlo por correo), o null.
+     */
+    @Transactional
+    public String requestPasswordReset(String email) {
+        AppUser user = appUserRepository.findByEmail(email).orElse(null);
+        if (user == null) {
+            return null;
+        }
+        String token = UUID.randomUUID().toString().replace("-", "")
+                + UUID.randomUUID().toString().replace("-", "").substring(0, 32);
+        user.setPasswordResetToken(token);
+        user.setPasswordResetExpiresAt(OffsetDateTime.now().plus(RESET_TOKEN_TTL));
         appUserRepository.save(user);
-        return tempPassword;
+        return frontendUrl + "/reset-password?token=" + token;
     }
 
-    private String generateTempPassword() {
-        String chars = "ABCDEFGHJKLMNPQRSTUVWXYZabcdefghjkmnpqrstuvwxyz23456789";
-        SecureRandom rng = new SecureRandom();
-        StringBuilder sb = new StringBuilder(8);
-        for (int i = 0; i < 8; i++) {
-            sb.append(chars.charAt(rng.nextInt(chars.length())));
+    /**
+     * Aplica una nueva contraseña usando un token de recuperación válido y no expirado.
+     * Invalida el token tras usarlo (un solo uso).
+     */
+    @Transactional
+    public void resetPasswordWithToken(String token, String newPassword) {
+        AppUser user = appUserRepository.findByPasswordResetToken(token)
+                .orElseThrow(() -> new BusinessRuleException("Enlace de recuperación inválido o ya utilizado."));
+
+        if (user.getPasswordResetExpiresAt() == null
+                || user.getPasswordResetExpiresAt().isBefore(OffsetDateTime.now())) {
+            throw new BusinessRuleException("El enlace de recuperación expiró. Solicita uno nuevo.");
         }
-        return sb.toString();
+
+        user.setPasswordHash(passwordEncoder.encode(newPassword));
+        user.setPasswordResetToken(null);
+        user.setPasswordResetExpiresAt(null);
+        // Invalida tokens previos: si alguien tenía sesión abierta, queda fuera.
+        user.setTokenVersion((user.getTokenVersion() != null ? user.getTokenVersion() : 0) + 1);
+        appUserRepository.save(user);
     }
 
     @Transactional
@@ -215,8 +246,9 @@ public class UserService {
             throw new BusinessRuleException("La nueva contraseña debe ser diferente a la actual");
         }
 
-        // Actualizar la contraseña
+        // Actualizar la contraseña e invalidar todos los tokens previos
         user.setPasswordHash(passwordEncoder.encode(request.newPassword()));
+        user.setTokenVersion((user.getTokenVersion() != null ? user.getTokenVersion() : 0) + 1);
 
         return appUserRepository.save(user);
     }

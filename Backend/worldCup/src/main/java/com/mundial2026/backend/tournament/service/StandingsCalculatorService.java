@@ -99,6 +99,22 @@ public class StandingsCalculatorService {
             groupStandingRepository.save(standing);
         }
 
+        // Purge orphaned rows: teams whose standing row points at this group but
+        // that no longer have any fixture in it (stale seeds previous to the real
+        // draw, or re-assignments after a re-sync). Only when the group has a
+        // roster — if it has no fixtures at all we keep the existing zeroed rows.
+        if (!teamsInGroup.isEmpty()) {
+            List<GroupStanding> existing = groupStandingRepository
+                    .findByGroupStageIdOrderByPositionAsc(groupStage.getId());
+            for (GroupStanding gs : existing) {
+                if (!teamsInGroup.containsKey(gs.getTeam().getId())) {
+                    groupStandingRepository.delete(gs);
+                    log.info("Standing huérfano eliminado — Grupo {}: equipo {} sin fixtures en el grupo",
+                            groupStage.getCode(), gs.getTeam().getName());
+                }
+            }
+        }
+
         log.info("Standings recalculados — Grupo {}: {} equipos, {} partidos jugados",
                 groupStage.getCode(), sorted.size(), finished.size());
     }

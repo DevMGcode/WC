@@ -34,8 +34,23 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
             if (StringUtils.hasText(jwt) && tokenProvider.validateToken(jwt) && !tokenProvider.isRefreshToken(jwt)) {
                 String username = tokenProvider.getUsernameFromToken(jwt);
+                var userOpt = appUserRepository.findByUsername(username);
+
+                // Invalidación por versión: si el token quedó obsoleto tras un
+                // cambio de contraseña (tokenVersion incrementado), no autenticamos.
+                if (userOpt.isPresent()) {
+                    Integer currentVersion = userOpt.get().getTokenVersion();
+                    int tokenVersion = tokenProvider.getTokenVersion(jwt);
+                    if (currentVersion != null && currentVersion != tokenVersion) {
+                        log.debug("JWT con versión obsoleta para {} (token={}, actual={})",
+                                username, tokenVersion, currentVersion);
+                        filterChain.doFilter(request, response);
+                        return;
+                    }
+                }
+
                 // Carga roles desde BD para que hasRole(...) en SecurityConfig funcione.
-                List<SimpleGrantedAuthority> authorities = appUserRepository.findByUsername(username)
+                List<SimpleGrantedAuthority> authorities = userOpt
                         .map(u -> u.getRoles().stream()
                                 .map(r -> new SimpleGrantedAuthority("ROLE_" + r.getCode()))
                                 .collect(Collectors.toList()))

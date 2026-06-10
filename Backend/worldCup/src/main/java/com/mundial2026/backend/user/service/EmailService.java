@@ -154,9 +154,13 @@ public class EmailService {
         }
     }
 
-    public void sendPasswordReset(String toEmail, String tempPassword) {
+    /**
+     * Envía un enlace seguro de recuperación de contraseña (no un password en claro).
+     * El password real del usuario no cambia hasta que confirme con este enlace.
+     */
+    public void sendPasswordResetLink(String toEmail, String resetUrl) {
         if (fromAddress == null || fromAddress.isBlank()) {
-            log.warn("[Email DEV MODE] To: {} | TempPassword: {}", toEmail, tempPassword);
+            log.warn("[Email DEV MODE] To: {} | ResetUrl: {}", toEmail, resetUrl);
             return;
         }
 
@@ -166,12 +170,12 @@ public class EmailService {
 
             helper.setFrom(fromAddress, "Orionix Gol");
             helper.setTo(toEmail);
-            helper.setSubject("Tu contrasena temporal - Orionix Gol");
-            helper.setText(buildHtml(tempPassword), true);
+            helper.setSubject("Recupera tu contrasena - Orionix Gol");
+            helper.setText(buildResetLinkHtml(resetUrl), true);
             addLogoIfCid(helper);
 
             mailSender.send(message);
-            log.info("[Email] Password reset sent to {}", toEmail);
+            log.info("[Email] Password reset link sent to {}", toEmail);
         } catch (Exception e) {
             log.error("[Email] Failed to send to {}: {}", toEmail, e.getMessage());
             throw new RuntimeException("No se pudo enviar el correo. Verifica tu conexion.");
@@ -277,7 +281,7 @@ public class EmailService {
             """).formatted(logoImgSrc(), username, frontendUrl);
     }
 
-    private String buildHtml(String tempPassword) {
+    private String buildResetLinkHtml(String resetUrl) {
         return ("""
             <!DOCTYPE html>
             <html lang="es">
@@ -334,24 +338,19 @@ public class EmailService {
                               <p style="color:rgba(148,163,184,0.80);font-size:14px;
                                         line-height:1.75;margin:0 0 28px;text-align:center;">
                                 Recibimos una solicitud para restablecer tu contrasena.<br>
-                                Tu contrasena temporal es:
+                                Haz clic en el boton para elegir una nueva.
                               </p>
-                              <table width="100%%" cellpadding="0" cellspacing="0"
-                                     style="margin-bottom:28px;">
+                              <table width="100%%" cellpadding="0" cellspacing="0" style="margin-bottom:24px;">
                                 <tr>
-                                  <td style="background:linear-gradient(145deg,rgba(34,211,238,0.08),rgba(4,12,28,0.85));
-                                             border:1.5px solid rgba(34,211,238,0.32);
-                                             border-radius:14px;padding:28px 20px;text-align:center;">
-                                    <p style="margin:0 0 12px;color:rgba(100,116,139,0.75);
-                                              font-size:9px;letter-spacing:4px;
-                                              text-transform:uppercase;font-weight:700;">
-                                      Contrasena Temporal
-                                    </p>
-                                    <span style="display:inline-block;font-size:34px;font-weight:900;
-                                                 color:#22d3ee;letter-spacing:8px;
-                                                 font-family:'Courier New',Courier,monospace;">
-                                      %s
-                                    </span>
+                                  <td align="center">
+                                    <a href="%s" target="_blank"
+                                       style="display:inline-block;padding:16px 40px;
+                                              background:linear-gradient(135deg,#22d3ee,#10b981);
+                                              color:#030810;font-size:15px;font-weight:800;
+                                              text-decoration:none;border-radius:12px;
+                                              letter-spacing:0.5px;">
+                                      &#128273; Restablecer contrasena
+                                    </a>
                                   </td>
                                 </tr>
                               </table>
@@ -365,9 +364,9 @@ public class EmailService {
                                               line-height:1.65;margin:0;">
                                       &#x26A0;&#xFE0F;&nbsp;
                                       <strong style="color:rgba(251,191,36,0.95);">
-                                        Esta contrasena es temporal.
+                                        El enlace expira en 1 hora.
                                       </strong>
-                                      Una vez que inicies sesion, cambialas desde tu perfil.
+                                      Tu contrasena actual sigue funcionando hasta que la cambies.
                                     </p>
                                   </td>
                                 </tr>
@@ -404,6 +403,6 @@ public class EmailService {
 
             </body>
             </html>
-            """).formatted(logoImgSrc(), tempPassword);
+            """).formatted(logoImgSrc(), resetUrl);
     }
 }

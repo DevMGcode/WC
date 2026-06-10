@@ -5,6 +5,8 @@ import org.junit.jupiter.api.Test;
 import org.springframework.test.util.ReflectionTestUtils;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.assertj.core.api.Assertions.assertThatCode;
 
 class JwtTokenProviderTest {
 
@@ -68,5 +70,41 @@ class JwtTokenProviderTest {
         Thread.sleep(50);
 
         assertThat(subject.validateToken(token)).isFalse();
+    }
+
+    // ── Validación del secret al arrancar (S2) ──────────────────────────────────
+
+    private JwtTokenProvider providerWithSecret(String secret) {
+        JwtTokenProvider p = new JwtTokenProvider();
+        ReflectionTestUtils.setField(p, "jwtSecret", secret);
+        return p;
+    }
+
+    @Test
+    void validateSecret_rejectsBlank() {
+        assertThatThrownBy(() -> providerWithSecret("").validateSecret())
+                .isInstanceOf(IllegalStateException.class);
+    }
+
+    @Test
+    void validateSecret_rejectsPlaceholder() {
+        assertThatThrownBy(() ->
+                providerWithSecret("change-this-secret-key-change-this-secret-key").validateSecret())
+                .isInstanceOf(IllegalStateException.class);
+        assertThatThrownBy(() ->
+                providerWithSecret("REEMPLAZA_CON_openssl_rand_base64_48_aaaaaaaaaa").validateSecret())
+                .isInstanceOf(IllegalStateException.class);
+    }
+
+    @Test
+    void validateSecret_rejectsTooShort() {
+        assertThatThrownBy(() -> providerWithSecret("short-secret").validateSecret())
+                .isInstanceOf(IllegalStateException.class);
+    }
+
+    @Test
+    void validateSecret_acceptsStrongSecret() {
+        assertThatCode(() -> providerWithSecret(SECRET).validateSecret())
+                .doesNotThrowAnyException();
     }
 }
