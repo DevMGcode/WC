@@ -71,6 +71,21 @@ public class AppUser {
     @Column(name = "email_verification_token", length = 64)
     private String verificationToken;
 
+    /** Token de recuperación de contraseña (flujo con enlace temporal). */
+    @Column(name = "password_reset_token", length = 64)
+    private String passwordResetToken;
+
+    /** Expiración del token de recuperación. */
+    @Column(name = "password_reset_expires_at")
+    private OffsetDateTime passwordResetExpiresAt;
+
+    /**
+     * Versión de token. Cada JWT lleva esta versión al emitirse. Al cambiar el
+     * password se incrementa, invalidando todos los tokens emitidos previamente.
+     */
+    @Column(name = "token_version", nullable = false)
+    private Integer tokenVersion = 0;
+
     /**
      * Equipo favorito del usuario.
      * Lo usa el plan FREE para determinar qué 3 partidos puede predecir gratis

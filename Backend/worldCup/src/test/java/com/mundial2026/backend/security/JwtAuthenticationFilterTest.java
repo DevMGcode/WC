@@ -1,6 +1,7 @@
 package com.mundial2026.backend.security;
 
 
+import com.mundial2026.backend.user.domain.AppUser;
 import com.mundial2026.backend.user.repository.AppUserRepository;
 import jakarta.servlet.FilterChain;
 import org.junit.jupiter.api.AfterEach;
@@ -40,6 +41,49 @@ class JwtAuthenticationFilterTest {
         when(tokenProvider.isRefreshToken("token123")).thenReturn(false);
         when(tokenProvider.getUsernameFromToken("token123")).thenReturn("alice");
         when(appUserRepository.findByUsername("alice")).thenReturn(Optional.empty());
+
+        filter.doFilter(request, response, filterChain);
+
+        assertThat(SecurityContextHolder.getContext().getAuthentication()).isNotNull();
+        assertThat(SecurityContextHolder.getContext().getAuthentication().getPrincipal()).isEqualTo("alice");
+    }
+
+    @Test
+    void tokenWithStaleVersion_doesNotAuthenticate() throws Exception {
+        JwtAuthenticationFilter filter = new JwtAuthenticationFilter(tokenProvider, appUserRepository);
+        MockHttpServletRequest request = new MockHttpServletRequest();
+        request.addHeader("Authorization", "Bearer oldtok");
+        MockHttpServletResponse response = new MockHttpServletResponse();
+
+        AppUser user = new AppUser();
+        user.setTokenVersion(2);              // password cambió → versión actual = 2
+
+        when(tokenProvider.validateToken("oldtok")).thenReturn(true);
+        when(tokenProvider.isRefreshToken("oldtok")).thenReturn(false);
+        when(tokenProvider.getUsernameFromToken("oldtok")).thenReturn("alice");
+        when(appUserRepository.findByUsername("alice")).thenReturn(Optional.of(user));
+        when(tokenProvider.getTokenVersion("oldtok")).thenReturn(1); // token viejo = 1
+
+        filter.doFilter(request, response, filterChain);
+
+        assertThat(SecurityContextHolder.getContext().getAuthentication()).isNull();
+    }
+
+    @Test
+    void tokenWithCurrentVersion_authenticates() throws Exception {
+        JwtAuthenticationFilter filter = new JwtAuthenticationFilter(tokenProvider, appUserRepository);
+        MockHttpServletRequest request = new MockHttpServletRequest();
+        request.addHeader("Authorization", "Bearer tok");
+        MockHttpServletResponse response = new MockHttpServletResponse();
+
+        AppUser user = new AppUser();
+        user.setTokenVersion(3);
+
+        when(tokenProvider.validateToken("tok")).thenReturn(true);
+        when(tokenProvider.isRefreshToken("tok")).thenReturn(false);
+        when(tokenProvider.getUsernameFromToken("tok")).thenReturn("alice");
+        when(appUserRepository.findByUsername("alice")).thenReturn(Optional.of(user));
+        when(tokenProvider.getTokenVersion("tok")).thenReturn(3);
 
         filter.doFilter(request, response, filterChain);
 

@@ -4,6 +4,8 @@ import com.mundial2026.backend.subscription.api.dto.MercadoPagoPreferenceRequest
 import com.mundial2026.backend.subscription.api.dto.MercadoPagoPreferenceResponse;
 import com.mundial2026.backend.user.domain.AppUser;
 
+import java.math.BigDecimal;
+
 /**
  * Contrato de la pasarela Mercado Pago (Checkout Pro).
  *
@@ -39,9 +41,11 @@ public interface MercadoPagoGateway {
      * - PENDING:   en proceso (efectivo, PSE pendiente, etc.)
      */
     record PaymentStatus(
-            String mpStatus,           // status crudo de MP
-            String externalReference,  // referencia interna que mandamos = subscriptionId
+            String mpStatus,             // status crudo de MP
+            String externalReference,    // referencia interna que mandamos = subscriptionId
             boolean approved,
-            boolean rejected
+            boolean rejected,
+            BigDecimal transactionAmount, // monto realmente pagado (para conciliar anti-fraude)
+            String currency              // moneda del pago
     ) {}
 }

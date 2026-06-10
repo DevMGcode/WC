@@ -24,37 +24,40 @@ class SecurityConfigTest {
     }
 
     @Test
-    void corsConfiguration_includesLocalhostAndFrontendUrl() {
+    void corsConfiguration_devOrigins_includesLocalhostAndFrontendUrl() {
         SecurityConfig config = new SecurityConfig(mock(JwtAuthenticationFilter.class));
         ReflectionTestUtils.setField(config, "frontendUrl", "https://mi-front.com");
+        ReflectionTestUtils.setField(config, "allowDevOrigins", true);
 
         CorsConfigurationSource source = config.corsConfigurationSource();
-
-        MockHttpServletRequest request = new MockHttpServletRequest(
-                "GET",
-                "/api/v1/public/users/count"
-        );
-        request.addHeader("Origin", "http://localhost:3000");
-
-        var cors = source.getCorsConfiguration(request);
+        var cors = source.getCorsConfiguration(new MockHttpServletRequest("GET", "/api/v1/public/users/count"));
 
         assertThat(cors).isNotNull();
-
-        assertThat(cors.getAllowedOrigins())
+        // El código usa allowedOriginPatterns (no allowedOrigins) por los wildcards ngrok.
+        assertThat(cors.getAllowedOriginPatterns())
                 .contains(
                         "http://localhost:3000",
                         "http://127.0.0.1:3000",
+                        "https://*.ngrok-free.app",
                         "https://mi-front.com"
                 );
-
         assertThat(cors.getAllowedMethods())
-                .contains(
-                        "GET",
-                        "POST",
-                        "PUT",
-                        "PATCH",
-                        "DELETE",
-                        "OPTIONS"
-                );
+                .contains("GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS");
+    }
+
+    /** S7: en producción (allow-dev-origins=false) solo se permite el dominio real. */
+    @Test
+    void corsConfiguration_prod_excludesDevAndNgrokOrigins() {
+        SecurityConfig config = new SecurityConfig(mock(JwtAuthenticationFilter.class));
+        ReflectionTestUtils.setField(config, "frontendUrl", "https://mi-front.com");
+        ReflectionTestUtils.setField(config, "allowDevOrigins", false);
+
+        CorsConfigurationSource source = config.corsConfigurationSource();
+        var cors = source.getCorsConfiguration(new MockHttpServletRequest("GET", "/api/v1/public/users/count"));
+
+        assertThat(cors).isNotNull();
+        assertThat(cors.getAllowedOriginPatterns())
+                .containsExactly("https://mi-front.com")
+                .doesNotContain("http://localhost:3000", "https://*.ngrok-free.app");
     }
 }

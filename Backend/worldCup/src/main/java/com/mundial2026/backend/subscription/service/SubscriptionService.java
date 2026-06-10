@@ -37,9 +37,18 @@ public class SubscriptionService {
 
     /**
      * Plan único actualmente disponible: Pase Mundial 2026.
-     * Cobramos en USD pero el usuario ve $20.000 COP en la UI.
+     * Cobramos en USD pero el usuario ve el equivalente en COP en la UI.
      */
     public static final String PLAN_MUNDIAL_PASS = "MUNDIAL_PASS_2026";
+
+    /**
+     * Precio y moneda CANÓNICOS del Pase Mundial — definidos en el servidor.
+     * NUNCA se confía en el `amount` que envía el cliente: el frontend podría
+     * manipularlo (p.ej. ?amount=1) para pagar menos y obtener Premium.
+     * Este es el único valor que se cobra y contra el que se concilia el webhook.
+     */
+    public static final BigDecimal MUNDIAL_PASS_PRICE = new BigDecimal("9.99");
+    public static final String     MUNDIAL_PASS_CURRENCY = "USD";
 
     /** Fecha de expiración del Pase Mundial (fin del torneo + buffer). */
     private static final OffsetDateTime MUNDIAL_PASS_EXPIRES_AT =
@@ -50,12 +59,27 @@ public class SubscriptionService {
     /**
      * ¿El usuario es Premium AHORA?
      * Esta es la consulta clave que se invoca desde el JWT/login y desde gates.
+     *
+     * Los administradores (rol ADMIN) son Premium SIEMPRE, en cualquier entorno,
+     * sin depender de una suscripción sembrada: garantiza que puedan probar y dar
+     * soporte a todas las funcionalidades Premium incluso en producción con BD limpia.
      */
     @Transactional(readOnly = true)
     public boolean isPremium(Long userId) {
+        if (isAdmin(userId)) {
+            return true;
+        }
         return subscriptionRepository
                 .findActiveByUserId(userId, OffsetDateTime.now())
                 .isPresent();
+    }
+
+    /** ¿El usuario tiene rol ADMIN? */
+    private boolean isAdmin(Long userId) {
+        return userRepository.findById(userId)
+                .map(u -> u.getRoles().stream()
+                        .anyMatch(r -> "ADMIN".equalsIgnoreCase(r.getCode())))
+                .orElse(false);
     }
 
     /**
@@ -143,15 +167,48 @@ public class SubscriptionService {
      * Activa una suscripción identificada por su propio ID (no por providerOrderId).
      * Útil cuando el proveedor (Mercado Pago) devuelve nuestro `external_reference`
      * que justamente es el `subscriptionId`.
+     *
+     * Sobrecarga sin validación de monto — solo para el gateway MOCK, donde el
+     * pago es simulado localmente y no existe un monto externo que conciliar.
      */
     @Transactional
     public Subscription activateById(Long subscriptionId, String paymentId) {
+        return activateById(subscriptionId, paymentId, null, null);
+    }
+
+    /**
+     * Activa una suscripción validando el monto realmente pagado contra el monto
+     * que el servidor registró al crear la orden (defensa en profundidad anti-fraude).
+     *
+     * Si {@code paidAmount} no es null y NO coincide con el monto esperado de la
+     * suscripción, se rechaza la activación: un atacante podría haber generado un
+     * pago por un valor inferior al precio real del Pase.
+     */
+    @Transactional
+    public Subscription activateById(Long subscriptionId, String paymentId,
+                                     BigDecimal paidAmount, String paidCurrency) {
         Subscription sub = subscriptionRepository.findById(subscriptionId)
                 .orElseThrow(() -> new IllegalArgumentException("Suscripción no encontrada: " + subscriptionId));
 
         if (sub.getStatus() == SubscriptionStatus.ACTIVE) {
             log.info("Suscripción ya ACTIVA, ignorando duplicado id={}", sub.getId());
             return sub;
+        }
+
+        // Conciliación de monto: el pago debe cubrir EXACTAMENTE lo registrado.
+        if (paidAmount != null) {
+            BigDecimal expected = sub.getAmount();
+            boolean amountOk   = expected != null && paidAmount.compareTo(expected) == 0;
+            boolean currencyOk = paidCurrency == null
+                    || sub.getCurrency() == null
+                    || paidCurrency.equalsIgnoreCase(sub.getCurrency());
+            if (!amountOk || !currencyOk) {
+                log.warn("[Anti-fraude] Monto del pago no coincide subId={} esperado={} {} pagado={} {} — NO se activa",
+                        subscriptionId, expected, sub.getCurrency(), paidAmount, paidCurrency);
+                sub.setStatus(SubscriptionStatus.FAILED);
+                subscriptionRepository.save(sub);
+                throw new BusinessRuleException("El monto del pago no coincide con el precio del plan.");
+            }
         }
 
         sub.setStatus(SubscriptionStatus.ACTIVE);

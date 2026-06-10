@@ -60,8 +60,8 @@ class AuthControllerTest {
                 "Alice Smith", "ACTIVE", OffsetDateTime.now(), false);
 
         when(userService.authenticate("alice@test.com", "pass123")).thenReturn(user);
-        when(tokenProvider.generateAccessToken("alice")).thenReturn("access-tok");
-        when(tokenProvider.generateRefreshToken("alice")).thenReturn("refresh-tok");
+        when(tokenProvider.generateAccessToken("alice", 0)).thenReturn("access-tok");
+        when(tokenProvider.generateRefreshToken("alice", 0)).thenReturn("refresh-tok");
         when(userMapper.toAuthResponse(user)).thenReturn(authUser);
 
         mockMvc.perform(post(LOGIN_URL)

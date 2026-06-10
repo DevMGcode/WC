@@ -98,6 +98,18 @@ export function IntroSplash() {
 
   useEffect(() => {
     setMounted(true);
+
+    // El splash se muestra UNA sola vez por sesión del navegador. En recargas o
+    // navegaciones posteriores dentro de la misma sesión se omite por completo,
+    // evitando pagar ~3 s de animación en cada carga de página.
+    let alreadyShown = false;
+    try { alreadyShown = window.sessionStorage.getItem('orionix.introShown') === '1'; } catch {}
+    if (alreadyShown) {
+      setShowIntro(false);
+      return;
+    }
+    try { window.sessionStorage.setItem('orionix.introShown', '1'); } catch {}
+
     setShowIntro(true);
     setProgress(0);
 

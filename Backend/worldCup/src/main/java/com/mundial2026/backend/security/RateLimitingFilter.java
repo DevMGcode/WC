@@ -5,6 +5,7 @@ import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.annotation.Order;
 import org.springframework.stereotype.Component;
 import org.springframework.web.filter.OncePerRequestFilter;
@@ -21,6 +22,15 @@ public class RateLimitingFilter extends OncePerRequestFilter {
 
     private static final int MAX_REQUESTS = 10;
     private static final long WINDOW_MS = 60_000L;
+
+    /**
+     * Solo cuando la app corre detrás de un proxy confiable (nginx) que setea
+     * X-Forwarded-For. En ese caso confiamos en la IP que NUESTRO proxy añade.
+     * En dev/sin proxy queda en false: ignoramos X-Forwarded-For por completo,
+     * porque el cliente lo controla y podría rotar IPs falsas para evadir el límite.
+     */
+    @Value("${app.security.trust-proxy:false}")
+    private boolean trustProxy;
 
     private final ConcurrentHashMap<String, Deque<Long>> requestLog = new ConcurrentHashMap<>();
 
@@ -58,9 +68,18 @@ public class RateLimitingFilter extends OncePerRequestFilter {
     }
 
     private String resolveClientIp(HttpServletRequest request) {
+        // Sin proxy confiable: NUNCA usar X-Forwarded-For (el cliente lo controla
+        // y podría rotar IPs falsas para evadir el rate limit).
+        if (!trustProxy) {
+            return request.getRemoteAddr();
+        }
         String forwarded = request.getHeader("X-Forwarded-For");
         if (forwarded != null && !forwarded.isBlank()) {
-            return forwarded.split(",")[0].trim();
+            // Detrás de un único proxy (nginx con $proxy_add_x_forwarded_for), la IP
+            // que NUESTRO proxy añade es la ÚLTIMA del header; las anteriores podrían
+            // venir falsificadas por el cliente. Tomamos la última.
+            String[] parts = forwarded.split(",");
+            return parts[parts.length - 1].trim();
         }
         return request.getRemoteAddr();
     }

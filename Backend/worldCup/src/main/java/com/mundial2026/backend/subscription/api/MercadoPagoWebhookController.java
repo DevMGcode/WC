@@ -100,7 +100,10 @@ public class MercadoPagoWebhookController {
 
             Long subscriptionId = Long.parseLong(externalRef);
             if (status.approved()) {
-                subscriptionService.activateById(subscriptionId, paymentId);
+                // Conciliamos el monto realmente pagado contra el precio registrado
+                // por el servidor — si no coincide, activateById rechaza la activación.
+                subscriptionService.activateById(subscriptionId, paymentId,
+                        status.transactionAmount(), status.currency());
                 log.info("Suscripción ACTIVADA por webhook MP subscriptionId={} paymentId={}", externalRef, paymentId);
             } else if (status.rejected()) {
                 subscriptionService.markFailedById(subscriptionId);

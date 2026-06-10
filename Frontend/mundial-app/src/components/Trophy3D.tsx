@@ -1,6 +1,6 @@
 'use client';
 
-import { Suspense, useRef } from 'react';
+import { Suspense, useRef, useState, useEffect } from 'react';
 import { Canvas, useFrame, useThree } from '@react-three/fiber';
 import { useGLTF } from '@react-three/drei';
 import type { Group } from 'three';
@@ -44,9 +44,29 @@ function TrophyScene() {
   return <primitive ref={ref} object={scene} scale={5.5} />;
 }
 
-useGLTF.preload('/e9fadbdacccde217a1be5a782605c3b8.glb');
+// NOTA: el modelo .glb pesa ~39 MB. NO se hace `useGLTF.preload(...)` a nivel de
+// módulo a propósito: precargarlo competía con los recursos críticos del login
+// (CSS, JS, fuentes) y retrasaba la primera pintura. Se carga de forma diferida
+// cuando el Canvas se monta (ver gate de "idle" abajo), dentro de <Suspense>.
+// Mejora pendiente recomendada: recomprimir el modelo con Draco/meshopt para
+// bajarlo a pocos MB.
 
 export default function Trophy3D() {
+  // Difiere el montaje del Canvas (y la descarga del modelo) hasta que el
+  // navegador esté libre tras la primera pintura, para que el login aparezca ya.
+  const [ready, setReady] = useState(false);
+  useEffect(() => {
+    const w = window as any;
+    if (typeof w.requestIdleCallback === 'function') {
+      const id = w.requestIdleCallback(() => setReady(true), { timeout: 2000 });
+      return () => w.cancelIdleCallback?.(id);
+    }
+    const t = window.setTimeout(() => setReady(true), 600);
+    return () => window.clearTimeout(t);
+  }, []);
+
+  if (!ready) return null;
+
   return (
     <Canvas
       camera={{ position: [0, 3.1, 2.4], fov: 60 }}
