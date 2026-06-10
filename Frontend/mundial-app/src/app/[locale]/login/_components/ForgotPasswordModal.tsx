@@ -64,7 +64,7 @@ export default function ForgotPasswordModal({ show, onClose }: ForgotPasswordMod
             exit={{ opacity: 0, scale: 0.92, y: 18 }}
             transition={{ type: 'spring', stiffness: 280, damping: 24 }}
           >
-            <div className="rounded-2xl p-6"
+            <div className="rounded-2xl p-4 sm:p-6"
               style={{
                 background: `linear-gradient(145deg, ${alpha(hex.accent.navyCard, 0.99)}, ${alpha(hex.accent.navyCardMid, 0.97)})`,
                 border: `1px solid ${alphaOf('green', 0.18)}`,
@@ -130,7 +130,7 @@ export default function ForgotPasswordModal({ show, onClose }: ForgotPasswordMod
                   </div>
 
                   <button type="submit" disabled={fpLoading}
-                    className="w-full py-2.5 rounded-xl text-sm font-bold tracking-wider uppercase overflow-hidden relative"
+                    className="w-full py-2.5 rounded-xl text-[11px] sm:text-sm font-bold tracking-normal sm:tracking-wider uppercase overflow-hidden relative whitespace-nowrap"
                     style={{
                       background: fpLoading ? alpha(hex.green.hover, 0.28) : `linear-gradient(90deg, ${hex.green.dark}, ${hex.green.base})`,
                       color: '#fff',

@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
+import { useQueryClient } from '@tanstack/react-query';
 import { useTranslations } from 'next-intl';
 import { Header } from '@/components/Navigation';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -87,6 +88,7 @@ function CreateLeagueForm() {
   const router = useRouter();
   const t      = useTranslations();
   const { user } = useAuth();
+  const queryClient = useQueryClient();
 
   const [tournamentId, setTournamentId] = useState<number>(0);
   const [createdLeague, setCreatedLeague] = useState<{ id: string; name: string; code: string } | null>(null);
@@ -102,7 +104,7 @@ function CreateLeagueForm() {
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     const { name, value } = e.target;
-    setFormData(prev => ({ ...prev, [name]: name === 'maxMembers' ? parseInt(value) : value }));
+    setFormData(prev => ({ ...prev, [name]: name === 'maxMembers' ? (value === '' ? '' : parseInt(value, 10)) : value }));
   };
 
   const handleCopyCode = () => {
@@ -120,6 +122,7 @@ function CreateLeagueForm() {
     if (!tournamentId) { setError('No se pudo obtener el torneo activo. Intenta de nuevo.'); setLoading(false); return; }
     try {
       const newLeague = await leagueService.createLeague({ userId: Number(user.id), ...formData, tournamentId });
+      await queryClient.invalidateQueries({ queryKey: ['leagues', 'user', Number(user.id)] });
       setCreatedLeague({ id: String((newLeague as any).id), name: (newLeague as any).name, code: (newLeague as any).code });
     } catch (err: any) {
       setError(err.message || 'Error al crear la liga');
@@ -195,7 +198,7 @@ function CreateLeagueForm() {
                   <motion.button
                     onClick={handleCopyCode}
                     whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.97 }}
-                    className="relative w-full overflow-hidden rounded-xl flex items-center justify-between px-5 py-4"
+                    className="relative w-full overflow-hidden rounded-xl flex items-center justify-between gap-3 px-4 py-4"
                     style={{
                       background: copied ? 'rgba(52,211,153,0.08)' : 'rgba(251,191,36,0.07)',
                       border: `1px solid ${copied ? 'rgba(52,211,153,0.30)' : 'rgba(251,191,36,0.25)'}`,
@@ -203,11 +206,11 @@ function CreateLeagueForm() {
                   >
                     <div className="absolute inset-x-0 top-0 h-px"
                       style={{ background: `linear-gradient(90deg, transparent, ${copied ? 'rgba(52,211,153,0.60)' : 'rgba(251,191,36,0.60)'}, transparent)` }} />
-                    <p className="text-3xl font-black font-mono tracking-[0.3em]"
+                    <p className="text-2xl font-black font-mono tracking-[0.12em] min-w-0 flex-1"
                       style={{ color: copied ? '#34d399' : '#fbbf24', textShadow: `0 0 20px ${copied ? 'rgba(52,211,153,0.65)' : 'rgba(251,191,36,0.65)'}` }}>
                       {createdLeague.code}
                     </p>
-                    <div className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg"
+                    <div className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg shrink-0"
                       style={{ background: copied ? 'rgba(52,211,153,0.12)' : 'rgba(251,191,36,0.10)' }}>
                       {copied
                         ? <FiCheck size={14} style={{ color: '#34d399' }} />

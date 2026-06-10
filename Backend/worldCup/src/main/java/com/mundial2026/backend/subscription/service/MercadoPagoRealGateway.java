@@ -2,6 +2,7 @@ package com.mundial2026.backend.subscription.service;
 
 import com.mercadopago.MercadoPagoConfig;
 import com.mercadopago.client.payment.PaymentClient;
+import com.mercadopago.client.payment.PaymentRefundClient;
 import com.mercadopago.client.preference.PreferenceBackUrlsRequest;
 import com.mercadopago.client.preference.PreferenceClient;
 import com.mercadopago.client.preference.PreferenceItemRequest;
@@ -20,7 +21,6 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.stereotype.Service;
 
-import java.math.BigDecimal;
 import java.util.List;
 
 /**
@@ -163,6 +163,27 @@ public class MercadoPagoRealGateway implements MercadoPagoGateway {
         } catch (MPException e) {
             log.error("MercadoPago fetchPayment error: {}", e.getMessage());
             throw new IllegalStateException("Error consultando pago en Mercado Pago", e);
+        }
+    }
+
+    @Override
+    public void refund(String paymentId) {
+        long numericId;
+        try {
+            numericId = Long.parseLong(paymentId);
+        } catch (NumberFormatException e) {
+            throw new IllegalArgumentException("El payment_id almacenado no es un ID numérico válido de Mercado Pago: " + paymentId);
+        }
+        try {
+            PaymentRefundClient refundClient = new PaymentRefundClient();
+            refundClient.refund(numericId);
+            log.info("MercadoPago: reembolso solicitado paymentId={}", paymentId);
+        } catch (MPApiException e) {
+            log.error("MercadoPago refund API error: status={} body={}", e.getStatusCode(), e.getApiResponse().getContent());
+            throw new IllegalStateException("Error solicitando reembolso en Mercado Pago: " + e.getApiResponse().getContent(), e);
+        } catch (MPException e) {
+            log.error("MercadoPago refund error: {}", e.getMessage());
+            throw new IllegalStateException("Error solicitando reembolso en Mercado Pago", e);
         }
     }
 

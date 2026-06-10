@@ -110,7 +110,7 @@ const HomeCountdown = ({ countdown, mundialStarted, t }: HomeCountdownProps) => 
           <div className="absolute -top-16 right-8 w-56 h-56 rounded-full pointer-events-none"
             style={{ background: `radial-gradient(circle, ${alphaOf('gold', 0.10)} 0%, transparent 70%)`, filter: 'blur(36px)' }} />
 
-          <div className="relative flex flex-col sm:flex-row items-center gap-5 px-5 sm:px-7 py-5 sm:py-6">
+          <div className="relative flex flex-col sm:flex-row items-center gap-5 px-3 sm:px-7 py-5 sm:py-6">
 
             {/* Ícono + título */}
             <div className="flex items-center gap-3 shrink-0">
@@ -136,14 +136,14 @@ const HomeCountdown = ({ countdown, mundialStarted, t }: HomeCountdownProps) => 
               style={{ background: alphaOf('gold', 0.18) }} />
 
             {/* Dígitos del countdown — números grandes (3xl/4xl) */}
-            <div className="flex items-center gap-1.5 sm:gap-3 flex-1 justify-center sm:justify-start">
+            <div className="flex items-center gap-1 sm:gap-3 flex-1 justify-center sm:justify-start">
               {cdUnits.map(({ val, label }, i) => (
                 <React.Fragment key={label}>
                   {i > 0 && (
-                    <span className="font-black text-2xl sm:text-3xl pb-5 shrink-0"
+                    <span className="font-black text-xl sm:text-3xl shrink-0 self-start mt-2 sm:mt-4"
                       style={{ color: alphaOf('gold', 0.35) }}>:</span>
                   )}
-                  <div className="flex flex-col items-center px-2.5 py-2 rounded-xl min-w-[52px] sm:min-w-[60px]"
+                  <div className="flex flex-col items-center px-1.5 sm:px-2.5 py-1.5 sm:py-2 rounded-xl min-w-[44px] sm:min-w-[60px]"
                     style={{
                       background: alphaOf('gold', 0.07),
                       border: `1px solid ${alphaOf('gold', 0.16)}`,
@@ -153,7 +153,7 @@ const HomeCountdown = ({ countdown, mundialStarted, t }: HomeCountdownProps) => 
                       key={val}
                       className="font-black tabular-nums leading-none"
                       style={{
-                        fontSize: 'clamp(1.9rem, 4vw, 2.6rem)',
+                        fontSize: 'clamp(1.5rem, 6vw, 2.6rem)',
                         color: hex.gold.soft,
                         textShadow: `0 0 26px ${alphaOf('gold', 0.65)}`,
                       }}
@@ -161,8 +161,8 @@ const HomeCountdown = ({ countdown, mundialStarted, t }: HomeCountdownProps) => 
                       animate={{ y: 0, opacity: 1 }}
                       transition={{ duration: 0.18 }}
                     >{val}</motion.p>
-                    {/* Label unidad: mínimo 11px, contraste visible */}
-                    <p className="text-[11px] font-bold tracking-[0.18em] uppercase mt-1"
+                    {/* Label unidad: mínimo 10px en mobile, 11px en sm+ */}
+                    <p className="text-[10px] sm:text-[11px] font-bold tracking-[0.14em] sm:tracking-[0.18em] uppercase mt-1"
                       style={{ color: `${hex.gold.base}80` }}>{label}</p>
                   </div>
                 </React.Fragment>
@@ -170,7 +170,7 @@ const HomeCountdown = ({ countdown, mundialStarted, t }: HomeCountdownProps) => 
             </div>
 
             {/* Sedes: código país 11px */}
-            <div className="hidden md:flex flex-col items-end gap-2 shrink-0">
+            <div className="hidden lg:flex flex-col items-end gap-2 shrink-0">
               <p className="text-[10px] font-black tracking-[0.26em] uppercase"
                 style={{ color: alpha(hex.neutral.white, 0.35) }}>SEDE</p>
               <div className="flex items-center gap-2.5">

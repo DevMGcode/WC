@@ -48,14 +48,14 @@ const QuickAccessBento = ({ t }: QuickAccessBentoProps) => {
       initial={{ opacity: 0, y: 18 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.5, delay: 0.60, ease: [0.22, 1, 0.36, 1] }}
-      className="grid grid-cols-3 gap-4 mt-6"
+      className="grid grid-cols-3 gap-2 sm:gap-4 mt-6"
     >
       {items.map(({ href, icon, label, desc, accent, glow, bg }, i) => (
         <Link key={href} href={href} className="block">
           <motion.div
             whileHover={{ scale: 1.04, y: -7, boxShadow: `0 28px 56px ${glow}` }}
             whileTap={{ scale: 0.96 }}
-            className="relative overflow-hidden rounded-2xl p-5 text-center cursor-pointer h-full flex flex-col items-center"
+            className="relative overflow-hidden rounded-2xl p-3 sm:p-5 text-center cursor-pointer h-full flex flex-col items-center"
             style={{
               background: `linear-gradient(160deg, ${bg} 0%, ${alpha(hex.bg.soft, 0.90)} 45%, ${alpha(hex.bg.secondary, 0.98)} 100%)`,
               border: `1px solid ${accent}30`,
@@ -85,8 +85,8 @@ const QuickAccessBento = ({ t }: QuickAccessBentoProps) => {
               {label}
             </p>
 
-            {/* Desc: 12px mínimo, contraste real */}
-            <p className="text-[12px] font-medium mb-4 leading-relaxed" style={{ color: alpha(hex.neutral.white, 0.55) }}>
+            {/* Desc: 12px mínimo, contraste real — oculto en mobile para no romper layout */}
+            <p className="hidden sm:block text-[12px] font-medium mb-4 leading-relaxed" style={{ color: alpha(hex.neutral.white, 0.55) }}>
               {desc}
             </p>
 

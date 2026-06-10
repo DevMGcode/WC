@@ -6,6 +6,7 @@ import com.mundial2026.backend.tournament.domain.GroupStage;
 import com.mundial2026.backend.tournament.domain.Stage;
 import com.mundial2026.backend.tournament.domain.Team;
 import com.mundial2026.backend.tournament.domain.Tournament;
+import com.mundial2026.backend.tournament.domain.Venue;
 import com.mundial2026.backend.tournament.integration.port.ExternalMatch;
 import com.mundial2026.backend.tournament.integration.port.MatchDataPort;
 import com.mundial2026.backend.tournament.integration.port.MatchStatus;
@@ -49,6 +50,7 @@ public class FixtureSyncService {
     private final StageRepository stageRepository;
     private final GroupStageRepository groupStageRepository;
     private final TeamRepository teamRepository;
+    private final VenueSyncService venueSyncService;
     private final ApplicationEventPublisher events;
 
     @Transactional
@@ -192,6 +194,10 @@ public class FixtureSyncService {
         f.setPredictionLockMinutesBefore(DEFAULT_LOCK_MINUTES_BEFORE);
         f.setPredictionLockedAt(kickoff.minusMinutes(DEFAULT_LOCK_MINUTES_BEFORE));
         f.setStatus(mapStatus(ext.status()));
+        // Persistir venue. El VenueSyncService maneja dual-strategy (extId vs name+city)
+        // y devuelve empty cuando la API no envía datos suficientes (fixture TBD).
+        venueSyncService.resolveOrCreate(ext.venueExternalId(), ext.venueName(), ext.venueCity())
+                .ifPresent(f::setVenue);
         return f;
     }
 
@@ -228,6 +234,17 @@ public class FixtureSyncService {
             existing.setAwayTeam(away);
             changed = true;
         }
+        // Venue: resolver y comparar. Solo escribimos si cambió la referencia o estaba en null
+        // (fixtures sincronizados antes de la Mejora #4 quedaron sin venue — al re-sync los rellenamos).
+        Optional<Venue> resolved = venueSyncService.resolveOrCreate(
+                ext.venueExternalId(), ext.venueName(), ext.venueCity());
+        if (resolved.isPresent()) {
+            Venue newVenue = resolved.get();
+            if (existing.getVenue() == null || !existing.getVenue().getId().equals(newVenue.getId())) {
+                existing.setVenue(newVenue);
+                changed = true;
+            }
+        }
         return changed;
     }
 
@@ -261,12 +278,44 @@ public class FixtureSyncService {
         // Map API-Football round names → stage codes used in this DB (Spanish).
         // Check 3rd-place / round-of-X BEFORE the generic "final" check, otherwise
         // "Semi-finals" → would match "final" first. Order matters.
+        //
+        // Strings verificados consultando la API en vivo (GET /fixtures/rounds):
+        //   2018 → ["Group Stage - 1/2/3", "8th Finals", "Quarter-finals", "Semi-finals",
+        //           "3rd Place Final", "Final"]
+        //   2022 → ["Group Stage - 1/2/3", "Round of 16", "Quarter-finals", "Semi-finals",
+        //           "3rd Place Final", "Final"]
+        //   2026 → solo grupos disponibles hoy (la API aún no publica fases finales).
         if (r.startsWith("group")) return "GROUPS";
+
+        // "Round of 32" (DIECISEISAVOS): proyección defensiva para Mundial 2026.
+        // Razón: 2026 tiene 48 equipos (no 32 como 2018/2022) → agrega una ronda extra
+        // antes de octavos. El string exacto aún no está confirmado por la API; cuando
+        // aparezca, si difiere ("Knockout Round", "Play-off Round", etc.), el WARN de
+        // abajo lo expone en logs sin romper el sync.
+        // NOTA: El stage DIECISEISAVOS aún NO existe en la BD — se creará via Flyway
+        // cuando confirmemos el string real. Mientras tanto, el lookup en BD devolverá
+        // empty y el fixture quedará sin stage (no crash).
+        if (r.contains("round of 32")) return "DIECISEISAVOS";
+
+        // "Round of 16" (formato moderno usado por 2022 en adelante).
         if (r.contains("round of 16")) return "OCTAVOS";
+
+        // "8th Finals" — formato legacy que usó la API SOLO para 2018. Verificado con
+        // GET /fixtures/rounds?league=1&season=2018 → devuelve literalmente "8th Finals".
+        // Sin esta línea, los 8 partidos de octavos del 2018 caen en null al sincronizar.
+        if (r.contains("8th finals")) return "OCTAVOS";
+
         if (r.contains("quarter")) return "CUARTOS";
         if (r.contains("semi")) return "SEMIFINAL";
         if (r.contains("3rd") || r.contains("third")) return "TERCER_PUESTO";
         if (r.contains("final")) return "FINAL";
+
+        // Red de seguridad: si la API devuelve un string que no reconocemos (caso
+        // probable para fases finales de 2026 si usan un formato distinto), lo
+        // logueamos en lugar de fallar silenciosamente. Así, al sincronizar el día del
+        // kick-off vemos rápido qué string nuevo agregar sin tener que adivinar.
+        log.warn("Unmapped API-Football round string: \"{}\" — fixture will have no stage assigned. " +
+                 "Add a mapping rule in mapStageCode() if this is a known round.", round);
         return null;
     }
 

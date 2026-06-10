@@ -25,10 +25,35 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   // Runs only on client after hydration completes
   useEffect(() => {
-    const token = authService.getToken();
-    const saved  = authService.getUser();
-    if (token && saved) setUser(saved);
-    setLoading(false);
+    try {
+      const token = authService.getToken();
+      const saved  = authService.getUser();
+      if (token && saved) setUser(saved);
+    } catch {
+      try {
+        window.localStorage.removeItem('authToken');
+        window.localStorage.removeItem('user');
+      } catch {}
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
+  // Escucha cambios de usuario disparados por otros componentes (ej. /auth/refresh
+  // tras un upgrade a Premium). Evita la necesidad de logout/login para que la
+  // UI refleje el nuevo plan inmediatamente.
+  useEffect(() => {
+    const onUpdate = (e: Event) => {
+      const detail = (e as CustomEvent).detail as AuthUser | undefined;
+      if (!detail) return;
+      try {
+        // Persistimos también el user para que sobreviva al refresh de página.
+        window.localStorage.setItem('user', JSON.stringify(detail));
+      } catch {}
+      setUser(detail);
+    };
+    window.addEventListener('auth:user-updated', onUpdate);
+    return () => window.removeEventListener('auth:user-updated', onUpdate);
   }, []);
 
   const login = async (email: string, password: string): Promise<boolean> => {
@@ -38,6 +63,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       const response = await authService.login(email, password);
       if (response.success && response.data) {
         setUser(response.data.user);
+        // Limpiar flags de UI por-sesión para que onboarding (modal Premium,
+        // tours, etc.) se muestren de nuevo al login con cualquier cuenta.
+        if (typeof window !== 'undefined') {
+          window.sessionStorage.removeItem('orionix.premiumModalShown');
+        }
         return true;
       }
       setError(response.message || t('errors.invalidLogin'));
@@ -57,6 +87,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       const response = await authService.register(req);
       if (response.success) {
         if (response.data) setUser(response.data.user);
+        if (typeof window !== 'undefined') {
+          window.sessionStorage.removeItem('orionix.premiumModalShown');
+        }
         return { ok: true, emailVerificationRequired: response.emailVerificationRequired ?? true, message: response.message };
       }
       setError(response.message || t('register.genericError'));
@@ -73,6 +106,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     authService.logout();
     if (typeof window !== 'undefined') {
       window.sessionStorage.removeItem('orionix-dock-visible');
+      window.sessionStorage.removeItem('orionix.premiumModalShown');
     }
     setUser(null);
   };

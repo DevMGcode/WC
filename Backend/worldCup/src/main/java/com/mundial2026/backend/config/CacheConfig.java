@@ -29,6 +29,11 @@ public class CacheConfig {
     public static final String MATCH_EVENTS = "matchEvents";
     public static final String MATCH_STATISTICS = "matchStatistics";
     public static final String MATCH_PLAYER_STATS = "matchPlayerStats";
+    /** Cobertura declarada por API-Football para la temporada activa
+     *  (coverage.events, coverage.top_scorers, coverage.players, ...).
+     *  TTL largo (6h) porque la cobertura cambia muy poco — la API la activa
+     *  cuando se publican los primeros datos del torneo. */
+    public static final String LEAGUE_COVERAGE = "leagueCoverage";
 
     @Bean
     public CacheManager cacheManager() {
@@ -41,7 +46,8 @@ public class CacheConfig {
         mgr.setCacheNames(List.of(
                 STANDINGS, TOP_SCORERS, TOP_ASSISTS, SQUAD,
                 LINEUPS, HEAD_TO_HEAD, FIXTURE_PREDICTIONS,
-                MATCH_EVENTS, MATCH_STATISTICS, MATCH_PLAYER_STATS));
+                MATCH_EVENTS, MATCH_STATISTICS, MATCH_PLAYER_STATS,
+                LEAGUE_COVERAGE));
         return mgr;
     }
 
@@ -56,6 +62,10 @@ public class CacheConfig {
             case MATCH_EVENTS            -> base.expireAfterWrite(Duration.ofSeconds(30));
             case MATCH_STATISTICS        -> base.expireAfterWrite(Duration.ofMinutes(1));
             case MATCH_PLAYER_STATS      -> base.expireAfterWrite(Duration.ofHours(6));
+            // TTL corto pre-Mundial: cuando API-Football active los flags el día del kick-off
+            // (11-jun-2026), queremos verlo en ≤30 min, no hasta 6h después. Post-Mundial se
+            // puede subir a 6h sin urgencia — la cobertura ya no cambia.
+            case LEAGUE_COVERAGE         -> base.expireAfterWrite(Duration.ofMinutes(30));
             default                      -> base.expireAfterWrite(Duration.ofMinutes(10));
         };
     }

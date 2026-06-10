@@ -46,6 +46,20 @@ public class PaymentController {
         return ResponseEntity.ok(response);
     }
 
+    // ─── Reembolso ────────────────────────────────────────────────────────────
+
+    /**
+     * Solicita el reembolso de la suscripción activa del usuario autenticado.
+     * Solo aplica dentro de las 24 horas desde la activación del pago.
+     */
+    @PostMapping("/refund")
+    public ResponseEntity<ApiResponse<Void>> requestRefund() {
+        AppUser user = securityUtils.currentUser();
+        log.info("Solicitud de reembolso userId={}", user.getId());
+        subscriptionService.requestRefund(user.getId());
+        return ResponseEntity.ok(ApiResponse.ok("Reembolso procesado exitosamente. El monto será acreditado en los próximos días hábiles.", null));
+    }
+
     // ─── Mercado Pago ─────────────────────────────────────────────────────────
 
     @PostMapping("/mercadopago/preference")

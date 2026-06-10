@@ -2,6 +2,7 @@
 
 import React, { useState } from 'react';
 import { useRouter } from 'next/navigation';
+import { useQueryClient } from '@tanstack/react-query';
 import { useTranslations } from 'next-intl';
 import { Header } from '@/components/Navigation';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -18,6 +19,7 @@ export default function JoinLeaguePage() {
   const router = useRouter();
   const t      = useTranslations();
   const { user } = useAuth();
+  const queryClient = useQueryClient();
 
   const [leagueCode, setLeagueCode] = useState('');
   const [loading, setLoading]       = useState(false);
@@ -31,8 +33,9 @@ export default function JoinLeaguePage() {
       if (!leagueCode.trim()) { setError(t('league.enterValidCode')); setLoading(false); return; }
       if (!user?.id)          { setError(t('league.mustLoginJoin')); setLoading(false); return; }
       await leagueService.joinLeague({ userId: Number(user.id), leagueCode: leagueCode.toUpperCase() });
+      await queryClient.invalidateQueries({ queryKey: ['leagues', 'user', Number(user.id)] });
       setSuccess(t('league.joinedSuccessfully'));
-      setTimeout(() => router.push('/predictions'), 1500);
+      setTimeout(() => router.push('/predictions?tab=ligas'), 1500);
     } catch (err: any) {
       setError(err.message || t('league.enterValidCode'));
     } finally { setLoading(false); }

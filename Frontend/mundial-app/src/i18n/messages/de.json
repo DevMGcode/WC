@@ -523,5 +523,42 @@
     "back": "Zurück",
     "isOwner": "Du bist der Besitzer",
     "loading": "Laden"
+  },
+  "onboarding": {
+    "welcome": "Willkommen",
+    "step1": {
+      "title": "Sprache auswählen",
+      "subtitle": "Sie können dies später in Ihrem Profil ändern"
+    },
+    "step2": {
+      "label": "Teams",
+      "selected": "{count} ausgewählt",
+      "title": "Lieblingsteams",
+      "subtitle": "Wählen Sie die Teams aus, denen Sie folgen möchten"
+    },
+    "step3": {
+      "label": "Benachrichtigungen",
+      "title": "Bleiben Sie auf dem Laufenden",
+      "subtitle": "Konfigurieren Sie, welche Benachrichtigungen Sie erhalten möchten",
+      "matchReminders": "Spielerinnerungen",
+      "realTimeResults": "Echtzeit-Ergebnisse",
+      "leagueUpdates": "Liga-Updates",
+      "newsUpdates": "Neuigkeiten"
+    },
+    "step4": {
+      "title": "Alles bereit!",
+      "subtitle": "Ihr Konto ist eingerichtet und bereit",
+      "language": "Sprache",
+      "favoriteTeams": "Lieblingsteams",
+      "selected": "{count} ausgewählt",
+      "none": "Keine",
+      "activeNotifications": "Aktive Benachrichtigungen"
+    },
+    "nav": {
+      "back": "Zurück",
+      "next": "Weiter",
+      "start": "Loslegen",
+      "skip": "Einrichtung überspringen"
+    }
   }
 }

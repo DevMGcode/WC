@@ -84,23 +84,23 @@ public class MercadoPagoWebhookController {
             log.warn("Webhook MP sin paymentId — ignorado");
             return ResponseEntity.ok().build();
         }
+        paymentId = paymentId.strip();
 
-        // 4. Consultar a MP el estado real del pago
-        MercadoPagoGateway.PaymentStatus status = mercadoPagoGateway.fetchPaymentStatus(paymentId);
-
-        // 5. Buscar la suscripción asociada por preferenceId (externalReference contiene el subscriptionId)
-        //    El external_reference que mandamos al crear la preferencia es el ID de la suscripción.
-        String externalRef = status.externalReference();
-        if (externalRef == null || externalRef.isBlank()) {
-            log.warn("Webhook MP sin externalReference — no se puede conciliar paymentId={}", paymentId);
-            return ResponseEntity.ok().build();
-        }
-
-        // 6. Activar o marcar como fallida la suscripción según el resultado
+        // 4-6. Consultar estado y conciliar suscripción — todo en un solo bloque para
+        // garantizar que cualquier excepción inesperada (red, parseo, BD) nunca produzca
+        // un 500: MP reintenta hasta 5 veces ante errores, lo que duplicaría activaciones.
         try {
+            MercadoPagoGateway.PaymentStatus status = mercadoPagoGateway.fetchPaymentStatus(paymentId);
+
+            String externalRef = status.externalReference();
+            if (externalRef == null || externalRef.isBlank()) {
+                log.warn("Webhook MP sin externalReference — no se puede conciliar paymentId={}", paymentId);
+                return ResponseEntity.ok().build();
+            }
+
             Long subscriptionId = Long.parseLong(externalRef);
             if (status.approved()) {
-                subscriptionService.activateById(subscriptionId);
+                subscriptionService.activateById(subscriptionId, paymentId);
                 log.info("Suscripción ACTIVADA por webhook MP subscriptionId={} paymentId={}", externalRef, paymentId);
             } else if (status.rejected()) {
                 subscriptionService.markFailedById(subscriptionId);
@@ -109,10 +109,9 @@ public class MercadoPagoWebhookController {
                 log.info("Webhook MP pago PENDING — sin acción subscriptionId={} status={}", externalRef, status.mpStatus());
             }
         } catch (NumberFormatException nfe) {
-            log.warn("externalReference inválido en webhook MP: {}", externalRef);
+            log.warn("Webhook MP — ID inválido (paymentId={} o externalRef no numérico)", paymentId);
         } catch (Exception e) {
-            log.error("Error procesando webhook MP subscriptionId={} paymentId={} : {}",
-                    externalRef, paymentId, e.getMessage(), e);
+            log.error("Webhook MP — error procesando paymentId={}: {}", paymentId, e.getMessage(), e);
         }
 
         // 7. Siempre devolver 200 a MP para que no reintente

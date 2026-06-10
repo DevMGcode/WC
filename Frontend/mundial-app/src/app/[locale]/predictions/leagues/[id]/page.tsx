@@ -2,6 +2,7 @@
 
 import React, { useEffect, useState } from 'react';
 import { useParams, useRouter } from 'next/navigation';
+import { useQueryClient } from '@tanstack/react-query';
 import { useTranslations } from 'next-intl';
 import { Header } from '@/components/Navigation';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -44,6 +45,7 @@ export default function LeagueDetailPage() {
   const leagueId = params.id as string;
   const { user } = useAuth();
   const userId = Number(user?.id ?? 0);
+  const queryClient = useQueryClient();
 
   const [league, setLeague]                   = useState<any>(null);
   const [members, setMembers]                 = useState<any[]>([]);
@@ -53,6 +55,7 @@ export default function LeagueDetailPage() {
   const [actionLoading, setActionLoading]     = useState(false);
   const [selectedNewOwnerId, setSelectedNewOwnerId] = useState('');
   const [codeCopied, setCodeCopied]           = useState(false);
+  const [confirmModal, setConfirmModal]       = useState<{ message: string; onConfirm: () => void } | null>(null);
 
   const handleCopyCode = () => {
     if (!league?.code) return;
@@ -77,20 +80,26 @@ export default function LeagueDetailPage() {
     finally { setLoading(false); }
   };
 
-  const handleLeaveLeague = async () => {
+  const handleLeaveLeague = () => {
     setActionError('');
     if (league?.ownerId === userId) {
       setActionError('No puedes salir siendo propietario. Transfiere o elimina la liga primero.');
       return;
     }
-    if (!confirm(t('league.confirmLeave'))) return;
-    try {
-      setActionLoading(true);
-      await leagueService.leaveLeague(leagueId, userId);
-      router.push('/predictions');
-    } catch (e: any) {
-      setActionError(e?.response?.data?.message || 'No se pudo salir de la liga.');
-    } finally { setActionLoading(false); }
+    setConfirmModal({
+      message: t('league.confirmLeave'),
+      onConfirm: async () => {
+        setConfirmModal(null);
+        try {
+          setActionLoading(true);
+          await leagueService.leaveLeague(leagueId, userId);
+          await queryClient.invalidateQueries({ queryKey: ['leagues', 'user', userId] });
+          router.push('/predictions?tab=ligas');
+        } catch (e: any) {
+          setActionError(e?.response?.data?.message || 'No se pudo salir de la liga.');
+        } finally { setActionLoading(false); }
+      },
+    });
   };
 
   const handleTransferOwnership = async () => {
@@ -106,16 +115,22 @@ export default function LeagueDetailPage() {
     } finally { setActionLoading(false); }
   };
 
-  const handleDeleteLeague = async () => {
+  const handleDeleteLeague = () => {
     setActionError('');
-    if (!confirm(t('league.confirmDelete'))) return;
-    try {
-      setActionLoading(true);
-      await leagueService.deleteLeague(leagueId, userId);
-      router.push('/predictions');
-    } catch (e: any) {
-      setActionError(e?.response?.data?.message || 'No se pudo eliminar.');
-    } finally { setActionLoading(false); }
+    setConfirmModal({
+      message: t('league.confirmDelete'),
+      onConfirm: async () => {
+        setConfirmModal(null);
+        try {
+          setActionLoading(true);
+          await leagueService.deleteLeague(leagueId, userId);
+          await queryClient.invalidateQueries({ queryKey: ['leagues', 'user', userId] });
+          router.push('/predictions?tab=ligas');
+        } catch (e: any) {
+          setActionError(e?.response?.data?.message || 'No se pudo eliminar.');
+        } finally { setActionLoading(false); }
+      },
+    });
   };
 
   /* ── Loading ── */
@@ -294,14 +309,15 @@ export default function LeagueDetailPage() {
             {ranking.length === 0 ? (
               <p className="text-orionix-text-muted text-sm text-center py-6">{t('league.noMembers')}</p>
             ) : (
-              <div className="space-y-1.5">
-                {/* Header row */}
+              <div className="overflow-x-auto -mx-3 sm:mx-0 px-3 sm:px-0">
+                <div className="space-y-1.5 min-w-[440px] sm:min-w-0">
+                {/* Header row — anchos fijos cómodos, scroll horizontal en mobile */}
                 <div className="grid grid-cols-[32px_1fr_56px_64px_52px] gap-2 px-3 pb-1">
-                  <span className="text-[8px] font-black text-orionix-text-muted uppercase tracking-widest">{t('league.position')}</span>
-                  <span className="text-[8px] font-black text-orionix-text-muted uppercase tracking-widest">{t('league.player')}</span>
-                  <span className="text-[8px] font-black text-orionix-text-muted uppercase tracking-widest text-center">{t('league.exactScores')}</span>
-                  <span className="text-[8px] font-black text-orionix-text-muted uppercase tracking-widest text-center">{t('league.winners')}</span>
-                  <span className="text-[8px] font-black text-orionix-text-muted uppercase tracking-widest text-right">{t('league.points')}</span>
+                  <span className="text-[8px] font-black text-orionix-text-muted uppercase tracking-tight sm:tracking-widest">{t('league.position')}</span>
+                  <span className="text-[8px] font-black text-orionix-text-muted uppercase tracking-tight sm:tracking-widest">{t('league.player')}</span>
+                  <span className="text-[8px] font-black text-orionix-text-muted uppercase tracking-tight sm:tracking-widest text-center">{t('league.exactScores')}</span>
+                  <span className="text-[8px] font-black text-orionix-text-muted uppercase tracking-tight sm:tracking-widest text-center">{t('league.winners')}</span>
+                  <span className="text-[8px] font-black text-orionix-text-muted uppercase tracking-tight sm:tracking-widest text-right">{t('league.points')}</span>
                 </div>
 
                 {ranking.map((player: any, idx: number) => {
@@ -327,11 +343,14 @@ export default function LeagueDetailPage() {
                             ? MEDALS[idx]
                             : <span className="text-orionix-text-muted text-xs font-bold">{idx + 1}</span>}
                         </span>
-                        <span className={`text-xs font-bold truncate flex items-center gap-1.5 ${isMe ? 'text-green-300' : 'text-orionix-text-secondary'}`}>
-                          {isMe && <span className="text-green-500 mr-0.5">›</span>}
-                          <span className="truncate">{player.fullName || player.username}</span>
-                          <PremiumBadge isPremium={player.isPremium} />
-                          {isMe && <span className="text-orionix-text-muted">{t('league.you')}</span>}
+                        <span className={`text-xs font-bold flex items-center gap-1 sm:gap-1.5 min-w-0 ${isMe ? 'text-green-300' : 'text-orionix-text-secondary'}`}>
+                          {/* Chevron solo desde sm: — en mobile el background del row ya marca al usuario */}
+                          {isMe && <span className="hidden sm:inline text-green-500 shrink-0">›</span>}
+                          <span className="truncate min-w-0">{player.fullName || player.username}</span>
+                          {/* En mobile solo ícono ⚡, desde sm: con "PRO" */}
+                          <span className="sm:hidden shrink-0"><PremiumBadge isPremium={player.isPremium} iconOnly /></span>
+                          <span className="hidden sm:inline shrink-0"><PremiumBadge isPremium={player.isPremium} /></span>
+                          {isMe && <span className="hidden sm:inline text-orionix-text-muted shrink-0">{t('league.you')}</span>}
                         </span>
                         <span className="text-xs font-black tabular-nums text-center text-orionix-text-secondary">{player.exactScores}</span>
                         <span className="text-xs font-black tabular-nums text-center text-orionix-text-secondary">{player.winnerHits}</span>
@@ -346,6 +365,7 @@ export default function LeagueDetailPage() {
                     </motion.div>
                   );
                 })}
+                </div>
               </div>
             )}
           </div>
@@ -434,10 +454,65 @@ export default function LeagueDetailPage() {
           )}
         </AnimatePresence>
 
+        {/* ── Modal de confirmación ── */}
+        <AnimatePresence>
+          {confirmModal && (
+            <motion.div
+              initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
+              className="fixed inset-0 flex items-center justify-center z-50 px-4"
+              style={{ background: 'rgba(0,0,0,0.78)', backdropFilter: 'blur(10px)' }}
+              onClick={() => setConfirmModal(null)}>
+              <motion.div
+                initial={{ scale: 0.88, opacity: 0, y: 12 }}
+                animate={{ scale: 1, opacity: 1, y: 0 }}
+                exit={{ scale: 0.88, opacity: 0 }}
+                transition={{ ease: [0.22, 1, 0.36, 1] }}
+                onClick={e => e.stopPropagation()}
+                className="relative overflow-hidden rounded-2xl p-6 w-full max-w-sm"
+                style={{
+                  background: 'linear-gradient(160deg, rgba(2,8,24,0.99), rgba(20,4,4,0.98))',
+                  border: '1px solid rgba(239,68,68,0.28)',
+                  boxShadow: '0 36px 88px rgba(0,0,0,0.88)',
+                }}>
+                <div className="absolute inset-x-0 top-0 h-[2px]"
+                  style={{ background: 'linear-gradient(90deg, transparent, rgba(239,68,68,0.65), transparent)' }} />
+                <div className="flex flex-col items-center text-center gap-4">
+                  <motion.div
+                    className="w-14 h-14 rounded-2xl flex items-center justify-center"
+                    style={{ background: 'rgba(239,68,68,0.10)', border: '1px solid rgba(239,68,68,0.28)' }}
+                    animate={{ boxShadow: ['0 0 10px rgba(239,68,68,0.25)', '0 0 24px rgba(239,68,68,0.55)', '0 0 10px rgba(239,68,68,0.25)'] }}
+                    transition={{ duration: 2, repeat: Infinity }}>
+                    <FiAlertCircle size={26} style={{ color: '#ef4444', filter: 'drop-shadow(0 0 6px rgba(239,68,68,0.70))' }} />
+                  </motion.div>
+                  <p className="text-sm leading-relaxed" style={{ color: 'rgba(203,213,225,0.85)' }}>
+                    {confirmModal.message}
+                  </p>
+                </div>
+                <div className="flex gap-3 mt-6">
+                  <motion.button
+                    whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.97 }}
+                    onClick={() => setConfirmModal(null)}
+                    className="flex-1 py-3 rounded-xl text-sm font-black"
+                    style={{ border: `1px solid ${alpha(hex.neutral.white, 0.09)}`, background: alpha(hex.neutral.white, 0.03), color: 'rgba(148,163,184,0.85)' }}>
+                    Cancelar
+                  </motion.button>
+                  <motion.button
+                    whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.97 }}
+                    onClick={confirmModal.onConfirm}
+                    className="flex-1 py-3 rounded-xl text-sm font-black text-white"
+                    style={{ background: 'linear-gradient(135deg, #991b1b, #dc2626)', boxShadow: '0 4px 18px rgba(220,38,38,0.32)' }}>
+                    Confirmar
+                  </motion.button>
+                </div>
+              </motion.div>
+            </motion.div>
+          )}
+        </AnimatePresence>
+
         {/* Bottom buttons */}
         <div className="flex gap-3">
           <motion.button
-            onClick={() => router.back()}
+            onClick={() => router.push('/predictions?tab=ligas')}
             whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.97 }}
             className="flex-1 py-3 rounded-xl text-sm font-black text-orionix-text-secondary flex items-center justify-center gap-2"
             style={{ border: `1px solid ${alpha(hex.neutral.white, 0.07)}`, background: alpha(hex.neutral.white, 0.02) }}

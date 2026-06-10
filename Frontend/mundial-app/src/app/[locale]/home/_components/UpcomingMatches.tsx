@@ -166,48 +166,46 @@ const UpcomingMatches = ({ fixtures, t }: UpcomingMatchesProps) => {
                 <div className="absolute inset-x-0 top-0 h-px opacity-0 group-hover:opacity-100 transition-opacity duration-300"
                   style={{ background: `linear-gradient(90deg, transparent, ${hex.green.bright}99, transparent)` }} />
 
-                <div className="flex items-center gap-2 px-4 py-4">
-                  {/* Home team */}
-                  <div className="flex items-center gap-2.5 flex-1 min-w-0">
+                <div className="flex items-center gap-3 sm:gap-4 px-3 sm:px-5 py-4">
+                  {/* Home team: mobile = bandera horizontal; sm+ = bandera+nombre apilados, fill space */}
+                  <div className="flex items-center justify-end gap-1.5 flex-1 min-w-0 sm:flex-col sm:items-center sm:justify-center sm:gap-1.5">
                     <Flag url={fixture.homeTeam.flagUrl} name={fixture.homeTeam.name} size="sm" />
-                    {/* Nombre equipo: 13px mínimo */}
-                    <span className="text-[13px] font-black tracking-wide truncate uppercase"
+                    <span className="hidden sm:block text-[11px] font-black tracking-wide truncate uppercase text-center w-full"
                       style={{ color: hex.text.primary }}>
                       {fixture.homeTeam.shortName}
                     </span>
                   </div>
 
                   {/* Time center */}
-                  <div className="text-center shrink-0 px-2 min-w-[88px]">
-                    {/* Día: 12px */}
-                    <span className="text-[12px] font-semibold block leading-none mb-1.5" style={{ color: hex.text.muted }}>
+                  <div className="text-center shrink-0 px-1 sm:px-2 min-w-[64px] sm:min-w-[88px]">
+                    <span className="text-[11px] sm:text-[12px] font-semibold block leading-none mb-1.5" style={{ color: hex.text.muted }}>
                       {fmtDay(fixture.kickoffAt, locale)}
                     </span>
-                    <div className="px-2.5 py-1 rounded-lg inline-block"
+                    <div className="px-2 sm:px-2.5 py-1 rounded-lg inline-block"
                       style={{ background: alphaOf('green', 0.12), border: `1px solid ${alphaOf('green', 0.22)}` }}>
-                      {/* Hora: text-sm = 14px */}
-                      <span className="text-sm font-black leading-none tabular-nums"
+                      <span className="text-[13px] sm:text-sm font-black leading-none tabular-nums"
                         style={{ color: hex.green.bright, textShadow: `0 0 14px ${alphaOf('green', 0.55)}` }}>
                         {fmtTime(fixture.kickoffAt, locale)}
                       </span>
                     </div>
                   </div>
 
-                  {/* Away team */}
-                  <div className="flex items-center gap-2.5 flex-1 min-w-0 justify-end">
-                    <span className="text-[13px] font-black tracking-wide truncate uppercase"
+                  {/* Away team: mobile = bandera horizontal; sm+ = bandera+nombre apilados, fill space */}
+                  <div className="flex items-center justify-start gap-1.5 flex-1 min-w-0 sm:flex-col sm:items-center sm:justify-center sm:gap-1.5">
+                    <Flag url={fixture.awayTeam.flagUrl} name={fixture.awayTeam.name} size="sm" />
+                    <span className="hidden sm:block text-[11px] font-black tracking-wide truncate uppercase text-center w-full"
                       style={{ color: hex.text.primary }}>
                       {fixture.awayTeam.shortName}
                     </span>
-                    <Flag url={fixture.awayTeam.flagUrl} name={fixture.awayTeam.name} size="sm" />
                   </div>
 
-                  {/* CTA Button — 12px mínimo */}
-                  <Link href={`/fixtures/${fixture.id}`} className="shrink-0 ml-3">
+                  {/* CTA Button */}
+                  <Link href={`/fixtures/${fixture.id}`} className="shrink-0">
                     <motion.button
                       whileHover={{ scale: 1.08, boxShadow: `0 8px 26px ${alphaOf('success', 0.58)}` }}
                       whileTap={{ scale: 0.93 }}
-                      className="flex items-center gap-1.5 px-4 py-2.5 rounded-xl font-black text-white whitespace-nowrap"
+                      aria-label={t('common.predict')}
+                      className="flex items-center gap-1.5 px-2.5 py-2.5 sm:px-4 sm:py-2.5 rounded-xl font-black text-white whitespace-nowrap"
                       style={{
                         background: `linear-gradient(135deg, ${hex.green.dark}, ${hex.green.base})`,
                         boxShadow: `0 3px 14px ${alphaOf('success', 0.35)}`,
@@ -216,7 +214,7 @@ const UpcomingMatches = ({ fixtures, t }: UpcomingMatchesProps) => {
                       }}
                     >
                       <FiZap size={12} />
-                      {t('common.predict')}
+                      <span className="hidden sm:inline">{t('common.predict')}</span>
                     </motion.button>
                   </Link>
                 </div>

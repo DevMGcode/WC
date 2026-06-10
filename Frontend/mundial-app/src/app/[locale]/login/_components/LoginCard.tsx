@@ -109,28 +109,29 @@ export default function LoginCard({ onShowForgot }: LoginCardProps) {
           <div className="absolute top-0 right-0 w-48 h-48 pointer-events-none" style={{ background: `radial-gradient(circle at 100% 0%, ${alphaOf('green', 0.09)} 0%, transparent 60%)` }} />
           <div className="absolute bottom-0 left-0 w-40 h-40 pointer-events-none" style={{ background: `radial-gradient(circle at 0% 100%, ${alphaOf('green', 0.07)} 0%, transparent 60%)` }} />
 
-          <div className="relative px-9 py-9">
+          <div className="relative px-5 py-7 sm:px-9 sm:py-9">
 
-            {/* Card header */}
-            <div className="flex items-center gap-4 mb-9">
-              <motion.div
-                className="relative w-14 h-14 rounded-2xl overflow-hidden flex items-center justify-center shrink-0"
-                style={{ background: `linear-gradient(135deg, ${alphaOf('green', 0.15)}, ${alpha(hex.green.hover, 0.10)})`, border: `1px solid ${alphaOf('green', 0.35)}`, boxShadow: `0 0 20px ${alphaOf('green', 0.10)}` }}
-                whileHover={{ scale: 1.08, rotate: 5 }} transition={{ type: 'spring', stiffness: 280, damping: 18 }}>
-                <div className="w-9 h-9 relative">
-                  <Image src="/logotipo_Orionix_Gol_transparente.png" alt="logo" fill sizes="36px" style={{ objectFit: 'contain' }} />
-                </div>
-              </motion.div>
-              <div className="flex-1 min-w-0">
-                <h2 className="text-[1.75rem] font-black text-white tracking-tight leading-none mb-1">{t('auth.title')}</h2>
-                <p className="text-xs tracking-wide text-orionix-text-muted">{t('auth.subtitle')}</p>
-              </div>
-              <motion.div className="px-3 py-1.5 rounded-full text-[9px] font-black tracking-widest uppercase shrink-0"
+            {/* Card header — vertical centrado en mobile, horizontal desde sm: */}
+            <div className="flex flex-col sm:flex-row items-center sm:items-center gap-3 sm:gap-4 mb-7 sm:mb-9 text-center sm:text-left relative">
+              {/* BETA en esquina superior derecha en mobile */}
+              <motion.div className="absolute top-0 right-0 sm:static sm:order-3 px-3 py-1.5 rounded-full text-[9px] font-black tracking-widest uppercase shrink-0"
                 style={{ background: alphaOf('green', 0.08), border: `1px solid ${alphaOf('green', 0.28)}`, color: hex.green.soft }}
                 animate={{ boxShadow: [`0 0 8px ${alphaOf('green', 0.08)}`, `0 0 18px ${alphaOf('green', 0.22)}`, `0 0 8px ${alphaOf('green', 0.08)}`] }}
                 transition={{ duration: 2.5, repeat: Infinity, ease: 'easeInOut' }}>
                 BETA
               </motion.div>
+              <motion.div
+                className="relative w-20 h-20 sm:w-14 sm:h-14 rounded-2xl overflow-hidden flex items-center justify-center shrink-0 sm:order-1"
+                style={{ background: `linear-gradient(135deg, ${alphaOf('green', 0.15)}, ${alpha(hex.green.hover, 0.10)})`, border: `1px solid ${alphaOf('green', 0.35)}`, boxShadow: `0 0 20px ${alphaOf('green', 0.10)}` }}
+                whileHover={{ scale: 1.08, rotate: 5 }} transition={{ type: 'spring', stiffness: 280, damping: 18 }}>
+                <div className="w-14 h-14 sm:w-9 sm:h-9 relative">
+                  <Image src="/logotipo_Orionix_Gol_transparente.png" alt="logo" fill sizes="56px" style={{ objectFit: 'contain' }} />
+                </div>
+              </motion.div>
+              <div className="flex-1 min-w-0 sm:order-2">
+                <h2 className="text-3xl sm:text-[1.75rem] font-black text-white tracking-tight leading-tight sm:leading-none mb-1">{t('auth.title')}</h2>
+                <p className="text-xs tracking-wide text-orionix-text-muted">{t('auth.subtitle')}</p>
+              </div>
             </div>
 
             {/* Error */}

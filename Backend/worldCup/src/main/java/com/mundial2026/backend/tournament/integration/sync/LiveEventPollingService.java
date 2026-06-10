@@ -10,7 +10,6 @@ import com.mundial2026.backend.tournament.integration.port.ExternalMatchEvent;
 import com.mundial2026.backend.tournament.integration.port.MatchEventDataPort;
 import com.mundial2026.backend.tournament.repository.FixtureRepository;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
 
@@ -23,8 +22,12 @@ import java.util.List;
  * Dedups in memory with Caffeine (TTL 6h, capped 20k entries) so restarts will
  * re-emit recent events at most once — tolerable for a UI timeline.
  *
- * Set tournament.sync.events-enabled=false when the active season has no events coverage
- * in API-Football (e.g. 2026 at tournament start) to avoid burning daily quota on empty calls.
+ * <p>Self-gating: en lugar de un flag manual de Spring, este servicio consulta
+ * {@link CoverageService#canFetchEvents()}. Cuando API-Football declara
+ * {@code coverage.events=false} para la temporada activa (caso típico
+ * pre-Mundial), el poll devuelve vacío sin tocar la API. Cuando el proveedor
+ * activa el flag (el día del kick-off), el polling arranca solo sin
+ * intervención manual ni redeploy.
  */
 @Service
 @Slf4j
@@ -33,30 +36,29 @@ public class LiveEventPollingService {
     private final FixtureRepository fixtureRepository;
     private final MatchEventDataPort matchEventDataPort;
     private final ApplicationEventPublisher events;
-    private final boolean eventsEnabled;
+    private final CoverageService coverageService;
 
     private final Cache<String, Boolean> seenEvents;
 
     public LiveEventPollingService(FixtureRepository fixtureRepository,
                                    MatchEventDataPort matchEventDataPort,
                                    ApplicationEventPublisher events,
-                                   @Value("${tournament.sync.events-enabled:false}") boolean eventsEnabled) {
+                                   CoverageService coverageService) {
         this.fixtureRepository = fixtureRepository;
         this.matchEventDataPort = matchEventDataPort;
         this.events = events;
-        this.eventsEnabled = eventsEnabled;
+        this.coverageService = coverageService;
         this.seenEvents = Caffeine.newBuilder()
                 .expireAfterWrite(Duration.ofHours(6))
                 .maximumSize(20000)
                 .build();
-        if (!eventsEnabled) {
-            log.warn("Live event polling is DISABLED (tournament.sync.events-enabled=false). " +
-                     "Enable once API-Football provides events coverage for the active season.");
-        }
     }
 
     public PollResult pollAllLive() {
-        if (!eventsEnabled) {
+        // Auto-gate por cobertura declarada por API-Football. Pre-Mundial el
+        // proveedor reporta coverage.events=false → cero llamadas. El día del
+        // kick-off lo flipea a true y este método empieza a llamar solo.
+        if (!coverageService.canFetchEvents()) {
             return new PollResult(0, 0);
         }
         List<Fixture> liveFixtures = fixtureRepository.findByStatusOrderByKickoffAtAsc(FixtureStatus.LIVE);

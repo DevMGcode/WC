@@ -7,11 +7,13 @@ package com.mundial2026.backend.subscription.domain;
  *   EXPIRED   → expires_at pasó (job nocturno o lectura en caliente)
  *   CANCELLED → el usuario canceló manualmente
  *   FAILED    → el pago falló (webhook de failure)
+ *   REFUNDED  → pago reembolsado dentro de la ventana de 24 horas
  */
 public enum SubscriptionStatus {
     PENDING,
     ACTIVE,
     EXPIRED,
     CANCELLED,
-    FAILED
+    FAILED,
+    REFUNDED
 }

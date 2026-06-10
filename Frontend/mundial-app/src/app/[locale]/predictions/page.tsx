@@ -12,6 +12,7 @@ import {
 } from 'react-icons/fi';
 import { Header } from '@/components/Navigation';
 import ShareButton from '@/components/ShareButton';
+import { PremiumBadge } from '@/components/premium/PremiumBadge';
 import {
   useCurrentTournament,
   useTournamentFixtures,
@@ -344,6 +345,7 @@ export default function PredictionsPage() {
       user:        score.fullName || score.username,
       points:      score.totalPoints ?? 0,
       predictions: score.matchesScored ?? 0,
+      isPremium:   score.isPremium === true,
     })),
     [rankingItems]
   );
@@ -415,12 +417,12 @@ export default function PredictionsPage() {
         <div className="absolute inset-x-0 bottom-0 h-px"
           style={{ background: `linear-gradient(90deg, transparent, ${alphaOf('green', 0.30)}, ${alpha(hex.gold.base, 0.18)}, transparent)` }} />
 
-        <div className="max-w-4xl mx-auto px-4 py-3 flex items-center gap-1.5">
+        <div className="max-w-4xl mx-auto px-4 py-3 flex items-center gap-1.5 overflow-x-auto">
           {TRANSLATED_TABS.map(({ key, label, icon, color, glow }) => {
             const isActive = activeTab === key;
             return (
               <motion.button key={key} onClick={() => setActiveTab(key)}
-                className="relative flex items-center gap-2 px-4 py-2.5 rounded-xl overflow-hidden"
+                className="relative flex items-center gap-2 px-3 sm:px-4 py-2 sm:py-2.5 rounded-xl overflow-hidden flex-shrink-0"
                 style={{
                   background: isActive
                     ? `linear-gradient(135deg, ${color}18, ${alpha(hex.bg.elevated, 0.85)})`
@@ -441,15 +443,17 @@ export default function PredictionsPage() {
                   {icon}
                 </span>
                 {/* Label tab: text-sm = 14px */}
-                <span className="text-sm font-black tracking-[0.07em]"
+                <span className="text-[11px] sm:text-sm font-black tracking-[0.07em] whitespace-nowrap"
                   style={{ color: isActive ? color : alpha(hex.neutral.white, 0.50), textShadow: isActive ? `0 0 12px ${glow}` : 'none' }}>
                   {label}
                 </span>
               </motion.button>
             );
           })}
-          <div className="flex-1" />
-          <EQBars color={alphaOf('green', 0.35)} count={7} maxH={14} />
+          <div className="flex-1 min-w-2" />
+          <div className="flex items-center shrink-0">
+            <EQBars color={alphaOf('green', 0.35)} count={7} maxH={14} />
+          </div>
         </div>
       </div>
 
@@ -539,30 +543,30 @@ export default function PredictionsPage() {
                     </div>
                   </div>
 
-                  <div className="flex flex-col sm:flex-row gap-3">
+                  <div className="flex flex-col gap-2">
                     {SCORING_RULES_KEYS.map((rule, i) => (
-                      <div key={i} className="flex-1 relative overflow-hidden rounded-xl p-4"
+                      <div key={i} className="relative overflow-hidden rounded-xl flex items-center gap-3 px-4 py-3"
                         style={{
                           background: `linear-gradient(135deg, ${rule.bg}, ${alpha(hex.bg.primary, 0.65)})`,
                           border: `1px solid ${rule.color}28`,
                         }}>
                         <div className="absolute inset-x-0 top-0 h-px"
                           style={{ background: `linear-gradient(90deg, transparent, ${rule.color}45, transparent)` }} />
-                        <div className="flex items-center justify-between mb-3">
-                          <PremiumIcon icon={rule.icon} color={rule.color} glow={rule.glow} bg={rule.bg} size="sm" delay={i * 0.4} />
-                          <div className="text-right">
-                            <span className="text-4xl font-black tabular-nums leading-none"
-                              style={{ color: rule.color, textShadow: `0 0 20px ${rule.glow}` }}>
-                              {rule.pts}
-                            </span>
-                            {/* "pts": 10px — decorativo mínimo */}
-                            <p className="text-[10px] font-black tracking-[0.16em] uppercase -mt-0.5" style={{ color: hex.text.muted }}>pts</p>
-                          </div>
+                        <div className="w-9 h-9 rounded-xl flex items-center justify-center shrink-0"
+                          style={{ background: rule.bg, border: `1px solid ${rule.color}35`, boxShadow: `0 0 10px ${rule.glow}40` }}>
+                          <span style={{ color: rule.color, fontSize: 16, filter: `drop-shadow(0 0 4px ${rule.color})` }}>{rule.icon}</span>
                         </div>
-                        {/* Título regla: text-sm = 14px */}
-                        <p className="text-sm font-black text-white leading-tight mb-1">{t(rule.titleKey)}</p>
-                        {/* Descripción regla: 12px */}
-                        <p className="text-[12px] leading-relaxed" style={{ color: hex.text.secondary }}>{t(rule.descKey)}</p>
+                        <div className="flex-1 min-w-0">
+                          <p className="text-sm font-black text-white leading-tight">{t(rule.titleKey)}</p>
+                          <p className="text-[11px] mt-0.5 leading-snug" style={{ color: hex.text.secondary }}>{t(rule.descKey)}</p>
+                        </div>
+                        <div className="text-right shrink-0">
+                          <p className="text-2xl font-black tabular-nums leading-none"
+                            style={{ color: rule.color, textShadow: `0 0 16px ${rule.glow}` }}>
+                            {rule.pts}
+                          </p>
+                          <p className="text-[9px] font-black tracking-widest uppercase" style={{ color: hex.text.muted }}>pts</p>
+                        </div>
                       </div>
                     ))}
                   </div>
@@ -639,50 +643,110 @@ export default function PredictionsPage() {
                   </div>
                 </div>
 
-                {/* Top 3 podium */}
+                {/* Top 3 podium — 1° destacado, 2° y 3° en fila */}
                 {globalRanking.length > 0 && (
-                  <div className="grid grid-cols-3 gap-3 mb-2">
-                    {globalRanking.slice(0, 3).map((player, idx) => {
-                      const mc = MEDAL_CFG[idx];
+                  <div className="space-y-2 mb-2">
+                    {/* 1° lugar — card horizontal ancho completo */}
+                    {(() => {
+                      const p = globalRanking[0];
+                      const mc = MEDAL_CFG[0];
                       return (
-                        <motion.div key={player.rank}
-                          initial={{ opacity: 0, y: 20, scale: 0.95 }}
+                        <motion.div
+                          initial={{ opacity: 0, y: 16, scale: 0.97 }}
                           animate={{ opacity: 1, y: 0, scale: 1 }}
-                          transition={{ delay: idx * 0.10, ease: [0.22, 1, 0.36, 1] }}
-                          whileHover={{ y: -4, scale: 1.02, transition: { duration: 0.2 } }}
-                          className="relative overflow-hidden rounded-2xl flex flex-col items-center py-6 px-3"
+                          transition={{ ease: [0.22, 1, 0.36, 1] }}
+                          whileHover={{ y: -3, scale: 1.01, transition: { duration: 0.2 } }}
+                          className="relative overflow-hidden rounded-2xl flex items-center gap-4 py-4 px-4"
                           style={{
-                            background: `linear-gradient(160deg, ${alpha(hex.bg.soft, 0.88)} 0%, ${alpha(mc.bg, 0.60)} 40%, ${alpha(hex.bg.secondary, 0.95)} 100%)`,
+                            background: `linear-gradient(160deg, ${alpha(hex.bg.soft, 0.88)} 0%, ${alpha(mc.bg, 0.65)} 45%, ${alpha(hex.bg.secondary, 0.95)} 100%)`,
                             border: `1px solid ${mc.border}`,
                             backdropFilter: 'blur(24px)',
-                            boxShadow: `0 16px 44px ${alpha(hex.neutral.black, 0.60)}, 0 0 28px ${mc.glow}22`,
+                            boxShadow: `0 16px 44px ${alpha(hex.neutral.black, 0.60)}, 0 0 32px ${mc.glow}28`,
                           }}>
                           <div className="absolute inset-x-0 top-0 h-[2px]"
                             style={{ background: `linear-gradient(90deg, transparent, ${mc.color}70, transparent)` }} />
-                          <motion.div className="w-11 h-11 rounded-full flex items-center justify-center mb-3 text-sm font-black"
-                            style={{ background: mc.bg, border: `2px solid ${mc.color}55`, color: mc.color,
-                              boxShadow: `0 0 18px ${mc.glow}` }}
-                            animate={{ boxShadow: [`0 0 10px ${mc.glow}40`, `0 0 24px ${mc.glow}`, `0 0 10px ${mc.glow}40`] }}
-                            transition={{ duration: 2.5 + idx * 0.4, repeat: Infinity }}>
+                          <motion.div
+                            className="w-12 h-12 rounded-full flex items-center justify-center text-base font-black shrink-0"
+                            style={{ background: mc.bg, border: `2px solid ${mc.color}55`, color: mc.color, boxShadow: `0 0 20px ${mc.glow}` }}
+                            animate={{ boxShadow: [`0 0 10px ${mc.glow}40`, `0 0 26px ${mc.glow}`, `0 0 10px ${mc.glow}40`] }}
+                            transition={{ duration: 2.5, repeat: Infinity }}>
                             {mc.label}
                           </motion.div>
-                          {/* Nombre podio: text-sm = 14px */}
-                          <p className="text-sm font-black text-center truncate w-full leading-tight"
-                            style={{ color: mc.color, textShadow: `0 0 12px ${mc.glow}` }}>{player.user}</p>
-                          <motion.p className="text-3xl font-black tabular-nums mt-1.5"
-                            style={{ color: mc.color, textShadow: `0 0 18px ${mc.glow}` }}
-                            animate={{ textShadow: [`0 0 8px ${mc.glow}50`, `0 0 24px ${mc.glow}`, `0 0 8px ${mc.glow}50`] }}
-                            transition={{ duration: 3, repeat: Infinity }}>
-                            {player.points}
-                          </motion.p>
-                          {/* "pts": 11px */}
-                          <p className="text-[11px] font-bold tracking-[0.18em] uppercase -mt-0.5 mb-3" style={{ color: hex.text.muted }}>pts</p>
-                          <div className="w-full">
-                            <GlowBar value={player.points} max={maxRankPts} color={mc.color} />
+                          <div className="flex-1 min-w-0">
+                            <div className="flex items-center gap-2 min-w-0">
+                              <p className="text-base font-black truncate leading-tight"
+                                style={{ color: mc.color, textShadow: `0 0 12px ${mc.glow}` }}>
+                                {p.user}
+                              </p>
+                              <PremiumBadge isPremium={p.isPremium} iconOnly />
+                            </div>
+                            <div className="mt-2">
+                              <GlowBar value={p.points} max={maxRankPts} color={mc.color} />
+                            </div>
+                          </div>
+                          <div className="text-right shrink-0">
+                            <motion.p className="text-3xl font-black tabular-nums"
+                              style={{ color: mc.color, textShadow: `0 0 18px ${mc.glow}` }}
+                              animate={{ textShadow: [`0 0 8px ${mc.glow}50`, `0 0 24px ${mc.glow}`, `0 0 8px ${mc.glow}50`] }}
+                              transition={{ duration: 3, repeat: Infinity }}>
+                              {p.points}
+                            </motion.p>
+                            <p className="text-[10px] font-bold tracking-widest uppercase" style={{ color: hex.text.muted }}>pts</p>
                           </div>
                         </motion.div>
                       );
-                    })}
+                    })()}
+
+                    {/* 2° y 3° — side by side */}
+                    {globalRanking.length > 1 && (
+                      <div className="grid grid-cols-2 gap-2">
+                        {globalRanking.slice(1, 3).map((p, i) => {
+                          const idx = i + 1;
+                          const mc = MEDAL_CFG[idx];
+                          return (
+                            <motion.div key={p.rank}
+                              initial={{ opacity: 0, y: 16, scale: 0.97 }}
+                              animate={{ opacity: 1, y: 0, scale: 1 }}
+                              transition={{ delay: 0.10 + i * 0.08, ease: [0.22, 1, 0.36, 1] }}
+                              whileHover={{ y: -3, scale: 1.02, transition: { duration: 0.2 } }}
+                              className="relative overflow-hidden rounded-xl flex flex-col items-center py-4 px-3"
+                              style={{
+                                background: `linear-gradient(160deg, ${alpha(hex.bg.soft, 0.88)} 0%, ${alpha(mc.bg, 0.55)} 45%, ${alpha(hex.bg.secondary, 0.95)} 100%)`,
+                                border: `1px solid ${mc.border}`,
+                                backdropFilter: 'blur(24px)',
+                                boxShadow: `0 12px 36px ${alpha(hex.neutral.black, 0.55)}`,
+                              }}>
+                              <div className="absolute inset-x-0 top-0 h-[2px]"
+                                style={{ background: `linear-gradient(90deg, transparent, ${mc.color}55, transparent)` }} />
+                              <motion.div
+                                className="w-9 h-9 rounded-full flex items-center justify-center text-xs font-black mb-2 shrink-0"
+                                style={{ background: mc.bg, border: `2px solid ${mc.color}55`, color: mc.color, boxShadow: `0 0 14px ${mc.glow}` }}
+                                animate={{ boxShadow: [`0 0 8px ${mc.glow}40`, `0 0 18px ${mc.glow}`, `0 0 8px ${mc.glow}40`] }}
+                                transition={{ duration: 2.5 + i * 0.4, repeat: Infinity }}>
+                                {mc.label}
+                              </motion.div>
+                              <div className="flex items-center gap-1 w-full justify-center min-w-0">
+                                <p className="text-xs font-black text-center truncate leading-tight"
+                                  style={{ color: mc.color, textShadow: `0 0 10px ${mc.glow}` }}>
+                                  {p.user}
+                                </p>
+                                <PremiumBadge isPremium={p.isPremium} iconOnly />
+                              </div>
+                              <motion.p className="text-2xl font-black tabular-nums mt-1.5"
+                                style={{ color: mc.color, textShadow: `0 0 14px ${mc.glow}` }}
+                                animate={{ textShadow: [`0 0 6px ${mc.glow}50`, `0 0 18px ${mc.glow}`, `0 0 6px ${mc.glow}50`] }}
+                                transition={{ duration: 3, repeat: Infinity }}>
+                                {p.points}
+                              </motion.p>
+                              <p className="text-[10px] font-bold tracking-widest uppercase -mt-0.5 mb-2" style={{ color: hex.text.muted }}>pts</p>
+                              <div className="w-full">
+                                <GlowBar value={p.points} max={maxRankPts} color={mc.color} />
+                              </div>
+                            </motion.div>
+                          );
+                        })}
+                      </div>
+                    )}
                   </div>
                 )}
 
@@ -715,8 +779,11 @@ export default function PredictionsPage() {
                           </span>
                           <div className="flex-1 min-w-0">
                             {/* Nombre: text-sm = 14px */}
-                            <p className="text-sm font-black truncate"
-                              style={{ color: isMe ? hex.green.bright : alpha(hex.neutral.white, 0.80) }}>{player.user}</p>
+                            <div className="flex items-center gap-1.5">
+                              <p className="text-sm font-black truncate"
+                                style={{ color: isMe ? hex.green.bright : alpha(hex.neutral.white, 0.80) }}>{player.user}</p>
+                              <PremiumBadge isPremium={player.isPremium} iconOnly />
+                            </div>
                             <div className="mt-1.5">
                               <GlowBar value={player.points} max={maxRankPts} color={isMe ? hex.green.bright : '#475569'} />
                             </div>
@@ -776,33 +843,34 @@ export default function PredictionsPage() {
                       style={{ background: `linear-gradient(90deg, transparent, ${alpha(hex.green.hover, 0.55)}, transparent)` }} />
 
                     {/* League header */}
-                    <div className="flex items-center justify-between px-5 pt-5 pb-4">
-                      <div className="flex items-center gap-3">
+                    <div className="flex items-start justify-between gap-2 px-3 sm:px-5 pt-5 pb-4">
+                      <div className="flex items-center gap-3 min-w-0 flex-1">
                         <PremiumIcon icon={<FiShield />} color={hex.green.hover} glow={alpha(hex.green.hover, 0.55)} bg={alpha(hex.green.hover, 0.08)} size="sm" delay={idx * 0.2} />
-                        <div>
+                        <div className="min-w-0 flex-1">
                           {/* Nombre liga: text-base = 16px */}
-                          <p className="text-base font-black text-white leading-none">{league.name}</p>
+                          <p className="text-base font-black text-white leading-tight truncate">{league.name}</p>
                           {/* Info miembros/código: 12px */}
-                          <p className="text-[12px] mt-1 tracking-wide" style={{ color: hex.text.secondary }}>
+                          <p className="text-[12px] mt-1 tracking-wide truncate" style={{ color: hex.text.secondary }}>
                             {league.memberCount}{league.maxMembers ? `/${league.maxMembers}` : ''} {t('predictions.members')} · #{league.code}
                           </p>
                         </div>
                       </div>
-                      {/* Badge posición: 12px */}
-                      <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-full"
+                      {/* Badge posición: solo "#1" en mobile, "Puesto #1" desde sm: */}
+                      <div className="flex items-center gap-1.5 px-2 sm:px-3 py-1 sm:py-1.5 rounded-full shrink-0"
                         style={{ background: alpha(hex.green.hover, 0.10), border: `1px solid ${alpha(hex.green.hover, 0.28)}` }}>
-                        <span className="text-[12px] font-black" style={{ color: hex.green.bright }}>{t('predictions.position')} #{league.myRank || '—'}</span>
+                        <span className="hidden sm:inline text-[12px] font-black" style={{ color: hex.green.bright }}>{t('predictions.position')}</span>
+                        <span className="text-[12px] font-black whitespace-nowrap" style={{ color: hex.green.bright }}>#{league.myRank || '—'}</span>
                       </div>
                     </div>
 
                     {/* Stats row */}
-                    <div className="grid grid-cols-3 gap-2 px-5 pb-4">
+                    <div className="grid grid-cols-3 gap-1.5 sm:gap-2 px-3 sm:px-5 pb-4">
                       {[
                         { label: t('predictions.myPts'),      value: league.myPoints,                              color: hex.green.bright, icon: <FiActivity size={12} /> },
                         { label: t('predictions.leader'),     value: league.leader.name,                           color: hex.gold.base,    icon: <FiStar size={12} />, isText: true },
                         { label: t('predictions.difference'), value: `-${league.leader.points - league.myPoints}`, color: '#f87171',        icon: <FiTrendingUp size={12} />, isText: true },
                       ].map((item, i) => (
-                        <div key={i} className="relative overflow-hidden rounded-xl p-3 text-center"
+                        <div key={i} className="relative overflow-hidden rounded-xl p-2 sm:p-3 text-center"
                           style={{
                             background: alpha(hex.bg.primary, 0.65),
                             border: `1px solid ${item.color}20`,
@@ -811,20 +879,20 @@ export default function PredictionsPage() {
                             style={{ color: item.color + '80' }}>
                             {item.icon}
                           </div>
-                          {/* Valor stat: 20px si número, text-sm si texto */}
+                          {/* Valor stat: 18px en mobile / 20px desde sm: */}
                           <p className="font-black leading-none truncate"
                             style={{
                               color: item.color,
-                              fontSize: (item as any).isText ? '13px' : '20px',
+                              fontSize: (item as any).isText ? '12px' : '18px',
                               textShadow: `0 0 10px ${item.color}50`,
                             }}>
                             {item.value}
                           </p>
                           {!(item as any).isText && (
-                            <p className="text-[11px] font-bold -mt-0.5" style={{ color: hex.text.muted }}>pts</p>
+                            <p className="text-[10px] sm:text-[11px] font-bold -mt-0.5" style={{ color: hex.text.muted }}>pts</p>
                           )}
-                          {/* Label stat: 12px */}
-                          <p className="text-[12px] font-bold tracking-[0.14em] uppercase mt-1.5" style={{ color: hex.text.muted }}>{item.label}</p>
+                          {/* Label stat: 10px mobile sin tracking, 12px desde sm con tracking */}
+                          <p className="text-[9px] sm:text-[12px] font-bold tracking-tight sm:tracking-[0.14em] uppercase mt-1.5 leading-tight" style={{ color: hex.text.muted }}>{item.label}</p>
                         </div>
                       ))}
                     </div>
@@ -878,7 +946,7 @@ export default function PredictionsPage() {
                   </div>
                   {/* Descripción: text-sm = 14px */}
                   <p className="text-sm mb-5" style={{ color: hex.text.secondary }}>{t('predictions.competeFriends')}</p>
-                  <div className="grid grid-cols-2 gap-3">
+                  <div className="grid grid-cols-2 gap-2">
                     <motion.button
                       whileHover={{ scale: 1.02, boxShadow: `0 6px 22px ${isPremium ? alphaOf('green', 0.25) : alpha(hex.gold.base, 0.25)}` }}
                       whileTap={{ scale: 0.97 }}
@@ -886,31 +954,31 @@ export default function PredictionsPage() {
                         setShowLeagueModal(false);
                         router.push(isPremium ? '/predictions/create-league' : '/premium');
                       }}
-                      className="flex items-center justify-center gap-2 py-3 rounded-xl font-black tracking-[0.08em] uppercase"
+                      className="flex items-center justify-center gap-1.5 py-2.5 rounded-xl font-black tracking-[0.06em] uppercase"
                       style={{
                         background: isPremium
                           ? `linear-gradient(135deg, ${alphaOf('green', 0.18)}, ${alpha(hex.bg.elevated, 0.90)})`
                           : `linear-gradient(135deg, ${alpha(hex.gold.base, 0.14)}, ${alpha(hex.bg.elevated, 0.90)})`,
                         border: `1px solid ${isPremium ? alphaOf('green', 0.32) : alpha(hex.gold.base, 0.42)}`,
                         color: isPremium ? hex.green.bright : hex.gold.base,
-                        fontSize: '14px',
+                        fontSize: '12px',
                       }}>
-                      {isPremium ? <FiPlus size={15} /> : <FiZap size={15} />}
+                      {isPremium ? <FiPlus size={13} /> : <FiZap size={13} />}
                       {t('predictions.createLeague')}
-                      {!isPremium && <span className="text-[9px] ml-1 px-1.5 py-0.5 rounded-full" style={{ background: hex.gold.base, color: hex.neutral.black }}>PRO</span>}
+                      {!isPremium && <span className="text-[8px] ml-0.5 px-1 py-0.5 rounded-full" style={{ background: hex.gold.base, color: hex.neutral.black }}>PRO</span>}
                     </motion.button>
                     <motion.button
                       whileHover={{ scale: 1.02, boxShadow: `0 6px 22px ${alpha(hex.green.hover, 0.22)}` }}
                       whileTap={{ scale: 0.97 }}
                       onClick={() => { setShowLeagueModal(false); router.push('/predictions/join-league'); }}
-                      className="flex items-center justify-center gap-2 py-3 rounded-xl font-black tracking-[0.08em] uppercase"
+                      className="flex items-center justify-center gap-1.5 py-2.5 rounded-xl font-black tracking-[0.06em] uppercase"
                       style={{
                         background: `linear-gradient(135deg, ${alpha(hex.green.hover, 0.14)}, ${alpha(hex.bg.elevated, 0.90)})`,
                         border: `1px solid ${alpha(hex.green.hover, 0.30)}`,
                         color: hex.green.hover,
-                        fontSize: '14px',
+                        fontSize: '12px',
                       }}>
-                      <FiLogIn size={15} /> {t('predictions.join')}
+                      <FiLogIn size={13} /> {t('predictions.join')}
                     </motion.button>
                   </div>
                 </motion.div>

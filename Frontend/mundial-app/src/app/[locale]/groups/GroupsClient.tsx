@@ -15,7 +15,7 @@
 import React, { useState, useMemo, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useParams } from 'next/navigation';
-import { FiAward, FiBarChart2, FiShield } from 'react-icons/fi';
+import { FiAward, FiBarChart2, FiShield, FiUsers } from 'react-icons/fi';
 import Image from 'next/image';
 import { Header } from '@/components/Navigation';
 import { Bracket } from '@/components/BracketChampions';  // 🛡️ PROTECTED
@@ -32,6 +32,8 @@ import GroupCard, { EQBars } from './_components/GroupCard';
 import { localizeTeamName } from '@/lib/i18n/teamNames';
 import KnockoutCard, { ChampionBanner, ROUND_META, ROUND_I18N, ROUND_GRID } from './_components/KnockoutCard';
 import BracketBg from './_components/BracketBg';
+import TeamsTab from './_components/TeamsTab';
+import { usePremium } from '@/hooks/usePremium';
 import type { Group, Match, BracketData, KnockoutRound, Team } from './_components/types';
 
 /* ══════════════════════════════════════════
@@ -103,15 +105,18 @@ export default function GroupsClient({ initialTournament, initialGroups, initial
 }) {
   const t      = useTranslations();
   const locale = useLocale();
-  const [activeTab,    setActiveTab]    = useState<'grupos' | 'eliminatorias'>('grupos');
+  const [activeTab,    setActiveTab]    = useState<'grupos' | 'eliminatorias' | 'equipos'>('grupos');
+  const { isPremium } = usePremium();
   const [activeRound,  setActiveRound]  = useState<KnockoutRound>('octavos');
   const [bestDefense,  setBestDefense]  = useState<any[]>([]);
 
   useEffect(() => {
+    let active = true;
     apiFetch('/api/v1/public/standings/best-defense')
       .then(r => r.ok ? r.json() : null)
-      .then(d => { if (d?.data) setBestDefense(d.data); })
+      .then(d => { if (active && d?.data) setBestDefense(d.data); })
       .catch(() => {});
+    return () => { active = false; };
   }, []);
 
   const { data: tournament }                                       = useCurrentTournament(initialTournament);
@@ -123,8 +128,6 @@ export default function GroupsClient({ initialTournament, initialGroups, initial
   const groups: Group[] = useMemo(() =>
     rawGroups.length > 0
       ? rawGroups.map((g: any) => ({
-          // Reconstruimos el nombre usando i18n + el code (A,B,C…) en lugar del
-          // `name` que viene del backend ya en español ("Grupo A").
           id: g.id, name: `${t('groups.groupLabel')} ${g.code ?? g.name?.replace(/^grupo\s+/i, '') ?? ''}`.trim(),
           standings: (g.standings ?? []).map((s: any) => ({
             position: s.position,
@@ -135,7 +138,8 @@ export default function GroupsClient({ initialTournament, initialGroups, initial
           })),
         }))
       : MOCK_GROUPS,
-    [rawGroups, locale, t]
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [rawGroups]
   );
 
   const bracketsData: BracketData = useMemo(() => {
@@ -151,17 +155,15 @@ export default function GroupsClient({ initialTournament, initialGroups, initial
   return (
     <div className="w-full relative">
 
-      {/* Ambient orbs */}
-      <motion.div className="fixed rounded-full pointer-events-none"
+      {/* Ambient orbs — CSS puro (sin JS Framer Motion loop) */}
+      <div className="animate-orb fixed rounded-full pointer-events-none"
         style={{ width: 650, height: 650, top: -200, left: -130,
           background: gradients.cornerGlow('success', 0.07).replace('circle,', 'circle at center,'),
-          filter: 'blur(75px)', zIndex: 0 }}
-        animate={{ scale: [1, 1.18, 1], opacity: [0.5, 0.85, 0.5] }} transition={{ duration: 12, repeat: Infinity }} />
-      <motion.div className="fixed rounded-full pointer-events-none"
+          filter: 'blur(75px)', zIndex: 0 }} />
+      <div className="animate-orb-slow fixed rounded-full pointer-events-none"
         style={{ width: 500, height: 500, bottom: -80, right: -80,
           background: gradients.cornerGlow('green', 0.06).replace('circle,', 'circle at center,'),
-          filter: 'blur(65px)', zIndex: 0 }}
-        animate={{ scale: [1, 1.22, 1], opacity: [0.4, 0.75, 0.4] }} transition={{ duration: 14, repeat: Infinity, delay: 4 }} />
+          filter: 'blur(65px)', zIndex: 0 }} />
 
       {/* Tech grid */}
       <svg className="fixed inset-0 w-full h-full pointer-events-none opacity-[0.022]" style={{ zIndex: 0 }} xmlns="http://www.w3.org/2000/svg">
@@ -190,16 +192,17 @@ export default function GroupsClient({ initialTournament, initialGroups, initial
                  boxShadow: `0 4px 32px ${alpha(hex.neutral.black, 0.55)}` }}>
         <div className="absolute inset-x-0 bottom-0 h-px"
           style={{ background: `linear-gradient(90deg, transparent, ${alphaOf('green', 0.25)}, ${alphaOf('gold', 0.15)}, transparent)` }} />
-        <div className="max-w-7xl mx-auto px-4 py-2 flex items-center gap-2">
+        <div className="max-w-7xl mx-auto px-4 py-2 flex items-center gap-2 overflow-x-auto">
           {([
             { key: 'grupos'        as const, label: t('groups.title'),    icon: <FiBarChart2 size={13} />, brand: 'green' as BrandColor, colorHex: hex.green.bright },
             { key: 'eliminatorias' as const, label: t('groups.knockout'), icon: <FiAward size={13} />,    brand: 'gold'  as BrandColor, colorHex: hex.gold.muted   },
+            { key: 'equipos'       as const, label: 'Equipos',            icon: <FiUsers size={13} />,    brand: 'green' as BrandColor, colorHex: hex.green.muted  },
           ]).map(({ key, label, icon, brand, colorHex }) => {
             const isActive = activeTab === key;
             const glow = alphaOf(brand, 0.55);
             return (
               <motion.button key={key} onClick={() => setActiveTab(key)}
-                className="relative flex items-center gap-2 px-4 py-2 rounded-xl overflow-hidden"
+                className="relative flex items-center gap-2 px-4 py-2 rounded-xl overflow-hidden flex-shrink-0"
                 style={{ background: isActive ? `linear-gradient(135deg, ${alphaOf(brand, 0.085)}, ${alpha(hex.bg.primary, 0.85)})` : 'transparent',
                   border: `1px solid ${isActive ? alphaOf(brand, 0.19) : 'transparent'}`,
                   outline: 'none', cursor: 'pointer' }}
@@ -209,15 +212,17 @@ export default function GroupsClient({ initialTournament, initialGroups, initial
                     style={{ background: gradients.divider(brand, 0.65) }} />
                 )}
                 <span style={{ color: isActive ? colorHex : alpha(hex.text.muted, 0.60), filter: isActive ? `drop-shadow(0 0 5px ${glow})` : 'none', display: 'flex' }}>{icon}</span>
-                <span className="text-[11px] font-black tracking-[0.10em]"
+                <span className="text-[11px] font-black tracking-[0.10em] whitespace-nowrap"
                   style={{ color: isActive ? colorHex : alpha(hex.text.muted, 0.60), textShadow: isActive ? `0 0 10px ${glow}` : 'none' }}>
                   {label}
                 </span>
               </motion.button>
             );
           })}
-          <div className="flex-1" />
-          <EQBars color={alphaOf('green', 0.30)} count={7} maxH={14} />
+          <div className="flex-1 min-w-2" />
+          <div className="flex items-center shrink-0">
+            <EQBars color={alphaOf('green', 0.30)} count={7} maxH={14} />
+          </div>
         </div>
       </div>
 
@@ -438,6 +443,18 @@ export default function GroupsClient({ initialTournament, initialGroups, initial
                 </div>
 
                 {champion && <ChampionBanner winner={champion} t={t} />}
+              </motion.div>
+            )}
+
+            {/* ═══════ EQUIPOS ═══════ */}
+            {activeTab === 'equipos' && (
+              <motion.div key="equipos"
+                initial={{ opacity: 0, y: 14 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -8 }}
+                transition={{ duration: 0.32 }}>
+                <TeamsTab
+                  groups={groups}
+                  isPremium={isPremium}
+                  locale={locale} />
               </motion.div>
             )}
 
