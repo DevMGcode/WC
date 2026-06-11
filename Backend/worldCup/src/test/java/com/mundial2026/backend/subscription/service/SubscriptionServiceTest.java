@@ -14,12 +14,14 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.math.BigDecimal;
+import java.time.OffsetDateTime;
 import java.util.Optional;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -146,6 +148,117 @@ class SubscriptionServiceTest {
 
         // Ya estaba activa: no se toca ni se valida monto, no se persiste de nuevo
         assertThat(result.getStatus()).isEqualTo(SubscriptionStatus.ACTIVE);
+        verify(subscriptionRepository, never()).save(any(Subscription.class));
+    }
+
+    // ─── Reembolso (requestRefund) ───────────────────────────────────────────
+
+    private Subscription activeSub(OffsetDateTime startedAt, String paymentId) {
+        AppUser user = new AppUser();
+        user.setId(7L);
+        Subscription sub = new Subscription();
+        sub.setUser(user);
+        sub.setStatus(SubscriptionStatus.ACTIVE);
+        sub.setStartedAt(startedAt);
+        sub.setPaymentId(paymentId);
+        return sub;
+    }
+
+    @Test
+    void requestRefund_within24h_refundsAndMarksRefunded() {
+        Subscription sub = activeSub(OffsetDateTime.now().minusHours(2), "123456");
+        when(subscriptionRepository.findFirstByUserIdAndStatus(7L, SubscriptionStatus.REFUNDED))
+                .thenReturn(Optional.empty());
+        when(subscriptionRepository.findActiveByUserId(eq(7L), any())).thenReturn(Optional.of(sub));
+        when(subscriptionRepository.save(any(Subscription.class))).thenAnswer(inv -> inv.getArgument(0));
+
+        subscriptionService.requestRefund(7L);
+
+        verify(mercadoPagoGateway).refund("123456");
+        assertThat(sub.getStatus()).isEqualTo(SubscriptionStatus.REFUNDED);
+        assertThat(sub.getRefundedAt()).isNotNull();
+    }
+
+    @Test
+    void requestRefund_windowExpired_rejectsWithoutCallingGateway() {
+        Subscription sub = activeSub(OffsetDateTime.now().minusHours(30), "123456");
+        when(subscriptionRepository.findFirstByUserIdAndStatus(7L, SubscriptionStatus.REFUNDED))
+                .thenReturn(Optional.empty());
+        when(subscriptionRepository.findActiveByUserId(eq(7L), any())).thenReturn(Optional.of(sub));
+
+        assertThatThrownBy(() -> subscriptionService.requestRefund(7L))
+                .isInstanceOf(BusinessRuleException.class)
+                .hasMessageContaining("24 horas");
+
+        verify(mercadoPagoGateway, never()).refund(any());
+        assertThat(sub.getStatus()).isEqualTo(SubscriptionStatus.ACTIVE);
+    }
+
+    @Test
+    void requestRefund_justOver24h_rejects() {
+        // La ventana es de 24h exactas: a las 24h30m ya no aplica
+        // (antes toHours() > 24 aceptaba hasta 24h59m)
+        Subscription sub = activeSub(OffsetDateTime.now().minusHours(24).minusMinutes(30), "123456");
+        when(subscriptionRepository.findFirstByUserIdAndStatus(7L, SubscriptionStatus.REFUNDED))
+                .thenReturn(Optional.empty());
+        when(subscriptionRepository.findActiveByUserId(eq(7L), any())).thenReturn(Optional.of(sub));
+
+        assertThatThrownBy(() -> subscriptionService.requestRefund(7L))
+                .isInstanceOf(BusinessRuleException.class);
+
+        verify(mercadoPagoGateway, never()).refund(any());
+    }
+
+    @Test
+    void requestRefund_alreadyRefundedOnce_rejects() {
+        when(subscriptionRepository.findFirstByUserIdAndStatus(7L, SubscriptionStatus.REFUNDED))
+                .thenReturn(Optional.of(new Subscription()));
+
+        assertThatThrownBy(() -> subscriptionService.requestRefund(7L))
+                .isInstanceOf(BusinessRuleException.class)
+                .hasMessageContaining("un reembolso por cuenta");
+
+        verify(mercadoPagoGateway, never()).refund(any());
+    }
+
+    @Test
+    void requestRefund_noActiveSubscription_rejects() {
+        when(subscriptionRepository.findFirstByUserIdAndStatus(7L, SubscriptionStatus.REFUNDED))
+                .thenReturn(Optional.empty());
+        when(subscriptionRepository.findActiveByUserId(eq(7L), any())).thenReturn(Optional.empty());
+
+        assertThatThrownBy(() -> subscriptionService.requestRefund(7L))
+                .isInstanceOf(BusinessRuleException.class);
+
+        verify(mercadoPagoGateway, never()).refund(any());
+    }
+
+    @Test
+    void requestRefund_missingPaymentId_rejects() {
+        Subscription sub = activeSub(OffsetDateTime.now().minusHours(1), null);
+        when(subscriptionRepository.findFirstByUserIdAndStatus(7L, SubscriptionStatus.REFUNDED))
+                .thenReturn(Optional.empty());
+        when(subscriptionRepository.findActiveByUserId(eq(7L), any())).thenReturn(Optional.of(sub));
+
+        assertThatThrownBy(() -> subscriptionService.requestRefund(7L))
+                .isInstanceOf(BusinessRuleException.class);
+
+        verify(mercadoPagoGateway, never()).refund(any());
+    }
+
+    @Test
+    void requestRefund_gatewayFails_subscriptionStaysActive() {
+        Subscription sub = activeSub(OffsetDateTime.now().minusHours(1), "123456");
+        when(subscriptionRepository.findFirstByUserIdAndStatus(7L, SubscriptionStatus.REFUNDED))
+                .thenReturn(Optional.empty());
+        when(subscriptionRepository.findActiveByUserId(eq(7L), any())).thenReturn(Optional.of(sub));
+        doThrow(new IllegalStateException("MP caído")).when(mercadoPagoGateway).refund("123456");
+
+        assertThatThrownBy(() -> subscriptionService.requestRefund(7L))
+                .isInstanceOf(BusinessRuleException.class);
+
+        // Si MP falla, la suscripción NO debe quedar marcada REFUNDED
+        assertThat(sub.getStatus()).isEqualTo(SubscriptionStatus.ACTIVE);
         verify(subscriptionRepository, never()).save(any(Subscription.class));
     }
 }

@@ -278,26 +278,22 @@ public class SubscriptionService {
             throw new BusinessRuleException("Solo se permite un reembolso por cuenta.");
         }
 
+        // El caso "ya reembolsada" no puede llegar aquí: la verificación anterior
+        // ya lanza si existe cualquier suscripción REFUNDED del usuario.
         Subscription sub = subscriptionRepository
                 .findActiveByUserId(userId, OffsetDateTime.now())
-                .orElseThrow(() -> {
-                    boolean yaReembolsada = subscriptionRepository
-                            .findFirstByUserIdAndStatus(userId, SubscriptionStatus.REFUNDED)
-                            .isPresent();
-                    return new BusinessRuleException(yaReembolsada
-                            ? "Esta suscripción ya fue reembolsada."
-                            : "No tienes una suscripción Premium activa para reembolsar.");
-                });
+                .orElseThrow(() -> new BusinessRuleException(
+                        "No tienes una suscripción Premium activa para reembolsar."));
 
         if (sub.getStartedAt() == null) {
             throw new BusinessRuleException("La suscripción no tiene fecha de activación registrada.");
         }
 
-        long horasDesdeActivacion = Duration.between(sub.getStartedAt(), OffsetDateTime.now()).toHours();
-        if (horasDesdeActivacion > 24) {
+        Duration desdeActivacion = Duration.between(sub.getStartedAt(), OffsetDateTime.now());
+        if (desdeActivacion.compareTo(Duration.ofHours(24)) > 0) {
             throw new BusinessRuleException(
                     "El período de reembolso de 24 horas ya expiró. La suscripción fue activada hace "
-                    + horasDesdeActivacion + " horas.");
+                    + desdeActivacion.toHours() + " horas.");
         }
 
         if (sub.getPaymentId() == null || sub.getPaymentId().isBlank()) {

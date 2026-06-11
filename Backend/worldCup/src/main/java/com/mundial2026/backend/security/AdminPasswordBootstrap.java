@@ -18,8 +18,9 @@ import org.springframework.transaction.annotation.Transactional;
  * abierta. No podemos modificar V1__init.sql (rompería el checksum de Flyway en
  * entornos ya migrados), así que lo gestionamos al arrancar:
  *
- *   - Si se define ADMIN_INITIAL_PASSWORD → reseteamos el password del admin a
- *     ese valor (solo mientras siga teniendo el hash por defecto).
+ *   - Si se define ADMIN_INITIAL_PASSWORD → en CADA arranque se garantiza que el
+ *     password del admin sea exactamente ese valor (la variable es la fuente de
+ *     verdad: si alguien lo cambió por otro medio, se restaura).
  *   - Si NO se define y el admin sigue con el hash por defecto:
  *       · app.security.fail-on-default-admin=true  → la app NO arranca.
  *       · false (default dev)                      → solo advertencia en log.
@@ -53,16 +54,20 @@ public class AdminPasswordBootstrap implements CommandLineRunner {
             return; // No hay admin sembrado (p.ej. prod con BD limpia) — nada que hacer.
         }
 
+        // Con ADMIN_INITIAL_PASSWORD definida, la variable manda: en cada arranque
+        // se asegura que el password del admin sea ese valor exacto.
+        if (adminInitialPassword != null && !adminInitialPassword.isBlank()) {
+            if (!passwordEncoder.matches(adminInitialPassword, admin.getPasswordHash())) {
+                admin.setPasswordHash(passwordEncoder.encode(adminInitialPassword));
+                appUserRepository.save(admin);
+                log.info("[AdminBootstrap] Password del admin impuesto desde ADMIN_INITIAL_PASSWORD.");
+            }
+            return;
+        }
+
         boolean hasDefaultHash = DEFAULT_ADMIN_HASH.equals(admin.getPasswordHash());
         if (!hasDefaultHash) {
             return; // El password ya fue cambiado — todo en orden.
-        }
-
-        if (adminInitialPassword != null && !adminInitialPassword.isBlank()) {
-            admin.setPasswordHash(passwordEncoder.encode(adminInitialPassword));
-            appUserRepository.save(admin);
-            log.info("[AdminBootstrap] Password del admin reseteado desde ADMIN_INITIAL_PASSWORD.");
-            return;
         }
 
         String msg = "El usuario admin (" + ADMIN_EMAIL + ") aún usa la contraseña por defecto "

@@ -1,6 +1,7 @@
 package com.mundial2026.backend.subscription.api;
 
 import com.fasterxml.jackson.databind.JsonNode;
+import com.mundial2026.backend.common.exception.BusinessRuleException;
 import com.mundial2026.backend.subscription.service.MercadoPagoGateway;
 import com.mundial2026.backend.subscription.service.SubscriptionService;
 import lombok.RequiredArgsConstructor;
@@ -86,9 +87,14 @@ public class MercadoPagoWebhookController {
         }
         paymentId = paymentId.strip();
 
-        // 4-6. Consultar estado y conciliar suscripción — todo en un solo bloque para
-        // garantizar que cualquier excepción inesperada (red, parseo, BD) nunca produzca
-        // un 500: MP reintenta hasta 5 veces ante errores, lo que duplicaría activaciones.
+        // 4-6. Consultar estado y conciliar suscripción.
+        // Estrategia de errores:
+        //   - PERMANENTES (IDs no numéricos, suscripción inexistente, monto que no
+        //     concilia) → 200: reintentar no los arregla, MP debe dejar de insistir.
+        //   - TRANSITORIOS (BD caída, red hacia MP) → 500: MP reintenta hasta 5 veces.
+        //     El reintento es seguro porque activateById es idempotente (ignora la
+        //     notificación si la suscripción ya está ACTIVE), y sin él un usuario que
+        //     pagó durante un fallo temporal quedaría en PENDING para siempre.
         try {
             MercadoPagoGateway.PaymentStatus status = mercadoPagoGateway.fetchPaymentStatus(paymentId);
 
@@ -113,11 +119,17 @@ public class MercadoPagoWebhookController {
             }
         } catch (NumberFormatException nfe) {
             log.warn("Webhook MP — ID inválido (paymentId={} o externalRef no numérico)", paymentId);
+        } catch (BusinessRuleException | IllegalArgumentException e) {
+            // Rechazo de negocio (monto no concilia, suscripción no encontrada):
+            // permanente, un reintento de MP produciría exactamente el mismo resultado.
+            log.warn("Webhook MP — rechazo permanente paymentId={}: {}", paymentId, e.getMessage());
         } catch (Exception e) {
-            log.error("Webhook MP — error procesando paymentId={}: {}", paymentId, e.getMessage(), e);
+            log.error("Webhook MP — error transitorio paymentId={}, devolviendo 500 para que MP reintente: {}",
+                    paymentId, e.getMessage(), e);
+            return ResponseEntity.status(500).build();
         }
 
-        // 7. Siempre devolver 200 a MP para que no reintente
+        // 7. 200 → MP no reintenta (procesado correctamente o rechazo permanente)
         return ResponseEntity.ok().build();
     }
 
