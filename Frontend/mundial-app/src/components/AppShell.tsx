@@ -14,14 +14,6 @@ const PREMIUM_BG = [
   'radial-gradient(ellipse at 50% 48%, #07130B 0%, #050D07 46%, #020705 100%)',
 ].join(', ');
 
-const PREMIUM_BG = [
-  'radial-gradient(circle, rgba(76,175,80,0.042) 1px, transparent 1px)',
-  'radial-gradient(ellipse 90% 80% at 50% 0%, rgba(46,125,50,0.18) 0%, rgba(46,125,50,0.06) 50%, transparent 95%)',
-  'radial-gradient(ellipse 60% 70% at 5% 100%, rgba(27,94,32,0.13) 0%, transparent 70%)',
-  'radial-gradient(ellipse 55% 65% at 95% 15%, rgba(46,125,50,0.10) 0%, transparent 65%)',
-  'radial-gradient(ellipse at 50% 48%, #07130B 0%, #050D07 46%, #020705 100%)',
-].join(', ');
-
 export function AppShell({ children }: { children: ReactNode }) {
   const pathname = usePathname();
   const { collapsed } = useSidebar();
