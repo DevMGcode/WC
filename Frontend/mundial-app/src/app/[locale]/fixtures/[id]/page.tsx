@@ -216,11 +216,28 @@ export default function FixtureDetailPage({ params }: { params: { id: string } }
 
   // Lógica de negocio — quién puede hacer porras
   // Free: solo fase de grupos del equipo principal (⭐). Premium: todos los partidos.
-  const isGroupStage     = !!fixture?.groupCode;
-  const primaryFav       = isPremium ? null : (favTeams.find(f => f.isPrimary) ?? null);
+  //
+  // isGroupStage usa tres señales para ser robusto ante backends que devuelven
+  // groupCode=null en partidos de grupo (ej. antes de que se asignen grupos):
+  //   1. groupCode truthy  →  señal directa
+  //   2. groupStageId truthy  →  FK hacia la tabla de grupos
+  //   3. stageName contiene "group" (case-insensitive)  →  fallback textual
+  const isGroupStage =
+    !!fixture?.groupCode ||
+    !!(fixture as any)?.groupStageId ||
+    (typeof fixture?.stageName === 'string' && /group/i.test(fixture.stageName));
+
+  const primaryFav = isPremium ? null : (favTeams.find(f => f.isPrimary) ?? null);
+
+  // Comparamos primero por ID (fuente de verdad). Fallback por fifaCode por si
+  // el endpoint de favoritos y el de fixtures usan IDs distintos.
   const isPrimaryInMatch = !!primaryFav && (
     primaryFav.teamId === fixture?.homeTeamId ||
-    primaryFav.teamId === fixture?.awayTeamId
+    primaryFav.teamId === fixture?.awayTeamId ||
+    !!(primaryFav.fifaCode && (
+      primaryFav.fifaCode === fixture?.homeTeam?.fifaCode ||
+      primaryFav.fifaCode === fixture?.awayTeam?.fifaCode
+    ))
   );
   // Mientras favTeams carga (!favsLoaded) mostramos el formulario optimistamente
   const canPredict = isPremium || !favsLoaded || !!prediction || (isGroupStage && isPrimaryInMatch);
