@@ -61,15 +61,16 @@ class LineupServiceTest {
     }
 
     @Test
-    void findByFixture_returnsEmptyWhenTooLate() {
+    void findByFixture_callsPortAfterMatch() {
         OffsetDateTime kickoffOneWeekAgo = OffsetDateTime.now(ZoneOffset.UTC).minusDays(7);
         when(fixtureRepository.findByExternalProviderId(868053L))
                 .thenReturn(Optional.of(fixtureWithKickoff(kickoffOneWeekAgo)));
+        when(port.fetchLineupsByFixture(868053L)).thenReturn(List.of(lineup()));
 
         List<LineupResponse> result = subject.findByFixture(868053L);
 
-        assertThat(result).isEmpty();
-        verify(port, never()).fetchLineupsByFixture(any());
+        assertThat(result).hasSize(1);
+        verify(port).fetchLineupsByFixture(868053L);
     }
 
     @Test
