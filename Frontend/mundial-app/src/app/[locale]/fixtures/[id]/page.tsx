@@ -7,10 +7,12 @@ import Image from 'next/image';
 import Link from 'next/link';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useRouter } from 'next/navigation';
-import { useTranslations } from 'next-intl';
+import { useTranslations, useLocale } from 'next-intl';
 import { getFixtureById } from '@/services/publicTournament';
 import { predictionService } from '@/services/predictions';
 import { useAuth } from '@/contexts/AuthContext';
+import { usePremium } from '@/hooks/usePremium';
+import { favoriteTeamsService, type FavoriteTeam } from '@/services/favoriteTeams';
 import {
   FiTarget, FiZap, FiCheck, FiX, FiEdit2, FiArrowLeft,
   FiMapPin, FiAlertCircle, FiList, FiBarChart2, FiUsers, FiRepeat,
@@ -69,6 +71,8 @@ export default function FixtureDetailPage({ params }: { params: { id: string } }
   const router = useRouter();
   const t      = useTranslations();
   const { user, isAuthenticated } = useAuth();
+  const { isPremium } = usePremium();
+  const locale = useLocale();
   const fixtureId = parseInt(params.id, 10);
 
   /* Tabs y reglas de puntuación dependen de t() ⇒ se construyen dentro del
@@ -96,6 +100,8 @@ export default function FixtureDetailPage({ params }: { params: { id: string } }
   const [predError,   setPredError]   = useState('');
   const [predSuccess, setPredSuccess] = useState(false);
   const [detailTab,   setDetailTab]   = useState<DetailTab>('lineups');
+  const [favTeams,    setFavTeams]    = useState<FavoriteTeam[]>([]);
+  const [favsLoaded,  setFavsLoaded]  = useState(false);
 
   // WebSocket — tiempo real (solo activo cuando el partido está LIVE)
   const liveDelta  = useMatchLive(fixture?.status === 'LIVE' ? fixtureId : null);
@@ -132,6 +138,16 @@ export default function FixtureDetailPage({ params }: { params: { id: string } }
       })
       .catch(() => {});
   }, [isAuthenticated, user, fixture]);
+
+  // Carga equipos favoritos para usuarios Free — determina si pueden predecir este partido
+  useEffect(() => {
+    if (!isAuthenticated || !user) { setFavsLoaded(true); return; }
+    if (isPremium) { setFavsLoaded(true); return; }
+    favoriteTeamsService.list(user.id)
+      .then(teams => setFavTeams(teams))
+      .catch(() => {})
+      .finally(() => setFavsLoaded(true));
+  }, [isAuthenticated, user, isPremium]);
 
   const handleSubmit = async () => {
     if (!user) return;
@@ -197,6 +213,17 @@ export default function FixtureDetailPage({ params }: { params: { id: string } }
   const isScheduled = liveStatus === 'SCHEDULED';
   const isLive      = liveStatus === 'LIVE';
   const isFinished  = liveStatus === 'FINISHED';
+
+  // Lógica de negocio — quién puede hacer porras
+  // Free: solo fase de grupos del equipo principal (⭐). Premium: todos los partidos.
+  const isGroupStage     = !!fixture?.groupCode;
+  const primaryFav       = isPremium ? null : (favTeams.find(f => f.isPrimary) ?? null);
+  const isPrimaryInMatch = !!primaryFav && (
+    primaryFav.teamId === fixture?.homeTeamId ||
+    primaryFav.teamId === fixture?.awayTeamId
+  );
+  // Mientras favTeams carga (!favsLoaded) mostramos el formulario optimistamente
+  const canPredict = isPremium || !favsLoaded || !!prediction || (isGroupStage && isPrimaryInMatch);
 
   const predCorrect = isFinished && prediction &&
     prediction.predictedHomeScore === fixture.homeScore &&
@@ -311,8 +338,8 @@ export default function FixtureDetailPage({ params }: { params: { id: string } }
             </DarkCard>
           )}
 
-          {/* Logged in — scheduled match */}
-          {isAuthenticated && isScheduled && (
+          {/* Logged in — scheduled match (solo si puede predecir o ya tiene porra) */}
+          {isAuthenticated && isScheduled && canPredict && (
             <DarkCard accent="green" delay={0.08}>
               <div className="p-5">
 
@@ -485,6 +512,48 @@ export default function FixtureDetailPage({ params }: { params: { id: string } }
                     {t('fixture.savedOk')}
                   </motion.p>
                 )}
+              </div>
+            </DarkCard>
+          )}
+
+          {/* Free gate — partido no elegible para predicción */}
+          {isAuthenticated && isScheduled && favsLoaded && !canPredict && (
+            <DarkCard accent="gold" delay={0.08}>
+              <div className="p-6 text-center">
+                <div className="w-14 h-14 rounded-2xl flex items-center justify-center mx-auto mb-4"
+                  style={{ background: alpha(hex.bg.primary, 0.85), border: `1px solid ${alphaOf('gold', 0.22)}` }}>
+                  <span style={{ fontSize: 26 }}>🔒</span>
+                </div>
+                <p className="text-white font-black text-base mb-2">
+                  {!primaryFav
+                    ? 'Elige tu equipo principal'
+                    : !isGroupStage
+                    ? 'Partido de eliminación directa'
+                    : `Este partido no es de ${primaryFav.name}`}
+                </p>
+                <p className="text-[12px] leading-relaxed mb-5"
+                  style={{ color: alpha(hex.text.muted, 0.80) }}>
+                  {!primaryFav
+                    ? 'Para predecir gratis, ve a tu perfil y marca un equipo favorito como principal (⭐). Podrás predecir sus 3 partidos de fase de grupos.'
+                    : !isGroupStage
+                    ? 'Los partidos de eliminación directa son exclusivos del plan Premium.'
+                    : `Con el plan Free solo puedes predecir los partidos de fase de grupos de ${primaryFav.name} (tu equipo principal). Hazte Premium para predecir todos.`}
+                </p>
+                <div className="flex flex-col gap-2">
+                  {!primaryFav && (
+                    <Link href={`/${locale}/profile`}
+                      onClick={() => { try { sessionStorage.setItem('profile-tab', 'FAVORITES'); } catch {} }}
+                      className="inline-flex items-center justify-center py-2.5 px-6 rounded-xl text-[12px] font-black"
+                      style={{ background: alphaOf('gold', 0.12), border: `1px solid ${alphaOf('gold', 0.28)}`, color: hex.gold.base }}>
+                      Ir a mi perfil ⭐
+                    </Link>
+                  )}
+                  <Link href={`/${locale}/premium`}
+                    className="inline-flex items-center justify-center py-2.5 px-6 rounded-xl text-[12px] font-black text-black"
+                    style={{ background: `linear-gradient(135deg, ${hex.gold.base}, ${hex.gold.muted})` }}>
+                    Hazte Premium
+                  </Link>
+                </div>
               </div>
             </DarkCard>
           )}
