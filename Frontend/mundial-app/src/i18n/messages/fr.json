@@ -347,6 +347,8 @@
       "mundial": "COUPE",
       "tagline": "FOOTBALL TECH EXPERIENCE",
       "countdownLabel": "⚡ Avant la Coupe du Monde",
+      "liveLabel": "⚽ La Coupe du Monde est en cours",
+      "liveTagline": "Jouez aux pronostics et analysez vos prédictions",
       "days": "JRS",
       "hours": "HRS",
       "minutes": "MIN",

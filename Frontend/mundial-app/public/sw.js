@@ -1,4 +1,6 @@
-const CACHE_VERSION = 'orionix-v4';
+// Subir la versión en cada deploy importante: obliga a los clientes con la PWA
+// instalada a detectar el SW nuevo → controllerchange → recarga automática.
+const CACHE_VERSION = 'orionix-v5';
 
 self.addEventListener('install', () => {
   self.skipWaiting();

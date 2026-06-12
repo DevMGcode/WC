@@ -94,9 +94,12 @@ export const authService = {
         : null;
 
       if (!registerResponse.ok || !registerData?.success) {
+        // Sin JSON del backend = respondió el proxy (nginx 502/504...) — incluir
+        // el código HTTP para poder diagnosticar reportes de usuarios en prod.
         return {
           success: false,
-          message: registerData?.message || 'No se pudo crear la cuenta.',
+          message: registerData?.message
+            || `No se pudo crear la cuenta. (Error ${registerResponse.status}) Intenta de nuevo en unos minutos.`,
         };
       }
 
