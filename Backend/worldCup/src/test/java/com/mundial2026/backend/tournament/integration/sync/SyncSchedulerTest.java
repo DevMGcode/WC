@@ -21,13 +21,13 @@ class SyncSchedulerTest {
     @Mock private FixtureSyncService fixtureSyncService;
     @Mock private LiveEventPollingService liveEventPollingService;
     @Mock private FixtureRepository fixtureRepository;
-
+    @Mock private ApiFootballScorerSyncService apiFootballScorerSyncService;
     private SyncScheduler subject;
 
     @BeforeEach
     void setUp() {
         subject = new SyncScheduler(teamSyncService, fixtureSyncService,
-                liveEventPollingService, fixtureRepository);
+                liveEventPollingService, apiFootballScorerSyncService, fixtureRepository);
     }
 
     @Test
