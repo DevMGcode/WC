@@ -10,7 +10,9 @@ import com.mundial2026.backend.subscription.service.PremiumGuard;
 import com.mundial2026.backend.tournament.domain.Fixture;
 import com.mundial2026.backend.tournament.repository.FixtureRepository;
 import com.mundial2026.backend.user.domain.AppUser;
+import com.mundial2026.backend.user.domain.UserFavoriteTeam;
 import com.mundial2026.backend.user.repository.AppUserRepository;
+import com.mundial2026.backend.user.repository.UserFavoriteTeamRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -26,6 +28,7 @@ public class PredictionService {
     private final AppUserRepository appUserRepository;
     private final FixtureRepository fixtureRepository;
     private final PremiumGuard premiumGuard;
+    private final UserFavoriteTeamRepository userFavoriteTeamRepository;
 
     @Transactional
     public UserPrediction create(CreatePredictionRequest request) {
@@ -46,36 +49,32 @@ public class PredictionService {
         validatePredictionWindow(fixture.getPredictionLockedAt());
 
         // ── Gate Free/Premium ──────────────────────────────────────────────
-        // Premium predice cualquier partido sin límite.
-        // Free predice solo hasta 3 partidos de fase de grupos de su equipo favorito.
+        // Premium: predice cualquier partido sin límite.
+        // Free:    puede predecir cualquier partido donde participe CUALQUIER
+        //          equipo de su lista de favoritos (elegidos en el onboarding).
         if (!premiumGuard.isPremium(user)) {
-            // 1. Debe tener equipo favorito seteado
-            if (user.getFavoriteTeam() == null) {
+            List<UserFavoriteTeam> favTeams = userFavoriteTeamRepository
+                    .findByUserIdOrderByPositionAscIdAsc(user.getId());
+
+            // 1. Debe tener al menos un equipo favorito configurado
+            if (favTeams.isEmpty()) {
                 throw new BusinessRuleException(
-                        "Para predecir gratis primero elige tu equipo favorito en tu perfil. " +
+                        "Para predecir gratis primero elige tus equipos favoritos en tu perfil. " +
                         "O hazte Premium para predecir todos los partidos."
                 );
             }
 
-            // 2. El partido debe ser de fase de grupos del equipo favorito
-            String stageCode = fixture.getStage() != null ? fixture.getStage().getCode() : null;
+            // 2. El partido debe incluir alguno de sus equipos favoritos
             Long homeId = fixture.getHomeTeam() != null ? fixture.getHomeTeam().getId() : null;
             Long awayId = fixture.getAwayTeam() != null ? fixture.getAwayTeam().getId() : null;
-
-            if (!premiumGuard.canFreeUserPredictFixture(user, homeId, awayId, stageCode)) {
+            boolean isFavInMatch = favTeams.stream().anyMatch(f -> {
+                Long tid = f.getTeam().getId();
+                return tid.equals(homeId) || tid.equals(awayId);
+            });
+            if (!isFavInMatch) {
                 throw new BusinessRuleException(
-                        "Como usuario gratuito solo puedes predecir partidos de fase de grupos " +
-                        "de tu equipo favorito. Hazte Premium para predecir todos los partidos."
-                );
-            }
-
-            // 3. Máximo 3 predicciones para Free
-            long already = userPredictionRepository.countByUserId(user.getId());
-            if (already >= PremiumGuard.FREE_MAX_PREDICTIONS) {
-                throw new BusinessRuleException(
-                        "Como usuario gratuito ya alcanzaste el máximo de " +
-                        PremiumGuard.FREE_MAX_PREDICTIONS + " predicciones. " +
-                        "Hazte Premium para seguir prediciendo."
+                        "Como usuario Free solo puedes predecir partidos de tus equipos favoritos. " +
+                        "Hazte Premium para predecir todos los partidos del Mundial."
                 );
             }
         }
