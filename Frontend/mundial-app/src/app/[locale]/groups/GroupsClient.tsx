@@ -229,6 +229,7 @@ export default function GroupsClient({ initialTournament, initialGroups, initial
 
       {/* ── CONTENT ── */}
       <div className="relative z-10 max-w-7xl mx-auto px-3 sm:px-5 py-5 pb-32">
+
         {loading ? (
           <div className="flex items-center justify-center min-h-80">
             <div className="flex flex-col items-center gap-4">

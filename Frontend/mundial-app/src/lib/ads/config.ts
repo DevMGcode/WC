@@ -35,6 +35,12 @@ export const ADSTERRA = {
     sky160x600: { key: '115fcbb9c370bb6d2eb7c2771b8bf374', width: 160, height: 600 } as BannerUnit,
     /** 160x300 — disponible para espacios angostos (sin colocación activa hoy). */
     box160x300: { key: '91fbf779c76a87e712643b60f9f3e223', width: 160, height: 300 } as BannerUnit,
+    /** 728x90 — leaderboard horizontal, cierre de página en desktop. */
+    leader728x90: { key: 'd803412965fb194048128e2459c0d714', width: 728, height: 90 } as BannerUnit,
+    /** 468x60 — banner horizontal para anchos intermedios (tablet). */
+    banner468x60: { key: 'cb48fe342a2d9408e93382de1db181d4', width: 468, height: 60 } as BannerUnit,
+    /** 320x50 — banner horizontal móvil. */
+    mobile320x50: { key: '287ad9a6936b89b757bcdc00a167a211', width: 320, height: 50 } as BannerUnit,
   },
 
   /** Banner nativo — se integra como tarjetas de contenido en el feed. */

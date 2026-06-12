@@ -357,10 +357,6 @@ export default function FixturesClient({ initialFixtures }: { initialFixtures?: 
         )}
       </div>
 
-      {/* Raíl lateral desktop (solo Free, pantallas muy anchas) */}
-      <div className="hidden 2xl:block fixed right-6 top-28 z-10">
-        <AdsterraBanner slot="sky160x600" />
-      </div>
 
       <TourButton steps={getTourSteps(locale, 'calendar')} />
     </div>
