@@ -144,9 +144,18 @@ public class SecurityConfig {
             patterns.add("https://*.ngrok.io");
         }
 
-        // El dominio real de producción siempre se permite.
+        // El dominio real de producción siempre se permite — en sus DOS variantes
+        // (con y sin www). Los usuarios llegan por ambas, y los POST (registro,
+        // login) envían el header Origin exacto: permitir una sola variante deja
+        // a la otra con 403 "Invalid CORS request" (bug real: registros móviles
+        // rechazados el 11-12/06/2026 por entrar sin www).
         if (frontendUrl != null && !frontendUrl.contains("localhost")) {
             patterns.add(frontendUrl);
+            if (frontendUrl.startsWith("https://www.")) {
+                patterns.add("https://" + frontendUrl.substring("https://www.".length()));
+            } else if (frontendUrl.startsWith("https://")) {
+                patterns.add("https://www." + frontendUrl.substring("https://".length()));
+            }
         }
         configuration.setAllowedOriginPatterns(patterns);
         configuration.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"));
