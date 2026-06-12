@@ -39,7 +39,8 @@ class SecurityConfigTest {
                         "http://localhost:3000",
                         "http://127.0.0.1:3000",
                         "https://*.ngrok-free.app",
-                        "https://mi-front.com"
+                        "https://mi-front.com",
+                        "https://www.mi-front.com"
                 );
         assertThat(cors.getAllowedMethods())
                 .contains("GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS");
@@ -57,7 +58,7 @@ class SecurityConfigTest {
 
         assertThat(cors).isNotNull();
         assertThat(cors.getAllowedOriginPatterns())
-                .containsExactly("https://mi-front.com")
+                .containsExactlyInAnyOrder("https://mi-front.com", "https://www.mi-front.com")
                 .doesNotContain("http://localhost:3000", "https://*.ngrok-free.app");
     }
 }

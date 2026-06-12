@@ -144,9 +144,16 @@ public class SecurityConfig {
             patterns.add("https://*.ngrok.io");
         }
 
-        // El dominio real de producción siempre se permite.
+        // El dominio real de producción siempre se permite (con y sin www).
         if (frontendUrl != null && !frontendUrl.contains("localhost")) {
             patterns.add(frontendUrl);
+            // Agrega la variante sin/con www para evitar CORS cuando el usuario
+            // llega por el dominio alternativo.
+            if (frontendUrl.contains("://www.")) {
+                patterns.add(frontendUrl.replace("://www.", "://"));
+            } else {
+                patterns.add(frontendUrl.replace("://", "://www."));
+            }
         }
         configuration.setAllowedOriginPatterns(patterns);
         configuration.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"));
