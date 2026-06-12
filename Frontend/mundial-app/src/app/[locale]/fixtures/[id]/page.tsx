@@ -215,32 +215,22 @@ export default function FixtureDetailPage({ params }: { params: { id: string } }
   const isFinished  = liveStatus === 'FINISHED';
 
   // Lógica de negocio — quién puede hacer porras
-  // Free: solo fase de grupos del equipo principal (⭐). Premium: todos los partidos.
+  // Free:    puede predecir partidos donde CUALQUIER equipo favorito (del onboarding) participe.
+  // Premium: puede predecir CUALQUIER partido (ilimitado, sin importar favoritos).
   //
-  // isGroupStage usa tres señales para ser robusto ante backends que devuelven
-  // groupCode=null en partidos de grupo (ej. antes de que se asignen grupos):
-  //   1. groupCode truthy  →  señal directa
-  //   2. groupStageId truthy  →  FK hacia la tabla de grupos
-  //   3. stageName contiene "group" (case-insensitive)  →  fallback textual
-  const isGroupStage =
-    !!fixture?.groupCode ||
-    !!(fixture as any)?.groupStageId ||
-    (typeof fixture?.stageName === 'string' && /group/i.test(fixture.stageName));
-
-  const primaryFav = isPremium ? null : (favTeams.find(f => f.isPrimary) ?? null);
-
-  // Comparamos primero por ID (fuente de verdad). Fallback por fifaCode por si
-  // el endpoint de favoritos y el de fixtures usan IDs distintos.
-  const isPrimaryInMatch = !!primaryFav && (
-    primaryFav.teamId === fixture?.homeTeamId ||
-    primaryFav.teamId === fixture?.awayTeamId ||
-    !!(primaryFav.fifaCode && (
-      primaryFav.fifaCode === fixture?.homeTeam?.fifaCode ||
-      primaryFav.fifaCode === fixture?.awayTeam?.fifaCode
+  // La comparación usa primero ID y luego fifaCode como fallback por si los IDs
+  // difieren entre el endpoint de favoritos y el de fixtures.
+  const isFavInMatch = !isPremium && favTeams.some(f =>
+    f.teamId === fixture?.homeTeamId ||
+    f.teamId === fixture?.awayTeamId ||
+    !!(f.fifaCode && (
+      f.fifaCode === fixture?.homeTeam?.fifaCode ||
+      f.fifaCode === fixture?.awayTeam?.fifaCode
     ))
   );
+  const hasFavs = favTeams.length > 0;
   // Mientras favTeams carga (!favsLoaded) mostramos el formulario optimistamente
-  const canPredict = isPremium || !favsLoaded || !!prediction || (isGroupStage && isPrimaryInMatch);
+  const canPredict = isPremium || !favsLoaded || !!prediction || isFavInMatch;
 
   const predCorrect = isFinished && prediction &&
     prediction.predictedHomeScore === fixture.homeScore &&
@@ -542,22 +532,18 @@ export default function FixtureDetailPage({ params }: { params: { id: string } }
                   <span style={{ fontSize: 26 }}>🔒</span>
                 </div>
                 <p className="text-white font-black text-base mb-2">
-                  {!primaryFav
-                    ? 'Elige tu equipo principal'
-                    : !isGroupStage
-                    ? 'Partido de eliminación directa'
-                    : `Este partido no es de ${primaryFav.name}`}
+                  {!hasFavs
+                    ? 'Elige tus equipos favoritos'
+                    : 'Ninguno de tus favoritos juega este partido'}
                 </p>
                 <p className="text-[12px] leading-relaxed mb-5"
                   style={{ color: alpha(hex.text.muted, 0.80) }}>
-                  {!primaryFav
-                    ? 'Para predecir gratis, ve a tu perfil y marca un equipo favorito como principal (⭐). Podrás predecir sus 3 partidos de fase de grupos.'
-                    : !isGroupStage
-                    ? 'Los partidos de eliminación directa son exclusivos del plan Premium.'
-                    : `Con el plan Free solo puedes predecir los partidos de fase de grupos de ${primaryFav.name} (tu equipo principal). Hazte Premium para predecir todos.`}
+                  {!hasFavs
+                    ? 'Ve a tu perfil y agrega equipos favoritos. Con el plan Free puedes predecir todos sus partidos del Mundial.'
+                    : 'Con el plan Free puedes predecir los partidos de tus equipos favoritos. Hazte Premium para predecir todos los partidos del Mundial.'}
                 </p>
                 <div className="flex flex-col gap-2">
-                  {!primaryFav && (
+                  {!hasFavs && (
                     <Link href={`/${locale}/profile`}
                       onClick={() => { try { sessionStorage.setItem('profile-tab', 'FAVORITES'); } catch {} }}
                       className="inline-flex items-center justify-center py-2.5 px-6 rounded-xl text-[12px] font-black"
