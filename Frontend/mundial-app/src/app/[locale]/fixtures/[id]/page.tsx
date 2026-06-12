@@ -119,12 +119,9 @@ export default function FixtureDetailPage({ params }: { params: { id: string } }
 
   useEffect(() => {
     if (!isAuthenticated || !user || !fixture) return;
-    const userId = Number(user.id);
-    if (!userId) return;
-    predictionService.getUserPredictions(userId)
-      .then((preds: any[]) => {
-        const existing = preds.find((p: any) => Number(p.fixtureId) === fixture.id);
-        if (existing) { setPrediction(existing); setPredHome(existing.predictedHomeScore); setPredAway(existing.predictedAwayScore); }
+    predictionService.getUserPredictionForFixture(fixture.id)
+      .then((pred) => {
+        if (pred) { setPrediction(pred); setPredHome(pred.predictedHomeScore); setPredAway(pred.predictedAwayScore); }
       })
       .catch(() => {});
   }, [isAuthenticated, user, fixture]);
@@ -176,8 +173,6 @@ export default function FixtureDetailPage({ params }: { params: { id: string } }
   const isScheduled = liveStatus === 'SCHEDULED';
   const isLive      = liveStatus === 'LIVE';
   const isFinished  = liveStatus === 'FINISHED';
-  const canPredict  = isScheduled && isAuthenticated;
-  const showForm    = canPredict && (!prediction || editing);
 
   const predCorrect = isFinished && prediction &&
     prediction.predictedHomeScore === fixture.homeScore &&

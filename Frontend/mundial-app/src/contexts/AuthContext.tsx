@@ -28,7 +28,28 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     try {
       const token = authService.getToken();
       const saved  = authService.getUser();
-      if (token && saved) setUser(saved);
+      if (token && saved) {
+        setUser(saved);
+        // Sincronización silenciosa: actualiza isPremium/premiumUntil desde el
+        // backend sin bloquear la carga. Cubre el caso en que el usuario ya era
+        // Premium antes de que el localStorage se actualizara (p.ej. pago manual,
+        // renovación de plan, o login antiguo sin el campo).
+        fetch(`/api/v1/users/${saved.id}`, {
+          headers: { Authorization: `Bearer ${token}` },
+        })
+          .then(r => r.ok ? r.json() : null)
+          .then(json => {
+            const fresh = json?.data ?? json;
+            if (!fresh) return;
+            const nextPremium    = fresh.isPremium    ?? saved.isPremium;
+            const nextUntil      = fresh.premiumUntil ?? saved.premiumUntil;
+            if (nextPremium === saved.isPremium && nextUntil === saved.premiumUntil) return;
+            const updated: AuthUser = { ...saved, isPremium: nextPremium, premiumUntil: nextUntil };
+            try { window.localStorage.setItem('user', JSON.stringify(updated)); } catch {}
+            setUser(updated);
+          })
+          .catch(() => {});
+      }
     } catch {
       try {
         window.localStorage.removeItem('authToken');
