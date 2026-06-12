@@ -107,13 +107,21 @@ public class FixtureSyncService {
         }
     }
 
-    /** "Group A" → "A". Returns null for non-group entries (e.g. "Ranking of third-placed teams"). */
+    /**
+     * Extrae la letra del grupo del nombre que publica API-Football:
+     *   2022 → "Group A"                  → "A"
+     *   2026 → "Group Stage - Group A"    → "A"  (formato nuevo, visto 12/06/2026)
+     * Devuelve null para entradas sin letra ("Group Stage" a secas,
+     * "Ranking of third-placed teams", etc.).
+     */
     private String parseGroupLetter(String groupName) {
         if (groupName == null) return null;
         String trimmed = groupName.trim();
-        if (!trimmed.toLowerCase().startsWith("group ")) return null;
-        String tail = trimmed.substring("Group ".length()).trim();
-        return tail.isEmpty() ? null : tail.toUpperCase();
+        int idx = trimmed.toLowerCase().lastIndexOf("group ");
+        if (idx < 0) return null;
+        String tail = trimmed.substring(idx + "group ".length()).trim();
+        // Una letra (A..L); descarta colas largas tipo "Stage" del nombre genérico.
+        return (tail.isEmpty() || tail.length() > 2) ? null : tail.toUpperCase();
     }
 
     private SyncResult persist(List<ExternalMatch> matches, Map<Long, String> teamToGroup) {
@@ -257,7 +265,11 @@ public class FixtureSyncService {
             existing.setStage(stage);
             changed = true;
         }
-        if (!sameId(existing.getGroupStage(), groupStage)) {
+        // Solo reasignar el grupo cuando la resolución encontró uno. El sync en
+        // vivo (score-only) no construye el mapa equipo→grupo y resuelve null:
+        // sin este guard, cada tick de 5s BORRABA el grupo ya asignado y la
+        // tabla de posiciones dejaba de contar esos partidos.
+        if (groupStage != null && !sameId(existing.getGroupStage(), groupStage)) {
             existing.setGroupStage(groupStage);
             changed = true;
         }
