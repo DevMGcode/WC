@@ -23,7 +23,7 @@ import { Surface, StatusDot } from '@/components/ui';
 
 import MatchCard, { getEffectiveStatus } from './_components/MatchCard';
 import FixturesFilterBar, { type FilterKey } from './_components/FixturesFilterBar';
-import { AdsterraNative, AdsterraBanner } from '@/components/ads';
+import { AdsterraBanner } from '@/components/ads';
 
 /* ══════════════════════════════════════════
    EQ BARS — decorativo
@@ -322,8 +322,6 @@ export default function FixturesClient({ initialFixtures }: { initialFixtures?: 
                 </div>
               </motion.div>
 
-              {/* Banner nativo (solo Free) — integrado al feed tras el primer día */}
-              {gi === 0 && grouped.length > 1 && <AdsterraNative />}
               </React.Fragment>
             ))}
           </div>

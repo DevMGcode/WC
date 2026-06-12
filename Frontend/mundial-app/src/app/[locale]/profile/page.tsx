@@ -318,8 +318,9 @@ export default function ProfilePage() {
       {/* Content */}
       <div className="relative z-10 px-3 sm:px-5 py-5 max-w-4xl mx-auto w-full pb-32">
 
-        {/* ── PUBLICIDAD (solo Free) — sobre las tabs de perfil ── */}
-        <AdsterraBanner slot="rect300x250" className="mb-6" />
+        {/* ── PUBLICIDAD (solo Free) — responsive ── */}
+        <div className="sm:hidden mb-6"><AdsterraBanner slot="mobile320x50" /></div>
+        <div className="hidden sm:block mb-6"><AdsterraBanner slot="rect300x250" /></div>
 
         {/* Tab bar */}
         <motion.div

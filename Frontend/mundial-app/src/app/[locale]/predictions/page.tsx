@@ -990,7 +990,9 @@ export default function PredictionsPage() {
           </AnimatePresence>
         )}
 
-        <AdsterraBanner slot="rect300x250" className="mt-10" />
+        {/* ── PUBLICIDAD (solo Free) — responsive ── */}
+        <div className="sm:hidden mt-10"><AdsterraBanner slot="mobile320x50" /></div>
+        <div className="hidden sm:block mt-10"><AdsterraBanner slot="rect300x250" /></div>
       </div>
 
       <TourButton steps={getTourSteps(locale, 'predictions')} />

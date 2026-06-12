@@ -10,7 +10,7 @@ import { SidebarProvider } from '@/contexts/SidebarContext';
 import CookieConsent, { useCookieConsent } from '@/components/CookieConsent';
 import { TourProvider } from '@/contexts/TourContext';
 import QueryProvider from '@/components/QueryProvider';
-import { AdsterraGlobal, AdsterraAnchor, GoogleAdsense } from '@/components/ads';
+import { AdsterraGlobal, GoogleAdsense } from '@/components/ads';
 
 // Dynamic imports — estos componentes son pesados (framer-motion + lógica)
 // Se cargan en paralelo pero NO bloquean el render inicial de la página
@@ -58,7 +58,6 @@ export default function LocaleClientLayout({ children }: { children: React.React
               <CookieConsent />
               {/* Anuncios globales — solo usuarios Free (cero anuncios en Premium) */}
               <AdsterraGlobal />
-              <AdsterraAnchor />
               <GoogleAdsense />
             </TourProvider>
           </SidebarProvider>

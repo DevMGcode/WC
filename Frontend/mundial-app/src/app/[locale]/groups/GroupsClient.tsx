@@ -463,8 +463,9 @@ export default function GroupsClient({ initialTournament, initialGroups, initial
           </AnimatePresence>
         )}
 
-        {/* ── PUBLICIDAD (solo Free) ── */}
-        <AdsterraBanner slot="rect300x250" className="mt-8" />
+        {/* ── PUBLICIDAD (solo Free) — responsive ── */}
+        <div className="sm:hidden mt-8"><AdsterraBanner slot="mobile320x50" /></div>
+        <div className="hidden sm:block mt-8"><AdsterraBanner slot="rect300x250" /></div>
       </div>
       <TourButton steps={getTourSteps(locale, 'groups')} />
     </div>

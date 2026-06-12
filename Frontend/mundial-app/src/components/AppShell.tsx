@@ -35,7 +35,7 @@ export function AppShell({ children }: { children: ReactNode }) {
 
   return (
     <div
-      className="app-shell flex flex-col pb-36 sm:pb-24 lg:pb-8 w-full relative"
+      className="app-shell flex flex-col pb-24 lg:pb-8 w-full relative"
       style={{
         paddingLeft: pl,
         transition: 'padding-left 0.38s cubic-bezier(0.22,1,0.36,1)',

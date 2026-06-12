@@ -697,8 +697,9 @@ export default function FixtureDetailPage({ params }: { params: { id: string } }
           </div>
         </DarkCard>
 
-        {/* ── PUBLICIDAD (solo Free) — antes de los botones inferiores ── */}
-        <AdsterraBanner slot="rect300x250" className="mb-4" />
+        {/* ── PUBLICIDAD (solo Free) — responsive ── */}
+        <div className="sm:hidden mb-4"><AdsterraBanner slot="mobile320x50" /></div>
+        <div className="hidden sm:block mb-4"><AdsterraBanner slot="rect300x250" /></div>
 
         {/* ── BOTTOM BUTTONS ── */}
         <div className="flex gap-3">
