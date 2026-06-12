@@ -178,9 +178,9 @@ export default function ScorersClient() {
   // explícitamente el número correcto para no traer datos extras y agilizar el cache.
   const desiredLimit = isPremium ? 50 : 10;
   const { data: rawScorers, isLoading: loadingScorers, isError: errScorers } = useTopScorers({ limit: desiredLimit });
-  // Top asistentes lo intentamos solo si es Premium (Free igual recibiría 422)
+  // Top asistentes: solo Premium. enabled:false evita el fetch para usuarios Free.
   const { data: rawAssists, isLoading: loadingAssists, isError: errAssists  } = useTopAssists(
-    isPremium ? { limit: 50 } : undefined
+    { limit: isPremium ? 50 : 10, enabled: isPremium }
   );
 
   // Defensivo: nullish coalescing porque el endpoint puede devolver null si está vacío o 422

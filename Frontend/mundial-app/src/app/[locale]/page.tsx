@@ -91,7 +91,7 @@ export default function HomePage() {
   const { data: allFixtures = [], isLoading: loading }  = useTournamentFixtures(tid);
   const { data: rawPredictions = [] }                   = useUserPredictions(userId);
   const { data: scoreData }                             = useUserScore(userId, tid);
-  const { data: rankingData = [] }                      = useGlobalRanking(tid, RANKING_PAGE.home);
+  const { data: rankingData = [] }                      = useGlobalRanking(tid, RANKING_PAGE.home, isPremium);
 
   // ── Derived state ──
   const todayUpcoming = useMemo(() =>

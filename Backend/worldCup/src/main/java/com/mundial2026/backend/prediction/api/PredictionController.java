@@ -81,4 +81,14 @@ public class PredictionController {
 
         return ResponseEntity.ok(ApiResponse.ok("Porras encontradas", data));
     }
+
+    /** Devuelve la porra del usuario autenticado para un fixture concreto, o 404 si no existe. */
+    @GetMapping("/fixture/{fixtureId}")
+    public ResponseEntity<ApiResponse<PredictionResponse>> findByFixture(@PathVariable Long fixtureId) {
+        Long jwtUserId = securityUtils.currentUserId();
+        return predictionService.findByUserIdAndFixtureId(jwtUserId, fixtureId)
+                .map(p -> ResponseEntity.ok(ApiResponse.ok("Porra encontrada", predictionMapper.toResponse(p))))
+                .orElseThrow(() -> new com.mundial2026.backend.common.exception.ResourceNotFoundException(
+                        "No hay porra para el fixture " + fixtureId));
+    }
 }

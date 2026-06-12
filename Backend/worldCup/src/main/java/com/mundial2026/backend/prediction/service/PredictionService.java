@@ -121,6 +121,11 @@ public class PredictionService {
     }
 
     @Transactional(readOnly = true)
+    public java.util.Optional<UserPrediction> findByUserIdAndFixtureId(Long userId, Long fixtureId) {
+        return userPredictionRepository.findByUserIdAndFixtureId(userId, fixtureId);
+    }
+
+    @Transactional(readOnly = true)
     public long count() {
         return userPredictionRepository.count();
     }

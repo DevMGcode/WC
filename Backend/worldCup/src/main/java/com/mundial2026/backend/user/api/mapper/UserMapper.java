@@ -16,6 +16,7 @@ public class UserMapper {
     private final SubscriptionService subscriptionService;
 
     public UserResponse toResponse(AppUser user) {
+        var activeSub = subscriptionService.findActive(user.getId());
         return new UserResponse(
                 user.getId(),
                 user.getUsername(),
@@ -31,19 +32,22 @@ public class UserMapper {
                 user.getEmailVerified(),
                 user.getRoles().stream().map(role -> role.getCode()).collect(Collectors.toSet()),
                 user.getCreatedAt(),
-                subscriptionService.isPremium(user.getId()),
+                activeSub.isPresent(),
+                activeSub.map(s -> s.getExpiresAt()).orElse(null),
                 user.getFavoriteTeam() != null ? user.getFavoriteTeam().getId() : null
         );
     }
 
     public AuthUserResponse toAuthResponse(AppUser user) {
+        var activeSub = subscriptionService.findActive(user.getId());
         return new AuthUserResponse(
                 user.getId().toString(),
                 user.getEmail(),
                 user.getFirstName() != null ? user.getFirstName() : user.getUsername(),
                 user.getStatus().name(),
                 user.getCreatedAt(),
-                subscriptionService.isPremium(user.getId())
+                activeSub.isPresent(),
+                activeSub.map(s -> s.getExpiresAt()).orElse(null)
         );
     }
 }

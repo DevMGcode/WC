@@ -58,10 +58,17 @@ export const Navigation: React.FC = () => {
         }
       }
       if (originalHref === '/scorers') {
-        await Promise.all([
+        const token = typeof window !== 'undefined' ? window.localStorage.getItem('authToken') : null;
+        const userJson = typeof window !== 'undefined' ? window.localStorage.getItem('user') : null;
+        const isPremiumUser = userJson ? (JSON.parse(userJson).isPremium === true) : false;
+        const authHeaders: HeadersInit = token ? { Authorization: `Bearer ${token}` } : {};
+        const prefetches = [
           queryClient.prefetchQuery({ queryKey: QUERY_KEYS.topScorers(), queryFn: () => fetchJson('/api/v1/public/players/topscorers'), staleTime: STALE.scorers }),
-          queryClient.prefetchQuery({ queryKey: QUERY_KEYS.topAssists(),  queryFn: () => fetchJson('/api/v1/public/players/topassists'),  staleTime: STALE.scorers }),
-        ]);
+        ];
+        if (isPremiumUser) {
+          prefetches.push(queryClient.prefetchQuery({ queryKey: QUERY_KEYS.topAssists(), queryFn: () => fetch('/api/v1/public/players/topassists', { headers: authHeaders }).then(r => r.ok ? r.json() : null).then(d => d?.data ?? null), staleTime: STALE.scorers }));
+        }
+        await Promise.all(prefetches);
       }
     } catch {
       prefetchedRoutes.current.delete(originalHref);

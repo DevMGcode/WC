@@ -290,7 +290,7 @@ export default function PredictionsPage() {
   const { data: allFixtures = [], isLoading: fixturesLoading } = useTournamentFixtures(tournamentId);
   const { data: rawPredictions = [], isLoading: predsLoading } = useUserPredictions(userId);
   const { data: scoreHistory = [], isLoading: histLoading }   = useScoreHistory(userId, tournamentId);
-  const { data: rankingItems = [], isLoading: rankLoading }   = useGlobalRanking(tournamentId, RANKING_PAGE.predictions);
+  const { data: rankingItems = [], isLoading: rankLoading }   = useGlobalRanking(tournamentId, RANKING_PAGE.predictions, isPremium);
   const { data: leaguesData = [], isLoading: leaguesLoading } = useUserLeaguesWithRankings(userId);
 
   const loading =

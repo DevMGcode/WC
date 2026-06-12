@@ -19,6 +19,7 @@ public record UserResponse(
         Set<String> roles,
         OffsetDateTime createdAt,
         Boolean isPremium,
+        OffsetDateTime premiumUntil,
         Long favoriteTeamId
 ) {
 }
