@@ -119,9 +119,16 @@ export default function FixtureDetailPage({ params }: { params: { id: string } }
 
   useEffect(() => {
     if (!isAuthenticated || !user || !fixture) return;
+    const userId = Number(user.id);
     predictionService.getUserPredictionForFixture(fixture.id)
       .then((pred) => {
-        if (pred) { setPrediction(pred); setPredHome(pred.predictedHomeScore); setPredAway(pred.predictedAwayScore); }
+        if (pred) { setPrediction(pred); setPredHome(pred.predictedHomeScore); setPredAway(pred.predictedAwayScore); return; }
+        // Fallback: busca entre todas las predicciones del usuario
+        if (!userId) return;
+        return predictionService.getUserPredictions(userId).then((preds) => {
+          const existing = preds.find((p: any) => Number(p.fixtureId) === fixture.id);
+          if (existing) { setPrediction(existing); setPredHome(existing.predictedHomeScore); setPredAway(existing.predictedAwayScore); }
+        });
       })
       .catch(() => {});
   }, [isAuthenticated, user, fixture]);
@@ -136,12 +143,29 @@ export default function FixtureDetailPage({ params }: { params: { id: string } }
         const updated = await predictionService.updatePrediction(prediction.id, { predictedHomeScore: predHome, predictedAwayScore: predAway });
         setPrediction(updated);
       } else {
-        const created = await predictionService.createPrediction({ userId, fixtureId: fixture.id, predictedHomeScore: predHome, predictedAwayScore: predAway });
-        setPrediction(created);
+        try {
+          const created = await predictionService.createPrediction({ userId, fixtureId: fixture.id, predictedHomeScore: predHome, predictedAwayScore: predAway });
+          setPrediction(created);
+        } catch (createErr: any) {
+          const status = createErr?.response?.status;
+          // 422 / 409 = ya existe una predicción que el GET inicial no detectó
+          if (status === 422 || status === 409) {
+            const existing = await predictionService.getUserPredictionForFixture(fixture.id);
+            if (existing) {
+              const updated = await predictionService.updatePrediction(existing.id, { predictedHomeScore: predHome, predictedAwayScore: predAway });
+              setPrediction(updated);
+            } else {
+              throw createErr;
+            }
+          } else {
+            throw createErr;
+          }
+        }
       }
       setPredSuccess(true); setEditing(false);
     } catch (err: any) {
-      setPredError(err?.response?.data?.error || err?.message || t('fixture.saveError'));
+      const d = err?.response?.data;
+      setPredError(d?.message || d?.error || d?.detail || err?.message || t('fixture.saveError'));
     } finally { setSubmitting(false); }
   };
 
