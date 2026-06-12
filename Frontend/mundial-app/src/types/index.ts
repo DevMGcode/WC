@@ -45,6 +45,8 @@ export interface Fixture {
   status: 'SCHEDULED' | 'FINISHED' | 'POSTPONED' | 'CANCELLED' | 'LIVE';
   homeScore?: number;
   awayScore?: number;
+  /** Minutos de reposición (90' + X). Fuente: API-Football o EXTENDER del admin. */
+  extraMinutes?: number;
   createdAt: Date;
   providerUpdatedAt?: Date;
 }

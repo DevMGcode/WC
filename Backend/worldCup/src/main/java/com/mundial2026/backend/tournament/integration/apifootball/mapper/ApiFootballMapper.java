@@ -62,6 +62,10 @@ public class ApiFootballMapper {
                         .map(FixtureItem.FixtureBlock::status)
                         .map(FixtureItem.StatusBlock::elapsed)
                         .orElse(null),
+                Optional.ofNullable(fixture)
+                        .map(FixtureItem.FixtureBlock::status)
+                        .map(FixtureItem.StatusBlock::extra)
+                        .orElse(null),
                 mapStatus(Optional.ofNullable(fixture)
                         .map(FixtureItem.FixtureBlock::status)
                         .map(FixtureItem.StatusBlock::shortCode)

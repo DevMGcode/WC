@@ -151,6 +151,16 @@ const RecentResults = ({ fixtures, predictions, t }: RecentResultsProps) => {
                         {fmtDate(fixture.kickoffAt, locale)}
                       </p>
 
+                      {/* Tiempo de reposición (90' + X) — fuente API o EXTENDER del admin */}
+                      {(fixture.extraMinutes ?? 0) > 0 && (
+                        <div className="mt-1.5 inline-flex items-center gap-1 px-2.5 py-1 rounded-full"
+                          style={{ background: alpha(hex.neutral.white, 0.05), border: `1px solid ${alpha(hex.neutral.white, 0.10)}` }}>
+                          <span className="text-[13px] font-black tabular-nums" style={{ color: hex.text.secondary }}>
+                            ⏱ 90&apos;&nbsp;+{fixture.extraMinutes}
+                          </span>
+                        </div>
+                      )}
+
                       {winner === 'draw' && (
                         <div className="mt-1.5 inline-flex px-2.5 py-1 rounded-full"
                           style={{ background: alpha(hex.neutral.white, 0.06), border: `1px solid ${alpha(hex.neutral.white, 0.12)}` }}>

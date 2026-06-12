@@ -12,7 +12,7 @@ import { apiFetch } from '@/lib/apiFetch';
 export default function LoginPage() {
   const router = useRouter();
   const { isAuthenticated, loading: authLoading } = useAuth();
-  const { countdown } = useCountdown();
+  const { countdown, started } = useCountdown();
 
   const [showForgot, setShowForgot] = useState(false);
   const [predCount,  setPredCount]  = useState(0);
@@ -40,7 +40,7 @@ export default function LoginPage() {
       <LoginBackground />
 
       <div className="relative z-10 w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 flex flex-col lg:flex-row items-center gap-8 lg:gap-16">
-        <LoginHero countdown={countdown} predCount={predCount} />
+        <LoginHero countdown={countdown} predCount={predCount} started={started} />
         <LoginCard onShowForgot={() => setShowForgot(true)} />
       </div>
 

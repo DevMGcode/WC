@@ -1,5 +1,5 @@
 'use client';
-import React, { useState, useRef, useCallback, useMemo } from 'react';
+import React, { useState, useRef, useCallback, useMemo, useEffect } from 'react';
 import Image from 'next/image';
 import { motion, AnimatePresence, useMotionValue, useSpring, useTransform } from 'framer-motion';
 import { useRouter, useSearchParams } from 'next/navigation';
@@ -22,6 +22,17 @@ export default function LoginCard({ onShowForgot }: LoginCardProps) {
   const [focused,      setFocused]      = useState<string | null>(null);
   const [isLoading,    setIsLoading]    = useState(false);
   const [error,        setError]        = useState('');
+
+  // Viniendo del registro: prellenar el EMAIL (la credencial real de login).
+  useEffect(() => {
+    try {
+      const saved = sessionStorage.getItem('prefill_login_email');
+      if (saved) {
+        setEmail(saved);
+        sessionStorage.removeItem('prefill_login_email');
+      }
+    } catch { /* storage bloqueado */ }
+  }, []);
 
   const verifiedBanner = useMemo(() => {
     const v = searchParams.get('verified');
@@ -176,7 +187,7 @@ export default function LoginCard({ onShowForgot }: LoginCardProps) {
                   <input
                     id="login-email" type="email" value={email} onChange={e => setEmail(e.target.value)}
                     onFocus={() => setFocused('email')} onBlur={() => setFocused(null)}
-                    placeholder="tu@email.com" required autoComplete="email"
+                    placeholder="tu@email.com" required autoComplete="username"
                     className="w-full pl-10 pr-4 py-4 rounded-xl text-white placeholder-slate-500 text-sm outline-none transition-all duration-300"
                     style={{ background: focused === 'email' ? inputFocusBg : inputBlurBg, border: focused === 'email' ? inputFocusBorder : inputBlurBorder, boxShadow: focused === 'email' ? inputFocusShadow : 'none' }}
                   />

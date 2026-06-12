@@ -294,6 +294,18 @@ const MatchCard = ({ fixture, index, isFirst, t }: MatchCardProps) => {
                   </div>
                 </>
               )}
+              {/* Tiempo de reposición (90' + X) — fuente API o EXTENDER del admin */}
+              {(isFinished || isLive) && (fixture.extraMinutes ?? 0) > 0 && (
+                <>
+                  <div className="w-px h-2.5" style={{ background: alpha(hex.neutral.white, 0.06) }} />
+                  <div className="flex items-center gap-1.5">
+                    <FiClock size={11} style={{ color: alpha(hex.text.secondary, 0.40) }} />
+                    <span className="text-[11px] font-black tabular-nums text-orionix-text-secondary">
+                      90&apos;&nbsp;+{fixture.extraMinutes}
+                    </span>
+                  </div>
+                </>
+              )}
             </div>
             {!isFinished && !isLive && (
               <motion.div className="flex items-center gap-1 px-2.5 py-1 rounded-full shrink-0"

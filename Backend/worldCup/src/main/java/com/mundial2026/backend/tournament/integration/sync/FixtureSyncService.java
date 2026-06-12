@@ -18,6 +18,7 @@ import com.mundial2026.backend.tournament.repository.GroupStageRepository;
 import com.mundial2026.backend.tournament.repository.StageRepository;
 import com.mundial2026.backend.tournament.repository.TeamRepository;
 import com.mundial2026.backend.tournament.repository.TournamentRepository;
+import com.mundial2026.backend.tournament.service.StandingsCalculatorService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.ApplicationEventPublisher;
@@ -31,9 +32,11 @@ import java.time.OffsetDateTime;
 import java.time.ZoneOffset;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.Set;
 
 @Service
 @RequiredArgsConstructor
@@ -51,6 +54,7 @@ public class FixtureSyncService {
     private final GroupStageRepository groupStageRepository;
     private final TeamRepository teamRepository;
     private final VenueSyncService venueSyncService;
+    private final StandingsCalculatorService standingsCalculator;
     private final ApplicationEventPublisher events;
 
     @Transactional
@@ -123,6 +127,7 @@ public class FixtureSyncService {
         long updated = 0;
         long skipped = 0;
         List<MatchLiveDelta> deltasToPublish = new ArrayList<>();
+        Set<GroupStage> groupsToRecalculate = new LinkedHashSet<>();
 
         for (ExternalMatch ext : matches) {
             if (ext.externalId() == null) {
@@ -169,8 +174,15 @@ public class FixtureSyncService {
                             Instant.now()
                     ));
                 }
+                // Si cambió algo de un partido finalizado de fase de grupos
+                // (típicamente el marcador), la tabla del grupo queda obsoleta.
+                if (existing.getStatus() == FixtureStatus.FINISHED && existing.getGroupStage() != null) {
+                    groupsToRecalculate.add(existing.getGroupStage());
+                }
             }
         }
+
+        groupsToRecalculate.forEach(standingsCalculator::recalculateForGroup);
 
         deltasToPublish.forEach(d -> events.publishEvent(new FixtureScoreUpdatedEvent(d)));
 
@@ -194,6 +206,11 @@ public class FixtureSyncService {
         f.setPredictionLockMinutesBefore(DEFAULT_LOCK_MINUTES_BEFORE);
         f.setPredictionLockedAt(kickoff.minusMinutes(DEFAULT_LOCK_MINUTES_BEFORE));
         f.setStatus(mapStatus(ext.status()));
+        f.setHomeScore(ext.homeScore());
+        f.setAwayScore(ext.awayScore());
+        if (ext.stoppageMinutes() != null) {
+            f.setExtraMinutes(ext.stoppageMinutes());
+        }
         // Persistir venue. El VenueSyncService maneja dual-strategy (extId vs name+city)
         // y devuelve empty cuando la API no envía datos suficientes (fixture TBD).
         venueSyncService.resolveOrCreate(ext.venueExternalId(), ext.venueName(), ext.venueCity())
@@ -216,6 +233,24 @@ public class FixtureSyncService {
         }
         if (existing.getStatus() != newStatus) {
             existing.setStatus(newStatus);
+            changed = true;
+        }
+        // Marcador: la API es la fuente de verdad. Solo escribimos valores no-null
+        // para no pisar con null un resultado cargado manualmente por el admin
+        // cuando la API aún no publica el dato.
+        if (ext.homeScore() != null && !ext.homeScore().equals(existing.getHomeScore())) {
+            existing.setHomeScore(ext.homeScore());
+            changed = true;
+        }
+        if (ext.awayScore() != null && !ext.awayScore().equals(existing.getAwayScore())) {
+            existing.setAwayScore(ext.awayScore());
+            changed = true;
+        }
+        // Minutos de reposición (90' + X): igual que el marcador, la API manda
+        // cuando publica el dato; el botón EXTENDER del admin queda como respaldo
+        // (la API lo deja en null cuando no cubre el partido y no se pisa nada).
+        if (ext.stoppageMinutes() != null && !ext.stoppageMinutes().equals(existing.getExtraMinutes())) {
+            existing.setExtraMinutes(ext.stoppageMinutes());
             changed = true;
         }
         if (existing.getStage() == null || !existing.getStage().getId().equals(stage.getId())) {

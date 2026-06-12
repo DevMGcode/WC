@@ -102,13 +102,16 @@ export default function HomePage() {
     [allFixtures]
   );
 
-  const recentResults = useMemo(() =>
-    (allFixtures as any[])
+  const recentResults = useMemo(() => {
+    const finished = (allFixtures as any[])
       .filter(f => f.status === 'FINISHED')
-      .sort((a, b) => new Date(b.kickoffAt).getTime() - new Date(a.kickoffAt).getTime())
-      .slice(0, 5),
-    [allFixtures]
-  );
+      .sort((a, b) => new Date(b.kickoffAt).getTime() - new Date(a.kickoffAt).getTime());
+    if (finished.length === 0) return [];
+    // Solo la jornada más reciente: partidos del mismo día (calendario local)
+    // que el último finalizado. El historial completo vive en "Mis porras".
+    const lastDay = new Date(finished[0].kickoffAt).toDateString();
+    return finished.filter(f => new Date(f.kickoffAt).toDateString() === lastDay);
+  }, [allFixtures]);
 
   const myPredictions = useMemo(() => {
     const predMap: Record<number, any> = {};

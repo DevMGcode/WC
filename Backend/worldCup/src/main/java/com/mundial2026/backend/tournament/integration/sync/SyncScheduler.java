@@ -19,6 +19,7 @@ public class SyncScheduler {
     private final TeamSyncService teamSyncService;
     private final FixtureSyncService fixtureSyncService;
     private final LiveEventPollingService liveEventPollingService;
+    private final ApiFootballScorerSyncService apiFootballScorerSyncService;
     private final FixtureRepository fixtureRepository;
 
     @Scheduled(initialDelayString = "PT30S", fixedDelayString = "PT24H")
@@ -72,6 +73,20 @@ public class SyncScheduler {
             liveEventPollingService.pollAllLive();
         } catch (Exception ex) {
             log.error("Live event polling failed: {}", ex.getMessage(), ex);
+        }
+    }
+
+    /**
+     * Persists scorers (name + minute) for recently finished fixtures.
+     * Cheap when idle: one DB query; API calls only for fixtures finished in
+     * the last 24h that still lack API-sourced events.
+     */
+    @Scheduled(initialDelayString = "PT3M", fixedDelayString = "PT5M")
+    public void finishedScorersSync() {
+        try {
+            apiFootballScorerSyncService.syncRecentlyFinished();
+        } catch (Exception ex) {
+            log.error("Finished-fixture scorer sync failed: {}", ex.getMessage(), ex);
         }
     }
 

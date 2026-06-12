@@ -103,6 +103,9 @@ export default function RegisterPage() {
 
       if (result.ok) {
         setSuccess(true);
+        // El login se identifica con EMAIL: dejarlo listo para prellenar el campo
+        // al redirigir (el username NO es credencial de inicio de sesión).
+        try { sessionStorage.setItem('prefill_login_email', form.email.trim()); } catch { /* storage bloqueado */ }
         if (!result.emailVerificationRequired) {
           setTimeout(() => router.replace('/es/login'), 1500);
         }
@@ -340,7 +343,7 @@ export default function RegisterPage() {
                       onBlur={() => setFocused(null)}
                       placeholder={f.placeholder}
                       required
-                      autoComplete="off"
+                      autoComplete={f.id === 'email' ? 'username' : f.type === 'password' ? 'new-password' : 'off'}
                       className="w-full pl-8 pr-3 py-2.5 rounded-xl text-sm text-white placeholder-orionix-text-muted transition-all duration-200"
                       style={{
                         background: focused === f.id ? 'rgba(76,175,80,0.06)' : 'rgba(255,255,255,0.04)',
@@ -375,7 +378,7 @@ export default function RegisterPage() {
                     onBlur={() => setFocused(null)}
                     placeholder={f.placeholder}
                     required
-                    autoComplete={f.type === 'password' ? 'new-password' : 'off'}
+                    autoComplete={f.id === 'email' ? 'username' : f.type === 'password' ? 'new-password' : 'off'}
                     className="w-full pl-8 pr-3 py-2.5 rounded-xl text-sm text-white placeholder-orionix-text-muted transition-all duration-200"
                     style={{
                       background: focused === f.id ? 'rgba(76,175,80,0.06)' : 'rgba(255,255,255,0.04)',
