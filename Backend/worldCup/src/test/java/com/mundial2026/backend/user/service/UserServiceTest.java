@@ -292,6 +292,46 @@ class UserServiceTest {
         assertThat(updated.getFirstName()).isEqualTo("Yo");
     }
 
+    // ── completeOnboarding ────────────────────────────────────────────────────
+
+    @Test
+    void completeOnboarding_setsFlagTrueAndSaves() {
+        AppUser existing = buildActiveVerifiedUser("a@b.com", "$h");
+        existing.setId(20L);
+        existing.setOnboardingCompleted(false);
+
+        when(appUserRepository.findById(20L)).thenReturn(Optional.of(existing));
+        when(appUserRepository.save(any(AppUser.class))).thenAnswer(inv -> inv.getArgument(0));
+
+        AppUser updated = userService.completeOnboarding(20L);
+
+        assertThat(updated.getOnboardingCompleted()).isTrue();
+        verify(appUserRepository).save(existing);
+    }
+
+    /** Idempotente: marcar dos veces no rompe nada y el flag sigue en true. */
+    @Test
+    void completeOnboarding_alreadyCompleted_staysTrue() {
+        AppUser existing = buildActiveVerifiedUser("a@b.com", "$h");
+        existing.setId(21L);
+        existing.setOnboardingCompleted(true);
+
+        when(appUserRepository.findById(21L)).thenReturn(Optional.of(existing));
+        when(appUserRepository.save(any(AppUser.class))).thenAnswer(inv -> inv.getArgument(0));
+
+        AppUser updated = userService.completeOnboarding(21L);
+
+        assertThat(updated.getOnboardingCompleted()).isTrue();
+    }
+
+    @Test
+    void completeOnboarding_missingUser_throwsResourceNotFound() {
+        when(appUserRepository.findById(404L)).thenReturn(Optional.empty());
+
+        assertThatThrownBy(() -> userService.completeOnboarding(404L))
+                .isInstanceOf(ResourceNotFoundException.class);
+    }
+
     @Test
     void updateProfile_missingUser_throwsResourceNotFound() {
         when(appUserRepository.findById(999L)).thenReturn(Optional.empty());

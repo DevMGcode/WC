@@ -41,10 +41,20 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           .then(json => {
             const fresh = json?.data ?? json;
             if (!fresh) return;
-            const nextPremium    = fresh.isPremium    ?? saved.isPremium;
-            const nextUntil      = fresh.premiumUntil ?? saved.premiumUntil;
-            if (nextPremium === saved.isPremium && nextUntil === saved.premiumUntil) return;
-            const updated: AuthUser = { ...saved, isPremium: nextPremium, premiumUntil: nextUntil };
+            const nextPremium    = fresh.isPremium           ?? saved.isPremium;
+            const nextUntil      = fresh.premiumUntil        ?? saved.premiumUntil;
+            const nextOnboarding = fresh.onboardingCompleted ?? saved.onboardingCompleted;
+            const nextLanguage   = fresh.preferredLanguage   ?? saved.preferredLanguage;
+            if (nextPremium === saved.isPremium && nextUntil === saved.premiumUntil
+                && nextOnboarding === saved.onboardingCompleted
+                && nextLanguage === saved.preferredLanguage) return;
+            const updated: AuthUser = {
+              ...saved,
+              isPremium: nextPremium,
+              premiumUntil: nextUntil,
+              onboardingCompleted: nextOnboarding,
+              preferredLanguage: nextLanguage,
+            };
             try { window.localStorage.setItem('user', JSON.stringify(updated)); } catch {}
             setUser(updated);
           })

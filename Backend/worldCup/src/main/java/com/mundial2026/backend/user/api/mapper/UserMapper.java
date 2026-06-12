@@ -16,7 +16,10 @@ public class UserMapper {
     private final SubscriptionService subscriptionService;
 
     public UserResponse toResponse(AppUser user) {
+        // isPremium vía SubscriptionService.isPremium() y no findActive().isPresent():
+        // incluye la regla "ADMIN siempre es Premium" aunque no tenga suscripción.
         var activeSub = subscriptionService.findActive(user.getId());
+        boolean premium = subscriptionService.isPremium(user.getId());
         return new UserResponse(
                 user.getId(),
                 user.getUsername(),
@@ -32,9 +35,10 @@ public class UserMapper {
                 user.getEmailVerified(),
                 user.getRoles().stream().map(role -> role.getCode()).collect(Collectors.toSet()),
                 user.getCreatedAt(),
-                activeSub.isPresent(),
+                premium,
                 activeSub.map(s -> s.getExpiresAt()).orElse(null),
-                user.getFavoriteTeam() != null ? user.getFavoriteTeam().getId() : null
+                user.getFavoriteTeam() != null ? user.getFavoriteTeam().getId() : null,
+                Boolean.TRUE.equals(user.getOnboardingCompleted())
         );
     }
 
@@ -46,8 +50,10 @@ public class UserMapper {
                 user.getFirstName() != null ? user.getFirstName() : user.getUsername(),
                 user.getStatus().name(),
                 user.getCreatedAt(),
-                activeSub.isPresent(),
-                activeSub.map(s -> s.getExpiresAt()).orElse(null)
+                subscriptionService.isPremium(user.getId()),
+                activeSub.map(s -> s.getExpiresAt()).orElse(null),
+                user.getPreferredLanguage(),
+                Boolean.TRUE.equals(user.getOnboardingCompleted())
         );
     }
 }

@@ -13,6 +13,9 @@ export interface AuthUser {
   country?:      string; // ISO 3166-1 alpha-2, ej. "CO"
   isPremium?:    boolean;
   premiumUntil?: string | null;
+  // Flujo de onboarding "solo la primera vez" (los devuelve el login)
+  preferredLanguage?:   string;  // ej. "es", "en"
+  onboardingCompleted?: boolean; // false → redirigir a /onboarding tras login
 }
 
 export interface AuthResponse {

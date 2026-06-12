@@ -57,7 +57,7 @@ class AuthControllerTest {
     void login_validCredentials_returns200WithTokens() throws Exception {
         AppUser user = buildUser("alice");
         AuthUserResponse authUser = new AuthUserResponse("1", "alice@test.com",
-                "Alice Smith", "ACTIVE", OffsetDateTime.now(), false);
+                "Alice Smith", "ACTIVE", OffsetDateTime.now(), false, null, "es", false);
 
         when(userService.authenticate("alice@test.com", "pass123")).thenReturn(user);
         when(tokenProvider.generateAccessToken("alice", 0)).thenReturn("access-tok");
@@ -72,7 +72,35 @@ class AuthControllerTest {
                 .andExpect(jsonPath("$.success").value(true))
                 .andExpect(jsonPath("$.data.accessToken").value("access-tok"))
                 .andExpect(jsonPath("$.data.refreshToken").value("refresh-tok"))
-                .andExpect(jsonPath("$.data.user.displayName").value("Alice Smith"));
+                .andExpect(jsonPath("$.data.user.displayName").value("Alice Smith"))
+                // El frontend decide la redirección post-login con estos dos campos:
+                .andExpect(jsonPath("$.data.user.preferredLanguage").value("es"))
+                .andExpect(jsonPath("$.data.user.onboardingCompleted").value(false));
+    }
+
+    /**
+     * Usuario que ya completó el onboarding: el login debe devolver
+     * onboardingCompleted=true para que el frontend NO lo redirija a /onboarding.
+     */
+    @Test
+    void login_userWithOnboardingDone_returnsOnboardingCompletedTrue() throws Exception {
+        AppUser user = buildUser("alice");
+        user.setOnboardingCompleted(true);
+        AuthUserResponse authUser = new AuthUserResponse("1", "alice@test.com",
+                "Alice Smith", "ACTIVE", OffsetDateTime.now(), false, null, "fr", true);
+
+        when(userService.authenticate("alice@test.com", "pass123")).thenReturn(user);
+        when(tokenProvider.generateAccessToken("alice", 0)).thenReturn("access-tok");
+        when(tokenProvider.generateRefreshToken("alice", 0)).thenReturn("refresh-tok");
+        when(userMapper.toAuthResponse(user)).thenReturn(authUser);
+
+        mockMvc.perform(post(LOGIN_URL)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(
+                                Map.of("email", "alice@test.com", "password", "pass123"))))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.data.user.preferredLanguage").value("fr"))
+                .andExpect(jsonPath("$.data.user.onboardingCompleted").value(true));
     }
 
     @Test

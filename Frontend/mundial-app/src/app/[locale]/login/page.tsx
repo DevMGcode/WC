@@ -1,6 +1,7 @@
 'use client';
 import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
+import { useLocale } from 'next-intl';
 import { useAuth } from '@/contexts/AuthContext';
 import { useCountdown } from '@/hooks/useCountdown';
 import LoginBackground from './_components/LoginBackground';
@@ -8,18 +9,21 @@ import LoginHero from './_components/LoginHero';
 import LoginCard from './_components/LoginCard';
 import ForgotPasswordModal from './_components/ForgotPasswordModal';
 import { apiFetch } from '@/lib/apiFetch';
+import { getPostLoginRoute } from '@/lib/postLoginRoute';
 
 export default function LoginPage() {
   const router = useRouter();
-  const { isAuthenticated, loading: authLoading } = useAuth();
+  const locale = useLocale();
+  const { user, isAuthenticated, loading: authLoading } = useAuth();
   const { countdown, started } = useCountdown();
 
   const [showForgot, setShowForgot] = useState(false);
   const [predCount,  setPredCount]  = useState(0);
 
   useEffect(() => {
-    if (isAuthenticated && !authLoading) router.push('/');
-  }, [isAuthenticated, authLoading, router]);
+    // Sesión ya activa: misma regla post-login (onboarding pendiente → /onboarding)
+    if (isAuthenticated && !authLoading) router.push(getPostLoginRoute(user, locale));
+  }, [isAuthenticated, authLoading, user, locale, router]);
 
   useEffect(() => {
     document.body.classList.add('login-route');

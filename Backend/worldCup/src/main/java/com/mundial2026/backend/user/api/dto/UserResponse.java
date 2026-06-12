@@ -20,6 +20,7 @@ public record UserResponse(
         OffsetDateTime createdAt,
         Boolean isPremium,
         OffsetDateTime premiumUntil,
-        Long favoriteTeamId
+        Long favoriteTeamId,
+        Boolean onboardingCompleted
 ) {
 }

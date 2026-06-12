@@ -79,6 +79,18 @@ public class UserController {
         ));
     }
 
+    /** Marca el onboarding como completado (flujo "solo la primera vez"). */
+    @PutMapping("/{id}/onboarding")
+    public ResponseEntity<ApiResponse<UserResponse>> completeOnboarding(@PathVariable Long id) {
+        // Anti-IDOR: solo el propio usuario o ADMIN
+        securityUtils.requireSelfOrAdmin(id);
+        AppUser user = userService.completeOnboarding(id);
+        return ResponseEntity.ok(ApiResponse.ok(
+                "Onboarding completado",
+                userMapper.toResponse(user)
+        ));
+    }
+
     @PutMapping("/{id}/password")
     public ResponseEntity<ApiResponse<UserResponse>> changePassword(
             @PathVariable Long id,

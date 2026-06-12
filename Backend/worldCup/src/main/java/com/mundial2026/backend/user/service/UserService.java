@@ -254,6 +254,17 @@ public class UserService {
     }
 
     /**
+     * Marca el onboarding como completado (también cuando el usuario lo omite,
+     * para que no se le vuelva a mostrar). Idempotente.
+     */
+    @Transactional
+    public AppUser completeOnboarding(Long userId) {
+        AppUser user = findById(userId);
+        user.setOnboardingCompleted(true);
+        return appUserRepository.save(user);
+    }
+
+    /**
      * Establece el equipo favorito del usuario.
      * Relevante para el plan FREE: determina qué 3 partidos puede predecir gratis.
      */

@@ -3,8 +3,10 @@ import React, { useState, useRef, useCallback, useMemo, useEffect } from 'react'
 import Image from 'next/image';
 import { motion, AnimatePresence, useMotionValue, useSpring, useTransform } from 'framer-motion';
 import { useRouter, useSearchParams } from 'next/navigation';
-import { useTranslations } from 'next-intl';
+import { useTranslations, useLocale } from 'next-intl';
 import { useAuth } from '@/contexts/AuthContext';
+import { authService } from '@/services/auth';
+import { getPostLoginRoute } from '@/lib/postLoginRoute';
 import { hex } from '@/lib/design/tokens';
 import { alpha, alphaOf } from '@/lib/design/effects';
 
@@ -12,6 +14,7 @@ interface LoginCardProps { onShowForgot: () => void; }
 
 export default function LoginCard({ onShowForgot }: LoginCardProps) {
   const t           = useTranslations();
+  const locale      = useLocale();
   const router      = useRouter();
   const searchParams = useSearchParams();
   const { login, loading: authLoading, error: authError } = useAuth();
@@ -65,7 +68,9 @@ export default function LoginCard({ onShowForgot }: LoginCardProps) {
     setError(''); setIsLoading(true);
     try {
       const ok = await login(email, password);
-      if (ok) router.push('/');
+      // Primera vez (onboardingCompleted=false) → /onboarding; si no, home
+      // en el idioma que el usuario guardó en su perfil.
+      if (ok) router.push(getPostLoginRoute(authService.getUser(), locale));
       else setError(authError || t('auth.invalidCredentials'));
     } catch { setError(t('auth.loginError')); }
     finally { setIsLoading(false); }

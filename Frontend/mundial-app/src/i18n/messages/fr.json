@@ -368,6 +368,19 @@
     "sentTitle": "E-mail envoyé !",
     "sentBody": "Vérifiez votre boîte de réception et connectez-vous avec le mot de passe temporaire."
   },
+  "reset": {
+    "title": "Nouveau mot de passe",
+    "subtitle": "Choisissez un mot de passe sécurisé pour votre compte",
+    "newPassword": "Nouveau mot de passe",
+    "confirmPassword": "Confirmer le mot de passe",
+    "submit": "Réinitialiser le mot de passe",
+    "passwordMin": "Minimum 6 caractères",
+    "passwordMismatch": "Les mots de passe ne correspondent pas.",
+    "invalidLink": "Lien invalide ou expiré. Demandez-en un nouveau.",
+    "successTitle": "Mot de passe mis à jour !",
+    "successBody": "Vous pouvez maintenant vous connecter avec votre nouveau mot de passe.",
+    "goToLogin": "Aller à la connexion"
+  },
   "register": {
     "password": "Mot de passe",
     "confirmPassword": "Confirmer le mot de passe",
@@ -536,7 +549,8 @@
       "label": "Équipes",
       "selected": "{count} sélectionnés",
       "title": "Équipes favorites",
-      "subtitle": "Sélectionnez les équipes que vous voulez suivre"
+      "subtitle": "Sélectionnez les équipes que vous voulez suivre",
+      "freeLimit": "Plan gratuit : maximum {max} équipes favorites. Passez Premium pour en choisir plus !"
     },
     "step3": {
       "label": "Notifications",
@@ -560,7 +574,8 @@
       "back": "Retour",
       "next": "Suivant",
       "start": "Commencer",
-      "skip": "Ignorer la configuration"
+      "skip": "Ignorer la configuration",
+      "saving": "Enregistrement..."
     }
   }
 }

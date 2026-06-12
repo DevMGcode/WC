@@ -368,6 +368,19 @@
     "sentTitle": "E-Mail gesendet!",
     "sentBody": "Überprüfe deinen Posteingang und melde dich mit dem temporären Passwort an."
   },
+  "reset": {
+    "title": "Neues Passwort",
+    "subtitle": "Wähle ein sicheres Passwort für dein Konto",
+    "newPassword": "Neues Passwort",
+    "confirmPassword": "Passwort bestätigen",
+    "submit": "Passwort zurücksetzen",
+    "passwordMin": "Mindestens 6 Zeichen",
+    "passwordMismatch": "Die Passwörter stimmen nicht überein.",
+    "invalidLink": "Ungültiger oder abgelaufener Link. Fordere einen neuen an.",
+    "successTitle": "Passwort aktualisiert!",
+    "successBody": "Du kannst dich jetzt mit deinem neuen Passwort anmelden.",
+    "goToLogin": "Zur Anmeldung"
+  },
   "register": {
     "password": "Passwort",
     "confirmPassword": "Passwort bestätigen",
@@ -536,7 +549,8 @@
       "label": "Teams",
       "selected": "{count} ausgewählt",
       "title": "Lieblingsteams",
-      "subtitle": "Wählen Sie die Teams aus, denen Sie folgen möchten"
+      "subtitle": "Wählen Sie die Teams aus, denen Sie folgen möchten",
+      "freeLimit": "Gratis-Plan: maximal {max} Lieblingsteams. Holen Sie sich Premium für mehr!"
     },
     "step3": {
       "label": "Benachrichtigungen",
@@ -560,7 +574,8 @@
       "back": "Zurück",
       "next": "Weiter",
       "start": "Loslegen",
-      "skip": "Einrichtung überspringen"
+      "skip": "Einrichtung überspringen",
+      "saving": "Speichern..."
     }
   }
 }

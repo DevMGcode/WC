@@ -368,6 +368,19 @@
     "sentTitle": "Email enviado!",
     "sentBody": "Verifique sua caixa de entrada e entre com a senha temporária."
   },
+  "reset": {
+    "title": "Nova senha",
+    "subtitle": "Escolha uma senha segura para a sua conta",
+    "newPassword": "Nova senha",
+    "confirmPassword": "Confirmar senha",
+    "submit": "Redefinir senha",
+    "passwordMin": "Mínimo 6 caracteres",
+    "passwordMismatch": "As senhas não coincidem.",
+    "invalidLink": "Link inválido ou expirado. Solicite um novo.",
+    "successTitle": "Senha atualizada!",
+    "successBody": "Agora você pode entrar com a sua nova senha.",
+    "goToLogin": "Ir para o login"
+  },
   "register": {
     "password": "Senha",
     "confirmPassword": "Confirmar senha",
@@ -536,7 +549,8 @@
       "label": "Times",
       "selected": "{count} selecionados",
       "title": "Times favoritos",
-      "subtitle": "Selecione os times que você quer seguir"
+      "subtitle": "Selecione os times que você quer seguir",
+      "freeLimit": "Plano gratuito: máximo de {max} times favoritos. Assine o Premium para escolher mais!"
     },
     "step3": {
       "label": "Notificações",
@@ -560,7 +574,8 @@
       "back": "Voltar",
       "next": "Próximo",
       "start": "Começar",
-      "skip": "Pular configuração"
+      "skip": "Pular configuração",
+      "saving": "Salvando..."
     }
   }
 }

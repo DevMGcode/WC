@@ -549,7 +549,8 @@
       "label": "Equipos",
       "selected": "{count} seleccionados",
       "title": "Equipos favoritos",
-      "subtitle": "Selecciona los equipos que quieres seguir"
+      "subtitle": "Selecciona los equipos que quieres seguir",
+      "freeLimit": "Plan gratuito: máximo {max} equipos favoritos. ¡Hazte Premium para elegir más!"
     },
     "step3": {
       "label": "Notificaciones",
@@ -573,7 +574,8 @@
       "back": "Atrás",
       "next": "Siguiente",
       "start": "Comenzar",
-      "skip": "Omitir configuración"
+      "skip": "Omitir configuración",
+      "saving": "Guardando..."
     }
   }
 }

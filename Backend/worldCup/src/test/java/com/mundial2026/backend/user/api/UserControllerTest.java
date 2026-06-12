@@ -23,8 +23,12 @@ import org.springframework.test.web.servlet.MockMvc;
 import java.time.OffsetDateTime;
 import java.util.Set;
 
+import static org.mockito.Mockito.doThrow;
+import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
 @WebMvcTest(
@@ -87,10 +91,57 @@ class UserControllerTest {
         user.setId(3L);
         user.setUsername("jaime");
 
-        UserResponse response = new UserResponse(
-                3L,
-                "jaime",
-                "jaime@test.com",
+        UserResponse response = buildUserResponse(3L, "jaime", false);
+
+        when(userService.findById(3L)).thenReturn(user);
+        when(userMapper.toResponse(user)).thenReturn(response);
+
+        mockMvc.perform(get("/api/v1/users/3"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.success").value(true))
+                .andExpect(jsonPath("$.data.username").value("jaime"));
+    }
+
+    // ── PUT /{id}/onboarding ──────────────────────────────────────────────────
+
+    @Test
+    void completeOnboarding_returnsOkWithFlagTrue() throws Exception {
+        AppUser user = new AppUser();
+        user.setId(3L);
+        user.setUsername("jaime");
+        user.setOnboardingCompleted(true);
+
+        when(userService.completeOnboarding(3L)).thenReturn(user);
+        when(userMapper.toResponse(user)).thenReturn(buildUserResponse(3L, "jaime", true));
+
+        mockMvc.perform(put("/api/v1/users/3/onboarding"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.success").value(true))
+                .andExpect(jsonPath("$.data.onboardingCompleted").value(true));
+
+        verify(userService).completeOnboarding(3L);
+    }
+
+    /** Anti-IDOR: un usuario no puede marcar el onboarding de otro. */
+    @Test
+    void completeOnboarding_otherUser_isRejected() throws Exception {
+        doThrow(new com.mundial2026.backend.common.exception.BusinessRuleException(
+                "Acceso denegado: el userId no corresponde al usuario autenticado"))
+                .when(securityUtils).requireSelfOrAdmin(99L);
+
+        mockMvc.perform(put("/api/v1/users/99/onboarding"))
+                .andExpect(status().isUnprocessableEntity());
+
+        verify(userService, never()).completeOnboarding(99L);
+    }
+
+    // ── helpers ───────────────────────────────────────────────────────────────
+
+    private UserResponse buildUserResponse(Long id, String username, boolean onboardingCompleted) {
+        return new UserResponse(
+                id,
+                username,
+                username + "@test.com",
                 "Jaime",
                 "R",
                 "Peru",
@@ -103,15 +154,9 @@ class UserControllerTest {
                 Set.of("USER"),
                 OffsetDateTime.now(),
                 false,
-                null
+                null,
+                null,
+                onboardingCompleted
         );
-
-        when(userService.findById(3L)).thenReturn(user);
-        when(userMapper.toResponse(user)).thenReturn(response);
-
-        mockMvc.perform(get("/api/v1/users/3"))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$.success").value(true))
-                .andExpect(jsonPath("$.data.username").value("jaime"));
     }
 }
