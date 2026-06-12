@@ -22,6 +22,7 @@ import { alpha, alphaOf, borders, gradients } from '@/lib/design/effects';
 import dynamic from 'next/dynamic';
 import { TabSkeleton } from '@/components/PageSkeleton';
 import { ErrorBoundary } from '@/components/ErrorBoundary';
+import { AdsterraBanner } from '@/components/ads';
 
 const LineupsTab    = dynamic(() => import('./_components/LineupsTab'),    { loading: () => <TabSkeleton /> });
 const StatisticsTab = dynamic(() => import('./_components/StatisticsTab'), { loading: () => <TabSkeleton /> });
@@ -676,6 +677,9 @@ export default function FixtureDetailPage({ params }: { params: { id: string } }
             </AnimatePresence>
           </div>
         </DarkCard>
+
+        {/* ── PUBLICIDAD (solo Free) — antes de los botones inferiores ── */}
+        <AdsterraBanner slot="rect300x250" className="mb-4" />
 
         {/* ── BOTTOM BUTTONS ── */}
         <div className="flex gap-3">

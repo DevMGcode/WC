@@ -47,6 +47,7 @@ public class TournamentMapper {
                 fixture.getStatus().name(),
                 fixture.getHomeScore(),
                 fixture.getAwayScore(),
+                fixture.getExtraMinutes(),
                 fixture.getExternalProviderId(),
                 scorers
         );

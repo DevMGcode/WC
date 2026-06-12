@@ -30,7 +30,9 @@ public record FixtureItem(
     public record StatusBlock(
             @JsonProperty("long") String longText,
             @JsonProperty("short") String shortCode,
-            Integer elapsed
+            Integer elapsed,
+            /** Minutos de reposición/adición (ej. 90' + 8). La API lo publica en vivo y al final. */
+            Integer extra
     ) {
     }
 

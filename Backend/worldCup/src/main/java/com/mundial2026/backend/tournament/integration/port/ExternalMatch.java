@@ -19,6 +19,7 @@ public record ExternalMatch(
         Integer homeScore,
         Integer awayScore,
         Integer elapsedMinutes,
+        Integer stoppageMinutes,
         MatchStatus status,
         Instant kickoffUtc,
         Long venueExternalId,

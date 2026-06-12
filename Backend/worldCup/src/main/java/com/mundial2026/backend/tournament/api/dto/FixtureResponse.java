@@ -19,6 +19,8 @@ public record FixtureResponse(
         String status,
         Integer homeScore,
         Integer awayScore,
+        /** Minutos de reposición (90' + X). Fuente: API-Football o botón EXTENDER del admin. */
+        Integer extraMinutes,
         Long externalProviderId,
         List<MatchEventResponse> scorers
 ) {

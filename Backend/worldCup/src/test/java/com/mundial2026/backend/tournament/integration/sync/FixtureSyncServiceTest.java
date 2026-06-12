@@ -16,6 +16,7 @@ import com.mundial2026.backend.tournament.repository.GroupStageRepository;
 import com.mundial2026.backend.tournament.repository.StageRepository;
 import com.mundial2026.backend.tournament.repository.TeamRepository;
 import com.mundial2026.backend.tournament.repository.TournamentRepository;
+import com.mundial2026.backend.tournament.service.StandingsCalculatorService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -50,6 +51,7 @@ class FixtureSyncServiceTest {
     @Mock private GroupStageRepository groupStageRepository;
     @Mock private TeamRepository teamRepository;
     @Mock private VenueSyncService venueSyncService;
+    @Mock private StandingsCalculatorService standingsCalculator;
     @Mock private ApplicationEventPublisher events;
 
     private FixtureSyncService subject;
@@ -69,7 +71,7 @@ class FixtureSyncServiceTest {
         subject = new FixtureSyncService(
                 matchDataPort, apiFootballClient, fixtureRepository,
                 tournamentRepository, stageRepository, groupStageRepository,
-                teamRepository, venueSyncService, events);
+                teamRepository, venueSyncService, standingsCalculator, events);
 
         tournament = new Tournament();
         tournament.setId(1L);
@@ -150,7 +152,7 @@ class FixtureSyncServiceTest {
     @Test
     void persist_skipsWhenExternalIdNotNumeric() {
         ExternalMatch bad = new ExternalMatch("not-a-number", 16L, "Mexico", 2384L, "USA",
-                null, null, null, MatchStatus.SCHEDULED, Instant.parse("2026-06-11T20:00:00Z"),
+                null, null, null, null, MatchStatus.SCHEDULED, Instant.parse("2026-06-11T20:00:00Z"),
                 1069L, "Azteca", "Mexico City", "Group Stage - A");
         when(matchDataPort.fetchLiveMatches()).thenReturn(List.of(bad));
         when(tournamentRepository.findByCode("WC2026")).thenReturn(Optional.of(tournament));
@@ -188,7 +190,7 @@ class FixtureSyncServiceTest {
         Fixture existing = existingFixture(868053L, FixtureStatus.SCHEDULED);
         // kickoff changes but status stays SCHEDULED → no WS push
         ExternalMatch reschedule = new ExternalMatch("868053", 16L, "Mexico", 2384L, "USA",
-                null, null, null, MatchStatus.SCHEDULED, Instant.parse("2026-06-12T20:00:00Z"),
+                null, null, null, null, MatchStatus.SCHEDULED, Instant.parse("2026-06-12T20:00:00Z"),
                 1069L, "Azteca", "Mexico City", "Group Stage - A");
         when(matchDataPort.fetchLiveMatches()).thenReturn(List.of(reschedule));
         whenStandardDepsResolve();
@@ -203,7 +205,7 @@ class FixtureSyncServiceTest {
     @Test
     void persist_resolvesRoundOf16WithoutGroupStage() {
         ExternalMatch r16 = new ExternalMatch("900000", 16L, "Mexico", 2384L, "USA",
-                null, null, null, MatchStatus.SCHEDULED, Instant.parse("2026-07-01T20:00:00Z"),
+                null, null, null, null, MatchStatus.SCHEDULED, Instant.parse("2026-07-01T20:00:00Z"),
                 1069L, "Azteca", "Mexico City", "Round of 16");
         when(matchDataPort.fetchLiveMatches()).thenReturn(List.of(r16));
         when(tournamentRepository.findByCode("WC2026")).thenReturn(Optional.of(tournament));
@@ -226,7 +228,7 @@ class FixtureSyncServiceTest {
     @Test
     void persist_skipsFixtureWithUnknownRound() {
         ExternalMatch unknown = new ExternalMatch("900001", 16L, "Mexico", 2384L, "USA",
-                null, null, null, MatchStatus.SCHEDULED, Instant.parse("2026-07-01T20:00:00Z"),
+                null, null, null, null, MatchStatus.SCHEDULED, Instant.parse("2026-07-01T20:00:00Z"),
                 1069L, "Azteca", "Mexico City", "Some Weird Round Name");
         when(matchDataPort.fetchLiveMatches()).thenReturn(List.of(unknown));
         when(tournamentRepository.findByCode("WC2026")).thenReturn(Optional.of(tournament));
@@ -252,7 +254,7 @@ class FixtureSyncServiceTest {
 
     private ExternalMatch extMatch(String externalId, Integer homeScore, Integer awayScore, MatchStatus status) {
         return new ExternalMatch(externalId, 16L, "Mexico", 2384L, "USA",
-                homeScore, awayScore, 23, status,
+                homeScore, awayScore, 23, null, status,
                 Instant.parse("2026-06-11T20:00:00Z"),
                 1069L, "Azteca", "Mexico City", "Group Stage - A");
     }
