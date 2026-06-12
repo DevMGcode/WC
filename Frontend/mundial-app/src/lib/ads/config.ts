@@ -30,29 +30,55 @@ export const ADSTERRA = {
   /** Banners formato iframe (atOptions + invoke.js de highperformanceformat). */
   banners: {
     /** 300x250 — rectángulo medio, el formato con mejor CPM. Contenido principal. */
-    rect300x250: { key: 'cf2a0fe893d6c4c7164b6b656d2dd9f8', width: 300, height: 250 } as BannerUnit,
+    rect300x250: {
+      key: "cf2a0fe893d6c4c7164b6b656d2dd9f8",
+      width: 300,
+      height: 250,
+    } as BannerUnit,
     /** 160x600 — rascacielos, solo raíl lateral en pantallas anchas. */
-    sky160x600: { key: '115fcbb9c370bb6d2eb7c2771b8bf374', width: 160, height: 600 } as BannerUnit,
+    sky160x600: {
+      key: "115fcbb9c370bb6d2eb7c2771b8bf374",
+      width: 160,
+      height: 600,
+    } as BannerUnit,
     /** 160x300 — disponible para espacios angostos (sin colocación activa hoy). */
-    box160x300: { key: '91fbf779c76a87e712643b60f9f3e223', width: 160, height: 300 } as BannerUnit,
+    box160x300: {
+      key: "91fbf779c76a87e712643b60f9f3e223",
+      width: 160,
+      height: 300,
+    } as BannerUnit,
     /** 728x90 — leaderboard horizontal, cierre de página en desktop. */
-    leader728x90: { key: 'd803412965fb194048128e2459c0d714', width: 728, height: 90 } as BannerUnit,
+    leader728x90: {
+      key: "d803412965fb194048128e2459c0d714",
+      width: 728,
+      height: 90,
+    } as BannerUnit,
     /** 468x60 — banner horizontal para anchos intermedios (tablet). */
-    banner468x60: { key: 'cb48fe342a2d9408e93382de1db181d4', width: 468, height: 60 } as BannerUnit,
+    banner468x60: {
+      key: "cb48fe342a2d9408e93382de1db181d4",
+      width: 468,
+      height: 60,
+    } as BannerUnit,
     /** 320x50 — banner horizontal móvil. */
-    mobile320x50: { key: '287ad9a6936b89b757bcdc00a167a211', width: 320, height: 50 } as BannerUnit,
+    mobile320x50: {
+      key: "287ad9a6936b89b757bcdc00a167a211",
+      width: 320,
+      height: 50,
+    } as BannerUnit,
   },
 
   /** Banner nativo — se integra como tarjetas de contenido en el feed. */
   native: {
-    scriptSrc: 'https://pl29705437.effectivecpmnetwork.com/432a9c24e6d49373f0b50b27139820d0/invoke.js',
-    containerId: 'container-432a9c24e6d49373f0b50b27139820d0',
+    scriptSrc:
+      "https://pl29705437.effectivecpmnetwork.com/432a9c24e6d49373f0b50b27139820d0/invoke.js",
+    containerId: "container-432a9c24e6d49373f0b50b27139820d0",
   },
 
   /** Social Bar — widget flotante global (formato no intrusivo de Adsterra). */
   socialBar: {
-    enabled: true,
-    scriptSrc: 'https://pl29705439.effectivecpmnetwork.com/03/de/6f/03de6f65955f957e679ef67450572cd8.js',
+    enabled: false,
+    scriptSrc:
+      "https://pl29705439.effectivecpmnetwork.com/03/de/6f/03de6f65955f957e679ef67450572cd8.js",
   },
 
   /**
@@ -65,7 +91,8 @@ export const ADSTERRA = {
    */
   popunder: {
     enabled: false,
-    scriptSrc: 'https://pl29705436.effectivecpmnetwork.com/4c/ca/37/4cca37ebf1a946cef1ac8f35ec73de92.js',
+    scriptSrc:
+      "https://pl29705436.effectivecpmnetwork.com/4c/ca/37/4cca37ebf1a946cef1ac8f35ec73de92.js",
   },
 } as const;
 
@@ -79,5 +106,5 @@ export const ADSTERRA = {
  */
 export const GOOGLE_ADSENSE = {
   enabled: true,
-  client: 'ca-pub-9221658875005359',
+  client: "ca-pub-9221658875005359",
 } as const;
