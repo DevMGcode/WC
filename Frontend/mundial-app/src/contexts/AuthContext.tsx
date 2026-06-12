@@ -9,7 +9,7 @@ export interface AuthContextType {
   loading: boolean;
   isAuthenticated: boolean;
   login: (email: string, password: string) => Promise<boolean>;
-  register: (req: RegisterRequest) => Promise<{ ok: boolean; emailVerificationRequired?: boolean; message?: string }>;
+  register: (req: RegisterRequest) => Promise<{ ok: boolean; emailVerificationRequired?: boolean; message?: string; detail?: string }>;
   logout: () => void;
   error: string | null;
 }
@@ -80,7 +80,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
   };
 
-  const register = async (req: RegisterRequest): Promise<{ ok: boolean; emailVerificationRequired?: boolean; message?: string }> => {
+  const register = async (req: RegisterRequest): Promise<{ ok: boolean; emailVerificationRequired?: boolean; message?: string; detail?: string }> => {
     setLoading(true);
     setError(null);
     try {
@@ -93,10 +93,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         return { ok: true, emailVerificationRequired: response.emailVerificationRequired ?? true, message: response.message };
       }
       setError(response.message || t('register.genericError'));
-      return { ok: false, message: response.message };
-    } catch {
+      return { ok: false, message: response.message, detail: response.detail };
+    } catch (err) {
       setError(t('errors.connection'));
-      return { ok: false, message: t('errors.connection') };
+      return {
+        ok: false,
+        message: t('errors.connection'),
+        detail: `excepción en register: ${err instanceof Error ? `${err.name}: ${err.message}` : String(err)}`,
+      };
     } finally {
       setLoading(false);
     }

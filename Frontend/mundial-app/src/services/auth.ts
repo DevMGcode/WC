@@ -24,6 +24,8 @@ export interface AuthResponse {
     refreshToken?: string;
   };
   message?: string;
+  /** Detalle técnico del fallo (HTTP status, respuesta cruda, error de red) — para diagnóstico en pantalla. */
+  detail?: string;
 }
 
 export interface RegisterRequest {
@@ -96,10 +98,17 @@ export const authService = {
       if (!registerResponse.ok || !registerData?.success) {
         // Sin JSON del backend = respondió el proxy (nginx 502/504...) — incluir
         // el código HTTP para poder diagnosticar reportes de usuarios en prod.
+        let rawBody = '';
+        if (!registerData) {
+          rawBody = await registerResponse.text().catch(() => '');
+        }
         return {
           success: false,
           message: registerData?.message
             || `No se pudo crear la cuenta. (Error ${registerResponse.status}) Intenta de nuevo en unos minutos.`,
+          detail: registerData
+            ? `HTTP ${registerResponse.status} · respuesta del backend: ${JSON.stringify(registerData).slice(0, 160)}`
+            : `HTTP ${registerResponse.status} ${registerResponse.statusText} · content-type: ${contentType || 'desconocido'} · cuerpo: ${rawBody.slice(0, 160) || '(vacío)'}`,
         };
       }
 
@@ -111,8 +120,13 @@ export const authService = {
           ? '¡Cuenta creada! Inicia sesión con tus credenciales.'
           : 'Cuenta creada. Revisa tu correo y haz clic en el enlace de verificación para activarla.',
       };
-    } catch {
-      return { success: false, message: 'Error de conexión con el servidor' };
+    } catch (err) {
+      // El fetch ni siquiera llegó al servidor (sin red, DNS, CORS, SW...).
+      return {
+        success: false,
+        message: 'Error de conexión con el servidor',
+        detail: `fetch falló: ${err instanceof Error ? `${err.name}: ${err.message}` : String(err)}`,
+      };
     }
   },
 
