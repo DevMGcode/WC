@@ -86,7 +86,7 @@ export default function RegisterPage() {
       return;
     }
     if (form.username.length < 3) {
-      setError(t('register.passwordTooShort'));
+      setError(t('register.usernameTooShort'));
       return;
     }
 
