@@ -104,7 +104,7 @@ public class SubscriptionService {
                 .ifPresent(sub -> {
                     try {
                         mercadoPagoGateway
-                                .fetchApprovedPaymentByPreferenceId(sub.getProviderOrderId())
+                                .fetchApprovedPaymentByExternalRef(String.valueOf(sub.getId()))
                                 .ifPresent(status -> {
                                     activateById(sub.getId(), status.externalReference(),
                                             status.transactionAmount(), status.currency());

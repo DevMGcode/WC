@@ -171,11 +171,11 @@ public class MercadoPagoRealGateway implements MercadoPagoGateway {
     }
 
     @Override
-    public Optional<PaymentStatus> fetchApprovedPaymentByPreferenceId(String preferenceId) {
+    public Optional<PaymentStatus> fetchApprovedPaymentByExternalRef(String subscriptionId) {
         try {
             PaymentClient client = new PaymentClient();
             Map<String, Object> filters = new HashMap<>();
-            filters.put("preference_id", preferenceId);
+            filters.put("external_reference", subscriptionId);
             filters.put("status", "approved");
             var result = client.search(com.mercadopago.net.MPSearchRequest.builder()
                     .limit(1).offset(0).filters(filters).build());
@@ -192,8 +192,12 @@ public class MercadoPagoRealGateway implements MercadoPagoGateway {
                     payment.getTransactionAmount(),
                     payment.getCurrencyId()
             ));
+        } catch (MPApiException e) {
+            log.warn("Error buscando pago por external_reference={}: HTTP {} — {}",
+                    subscriptionId, e.getStatusCode(), e.getApiResponse().getContent());
+            return Optional.empty();
         } catch (Exception e) {
-            log.warn("Error buscando pago por preferenceId={}: {}", preferenceId, e.getMessage());
+            log.warn("Error buscando pago por external_reference={}: {}", subscriptionId, e.getMessage());
             return Optional.empty();
         }
     }

@@ -82,9 +82,9 @@ public class MercadoPagoMockGateway implements MercadoPagoGateway {
     }
 
     @Override
-    public Optional<PaymentStatus> fetchApprovedPaymentByPreferenceId(String preferenceId) {
-        log.info("[MOCK MercadoPago] Búsqueda por preferenceId={} → APPROVED (simulado)", preferenceId);
-        return Optional.of(new PaymentStatus("approved", preferenceId, true, false,
+    public Optional<PaymentStatus> fetchApprovedPaymentByExternalRef(String subscriptionId) {
+        log.info("[MOCK MercadoPago] Búsqueda por external_reference={} → APPROVED (simulado)", subscriptionId);
+        return Optional.of(new PaymentStatus("approved", subscriptionId, true, false,
                 SubscriptionService.MUNDIAL_PASS_PRICE, SubscriptionService.MUNDIAL_PASS_CURRENCY));
     }
 

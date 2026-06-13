@@ -65,7 +65,7 @@ class SubscriptionReconciliationJobTest {
 
         reconciliationJob.reconcile();
 
-        verify(mercadoPagoGateway, never()).fetchApprovedPaymentByPreferenceId(any());
+        verify(mercadoPagoGateway, never()).fetchApprovedPaymentByExternalRef(any());
         verify(subscriptionService, never()).activateById(any(), any(), any(), any());
     }
 
@@ -74,14 +74,15 @@ class SubscriptionReconciliationJobTest {
         Subscription sub = pendingSub(5L, "PREF_ABC");
         when(subscriptionRepository.findPendingMercadoPagoOlderThan(any()))
                 .thenReturn(List.of(sub));
-        when(mercadoPagoGateway.fetchApprovedPaymentByPreferenceId("PREF_ABC"))
-                .thenReturn(Optional.of(approvedStatus("PREF_ABC")));
+        when(mercadoPagoGateway.fetchApprovedPaymentByExternalRef("5"))
+                .thenReturn(Optional.of(approvedStatus("5")));
 
         reconciliationJob.reconcile();
 
+        // externalReference que devuelve MP = "5" (el subscriptionId que enviamos al crear la preferencia)
         verify(subscriptionService).activateById(
                 eq(5L),
-                eq("PREF_ABC"),
+                eq("5"),
                 eq(SubscriptionService.MUNDIAL_PASS_PRICE),
                 eq(SubscriptionService.MUNDIAL_PASS_CURRENCY)
         );
@@ -92,7 +93,7 @@ class SubscriptionReconciliationJobTest {
         Subscription sub = pendingSub(5L, "PREF_ABC");
         when(subscriptionRepository.findPendingMercadoPagoOlderThan(any()))
                 .thenReturn(List.of(sub));
-        when(mercadoPagoGateway.fetchApprovedPaymentByPreferenceId("PREF_ABC"))
+        when(mercadoPagoGateway.fetchApprovedPaymentByExternalRef("5"))
                 .thenReturn(Optional.empty());
 
         reconciliationJob.reconcile();
@@ -108,11 +109,11 @@ class SubscriptionReconciliationJobTest {
                 .thenReturn(List.of(sub1, sub2));
 
         // sub1 lanza excepción en MP
-        when(mercadoPagoGateway.fetchApprovedPaymentByPreferenceId("PREF_FAIL"))
+        when(mercadoPagoGateway.fetchApprovedPaymentByExternalRef("10"))
                 .thenThrow(new RuntimeException("timeout"));
         // sub2 tiene pago aprobado
-        when(mercadoPagoGateway.fetchApprovedPaymentByPreferenceId("PREF_OK"))
-                .thenReturn(Optional.of(approvedStatus("PREF_OK")));
+        when(mercadoPagoGateway.fetchApprovedPaymentByExternalRef("11"))
+                .thenReturn(Optional.of(approvedStatus("11")));
 
         // No debe lanzar excepción aunque falle sub1
         reconciliationJob.reconcile();
@@ -127,10 +128,10 @@ class SubscriptionReconciliationJobTest {
         Subscription sub2 = pendingSub(21L, "PREF_2");
         when(subscriptionRepository.findPendingMercadoPagoOlderThan(any()))
                 .thenReturn(List.of(sub1, sub2));
-        when(mercadoPagoGateway.fetchApprovedPaymentByPreferenceId("PREF_1"))
-                .thenReturn(Optional.of(approvedStatus("PREF_1")));
-        when(mercadoPagoGateway.fetchApprovedPaymentByPreferenceId("PREF_2"))
-                .thenReturn(Optional.of(approvedStatus("PREF_2")));
+        when(mercadoPagoGateway.fetchApprovedPaymentByExternalRef("20"))
+                .thenReturn(Optional.of(approvedStatus("20")));
+        when(mercadoPagoGateway.fetchApprovedPaymentByExternalRef("21"))
+                .thenReturn(Optional.of(approvedStatus("21")));
 
         reconciliationJob.reconcile();
 

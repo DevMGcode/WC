@@ -293,7 +293,7 @@ class SubscriptionServiceTest {
         subscriptionService.reconcilePendingForUser(5L);
 
         verify(subscriptionRepository, never()).findFirstByUserIdAndStatus(any(), any());
-        verify(mercadoPagoGateway, never()).fetchApprovedPaymentByPreferenceId(any());
+        verify(mercadoPagoGateway, never()).fetchApprovedPaymentByExternalRef(any());
     }
 
     @Test
@@ -305,7 +305,7 @@ class SubscriptionServiceTest {
 
         subscriptionService.reconcilePendingForUser(5L);
 
-        verify(mercadoPagoGateway, never()).fetchApprovedPaymentByPreferenceId(any());
+        verify(mercadoPagoGateway, never()).fetchApprovedPaymentByExternalRef(any());
     }
 
     @Test
@@ -318,7 +318,7 @@ class SubscriptionServiceTest {
 
         subscriptionService.reconcilePendingForUser(5L);
 
-        verify(mercadoPagoGateway, never()).fetchApprovedPaymentByPreferenceId(any());
+        verify(mercadoPagoGateway, never()).fetchApprovedPaymentByExternalRef(any());
     }
 
     @Test
@@ -337,7 +337,8 @@ class SubscriptionServiceTest {
                 SubscriptionService.MUNDIAL_PASS_PRICE,
                 SubscriptionService.MUNDIAL_PASS_CURRENCY
         );
-        when(mercadoPagoGateway.fetchApprovedPaymentByPreferenceId("PREF_ABC123"))
+        // El código pasa String.valueOf(sub.getId()) = "10" como external_reference
+        when(mercadoPagoGateway.fetchApprovedPaymentByExternalRef("10"))
                 .thenReturn(Optional.of(approved));
 
         subscriptionService.reconcilePendingForUser(5L);
@@ -353,7 +354,7 @@ class SubscriptionServiceTest {
         when(subscriptionRepository.findActiveByUserId(eq(5L), any())).thenReturn(Optional.empty());
         when(subscriptionRepository.findFirstByUserIdAndStatus(5L, SubscriptionStatus.PENDING))
                 .thenReturn(Optional.of(sub));
-        when(mercadoPagoGateway.fetchApprovedPaymentByPreferenceId("PREF_ABC123"))
+        when(mercadoPagoGateway.fetchApprovedPaymentByExternalRef("10"))
                 .thenReturn(Optional.empty());
 
         subscriptionService.reconcilePendingForUser(5L);
@@ -369,7 +370,7 @@ class SubscriptionServiceTest {
         when(subscriptionRepository.findActiveByUserId(eq(5L), any())).thenReturn(Optional.empty());
         when(subscriptionRepository.findFirstByUserIdAndStatus(5L, SubscriptionStatus.PENDING))
                 .thenReturn(Optional.of(sub));
-        when(mercadoPagoGateway.fetchApprovedPaymentByPreferenceId("PREF_ERR"))
+        when(mercadoPagoGateway.fetchApprovedPaymentByExternalRef("10"))
                 .thenThrow(new RuntimeException("timeout MP"));
 
         // El error de MP no debe romper el login del usuario

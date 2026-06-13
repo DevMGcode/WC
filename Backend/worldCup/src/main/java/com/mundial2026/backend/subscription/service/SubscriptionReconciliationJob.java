@@ -41,7 +41,7 @@ public class SubscriptionReconciliationJob {
         for (Subscription sub : pending) {
             try {
                 mercadoPagoGateway
-                        .fetchApprovedPaymentByPreferenceId(sub.getProviderOrderId())
+                        .fetchApprovedPaymentByExternalRef(String.valueOf(sub.getId()))
                         .ifPresentOrElse(
                                 status -> {
                                     subscriptionService.activateById(

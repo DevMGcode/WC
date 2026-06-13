@@ -30,11 +30,12 @@ public interface MercadoPagoGateway {
     PaymentStatus fetchPaymentStatus(String paymentId);
 
     /**
-     * Busca el primer pago aprobado asociado a una preferencia de MP.
-     * Se usa en la reconciliación: dada la preferencia de una suscripción PENDING,
-     * verifica si existe un pago aprobado que nunca llegó por webhook.
+     * Busca el primer pago aprobado cuyo external_reference coincida con el
+     * subscriptionId que le pasamos a MP al crear la preferencia.
+     * Se usa en la reconciliación: si el webhook no llegó, preguntamos a MP
+     * directamente si hay un pago aprobado para esa suscripción.
      */
-    Optional<PaymentStatus> fetchApprovedPaymentByPreferenceId(String preferenceId);
+    Optional<PaymentStatus> fetchApprovedPaymentByExternalRef(String subscriptionId);
 
     /**
      * Solicita un reembolso total del pago indicado.
