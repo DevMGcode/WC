@@ -23,7 +23,6 @@ import { Surface, StatusDot } from '@/components/ui';
 
 import MatchCard, { getEffectiveStatus } from './_components/MatchCard';
 import FixturesFilterBar, { type FilterKey } from './_components/FixturesFilterBar';
-import { AdsterraBanner } from '@/components/ads';
 
 /* ══════════════════════════════════════════
    EQ BARS — decorativo

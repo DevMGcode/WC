@@ -41,7 +41,7 @@ import { TabSkeleton } from '@/components/PageSkeleton';
 
 import { KPIChip } from './home/_components/HomeUtils';
 import PremiumOnboardingModal from '@/components/premium/PremiumOnboardingModal';
-import { AdsterraBanner } from '@/components/ads';
+import { AdSlot } from '@/components/ads';
 
 // Lazy load de secciones pesadas — se descargan en paralelo pero no bloquean el render inicial
 const HomeCountdown   = dynamic(() => import('./home/_components/HomeCountdown'),   { loading: () => <TabSkeleton /> });
@@ -313,6 +313,9 @@ export default function HomePage() {
         {/* ── ROW 2 — COUNTDOWN / MUNDIAL EN CURSO ── */}
         <HomeCountdown countdown={countdown} mundialStarted={mundialStarted} t={t} />
 
+        {/* ── PUBLICIDAD (solo Free) — entre countdown y contenido principal ── */}
+        <AdSlot />
+
         {/* ── ROW 3 — BENTO GRID ── */}
         <div className="grid grid-cols-1 lg:grid-cols-[1fr_316px] gap-5">
 
@@ -335,10 +338,6 @@ export default function HomePage() {
 
         {/* ── ROW 4 — QUICK ACCESS BENTO ── */}
         <QuickAccessBento t={t} />
-
-        {/* ── PUBLICIDAD (solo Free) — responsive ── */}
-        <div className="sm:hidden mt-8"><AdsterraBanner slot="mobile320x50" /></div>
-        <div className="hidden sm:block mt-8"><AdsterraBanner slot="rect300x250" /></div>
       </div>
 
       <TourButton steps={getTourSteps(locale, 'dashboard')} />

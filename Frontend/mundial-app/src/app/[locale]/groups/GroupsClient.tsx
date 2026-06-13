@@ -28,7 +28,7 @@ import { hex, type BrandColor } from '@/lib/design/tokens';
 import { alpha, alphaOf, borders, gradients } from '@/lib/design/effects';
 import { apiFetch } from '@/lib/apiFetch';
 
-import { AdsterraBanner } from '@/components/ads';
+import { AdSlot } from '@/components/ads';
 import GroupCard, { EQBars } from './_components/GroupCard';
 import { localizeTeamName } from '@/lib/i18n/teamNames';
 import KnockoutCard, { ChampionBanner, ROUND_META, ROUND_I18N, ROUND_GRID } from './_components/KnockoutCard';
@@ -183,6 +183,11 @@ export default function GroupsClient({ initialTournament, initialGroups, initial
 
       <div className="relative z-10">
         <Header title="⚽ Orionix Gol" subtitle={t('groups.subtitle')} centered />
+      </div>
+
+      {/* ── PUBLICIDAD (solo Free) — entre header y tabs ── */}
+      <div className="relative z-10 max-w-7xl mx-auto px-4">
+        <AdSlot className="mb-0" />
       </div>
 
       {/* ── STICKY TAB BAR ── */}
@@ -463,9 +468,6 @@ export default function GroupsClient({ initialTournament, initialGroups, initial
           </AnimatePresence>
         )}
 
-        {/* ── PUBLICIDAD (solo Free) — responsive ── */}
-        <div className="sm:hidden mt-8"><AdsterraBanner slot="mobile320x50" /></div>
-        <div className="hidden sm:block mt-8"><AdsterraBanner slot="rect300x250" /></div>
       </div>
       <TourButton steps={getTourSteps(locale, 'groups')} />
     </div>

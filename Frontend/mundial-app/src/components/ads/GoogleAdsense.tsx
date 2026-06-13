@@ -27,6 +27,14 @@ export function GoogleAdsense() {
     if (!GOOGLE_ADSENSE.enabled || !showAds || consent !== 'accepted') return;
     if (document.querySelector(`script[src^="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js"]`)) return;
 
+    // Deshabilitar anchor ads (bottom) y vignette ads antes de cargar el script:
+    // estos formatos superponen la navegación móvil y bloquean el dock.
+    (window as any).adsbygoogle = (window as any).adsbygoogle || [];
+    (window as any).adsbygoogle.push({
+      google_ad_client: GOOGLE_ADSENSE.client,
+      overlays: { bottom: false },
+    });
+
     const script = document.createElement('script');
     script.async = true;
     script.src = ADSENSE_SRC;

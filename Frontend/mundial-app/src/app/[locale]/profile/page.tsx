@@ -22,7 +22,7 @@ import ChangePasswordModal from './_components/ChangePasswordModal';
 import LogoutModal       from './_components/LogoutModal';
 import { favoriteTeamsService, type FavoriteTeam, type PublicTeam } from '@/services/favoriteTeams';
 import { usePremium } from '@/hooks/usePremium';
-import { AdsterraBanner } from '@/components/ads';
+import { AdSlot } from '@/components/ads';
 
 export default function ProfilePage() {
   const router   = useRouter();
@@ -318,9 +318,8 @@ export default function ProfilePage() {
       {/* Content */}
       <div className="relative z-10 px-3 sm:px-5 py-5 max-w-4xl mx-auto w-full pb-32">
 
-        {/* ── PUBLICIDAD (solo Free) — responsive ── */}
-        <div className="sm:hidden mb-6"><AdsterraBanner slot="mobile320x50" /></div>
-        <div className="hidden sm:block mb-6"><AdsterraBanner slot="rect300x250" /></div>
+        {/* ── PUBLICIDAD (solo Free) — entre header y tabs ── */}
+        <AdSlot />
 
         {/* Tab bar */}
         <motion.div

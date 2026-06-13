@@ -11,7 +11,7 @@ import { useTranslations } from 'next-intl';
 import { useTopScorers, useTopAssists } from '@/hooks/useTournamentData';
 import { usePremium } from '@/hooks/usePremium';
 import { PremiumGate } from '@/components/premium/PremiumGate';
-import { AdsterraBanner } from '@/components/ads';
+import { AdSlot } from '@/components/ads';
 
 interface PlayerStat {
   playerId: number;
@@ -322,6 +322,9 @@ export default function ScorersClient() {
                 </div>
               )}
 
+              {/* Publicidad entre podio y resto del ranking */}
+              <AdSlot />
+
               {/* Divider */}
               {rest.length > 0 && (
                 <div className="flex items-center gap-3 mb-4">
@@ -348,10 +351,6 @@ export default function ScorersClient() {
             </motion.div>
           </AnimatePresence>
         )}
-
-        {/* ── PUBLICIDAD (solo Free) — responsive ── */}
-        <div className="sm:hidden mt-8"><AdsterraBanner slot="mobile320x50" /></div>
-        <div className="hidden sm:block mt-8"><AdsterraBanner slot="rect300x250" /></div>
       </div>
     </div>
   );

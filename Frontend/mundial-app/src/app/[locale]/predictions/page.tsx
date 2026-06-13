@@ -29,7 +29,7 @@ import { getTourSteps } from '@/components/Tour/tourSteps';
 import { hex } from '@/lib/design/tokens';
 import { alpha, alphaOf, surfaces } from '@/lib/design/effects';
 import { usePremium } from '@/hooks/usePremium';
-import { AdsterraBanner } from '@/components/ads';
+import { AdSlot } from '@/components/ads';
 
 /* ══════════════════════════════════════════
    TYPES
@@ -460,6 +460,9 @@ export default function PredictionsPage() {
 
       {/* ── CONTENT ── */}
       <div className="relative z-10 max-w-4xl mx-auto px-4 sm:px-6 py-5 pb-32">
+
+        {/* ── PUBLICIDAD (solo Free) — entre tabs y contenido ── */}
+        <AdSlot />
 
         {loading ? (
           <div className="flex items-center justify-center min-h-80">
@@ -990,9 +993,6 @@ export default function PredictionsPage() {
           </AnimatePresence>
         )}
 
-        {/* ── PUBLICIDAD (solo Free) — responsive ── */}
-        <div className="sm:hidden mt-10"><AdsterraBanner slot="mobile320x50" /></div>
-        <div className="hidden sm:block mt-10"><AdsterraBanner slot="rect300x250" /></div>
       </div>
 
       <TourButton steps={getTourSteps(locale, 'predictions')} />

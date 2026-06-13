@@ -24,7 +24,7 @@ import { alpha, alphaOf, borders, gradients } from '@/lib/design/effects';
 import dynamic from 'next/dynamic';
 import { TabSkeleton } from '@/components/PageSkeleton';
 import { ErrorBoundary } from '@/components/ErrorBoundary';
-import { AdsterraBanner } from '@/components/ads';
+import { AdSlot } from '@/components/ads';
 
 const LineupsTab    = dynamic(() => import('./_components/LineupsTab'),    { loading: () => <TabSkeleton /> });
 const StatisticsTab = dynamic(() => import('./_components/StatisticsTab'), { loading: () => <TabSkeleton /> });
@@ -769,9 +769,8 @@ export default function FixtureDetailPage({ params }: { params: { id: string } }
           </div>
         </DarkCard>
 
-        {/* ── PUBLICIDAD (solo Free) — responsive ── */}
-        <div className="sm:hidden mb-4"><AdsterraBanner slot="mobile320x50" /></div>
-        <div className="hidden sm:block mb-4"><AdsterraBanner slot="rect300x250" /></div>
+        {/* ── PUBLICIDAD (solo Free) — antes de los botones de navegación ── */}
+        <AdSlot />
 
         {/* ── BOTTOM BUTTONS ── */}
         <div className="flex gap-3">
