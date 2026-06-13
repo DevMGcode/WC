@@ -5,6 +5,7 @@ import com.mundial2026.backend.subscription.api.dto.MercadoPagoPreferenceRespons
 import com.mundial2026.backend.user.domain.AppUser;
 
 import java.math.BigDecimal;
+import java.util.Optional;
 
 /**
  * Contrato de la pasarela Mercado Pago (Checkout Pro).
@@ -27,6 +28,13 @@ public interface MercadoPagoGateway {
      * consultamos al MP qué pasó realmente con ese pago (status=approved, etc.).
      */
     PaymentStatus fetchPaymentStatus(String paymentId);
+
+    /**
+     * Busca el primer pago aprobado asociado a una preferencia de MP.
+     * Se usa en la reconciliación: dada la preferencia de una suscripción PENDING,
+     * verifica si existe un pago aprobado que nunca llegó por webhook.
+     */
+    Optional<PaymentStatus> fetchApprovedPaymentByPreferenceId(String preferenceId);
 
     /**
      * Solicita un reembolso total del pago indicado.

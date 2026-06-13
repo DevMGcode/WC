@@ -10,6 +10,7 @@ import com.mundial2026.backend.user.api.dto.RefreshTokenRequest;
 import com.mundial2026.backend.user.api.dto.ResetPasswordRequest;
 import com.mundial2026.backend.user.api.mapper.UserMapper;
 import com.mundial2026.backend.user.domain.AppUser;
+import com.mundial2026.backend.subscription.service.SubscriptionService;
 import com.mundial2026.backend.user.service.EmailService;
 import com.mundial2026.backend.user.service.UserService;
 import jakarta.servlet.http.HttpServletResponse;
@@ -30,6 +31,7 @@ public class AuthController {
     private final JwtTokenProvider tokenProvider;
     private final UserMapper userMapper;
     private final EmailService emailService;
+    private final SubscriptionService subscriptionService;
 
     @Value("${app.frontend-url:http://localhost:3000}")
     private String frontendUrl;
@@ -61,6 +63,10 @@ public class AuthController {
     public ResponseEntity<ApiResponse<LoginResponse>> login(@Valid @RequestBody LoginRequest request) {
         AppUser user = userService.authenticate(request.email(), request.password());
 
+        // Activa al instante si tiene un pago aprobado en MP que el webhook no notificó.
+        // Para usuarios free sin PENDING no hace nada (guarda <10ms).
+        subscriptionService.reconcilePendingForUser(user.getId());
+
         int tv = user.getTokenVersion() != null ? user.getTokenVersion() : 0;
         String accessToken  = tokenProvider.generateAccessToken(user.getUsername(), tv);
         String refreshToken = tokenProvider.generateRefreshToken(user.getUsername(), tv);
@@ -89,6 +95,9 @@ public class AuthController {
         if (tokenProvider.getTokenVersion(rt) != currentTv) {
             throw new BusinessRuleException("Token de refresco inválido o expirado");
         }
+
+        // Igual que en login: activa PENDING si MP aprobó el pago sin webhook.
+        subscriptionService.reconcilePendingForUser(user.getId());
 
         String newAccess  = tokenProvider.generateAccessToken(username, currentTv);
         String newRefresh = tokenProvider.generateRefreshToken(username, currentTv);

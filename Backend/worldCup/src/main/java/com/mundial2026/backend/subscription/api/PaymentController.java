@@ -8,6 +8,7 @@ import com.mundial2026.backend.subscription.api.dto.MercadoPagoPreferenceRespons
 import com.mundial2026.backend.subscription.api.dto.ProductDetailsDto;
 import com.mundial2026.backend.subscription.domain.PaymentProvider;
 import com.mundial2026.backend.subscription.domain.Subscription;
+import com.mundial2026.backend.subscription.service.CurrencyConversionService;
 import com.mundial2026.backend.subscription.service.MercadoPagoGateway;
 import com.mundial2026.backend.subscription.service.PaymentAvailabilityService;
 import com.mundial2026.backend.subscription.service.SubscriptionService;
@@ -18,6 +19,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import com.mundial2026.backend.common.exception.ResourceNotFoundException;
 import java.math.BigDecimal;
 
 /**
@@ -36,6 +38,7 @@ public class PaymentController {
     private final SubscriptionService subscriptionService;
     private final PaymentAvailabilityService availabilityService;
     private final MercadoPagoGateway mercadoPagoGateway;
+    private final CurrencyConversionService currencyConversionService;
 
     // ─── Availability ─────────────────────────────────────────────────────────
 
@@ -71,34 +74,34 @@ public class PaymentController {
     ) {
         AppUser user = securityUtils.currentUser();
 
-        // SEGURIDAD: el precio NO se toma del cliente. El frontend puede manipular
-        // `amount` (p.ej. ?amount=1) para pagar menos. Usamos el precio canónico
-        // del servidor y saneamos el productDetails para que el item cobrado coincida.
-        final BigDecimal price    = SubscriptionService.MUNDIAL_PASS_PRICE;
-        final String     currency = SubscriptionService.MUNDIAL_PASS_CURRENCY;
+        // SEGURIDAD: el precio NO se toma del cliente. Partimos de 9.99 USD
+        // y lo convertimos a COP en tiempo real para que MP y la BD coincidan.
+        final BigDecimal usdPrice = SubscriptionService.MUNDIAL_PASS_PRICE;
+        final BigDecimal copPrice = currencyConversionService.usdToCop(usdPrice);
+        final String     currency = "COP";
 
         var pd = request.productDetails();
         ProductDetailsDto sanitizedDetails = new ProductDetailsDto(
                 pd != null ? pd.id() : null,
                 pd != null ? pd.name() : "Pase Mundial 2026",
                 pd != null ? pd.description() : null,
-                1,                 // cantidad fija: 1 Pase
-                price,             // precio del servidor
-                currency,          // moneda del servidor
+                1,
+                copPrice,
+                currency,
                 pd != null ? pd.cryptoCurrency() : null,
                 pd != null ? pd.type() : "DIGITAL"
         );
         MercadoPagoPreferenceRequest sanitizedRequest =
-                new MercadoPagoPreferenceRequest(price, sanitizedDetails);
+                new MercadoPagoPreferenceRequest(copPrice, sanitizedDetails);
 
-        log.info("Creando preferencia Mercado Pago userId={} amount={} {} (precio fijado por servidor)",
-                user.getId(), price, currency);
+        log.info("Creando preferencia Mercado Pago userId={} amount={} USD → {} COP",
+                user.getId(), usdPrice, copPrice);
 
-        // 1. Crear suscripción PENDING en BD con el precio del servidor
+        // 1. Crear suscripción PENDING en BD con el precio en COP (misma moneda que MP reportará)
         Subscription pending = subscriptionService.createPending(
                 user.getId(),
                 PaymentProvider.MERCADO_PAGO,
-                price,
+                copPrice,
                 currency
         );
 
@@ -111,5 +114,37 @@ public class PaymentController {
         subscriptionService.attachProviderOrderId(pending.getId(), preference.preferenceId());
 
         return ResponseEntity.ok(ApiResponse.ok("Preferencia creada", preference));
+    }
+
+    /**
+     * El frontend llama este endpoint desde /checkout/result cuando MP redirige con status=success.
+     * Consulta MP directamente para confirmar el pago y activa la suscripción sin depender del webhook.
+     * Idempotente: si ya está ACTIVE no hace nada.
+     */
+    @PostMapping("/mercadopago/verify/{paymentId}")
+    public ResponseEntity<ApiResponse<Void>> verifyMercadoPagoPayment(
+            @PathVariable String paymentId
+    ) {
+        AppUser user = securityUtils.currentUser();
+        log.info("Verificación activa de pago userId={} paymentId={}", user.getId(), paymentId);
+
+        MercadoPagoGateway.PaymentStatus status = mercadoPagoGateway.fetchPaymentStatus(paymentId);
+
+        if (!status.approved()) {
+            log.info("Pago no aprobado aún paymentId={} mpStatus={}", paymentId, status.mpStatus());
+            return ResponseEntity.ok(ApiResponse.ok("Pago pendiente o rechazado", null));
+        }
+
+        String externalRef = status.externalReference();
+        if (externalRef == null || externalRef.isBlank()) {
+            throw new ResourceNotFoundException("No se encontró referencia de suscripción para el pago " + paymentId);
+        }
+
+        Long subscriptionId = Long.parseLong(externalRef);
+        subscriptionService.activateById(subscriptionId, paymentId,
+                status.transactionAmount(), status.currency());
+
+        log.info("Suscripción activada por verificación activa userId={} subscriptionId={}", user.getId(), subscriptionId);
+        return ResponseEntity.ok(ApiResponse.ok("¡Suscripción Premium activada!", null));
     }
 }

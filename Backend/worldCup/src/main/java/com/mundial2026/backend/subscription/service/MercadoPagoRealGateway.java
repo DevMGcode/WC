@@ -21,7 +21,10 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.stereotype.Service;
 
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
+import java.util.Optional;
 
 /**
  * Implementación real de Mercado Pago — llama al SDK oficial para crear
@@ -164,6 +167,34 @@ public class MercadoPagoRealGateway implements MercadoPagoGateway {
         } catch (MPException e) {
             log.error("MercadoPago fetchPayment error: {}", e.getMessage());
             throw new IllegalStateException("Error consultando pago en Mercado Pago", e);
+        }
+    }
+
+    @Override
+    public Optional<PaymentStatus> fetchApprovedPaymentByPreferenceId(String preferenceId) {
+        try {
+            PaymentClient client = new PaymentClient();
+            Map<String, Object> filters = new HashMap<>();
+            filters.put("preference_id", preferenceId);
+            filters.put("status", "approved");
+            var result = client.search(com.mercadopago.net.MPSearchRequest.builder()
+                    .limit(1).offset(0).filters(filters).build());
+            if (result == null || result.getResults() == null || result.getResults().isEmpty()) {
+                return Optional.empty();
+            }
+            Payment payment = result.getResults().get(0);
+            String status = payment.getStatus();
+            return Optional.of(new PaymentStatus(
+                    status,
+                    payment.getExternalReference(),
+                    "approved".equalsIgnoreCase(status),
+                    false,
+                    payment.getTransactionAmount(),
+                    payment.getCurrencyId()
+            ));
+        } catch (Exception e) {
+            log.warn("Error buscando pago por preferenceId={}: {}", preferenceId, e.getMessage());
+            return Optional.empty();
         }
     }
 

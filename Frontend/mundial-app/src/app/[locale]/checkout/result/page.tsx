@@ -1,9 +1,9 @@
 'use client';
 
 import { useSearchParams, useRouter } from 'next/navigation';
-import { useEffect }                  from 'react';
+import { useEffect, useState }        from 'react';
 import { motion }                     from 'framer-motion';
-import { FiCheckCircle, FiXCircle, FiArrowRight } from 'react-icons/fi';
+import { FiCheckCircle, FiXCircle, FiArrowRight, FiLoader } from 'react-icons/fi';
 import { Header }    from '@/components/Navigation';
 import { useAuth }   from '@/contexts/AuthContext';
 import { hex }       from '@/lib/design/tokens';
@@ -15,21 +15,51 @@ export default function CheckoutResultPage() {
   const router  = useRouter();
   const { isAuthenticated, loading } = useAuth();
 
-  const orderId  = params.get('preferenceId') ?? params.get('orderId') ?? '—';
-  const provider = params.get('provider') ?? 'MERCADO_PAGO';
-  const status   = params.get('status')   ?? 'failed'; // 'success' | 'failed' | 'pending'
-  const isOk     = status === 'success' || status === 'approved';
+  const orderId   = params.get('preferenceId') ?? params.get('orderId') ?? '—';
+  const provider  = params.get('provider') ?? 'MERCADO_PAGO';
+  const status    = params.get('status')   ?? 'failed';
+  const paymentId = params.get('payment_id') ?? params.get('collection_id') ?? null;
+  const isOk      = status === 'success' || status === 'approved';
+
+  const [verifying, setVerifying] = useState(isOk);
 
   useEffect(() => {
     if (!loading && !isAuthenticated) router.push('/login');
   }, [loading, isAuthenticated, router]);
 
-  // Si el pago fue exitoso, refrescar el JWT para que incluya isPremium=true.
-  // El backend lee subscriptionService.isPremium(userId) al emitir el token,
-  // así que el nuevo access token reflejará la sub recién activada sin
-  // requerir logout/login. Patrón estándar (Spotify, Netflix, Stripe).
+  // 1. Verificación activa: cuando MP redirige con status=success, consulta el backend
+  //    que a su vez consulta MP directamente. Cubre el caso en que el webhook no llegó
+  //    (frecuente con débito Bancolombia en Colombia).
   useEffect(() => {
-    if (!isOk || !isAuthenticated) return;
+    if (!isOk || !isAuthenticated || !paymentId) {
+      setVerifying(false);
+      return;
+    }
+    if (typeof window === 'undefined') return;
+
+    const token = window.localStorage.getItem('authToken');
+    if (!token) { setVerifying(false); return; }
+
+    let cancelled = false;
+    (async () => {
+      try {
+        await fetch(`/api/v1/payments/mercadopago/verify/${paymentId}`, {
+          method: 'POST',
+          headers: { Authorization: `Bearer ${token}` },
+        });
+      } catch {
+        // Si falla la verificación, el webhook puede llegar después — no es crítico.
+      } finally {
+        if (!cancelled) setVerifying(false);
+      }
+    })();
+    return () => { cancelled = true; };
+  }, [isOk, isAuthenticated, paymentId]);
+
+  // 2. Refrescar JWT una vez que la verificación terminó, para que isPremium=true
+  //    quede reflejado en el token sin requerir logout/login.
+  useEffect(() => {
+    if (!isOk || !isAuthenticated || verifying) return;
     if (typeof window === 'undefined') return;
 
     const refreshToken = window.localStorage.getItem('refreshToken');
@@ -50,15 +80,14 @@ export default function CheckoutResultPage() {
         if (data.accessToken)  window.localStorage.setItem('authToken',    data.accessToken);
         if (data.refreshToken) window.localStorage.setItem('refreshToken', data.refreshToken);
         if (data.user) {
-          // Notificar al resto de la app que el usuario cambió (sidebar, hooks, etc.)
           window.dispatchEvent(new CustomEvent('auth:user-updated', { detail: data.user }));
         }
       } catch {
-        // Silencioso — el usuario aún puede hacer logout/login manual si esto falla.
+        // Silencioso — el usuario puede hacer logout/login manual si esto falla.
       }
     })();
     return () => { cancelled = true; };
-  }, [isOk, isAuthenticated]);
+  }, [isOk, isAuthenticated, verifying]);
 
   const accentColor = isOk ? hex.green.bright : hex.status.danger;
   const accentGlow  = isOk ? alphaOf('green', 0.55) : `${hex.status.danger}55`;
@@ -128,7 +157,7 @@ export default function CheckoutResultPage() {
             className="text-xl font-black text-white mb-2"
             style={{ textShadow: `0 0 20px ${accentGlow}` }}
           >
-            {isOk ? '¡Pago exitoso!' : 'Pago no completado'}
+            {verifying ? 'Confirmando pago...' : isOk ? '¡Pago exitoso!' : 'Pago no completado'}
           </motion.p>
 
           <motion.p
@@ -138,7 +167,9 @@ export default function CheckoutResultPage() {
             className="text-[13px] mb-6"
             style={{ color: hex.text.secondary }}
           >
-            {isOk
+            {verifying
+              ? 'Estamos verificando tu pago con Mercado Pago. Un momento...'
+              : isOk
               ? 'Tu Pase Mundial 2026 ha sido activado. ¡Disfruta todas las funciones premium!'
               : 'El pago no fue procesado. Tus datos no han sido cobrados. Puedes intentarlo de nuevo.'
             }
@@ -177,18 +208,22 @@ export default function CheckoutResultPage() {
             className="space-y-3"
           >
             <motion.button
-              whileHover={{ scale: 1.02, boxShadow: `0 8px 28px ${accentGlow}` }}
-              whileTap={{ scale: 0.97 }}
-              onClick={() => router.push('/')}
+              whileHover={verifying ? {} : { scale: 1.02, boxShadow: `0 8px 28px ${accentGlow}` }}
+              whileTap={verifying ? {} : { scale: 0.97 }}
+              onClick={() => !verifying && router.push('/')}
+              disabled={verifying}
               className="w-full flex items-center justify-center gap-2 py-3.5 rounded-xl font-black tracking-wide text-sm"
               style={{
                 background: `linear-gradient(135deg, ${alpha(accentColor, 0.18)}, ${alpha(hex.bg.elevated, 0.90)})`,
                 border: `1px solid ${alpha(accentColor, 0.35)}`,
                 color: accentColor,
+                opacity: verifying ? 0.5 : 1,
+                cursor: verifying ? 'wait' : 'pointer',
               }}
             >
-              {isOk ? 'Ir al inicio' : 'Volver al inicio'}
-              <FiArrowRight size={14} />
+              {verifying ? <FiLoader size={14} className="animate-spin" /> : null}
+              {verifying ? 'Verificando...' : isOk ? 'Ir al inicio' : 'Volver al inicio'}
+              {!verifying && <FiArrowRight size={14} />}
             </motion.button>
 
             {!isOk && (
