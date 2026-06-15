@@ -49,4 +49,11 @@ public class SecurityUtils {
             throw new BusinessRuleException("Acceso denegado: el userId no corresponde al usuario autenticado");
         }
     }
+
+    /** Exige rol ADMIN; lanza 422 si el usuario autenticado no lo es. */
+    public void requireAdmin() {
+        if (!isAdmin()) {
+            throw new BusinessRuleException("Acceso denegado: se requiere rol de administrador");
+        }
+    }
 }

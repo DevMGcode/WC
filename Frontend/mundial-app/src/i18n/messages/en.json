@@ -275,6 +275,9 @@
     "pending": "PENDING",
     "finished": "FINISHED",
     "makePrediction": "⚡ Make Prediction",
+    "predictionDone": "Predicted",
+    "predictionClosed": "Closed",
+    "edit": "Edit",
     "ongoing": "Ongoing",
     "worldCupStart": "Start of",
     "stats": {
@@ -399,6 +402,7 @@
     "passwordRepeat": "Repeat your password",
     "passwordMismatch": "Passwords do not match.",
     "passwordTooShort": "Password must be at least 5 characters.",
+    "usernameTooShort": "Username must be at least 3 characters.",
     "successTitle": "Account created! ✓",
     "successMessage": "Account created! Sign in with your credentials.",
     "successPending": "Account created. Check your email and click the verification link to activate it.",
@@ -537,7 +541,10 @@
     "confirmDelete": "Delete this league? This action cannot be undone.",
     "back": "Back",
     "isOwner": "You are the owner",
-    "loading": "Loading"
+    "loading": "Loading",
+    "accessDeniedTitle": "Private league",
+    "accessDenied": "You can only see the ranking and members of leagues you belong to. Go Premium to view any league.",
+    "goPremium": "Go Premium"
   },
   "onboarding": {
     "welcome": "Welcome",

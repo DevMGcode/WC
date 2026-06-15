@@ -264,6 +264,9 @@
     "pending": "В ОЖИДАНИИ",
     "finished": "ЗАВЕРШЁН",
     "makePrediction": "⚡ Сделать прогноз",
+    "predictionDone": "Спрогнозировано",
+    "predictionClosed": "Закрыто",
+    "edit": "Изменить",
     "ongoing": "Идёт",
     "worldCupStart": "Начало",
     "stats": {
@@ -388,6 +391,7 @@
     "passwordRepeat": "Повторите пароль",
     "passwordMismatch": "Пароли не совпадают.",
     "passwordTooShort": "Пароль должен быть не менее 5 символов.",
+    "usernameTooShort": "Имя пользователя должно содержать не менее 3 символов.",
     "successTitle": "Аккаунт создан! ✓",
     "successMessage": "Аккаунт создан! Войдите с вашими данными.",
     "successPending": "Аккаунт создан. Проверьте email и нажмите на ссылку подтверждения.",
@@ -537,7 +541,10 @@
     "confirmDelete": "Удалить эту лигу? Это действие нельзя отменить.",
     "back": "Назад",
     "isOwner": "Вы владелец",
-    "loading": "Загрузка"
+    "loading": "Загрузка",
+    "accessDeniedTitle": "Частная лига",
+    "accessDenied": "Вы можете видеть рейтинг и участников только тех лиг, в которых состоите. Оформите Premium, чтобы видеть любую лигу.",
+    "goPremium": "Оформить Premium"
   },
   "onboarding": {
     "welcome": "Добро пожаловать",

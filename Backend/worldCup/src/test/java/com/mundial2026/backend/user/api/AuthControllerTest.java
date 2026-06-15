@@ -45,6 +45,9 @@ class AuthControllerTest {
     @MockitoBean JwtTokenProvider tokenProvider;
     @MockitoBean UserMapper userMapper;
     @MockitoBean EmailService emailService;
+    // AuthController inyecta SubscriptionService (añadido al resolver la activación
+    // Premium por webhook de MP); debe estar en el contexto del @WebMvcTest.
+    @MockitoBean com.mundial2026.backend.subscription.service.SubscriptionService subscriptionService;
     // JwtAuthenticationFilter ahora carga roles desde la BD, así que necesita
     // AppUserRepository en el contexto incluso cuando el filtro está deshabilitado.
     @MockitoBean AppUserRepository appUserRepository;

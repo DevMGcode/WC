@@ -35,6 +35,11 @@ public class LeagueController {
 
     @GetMapping
     public ResponseEntity<ApiResponse<List<LeagueResponse>>> findAll() {
+        // Listado global de TODAS las ligas privadas: solo ADMIN. Exponerlo a
+        // cualquier usuario filtraba nombres, códigos y dueños de ligas ajenas.
+        // El frontend no lo usa (ver verificación Fase 2); los usuarios ven sus
+        // ligas con /user/{id} y se unen por código.
+        securityUtils.requireAdmin();
         return ResponseEntity.ok(ApiResponse.ok("Ligas encontradas", leagueService.findAll()));
     }
 
@@ -64,6 +69,9 @@ public class LeagueController {
 
     @GetMapping("/{id}/members")
     public ResponseEntity<ApiResponse<List<LeagueMemberResponse>>> findMembers(@PathVariable Long id) {
+        // Solo miembros de la liga o Premium/admin (los miembros de una liga
+        // privada no deben ser visibles para cualquier usuario autenticado).
+        leagueService.requireCanViewLeague(id, securityUtils.currentUserId());
         return ResponseEntity.ok(ApiResponse.ok("Miembros de la liga encontrados", leagueService.findMembers(id)));
     }
 
@@ -88,6 +96,8 @@ public class LeagueController {
 
     @GetMapping("/{id}/ranking")
     public ResponseEntity<ApiResponse<List<LeagueRankingResponse>>> ranking(@PathVariable Long id) {
+        // Free: solo el ranking de SU liga. Premium/admin: cualquier liga.
+        leagueService.requireCanViewLeague(id, securityUtils.currentUserId());
         return ResponseEntity.ok(ApiResponse.ok("Ranking de la liga encontrado", leagueService.findRanking(id)));
     }
 

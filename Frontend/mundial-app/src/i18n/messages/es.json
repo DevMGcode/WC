@@ -275,6 +275,9 @@
     "pending": "PENDIENTE",
     "finished": "FINALIZADO",
     "makePrediction": "⚡ Hacer Porra",
+    "predictionDone": "Ya predicho",
+    "predictionClosed": "Cerrada",
+    "edit": "Editar",
     "ongoing": "En curso",
     "worldCupStart": "Inicio del",
     "stats": {
@@ -538,7 +541,10 @@
     "confirmDelete": "¿Eliminar esta liga? Esta acción no se puede deshacer.",
     "back": "Volver",
     "isOwner": "Eres propietario",
-    "loading": "Cargando"
+    "loading": "Cargando",
+    "accessDeniedTitle": "Liga privada",
+    "accessDenied": "Solo puedes ver el ranking y los miembros de las ligas a las que perteneces. Hazte Premium para ver cualquier liga.",
+    "goPremium": "Hazte Premium"
   },
   "onboarding": {
     "welcome": "Bienvenido",
