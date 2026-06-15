@@ -28,7 +28,7 @@ import { hex, type BrandColor } from '@/lib/design/tokens';
 import { alpha, alphaOf, borders, gradients } from '@/lib/design/effects';
 import { apiFetch } from '@/lib/apiFetch';
 
-import { AdsterraBanner } from '@/components/ads';
+import { AdSlot } from '@/components/ads';
 import GroupCard, { EQBars } from './_components/GroupCard';
 import { localizeTeamName } from '@/lib/i18n/teamNames';
 import KnockoutCard, { ChampionBanner, ROUND_META, ROUND_I18N, ROUND_GRID } from './_components/KnockoutCard';
@@ -185,6 +185,11 @@ export default function GroupsClient({ initialTournament, initialGroups, initial
         <Header title="⚽ Orionix Gol" subtitle={t('groups.subtitle')} centered />
       </div>
 
+      {/* ── PUBLICIDAD (solo Free) — entre header y tabs ── */}
+      <div className="relative z-10 max-w-7xl mx-auto px-4">
+        <AdSlot className="mb-0" />
+      </div>
+
       {/* ── STICKY TAB BAR ── */}
       <div data-tour="groups-tabs" className="sticky top-0 z-40"
         style={{ background: alpha(hex.bg.primary, 0.92),
@@ -229,6 +234,7 @@ export default function GroupsClient({ initialTournament, initialGroups, initial
 
       {/* ── CONTENT ── */}
       <div className="relative z-10 max-w-7xl mx-auto px-3 sm:px-5 py-5 pb-32">
+
         {loading ? (
           <div className="flex items-center justify-center min-h-80">
             <div className="flex flex-col items-center gap-4">
@@ -260,7 +266,7 @@ export default function GroupsClient({ initialTournament, initialGroups, initial
                   </div>
                 </motion.div>
                 <div data-tour="groups-grid" className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  {groups.map((g, i) => <GroupCard key={g.id} group={g} index={i} t={t} />)}
+                  {groups.map((g, i) => <GroupCard key={`group-${g.id}-${i}`} group={g} index={i} t={t} />)}
                 </div>
                 <motion.div className="mt-5 flex flex-wrap items-center gap-4"
                   initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.5 }}>
@@ -282,8 +288,8 @@ export default function GroupsClient({ initialTournament, initialGroups, initial
                   ))}
                 </motion.div>
 
-                {/* ── MEJOR DEFENSA ── */}
-                {bestDefense.length > 0 && (
+                {/* ── MEJOR DEFENSA ── se oculta si todos los equipos tienen 0 goles concedidos (API Football aún sin datos) */}
+                {bestDefense.length > 0 && bestDefense.some((r: any) => (r.goalsAgainst ?? 0) > 0) && (
                   <motion.div className="mt-6 relative overflow-hidden rounded-2xl"
                     initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.6 }}
                     style={{ background: `linear-gradient(145deg, ${alpha(hex.bg.primary, 0.98)}, ${alpha(hex.bg.secondary, 0.96)})`,
@@ -302,7 +308,7 @@ export default function GroupsClient({ initialTournament, initialGroups, initial
                       </div>
                       <div className="space-y-2">
                         {bestDefense.slice(0, 8).map((row: any, i: number) => (
-                          <motion.div key={row.teamId ?? i}
+                          <motion.div key={`defense-${row.teamId ?? 'x'}-${i}`}
                             initial={{ opacity: 0, x: -8 }} animate={{ opacity: 1, x: 0 }}
                             transition={{ delay: 0.65 + i * 0.04 }}
                             className="flex items-center gap-3 px-3 py-2 rounded-xl"
@@ -316,7 +322,7 @@ export default function GroupsClient({ initialTournament, initialGroups, initial
                             </span>
                             {(row.teamFlagUrl || row.flagUrl) && (
                               <div className="relative w-5 h-4 rounded-sm overflow-hidden shrink-0">
-                                <Image src={row.teamFlagUrl ?? row.flagUrl} alt={row.teamName ?? ''} fill className="object-cover" />
+                                <Image src={row.teamFlagUrl ?? row.flagUrl} alt={row.teamName ?? ''} fill sizes="20px" className="object-cover" />
                               </div>
                             )}
                             <span className="flex-1 text-[11px] font-bold truncate" style={{ color: hex.text.primary }}>
@@ -462,8 +468,6 @@ export default function GroupsClient({ initialTournament, initialGroups, initial
           </AnimatePresence>
         )}
 
-        {/* ── PUBLICIDAD (solo Free) ── */}
-        <AdsterraBanner slot="rect300x250" className="mt-8" />
       </div>
       <TourButton steps={getTourSteps(locale, 'groups')} />
     </div>

@@ -46,4 +46,17 @@ public interface SubscriptionRepository extends JpaRepository<Subscription, Long
      * Se usa para evitar crear órdenes duplicadas mientras una está en curso.
      */
     Optional<Subscription> findFirstByUserIdAndStatus(Long userId, SubscriptionStatus status);
+
+    /**
+     * Todas las suscripciones PENDING de Mercado Pago creadas antes de una fecha dada.
+     * El job de reconciliación las consulta con MP para activarlas si el pago fue aprobado.
+     */
+    @Query("""
+           SELECT s FROM Subscription s
+           WHERE s.status = com.mundial2026.backend.subscription.domain.SubscriptionStatus.PENDING
+             AND s.paymentProvider = com.mundial2026.backend.subscription.domain.PaymentProvider.MERCADO_PAGO
+             AND s.providerOrderId IS NOT NULL
+             AND s.createdAt < :before
+           """)
+    List<Subscription> findPendingMercadoPagoOlderThan(@Param("before") OffsetDateTime before);
 }

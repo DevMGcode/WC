@@ -50,6 +50,18 @@ export const fmtDate = (d: Date | string | number, locale?: string): string => {
 export const fmtDayLong = (d: Date | string | number, locale?: string): string =>
   new Date(d).toLocaleDateString(activeLocale(locale), { weekday: 'long', day: 'numeric', month: 'long', timeZone: TOURNAMENT_TZ });
 
+/**
+ * Clave de día "YYYY-MM-DD" en la TZ del torneo (CDMX), para AGRUPAR partidos
+ * por día de forma consistente con lo que muestran fmtDay/fmtDayLong.
+ *
+ * Importante: NO usar d.toISOString().slice(0,10) para agrupar — eso da la
+ * fecha en UTC, que para partidos cerca de medianoche cae en un día distinto
+ * al que se muestra (el del torneo), mezclando partidos bajo encabezados de
+ * otro día. 'en-CA' produce el formato ISO "YYYY-MM-DD" y ordena bien.
+ */
+export const dayKey = (d: Date | string | number): string =>
+  new Date(d).toLocaleDateString('en-CA', { timeZone: TOURNAMENT_TZ });
+
 /** "15 jun." — fecha corta sin día de la semana */
 export const fmtShortDate = (d: Date | string | number, locale?: string): string =>
   new Date(d).toLocaleDateString(activeLocale(locale), { day: '2-digit', month: 'short', timeZone: TOURNAMENT_TZ });

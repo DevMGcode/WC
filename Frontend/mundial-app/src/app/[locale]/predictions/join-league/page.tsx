@@ -37,7 +37,7 @@ export default function JoinLeaguePage() {
       setSuccess(t('league.joinedSuccessfully'));
       setTimeout(() => router.push('/predictions?tab=ligas'), 1500);
     } catch (err: any) {
-      setError(err.message || t('league.enterValidCode'));
+      setError(err.response?.data?.message || err.message || t('league.enterValidCode'));
     } finally { setLoading(false); }
   };
 

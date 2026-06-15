@@ -264,6 +264,9 @@
     "pending": "PENDENTE",
     "finished": "FINALIZADO",
     "makePrediction": "⚡ Fazer Palpite",
+    "predictionDone": "Já palpitado",
+    "predictionClosed": "Fechada",
+    "edit": "Editar",
     "ongoing": "Em andamento",
     "worldCupStart": "Início da",
     "stats": {
@@ -347,6 +350,8 @@
       "mundial": "COPA",
       "tagline": "FOOTBALL TECH EXPERIENCE",
       "countdownLabel": "⚡ Para a Copa do Mundo",
+      "liveLabel": "⚽ A Copa do Mundo está rolando",
+      "liveTagline": "Jogue bolões e analise palpites",
       "days": "DIAS",
       "hours": "HRS",
       "minutes": "MIN",
@@ -366,6 +371,19 @@
     "sentTitle": "Email enviado!",
     "sentBody": "Verifique sua caixa de entrada e entre com a senha temporária."
   },
+  "reset": {
+    "title": "Nova senha",
+    "subtitle": "Escolha uma senha segura para a sua conta",
+    "newPassword": "Nova senha",
+    "confirmPassword": "Confirmar senha",
+    "submit": "Redefinir senha",
+    "passwordMin": "Mínimo 6 caracteres",
+    "passwordMismatch": "As senhas não coincidem.",
+    "invalidLink": "Link inválido ou expirado. Solicite um novo.",
+    "successTitle": "Senha atualizada!",
+    "successBody": "Agora você pode entrar com a sua nova senha.",
+    "goToLogin": "Ir para o login"
+  },
   "register": {
     "password": "Senha",
     "confirmPassword": "Confirmar senha",
@@ -373,6 +391,7 @@
     "passwordRepeat": "Repita a sua senha",
     "passwordMismatch": "As senhas não coincidem.",
     "passwordTooShort": "A senha deve ter pelo menos 5 caracteres.",
+    "usernameTooShort": "O nome de usuário deve ter pelo menos 3 caracteres.",
     "successTitle": "Conta criada! ✓",
     "successMessage": "Conta criada! Entre com suas credenciais.",
     "successPending": "Conta criada. Verifique seu email e clique no link de verificação para ativá-la.",
@@ -522,7 +541,10 @@
     "confirmDelete": "Excluir esta liga? Esta ação não pode ser desfeita.",
     "back": "Voltar",
     "isOwner": "Você é o proprietário",
-    "loading": "Carregando"
+    "loading": "Carregando",
+    "accessDeniedTitle": "Liga privada",
+    "accessDenied": "Você só pode ver o ranking e os membros das ligas às quais pertence. Assine o Premium para ver qualquer liga.",
+    "goPremium": "Assinar Premium"
   },
   "onboarding": {
     "welcome": "Bem-vindo",
@@ -534,7 +556,8 @@
       "label": "Times",
       "selected": "{count} selecionados",
       "title": "Times favoritos",
-      "subtitle": "Selecione os times que você quer seguir"
+      "subtitle": "Selecione os times que você quer seguir",
+      "freeLimit": "Plano gratuito: máximo de {max} times favoritos. Assine o Premium para escolher mais!"
     },
     "step3": {
       "label": "Notificações",
@@ -558,7 +581,8 @@
       "back": "Voltar",
       "next": "Próximo",
       "start": "Começar",
-      "skip": "Pular configuração"
+      "skip": "Pular configuração",
+      "saving": "Salvando..."
     }
   }
 }

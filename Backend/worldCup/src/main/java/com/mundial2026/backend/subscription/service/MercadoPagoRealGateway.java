@@ -21,7 +21,10 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.stereotype.Service;
 
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
+import java.util.Optional;
 
 /**
  * Implementación real de Mercado Pago — llama al SDK oficial para crear
@@ -164,6 +167,38 @@ public class MercadoPagoRealGateway implements MercadoPagoGateway {
         } catch (MPException e) {
             log.error("MercadoPago fetchPayment error: {}", e.getMessage());
             throw new IllegalStateException("Error consultando pago en Mercado Pago", e);
+        }
+    }
+
+    @Override
+    public Optional<PaymentStatus> fetchApprovedPaymentByExternalRef(String subscriptionId) {
+        try {
+            PaymentClient client = new PaymentClient();
+            Map<String, Object> filters = new HashMap<>();
+            filters.put("external_reference", subscriptionId);
+            filters.put("status", "approved");
+            var result = client.search(com.mercadopago.net.MPSearchRequest.builder()
+                    .limit(1).offset(0).filters(filters).build());
+            if (result == null || result.getResults() == null || result.getResults().isEmpty()) {
+                return Optional.empty();
+            }
+            Payment payment = result.getResults().get(0);
+            String status = payment.getStatus();
+            return Optional.of(new PaymentStatus(
+                    status,
+                    payment.getExternalReference(),
+                    "approved".equalsIgnoreCase(status),
+                    false,
+                    payment.getTransactionAmount(),
+                    payment.getCurrencyId()
+            ));
+        } catch (MPApiException e) {
+            log.warn("Error buscando pago por external_reference={}: HTTP {} — {}",
+                    subscriptionId, e.getStatusCode(), e.getApiResponse().getContent());
+            return Optional.empty();
+        } catch (Exception e) {
+            log.warn("Error buscando pago por external_reference={}: {}", subscriptionId, e.getMessage());
+            return Optional.empty();
         }
     }
 

@@ -12,7 +12,7 @@ import {
 import { Header } from '@/components/Navigation';
 import { useAllFixtures } from '@/hooks/useTournamentData';
 import { LIVE_REFETCH_INTERVAL_MS } from '@/constants/tournament';
-import { fmtDayLong } from '@/utils/format';
+import { fmtDayLong, dayKey } from '@/utils/format';
 import { useTranslations, useLocale } from 'next-intl';
 import TourButton from '@/components/Tour/TourButton';
 import { getTourSteps } from '@/components/Tour/tourSteps';
@@ -23,7 +23,6 @@ import { Surface, StatusDot } from '@/components/ui';
 
 import MatchCard, { getEffectiveStatus } from './_components/MatchCard';
 import FixturesFilterBar, { type FilterKey } from './_components/FixturesFilterBar';
-import { AdsterraNative, AdsterraBanner } from '@/components/ads';
 
 /* ══════════════════════════════════════════
    EQ BARS — decorativo
@@ -151,7 +150,9 @@ export default function FixturesClient({ initialFixtures }: { initialFixtures?: 
     const map = new Map<string, { key: string; label: string; items: any[] }>();
     fixtures.forEach(f => {
       const d = new Date(f.kickoffAt);
-      const key = d.toISOString().slice(0, 10);
+      // Agrupar por el día en la TZ del torneo (igual que el encabezado y las
+      // tarjetas), no por la fecha UTC, para no mezclar días cercanos a medianoche.
+      const key = dayKey(f.kickoffAt);
       const label = fmtDayLong(d, locale);
       if (!map.has(key)) map.set(key, { key, label, items: [] });
       map.get(key)!.items.push(f);
@@ -322,8 +323,6 @@ export default function FixturesClient({ initialFixtures }: { initialFixtures?: 
                 </div>
               </motion.div>
 
-              {/* Banner nativo (solo Free) — integrado al feed tras el primer día */}
-              {gi === 0 && grouped.length > 1 && <AdsterraNative />}
               </React.Fragment>
             ))}
           </div>
@@ -357,10 +356,6 @@ export default function FixturesClient({ initialFixtures }: { initialFixtures?: 
         )}
       </div>
 
-      {/* Raíl lateral desktop (solo Free, pantallas muy anchas) */}
-      <div className="hidden 2xl:block fixed right-6 top-28 z-10">
-        <AdsterraBanner slot="sky160x600" />
-      </div>
 
       <TourButton steps={getTourSteps(locale, 'calendar')} />
     </div>

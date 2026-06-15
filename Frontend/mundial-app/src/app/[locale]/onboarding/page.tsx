@@ -14,6 +14,14 @@ import { getTeams } from '@/services/publicTournament';
 import { locales, localeConfig, type Locale } from '@/i18n/locales';
 import { hex } from '@/lib/design/tokens';
 import { alpha, alphaOf } from '@/lib/design/effects';
+import { useAuth } from '@/contexts/AuthContext';
+import { usePremium } from '@/hooks/usePremium';
+import { authService, type AuthUser } from '@/services/auth';
+import { apiFetch } from '@/lib/apiFetch';
+import { favoriteTeamsService } from '@/services/favoriteTeams';
+
+/** Tope de equipos favoritos para el plan FREE (mismo valor que el backend). */
+const FREE_MAX_FAVORITE_TEAMS = 3;
 
 type OnboardingTeam = { id: number; name: string; shortName: string; flagUrl?: string };
 
@@ -257,8 +265,19 @@ export default function OnboardingPage() {
   const router = useRouter();
   const locale = useLocale() as Locale;
   const t = useTranslations('onboarding');
+  const { isAuthenticated, loading: authLoading } = useAuth();
+  const { isPremium } = usePremium();
   const [step, setStep] = useState(1);
   const [selectedTeams, setSelectedTeams] = useState<number[]>([]);
+  const [capHint, setCapHint] = useState(false);
+  const [saving, setSaving] = useState(false);
+
+  // El onboarding configura la cuenta → requiere sesión activa.
+  useEffect(() => {
+    if (!authLoading && !isAuthenticated) {
+      router.replace(`/${locale}/login`);
+    }
+  }, [authLoading, isAuthenticated, locale, router]);
   const [notifications, setNotifications] = useState({
     fixtureReminders:    true,
     resultNotifications: true,
@@ -290,13 +309,81 @@ export default function OnboardingPage() {
   }, []);
 
   const toggleTeam = (id: number) =>
-    setSelectedTeams(p => p.includes(id) ? p.filter(x => x !== id) : [...p, id]);
+    setSelectedTeams(p => {
+      if (p.includes(id)) {
+        setCapHint(false);
+        return p.filter(x => x !== id);
+      }
+      // Plan FREE: máximo 3 equipos favoritos (mismo tope que valida el backend).
+      if (!isPremium && p.length >= FREE_MAX_FAVORITE_TEAMS) {
+        setCapHint(true);
+        return p;
+      }
+      return [...p, id];
+    });
 
-  const handleFinish = () => {
-    localStorage.setItem('onboardingCompleted', 'true');
-    localStorage.setItem('selectedTeams', JSON.stringify(selectedTeams));
-    localStorage.setItem('language', locale);
-    router.push(`/${locale}`);
+  /**
+   * Persiste TODO en el backend (no en localStorage):
+   *   1. Idioma elegido → PUT /users/{id}/profile (preferredLanguage)
+   *   2. Equipos elegidos → POST /users/{id}/favorite-teams (el 1ro = principal)
+   *   3. Flag onboarding_completed → PUT /users/{id}/onboarding (también al omitir)
+   * Luego sincroniza el usuario local y entra a la app.
+   */
+  const handleFinish = async (skip = false) => {
+    if (saving) return;
+    setSaving(true);
+    const u = authService.getUser();
+    try {
+      if (u?.id) {
+        if (!skip) {
+          // 1. Guardar idioma en el perfil. El PUT exige firstName y email,
+          //    así que primero leemos los valores actuales del usuario.
+          try {
+            const meRes = await apiFetch(`/api/v1/users/${u.id}`);
+            const meJson = await meRes.json().catch(() => null);
+            const me = meJson?.data;
+            if (meRes.ok && me?.firstName && me?.email) {
+              await apiFetch(`/api/v1/users/${u.id}/profile`, {
+                method: 'PUT',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                  firstName: me.firstName,
+                  lastName: me.lastName ?? undefined,
+                  email: me.email,
+                  preferredLanguage: locale,
+                  timeZone: me.timeZone ?? undefined,
+                }),
+              });
+            }
+          } catch { /* sin red: el idioma se puede cambiar luego en el perfil */ }
+
+          // 2. Equipos elegidos → favoritos reales (el primero queda como principal,
+          //    que es el que usa el plan FREE para sus 3 predicciones gratis).
+          for (let i = 0; i < selectedTeams.length; i++) {
+            try {
+              await favoriteTeamsService.add(u.id, selectedTeams[i], i === 0);
+            } catch { /* duplicado o tope: el backend ya protege, seguimos */ }
+          }
+        }
+
+        // 3. Marcar onboarding completado (también en "omitir": no perseguir al usuario).
+        try {
+          await apiFetch(`/api/v1/users/${u.id}/onboarding`, { method: 'PUT' });
+        } catch { /* si falla, el backend lo volverá a pedir en el próximo login */ }
+
+        // 4. Sincronizar el usuario local para que el resto de la app lo vea ya.
+        const updated: AuthUser = {
+          ...u,
+          onboardingCompleted: true,
+          preferredLanguage: skip ? u.preferredLanguage : locale,
+        };
+        try { localStorage.setItem('user', JSON.stringify(updated)); } catch {}
+        window.dispatchEvent(new CustomEvent('auth:user-updated', { detail: updated }));
+      }
+    } finally {
+      setSaving(false);
+      router.push(`/${locale}`);
+    }
   };
 
   const TOTAL_STEPS = 4;
@@ -491,53 +578,81 @@ export default function OnboardingPage() {
                       {t('step2.subtitle')}
                     </p>
 
-                    <div className="grid grid-cols-3 gap-2.5">
-                      {teams.map(team => {
-                        const selected = selectedTeams.includes(team.id);
-                        return (
-                          <motion.div
-                            key={team.id}
-                            onClick={() => toggleTeam(team.id)}
-                            whileHover={{ scale: 1.04 }}
-                            whileTap={{ scale: 0.96 }}
-                            className="relative cursor-pointer rounded-xl overflow-hidden"
-                            style={{
-                              background: selected ? alpha(hex.accent.pink, 0.10) : alpha(hex.neutral.white, 0.02),
-                              border: `1px solid ${selected ? alpha(hex.accent.pink, 0.35) : alpha(hex.neutral.white, 0.06)}`,
-                              boxShadow: selected ? `0 0 16px ${alpha(hex.accent.pink, 0.12)}` : 'none',
-                            }}
-                          >
-                            <div className="aspect-square p-2 flex items-center justify-center">
-                              {team.flagUrl && (
-                                <img
-                                  src={team.flagUrl}
-                                  alt={team.name}
-                                  className="w-full h-full object-cover rounded-lg"
-                                  style={{ opacity: selected ? 1 : 0.65 }}
-                                />
-                              )}
-                            </div>
-                            <p className="text-[9px] font-black text-center pb-1.5 tracking-wider"
-                              style={{ color: selected ? hex.accent.pink : hex.accent.slateDark }}>
-                              {team.shortName}
-                            </p>
-                            {/* Selected checkmark */}
-                            <AnimatePresence>
-                              {selected && (
-                                <motion.div
-                                  initial={{ scale: 0, opacity: 0 }}
-                                  animate={{ scale: 1, opacity: 1 }}
-                                  exit={{ scale: 0, opacity: 0 }}
-                                  className="absolute top-1.5 right-1.5 w-5 h-5 rounded-full flex items-center justify-center"
-                                  style={{ background: alpha(hex.accent.pink, 0.90), boxShadow: `0 0 8px ${alpha(hex.accent.pink, 0.60)}` }}
-                                >
-                                  <FiCheck size={11} style={{ color: '#fff' }} />
-                                </motion.div>
-                              )}
-                            </AnimatePresence>
-                          </motion.div>
-                        );
-                      })}
+                    {/* Tope FREE: 3 equipos. Aparece al intentar elegir el 4to. */}
+                    <AnimatePresence>
+                      {capHint && !isPremium && (
+                        <motion.div
+                          initial={{ opacity: 0, y: -6 }}
+                          animate={{ opacity: 1, y: 0 }}
+                          exit={{ opacity: 0, y: -6 }}
+                          className="flex items-center gap-2 px-3 py-2.5 rounded-xl mb-4"
+                          style={{
+                            background: alpha(hex.gold.base, 0.10),
+                            border: `1px solid ${alpha(hex.gold.base, 0.30)}`,
+                          }}
+                        >
+                          <FiStar size={12} style={{ color: hex.gold.base, flexShrink: 0 }} />
+                          <p className="text-[10px] font-bold leading-snug" style={{ color: hex.gold.base }}>
+                            {t('step2.freeLimit', { max: FREE_MAX_FAVORITE_TEAMS })}
+                          </p>
+                        </motion.div>
+                      )}
+                    </AnimatePresence>
+
+                    {/* Cuadrícula compacta con scroll propio: altura fija para no
+                        estirar la tarjeta con los 48 equipos del torneo. */}
+                    <div
+                      className="overflow-y-auto pr-1.5 -mr-1.5"
+                      style={{ maxHeight: 264, overscrollBehavior: 'contain' }}
+                    >
+                      <div className="grid grid-cols-4 gap-2">
+                        {teams.map(team => {
+                          const selected = selectedTeams.includes(team.id);
+                          return (
+                            <motion.div
+                              key={team.id}
+                              onClick={() => toggleTeam(team.id)}
+                              whileHover={{ scale: 1.04 }}
+                              whileTap={{ scale: 0.96 }}
+                              className="relative cursor-pointer rounded-xl overflow-hidden"
+                              style={{
+                                background: selected ? alpha(hex.accent.pink, 0.10) : alpha(hex.neutral.white, 0.02),
+                                border: `1px solid ${selected ? alpha(hex.accent.pink, 0.35) : alpha(hex.neutral.white, 0.06)}`,
+                                boxShadow: selected ? `0 0 16px ${alpha(hex.accent.pink, 0.12)}` : 'none',
+                              }}
+                            >
+                              <div className="aspect-square p-1.5 flex items-center justify-center">
+                                {team.flagUrl && (
+                                  <img
+                                    src={team.flagUrl}
+                                    alt={team.name}
+                                    className="w-full h-full object-cover rounded-lg"
+                                    style={{ opacity: selected ? 1 : 0.65 }}
+                                  />
+                                )}
+                              </div>
+                              <p className="text-[8px] font-black text-center pb-1 tracking-wider"
+                                style={{ color: selected ? hex.accent.pink : hex.accent.slateDark }}>
+                                {team.shortName}
+                              </p>
+                              {/* Selected checkmark */}
+                              <AnimatePresence>
+                                {selected && (
+                                  <motion.div
+                                    initial={{ scale: 0, opacity: 0 }}
+                                    animate={{ scale: 1, opacity: 1 }}
+                                    exit={{ scale: 0, opacity: 0 }}
+                                    className="absolute top-1 right-1 w-4 h-4 rounded-full flex items-center justify-center"
+                                    style={{ background: alpha(hex.accent.pink, 0.90), boxShadow: `0 0 8px ${alpha(hex.accent.pink, 0.60)}` }}
+                                  >
+                                    <FiCheck size={9} style={{ color: '#fff' }} />
+                                  </motion.div>
+                                )}
+                              </AnimatePresence>
+                            </motion.div>
+                          );
+                        })}
+                      </div>
                     </div>
                   </div>
                 </DarkCard>
@@ -729,11 +844,17 @@ export default function OnboardingPage() {
             </motion.button>
           ) : (
             <motion.button
-              onClick={handleFinish}
+              onClick={() => handleFinish(false)}
+              disabled={saving}
               whileHover={{ scale: 1.02, boxShadow: '0 12px 40px rgba(52,211,153,0.45)' }}
               whileTap={{ scale: 0.97 }}
               className="relative flex-1 flex items-center justify-center gap-2 py-3 rounded-2xl text-sm font-black text-white overflow-hidden"
-              style={{ background: 'linear-gradient(135deg, #059669, #10b981, #34d399)', boxShadow: '0 6px 24px rgba(52,211,153,0.28)' }}
+              style={{
+                background: 'linear-gradient(135deg, #059669, #10b981, #34d399)',
+                boxShadow: '0 6px 24px rgba(52,211,153,0.28)',
+                opacity: saving ? 0.6 : 1,
+                cursor: saving ? 'wait' : 'pointer',
+              }}
             >
               <motion.div
                 className="absolute inset-0"
@@ -742,7 +863,7 @@ export default function OnboardingPage() {
                 transition={{ duration: 2.5, repeat: Infinity, ease: 'linear', repeatDelay: 2 }}
               />
               <FiZap size={14} className="relative" />
-              <span className="relative">{t('nav.start')}</span>
+              <span className="relative">{saving ? t('nav.saving') : t('nav.start')}</span>
             </motion.button>
           )}
         </motion.div>
@@ -752,7 +873,8 @@ export default function OnboardingPage() {
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           transition={{ delay: 0.4 }}
-          onClick={handleFinish}
+          onClick={() => handleFinish(true)}
+          disabled={saving}
           className="text-[10px] font-bold text-orionix-text-muted hover:text-orionix-text-secondary transition-colors tracking-[0.18em] uppercase"
         >
           {t('nav.skip')}

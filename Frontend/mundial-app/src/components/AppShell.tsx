@@ -3,6 +3,7 @@
 import { usePathname } from 'next/navigation';
 import { useState, useEffect, ReactNode } from 'react';
 import { useSidebar } from '@/contexts/SidebarContext';
+import { useShowAds } from '@/components/ads/useShowAds';
 
 const AUTH_ROUTES = ['/login', '/register', '/onboarding', '/privacy', '/reset-password'];
 
@@ -17,6 +18,7 @@ const PREMIUM_BG = [
 export function AppShell({ children }: { children: ReactNode }) {
   const pathname = usePathname();
   const { collapsed } = useSidebar();
+  const showAds = useShowAds();
   const [mounted, setMounted] = useState(false);
   const [isDesktop, setIsDesktop] = useState(false);
 
@@ -35,7 +37,7 @@ export function AppShell({ children }: { children: ReactNode }) {
 
   return (
     <div
-      className="app-shell flex flex-col pb-24 lg:pb-8 w-full relative"
+      className={`app-shell flex flex-col ${showAds ? 'pb-44' : 'pb-24'} lg:pb-8 w-full relative`}
       style={{
         paddingLeft: pl,
         transition: 'padding-left 0.38s cubic-bezier(0.22,1,0.36,1)',

@@ -264,6 +264,9 @@
     "pending": "EN ATTENTE",
     "finished": "TERMINÉ",
     "makePrediction": "⚡ Faire un pronostic",
+    "predictionDone": "Pronostiqué",
+    "predictionClosed": "Fermé",
+    "edit": "Modifier",
     "ongoing": "En cours",
     "worldCupStart": "Début de la",
     "stats": {
@@ -347,6 +350,8 @@
       "mundial": "COUPE",
       "tagline": "FOOTBALL TECH EXPERIENCE",
       "countdownLabel": "⚡ Avant la Coupe du Monde",
+      "liveLabel": "⚽ La Coupe du Monde est en cours",
+      "liveTagline": "Jouez aux pronostics et analysez vos prédictions",
       "days": "JRS",
       "hours": "HRS",
       "minutes": "MIN",
@@ -366,6 +371,19 @@
     "sentTitle": "E-mail envoyé !",
     "sentBody": "Vérifiez votre boîte de réception et connectez-vous avec le mot de passe temporaire."
   },
+  "reset": {
+    "title": "Nouveau mot de passe",
+    "subtitle": "Choisissez un mot de passe sécurisé pour votre compte",
+    "newPassword": "Nouveau mot de passe",
+    "confirmPassword": "Confirmer le mot de passe",
+    "submit": "Réinitialiser le mot de passe",
+    "passwordMin": "Minimum 6 caractères",
+    "passwordMismatch": "Les mots de passe ne correspondent pas.",
+    "invalidLink": "Lien invalide ou expiré. Demandez-en un nouveau.",
+    "successTitle": "Mot de passe mis à jour !",
+    "successBody": "Vous pouvez maintenant vous connecter avec votre nouveau mot de passe.",
+    "goToLogin": "Aller à la connexion"
+  },
   "register": {
     "password": "Mot de passe",
     "confirmPassword": "Confirmer le mot de passe",
@@ -373,6 +391,7 @@
     "passwordRepeat": "Répétez votre mot de passe",
     "passwordMismatch": "Les mots de passe ne correspondent pas.",
     "passwordTooShort": "Le mot de passe doit comporter au moins 5 caractères.",
+    "usernameTooShort": "Le nom d'utilisateur doit comporter au moins 3 caractères.",
     "successTitle": "Compte créé ! ✓",
     "successMessage": "Compte créé ! Connectez-vous avec vos identifiants.",
     "successPending": "Compte créé. Vérifiez votre e-mail et cliquez sur le lien de vérification pour l'activer.",
@@ -522,7 +541,10 @@
     "confirmDelete": "Supprimer cette ligue ? Cette action est irréversible.",
     "back": "Retour",
     "isOwner": "Tu es le propriétaire",
-    "loading": "Chargement"
+    "loading": "Chargement",
+    "accessDeniedTitle": "Ligue privée",
+    "accessDenied": "Vous ne pouvez voir le classement et les membres que des ligues auxquelles vous appartenez. Passez Premium pour voir n'importe quelle ligue.",
+    "goPremium": "Passer Premium"
   },
   "onboarding": {
     "welcome": "Bienvenue",
@@ -534,7 +556,8 @@
       "label": "Équipes",
       "selected": "{count} sélectionnés",
       "title": "Équipes favorites",
-      "subtitle": "Sélectionnez les équipes que vous voulez suivre"
+      "subtitle": "Sélectionnez les équipes que vous voulez suivre",
+      "freeLimit": "Plan gratuit : maximum {max} équipes favorites. Passez Premium pour en choisir plus !"
     },
     "step3": {
       "label": "Notifications",
@@ -558,7 +581,8 @@
       "back": "Retour",
       "next": "Suivant",
       "start": "Commencer",
-      "skip": "Ignorer la configuration"
+      "skip": "Ignorer la configuration",
+      "saving": "Enregistrement..."
     }
   }
 }

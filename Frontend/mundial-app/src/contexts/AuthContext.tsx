@@ -9,7 +9,7 @@ export interface AuthContextType {
   loading: boolean;
   isAuthenticated: boolean;
   login: (email: string, password: string) => Promise<boolean>;
-  register: (req: RegisterRequest) => Promise<{ ok: boolean; emailVerificationRequired?: boolean; message?: string }>;
+  register: (req: RegisterRequest) => Promise<{ ok: boolean; emailVerificationRequired?: boolean; message?: string; detail?: string }>;
   logout: () => void;
   error: string | null;
 }
@@ -28,7 +28,38 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     try {
       const token = authService.getToken();
       const saved  = authService.getUser();
-      if (token && saved) setUser(saved);
+      if (token && saved) {
+        setUser(saved);
+        // Sincronización silenciosa: actualiza isPremium/premiumUntil desde el
+        // backend sin bloquear la carga. Cubre el caso en que el usuario ya era
+        // Premium antes de que el localStorage se actualizara (p.ej. pago manual,
+        // renovación de plan, o login antiguo sin el campo).
+        fetch(`/api/v1/users/${saved.id}`, {
+          headers: { Authorization: `Bearer ${token}` },
+        })
+          .then(r => r.ok ? r.json() : null)
+          .then(json => {
+            const fresh = json?.data ?? json;
+            if (!fresh) return;
+            const nextPremium    = fresh.isPremium           ?? saved.isPremium;
+            const nextUntil      = fresh.premiumUntil        ?? saved.premiumUntil;
+            const nextOnboarding = fresh.onboardingCompleted ?? saved.onboardingCompleted;
+            const nextLanguage   = fresh.preferredLanguage   ?? saved.preferredLanguage;
+            if (nextPremium === saved.isPremium && nextUntil === saved.premiumUntil
+                && nextOnboarding === saved.onboardingCompleted
+                && nextLanguage === saved.preferredLanguage) return;
+            const updated: AuthUser = {
+              ...saved,
+              isPremium: nextPremium,
+              premiumUntil: nextUntil,
+              onboardingCompleted: nextOnboarding,
+              preferredLanguage: nextLanguage,
+            };
+            try { window.localStorage.setItem('user', JSON.stringify(updated)); } catch {}
+            setUser(updated);
+          })
+          .catch(() => {});
+      }
     } catch {
       try {
         window.localStorage.removeItem('authToken');
@@ -80,7 +111,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
   };
 
-  const register = async (req: RegisterRequest): Promise<{ ok: boolean; emailVerificationRequired?: boolean; message?: string }> => {
+  const register = async (req: RegisterRequest): Promise<{ ok: boolean; emailVerificationRequired?: boolean; message?: string; detail?: string }> => {
     setLoading(true);
     setError(null);
     try {
@@ -93,10 +124,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         return { ok: true, emailVerificationRequired: response.emailVerificationRequired ?? true, message: response.message };
       }
       setError(response.message || t('register.genericError'));
-      return { ok: false, message: response.message };
-    } catch {
+      return { ok: false, message: response.message, detail: response.detail };
+    } catch (err) {
       setError(t('errors.connection'));
-      return { ok: false, message: t('errors.connection') };
+      return {
+        ok: false,
+        message: t('errors.connection'),
+        detail: `excepción en register: ${err instanceof Error ? `${err.name}: ${err.message}` : String(err)}`,
+      };
     } finally {
       setLoading(false);
     }

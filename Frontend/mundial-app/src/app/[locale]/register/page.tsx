@@ -56,6 +56,7 @@ export default function RegisterPage() {
   const [focused, setFocused] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState('');
+  const [errorDetail, setErrorDetail] = useState('');
   const [success, setSuccess] = useState(false);
 
   useEffect(() => {
@@ -69,7 +70,7 @@ export default function RegisterPage() {
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setForm(prev => ({ ...prev, [e.target.name]: e.target.value }));
-    if (error) setError('');
+    if (error) { setError(''); setErrorDetail(''); }
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -85,7 +86,7 @@ export default function RegisterPage() {
       return;
     }
     if (form.username.length < 3) {
-      setError(t('register.passwordTooShort'));
+      setError(t('register.usernameTooShort'));
       return;
     }
 
@@ -103,11 +104,15 @@ export default function RegisterPage() {
 
       if (result.ok) {
         setSuccess(true);
+        // El login se identifica con EMAIL: dejarlo listo para prellenar el campo
+        // al redirigir (el username NO es credencial de inicio de sesión).
+        try { sessionStorage.setItem('prefill_login_email', form.email.trim()); } catch { /* storage bloqueado */ }
         if (!result.emailVerificationRequired) {
           setTimeout(() => router.replace('/es/login'), 1500);
         }
       } else {
         setError(result.message || t('register.genericError'));
+        setErrorDetail(result.detail || '');
       }
     } finally {
       setIsLoading(false);
@@ -282,6 +287,13 @@ export default function RegisterPage() {
                 style={{ background: 'rgba(239,68,68,0.1)', border: '1px solid rgba(239,68,68,0.25)', color: '#f87171' }}
               >
                 {error}
+                {/* Detalle técnico del fallo — diagnóstico visible en el celular sin DevTools */}
+                {errorDetail && (
+                  <p className="mt-2 pt-2 text-[10px] font-mono break-all leading-relaxed"
+                    style={{ borderTop: '1px solid rgba(239,68,68,0.2)', color: 'rgba(248,113,113,0.7)' }}>
+                    🔍 {errorDetail}
+                  </p>
+                )}
               </motion.div>
             )}
           </AnimatePresence>
@@ -340,7 +352,7 @@ export default function RegisterPage() {
                       onBlur={() => setFocused(null)}
                       placeholder={f.placeholder}
                       required
-                      autoComplete="off"
+                      autoComplete={f.id === 'email' ? 'username' : f.type === 'password' ? 'new-password' : 'off'}
                       className="w-full pl-8 pr-3 py-2.5 rounded-xl text-sm text-white placeholder-orionix-text-muted transition-all duration-200"
                       style={{
                         background: focused === f.id ? 'rgba(76,175,80,0.06)' : 'rgba(255,255,255,0.04)',
@@ -375,7 +387,7 @@ export default function RegisterPage() {
                     onBlur={() => setFocused(null)}
                     placeholder={f.placeholder}
                     required
-                    autoComplete={f.type === 'password' ? 'new-password' : 'off'}
+                    autoComplete={f.id === 'email' ? 'username' : f.type === 'password' ? 'new-password' : 'off'}
                     className="w-full pl-8 pr-3 py-2.5 rounded-xl text-sm text-white placeholder-orionix-text-muted transition-all duration-200"
                     style={{
                       background: focused === f.id ? 'rgba(76,175,80,0.06)' : 'rgba(255,255,255,0.04)',

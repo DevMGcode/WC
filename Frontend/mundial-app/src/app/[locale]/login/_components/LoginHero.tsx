@@ -55,9 +55,9 @@ function FeatureChipItem({ chip, index, sm }: { chip: FeatureChip; index: number
   );
 }
 
-export interface LoginHeroProps { countdown: CountdownTime; predCount: number; }
+export interface LoginHeroProps { countdown: CountdownTime; predCount: number; started: boolean; }
 
-export default function LoginHero({ countdown, predCount }: LoginHeroProps) {
+export default function LoginHero({ countdown, predCount, started }: LoginHeroProps) {
   const t = useTranslations('auth');
   const FEATURES = buildFeatures(t);
   return (
@@ -165,18 +165,44 @@ export default function LoginHero({ countdown, predCount }: LoginHeroProps) {
         {/* Countdown */}
         <motion.div initial={{ opacity: 0, y: 14 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 1.1, duration: 0.7 }}
           className="flex flex-col items-center gap-2">
-          <p className="text-[8px] font-bold tracking-[0.32em] uppercase" style={{ color: alpha(hex.gold.base, 0.42) }}>
-            {t('hero.countdownLabel')}
-          </p>
-          <div className="flex items-end gap-2">
-            <CountBox value={countdown.days}    label={t('hero.days')} />
-            <span className="text-lg font-black mb-5" style={{ color: alphaOf('green', 0.35) }}>:</span>
-            <CountBox value={countdown.hours}   label={t('hero.hours')} />
-            <span className="text-lg font-black mb-5" style={{ color: alphaOf('green', 0.35) }}>:</span>
-            <CountBox value={countdown.minutes} label={t('hero.minutes')} />
-            <span className="text-lg font-black mb-5" style={{ color: alphaOf('green', 0.35) }}>:</span>
-            <CountBox value={countdown.seconds} label={t('hero.seconds')} />
-          </div>
+          {started ? (
+            /* Mundial en curso: el contador ya no aplica — invitación a jugar */
+            <>
+              <p className="text-[8px] font-bold tracking-[0.32em] uppercase" style={{ color: alpha(hex.gold.base, 0.42) }}>
+                {t('hero.liveLabel')}
+              </p>
+              <motion.p
+                initial={{ opacity: 0, scale: 0.94 }}
+                animate={{ opacity: 1, scale: 1 }}
+                transition={{ delay: 1.25, duration: 0.6 }}
+                className="text-xl sm:text-2xl font-black tracking-[0.04em] text-center uppercase"
+                style={{
+                  background: `linear-gradient(95deg, ${hex.gold.bright} 0%, ${hex.gold.base} 35%, ${hex.green.bright} 100%)`,
+                  WebkitBackgroundClip: 'text',
+                  backgroundClip: 'text',
+                  WebkitTextFillColor: 'transparent',
+                  filter: `drop-shadow(0 0 18px ${alphaOf('gold', 0.30)})`,
+                }}>
+                {t('hero.liveTagline')}
+              </motion.p>
+              <div className="h-px w-32" style={{ background: `linear-gradient(90deg, transparent, ${alphaOf('gold', 0.40)}, transparent)` }} />
+            </>
+          ) : (
+            <>
+              <p className="text-[8px] font-bold tracking-[0.32em] uppercase" style={{ color: alpha(hex.gold.base, 0.42) }}>
+                {t('hero.countdownLabel')}
+              </p>
+              <div className="flex items-end gap-2">
+                <CountBox value={countdown.days}    label={t('hero.days')} />
+                <span className="text-lg font-black mb-5" style={{ color: alphaOf('green', 0.35) }}>:</span>
+                <CountBox value={countdown.hours}   label={t('hero.hours')} />
+                <span className="text-lg font-black mb-5" style={{ color: alphaOf('green', 0.35) }}>:</span>
+                <CountBox value={countdown.minutes} label={t('hero.minutes')} />
+                <span className="text-lg font-black mb-5" style={{ color: alphaOf('green', 0.35) }}>:</span>
+                <CountBox value={countdown.seconds} label={t('hero.seconds')} />
+              </div>
+            </>
+          )}
           {predCount > 0 && (
             <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 1.6 }}
               className="flex items-center gap-1.5">

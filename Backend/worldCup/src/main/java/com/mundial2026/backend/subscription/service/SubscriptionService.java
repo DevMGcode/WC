@@ -90,6 +90,32 @@ public class SubscriptionService {
         return subscriptionRepository.findActiveByUserId(userId, OffsetDateTime.now());
     }
 
+    /**
+     * Verifica con MP si hay un pago aprobado para la suscripción PENDING del usuario.
+     * Se llama al hacer login y al refrescar el token para activar al instante
+     * sin depender de que el webhook haya llegado.
+     */
+    @Transactional
+    public void reconcilePendingForUser(Long userId) {
+        if (isPremium(userId)) return; // ya es premium, nada que hacer
+        subscriptionRepository
+                .findFirstByUserIdAndStatus(userId, SubscriptionStatus.PENDING)
+                .filter(sub -> sub.getProviderOrderId() != null)
+                .ifPresent(sub -> {
+                    try {
+                        mercadoPagoGateway
+                                .fetchApprovedPaymentByExternalRef(String.valueOf(sub.getId()))
+                                .ifPresent(status -> {
+                                    activateById(sub.getId(), status.externalReference(),
+                                            status.transactionAmount(), status.currency());
+                                    log.info("Reconciliación en login: suscripción {} activada para userId={}", sub.getId(), userId);
+                                });
+                    } catch (Exception e) {
+                        log.warn("Reconciliación en login falló para userId={}: {}", userId, e.getMessage());
+                    }
+                });
+    }
+
     // ─── Escritura ────────────────────────────────────────────────────────────
 
     /**
@@ -195,19 +221,26 @@ public class SubscriptionService {
             return sub;
         }
 
-        // Conciliación de monto: el pago debe cubrir EXACTAMENTE lo registrado.
+        // Conciliación de monto: solo cuando pago y suscripción están en la misma moneda.
+        // Si difieren (ej. suscripción en USD, pago en COP por conversión de MP)
+        // confiamos en la aprobación de MP — ya verificamos el estado vía API.
         if (paidAmount != null) {
-            BigDecimal expected = sub.getAmount();
-            boolean amountOk   = expected != null && paidAmount.compareTo(expected) == 0;
-            boolean currencyOk = paidCurrency == null
+            BigDecimal expected  = sub.getAmount();
+            boolean sameCurrency = paidCurrency == null
                     || sub.getCurrency() == null
                     || paidCurrency.equalsIgnoreCase(sub.getCurrency());
-            if (!amountOk || !currencyOk) {
-                log.warn("[Anti-fraude] Monto del pago no coincide subId={} esperado={} {} pagado={} {} — NO se activa",
+            if (sameCurrency) {
+                boolean amountOk = expected != null && paidAmount.compareTo(expected) == 0;
+                if (!amountOk) {
+                    log.warn("[Anti-fraude] Monto no coincide subId={} esperado={} {} pagado={} {} — NO se activa",
+                            subscriptionId, expected, sub.getCurrency(), paidAmount, paidCurrency);
+                    sub.setStatus(SubscriptionStatus.FAILED);
+                    subscriptionRepository.save(sub);
+                    throw new BusinessRuleException("El monto del pago no coincide con el precio del plan.");
+                }
+            } else {
+                log.info("[Anti-fraude] Monedas distintas subId={} esperado={} {} pagado={} {} — MP aprobó, se activa",
                         subscriptionId, expected, sub.getCurrency(), paidAmount, paidCurrency);
-                sub.setStatus(SubscriptionStatus.FAILED);
-                subscriptionRepository.save(sub);
-                throw new BusinessRuleException("El monto del pago no coincide con el precio del plan.");
             }
         }
 
@@ -278,26 +311,22 @@ public class SubscriptionService {
             throw new BusinessRuleException("Solo se permite un reembolso por cuenta.");
         }
 
+        // El caso "ya reembolsada" no puede llegar aquí: la verificación anterior
+        // ya lanza si existe cualquier suscripción REFUNDED del usuario.
         Subscription sub = subscriptionRepository
                 .findActiveByUserId(userId, OffsetDateTime.now())
-                .orElseThrow(() -> {
-                    boolean yaReembolsada = subscriptionRepository
-                            .findFirstByUserIdAndStatus(userId, SubscriptionStatus.REFUNDED)
-                            .isPresent();
-                    return new BusinessRuleException(yaReembolsada
-                            ? "Esta suscripción ya fue reembolsada."
-                            : "No tienes una suscripción Premium activa para reembolsar.");
-                });
+                .orElseThrow(() -> new BusinessRuleException(
+                        "No tienes una suscripción Premium activa para reembolsar."));
 
         if (sub.getStartedAt() == null) {
             throw new BusinessRuleException("La suscripción no tiene fecha de activación registrada.");
         }
 
-        long horasDesdeActivacion = Duration.between(sub.getStartedAt(), OffsetDateTime.now()).toHours();
-        if (horasDesdeActivacion > 24) {
+        Duration desdeActivacion = Duration.between(sub.getStartedAt(), OffsetDateTime.now());
+        if (desdeActivacion.compareTo(Duration.ofHours(24)) > 0) {
             throw new BusinessRuleException(
                     "El período de reembolso de 24 horas ya expiró. La suscripción fue activada hace "
-                    + horasDesdeActivacion + " horas.");
+                    + desdeActivacion.toHours() + " horas.");
         }
 
         if (sub.getPaymentId() == null || sub.getPaymentId().isBlank()) {

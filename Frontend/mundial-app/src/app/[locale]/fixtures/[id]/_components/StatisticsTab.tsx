@@ -102,7 +102,7 @@ export default function StatisticsTab({ fixtureId }: { fixtureId: number }) {
           <div key={team.teamId} className={`flex items-center gap-2 ${i === 1 ? 'flex-row-reverse' : ''}`}>
             {team.teamLogoUrl && (
               <div className="relative w-6 h-6 shrink-0">
-                <Image src={team.teamLogoUrl} alt={team.teamName} fill className="object-contain" />
+                <Image src={team.teamLogoUrl} alt={team.teamName} fill sizes="24px" className="object-contain" />
               </div>
             )}
             <span className="text-[10px] font-black truncate max-w-[80px]"

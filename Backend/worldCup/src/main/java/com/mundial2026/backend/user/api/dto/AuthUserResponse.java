@@ -8,6 +8,9 @@ public record AuthUserResponse(
         String displayName,
         String status,
         OffsetDateTime createdAt,
-        Boolean isPremium
+        Boolean isPremium,
+        OffsetDateTime premiumUntil,
+        String preferredLanguage,
+        Boolean onboardingCompleted
 ) {
 }

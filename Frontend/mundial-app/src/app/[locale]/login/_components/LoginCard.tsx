@@ -1,10 +1,12 @@
 'use client';
-import React, { useState, useRef, useCallback, useMemo } from 'react';
+import React, { useState, useRef, useCallback, useMemo, useEffect } from 'react';
 import Image from 'next/image';
 import { motion, AnimatePresence, useMotionValue, useSpring, useTransform } from 'framer-motion';
 import { useRouter, useSearchParams } from 'next/navigation';
-import { useTranslations } from 'next-intl';
+import { useTranslations, useLocale } from 'next-intl';
 import { useAuth } from '@/contexts/AuthContext';
+import { authService } from '@/services/auth';
+import { getPostLoginRoute } from '@/lib/postLoginRoute';
 import { hex } from '@/lib/design/tokens';
 import { alpha, alphaOf } from '@/lib/design/effects';
 
@@ -12,6 +14,7 @@ interface LoginCardProps { onShowForgot: () => void; }
 
 export default function LoginCard({ onShowForgot }: LoginCardProps) {
   const t           = useTranslations();
+  const locale      = useLocale();
   const router      = useRouter();
   const searchParams = useSearchParams();
   const { login, loading: authLoading, error: authError } = useAuth();
@@ -22,6 +25,17 @@ export default function LoginCard({ onShowForgot }: LoginCardProps) {
   const [focused,      setFocused]      = useState<string | null>(null);
   const [isLoading,    setIsLoading]    = useState(false);
   const [error,        setError]        = useState('');
+
+  // Viniendo del registro: prellenar el EMAIL (la credencial real de login).
+  useEffect(() => {
+    try {
+      const saved = sessionStorage.getItem('prefill_login_email');
+      if (saved) {
+        setEmail(saved);
+        sessionStorage.removeItem('prefill_login_email');
+      }
+    } catch { /* storage bloqueado */ }
+  }, []);
 
   const verifiedBanner = useMemo(() => {
     const v = searchParams.get('verified');
@@ -54,7 +68,9 @@ export default function LoginCard({ onShowForgot }: LoginCardProps) {
     setError(''); setIsLoading(true);
     try {
       const ok = await login(email, password);
-      if (ok) router.push('/');
+      // Primera vez (onboardingCompleted=false) → /onboarding; si no, home
+      // en el idioma que el usuario guardó en su perfil.
+      if (ok) router.push(getPostLoginRoute(authService.getUser(), locale));
       else setError(authError || t('auth.invalidCredentials'));
     } catch { setError(t('auth.loginError')); }
     finally { setIsLoading(false); }
@@ -176,7 +192,7 @@ export default function LoginCard({ onShowForgot }: LoginCardProps) {
                   <input
                     id="login-email" type="email" value={email} onChange={e => setEmail(e.target.value)}
                     onFocus={() => setFocused('email')} onBlur={() => setFocused(null)}
-                    placeholder="tu@email.com" required autoComplete="email"
+                    placeholder="tu@email.com" required autoComplete="username"
                     className="w-full pl-10 pr-4 py-4 rounded-xl text-white placeholder-slate-500 text-sm outline-none transition-all duration-300"
                     style={{ background: focused === 'email' ? inputFocusBg : inputBlurBg, border: focused === 'email' ? inputFocusBorder : inputBlurBorder, boxShadow: focused === 'email' ? inputFocusShadow : 'none' }}
                   />

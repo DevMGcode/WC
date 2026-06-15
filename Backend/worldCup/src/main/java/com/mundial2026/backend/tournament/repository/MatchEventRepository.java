@@ -13,5 +13,9 @@ public interface MatchEventRepository extends JpaRepository<MatchEvent, Long> {
 
     List<MatchEvent> findByFixtureIdAndSource(Long fixtureId, MatchEvent.Source source);
 
+    /** Todos los goles del torneo — base del fallback local de top goleadores. */
+    @Query("SELECT e FROM MatchEvent e LEFT JOIN FETCH e.team WHERE e.eventType = 'GOAL'")
+    List<MatchEvent> findGoalEvents();
+
     void deleteByFixtureId(Long fixtureId);
 }

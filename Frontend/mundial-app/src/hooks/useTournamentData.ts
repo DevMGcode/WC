@@ -144,8 +144,8 @@ export function useTeamSquad(teamId: number | null, enabled = true) {
   });
 }
 
-/** Asistencias del torneo — exclusivo Premium. */
-export function useTopAssists(opts?: { limit?: number; teamId?: number }) {
+/** Asistencias del torneo — exclusivo Premium. Pasa `enabled: false` para usuarios Free. */
+export function useTopAssists(opts?: { limit?: number; teamId?: number; enabled?: boolean }) {
   const qs = new URLSearchParams();
   if (opts?.limit)  qs.set('limit',  String(opts.limit));
   if (opts?.teamId) qs.set('teamId', String(opts.teamId));
@@ -154,6 +154,7 @@ export function useTopAssists(opts?: { limit?: number; teamId?: number }) {
     queryKey: QUERY_KEYS.topAssists(opts?.limit, opts?.teamId),
     queryFn:  () => fetchJsonAuth(`/api/v1/public/players/topassists${suffix}`),
     staleTime: STALE.scorers,
+    enabled:   opts?.enabled !== false,
   });
 }
 
@@ -227,15 +228,15 @@ export function useScoreHistory(userId: number | null, tournamentId: number | nu
   });
 }
 
-/** Ranking global del torneo */
-export function useGlobalRanking(tournamentId: number | null, pageSize: number = RANKING_PAGE.home) {
+/** Ranking global del torneo — exclusivo Premium. Requiere isPremium=true para disparar el fetch. */
+export function useGlobalRanking(tournamentId: number | null, pageSize: number = RANKING_PAGE.home, isPremium: boolean = false) {
   return useQuery({
     queryKey: QUERY_KEYS.globalRanking(tournamentId ?? 0, pageSize),
     queryFn:  async () => {
       const response = await scoringService.getGlobalRanking(tournamentId!, { page: 0, pageSize });
       return (response as any)?.data ?? [];
     },
-    enabled:  tournamentId != null,
+    enabled:  tournamentId != null && isPremium,
     staleTime: STALE.ranking,
   });
 }

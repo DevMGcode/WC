@@ -29,6 +29,7 @@ import { getTourSteps } from '@/components/Tour/tourSteps';
 import { hex } from '@/lib/design/tokens';
 import { alpha, alphaOf, surfaces } from '@/lib/design/effects';
 import { usePremium } from '@/hooks/usePremium';
+import { AdSlot } from '@/components/ads';
 
 /* ══════════════════════════════════════════
    TYPES
@@ -289,7 +290,7 @@ export default function PredictionsPage() {
   const { data: allFixtures = [], isLoading: fixturesLoading } = useTournamentFixtures(tournamentId);
   const { data: rawPredictions = [], isLoading: predsLoading } = useUserPredictions(userId);
   const { data: scoreHistory = [], isLoading: histLoading }   = useScoreHistory(userId, tournamentId);
-  const { data: rankingItems = [], isLoading: rankLoading }   = useGlobalRanking(tournamentId, RANKING_PAGE.predictions);
+  const { data: rankingItems = [], isLoading: rankLoading }   = useGlobalRanking(tournamentId, RANKING_PAGE.predictions, isPremium);
   const { data: leaguesData = [], isLoading: leaguesLoading } = useUserLeaguesWithRankings(userId);
 
   const loading =
@@ -459,6 +460,10 @@ export default function PredictionsPage() {
 
       {/* ── CONTENT ── */}
       <div className="relative z-10 max-w-4xl mx-auto px-4 sm:px-6 py-5 pb-32">
+
+        {/* ── PUBLICIDAD (solo Free) — entre tabs y contenido ── */}
+        <AdSlot />
+
         {loading ? (
           <div className="flex items-center justify-center min-h-80">
             <div className="flex flex-col items-center gap-4">
@@ -924,6 +929,7 @@ export default function PredictionsPage() {
 
                 {/* Create / Join card */}
                 <motion.div
+                  data-tour="leagues-create-join"
                   initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }}
                   transition={{ delay: myLeagues.length * 0.07 + 0.1 }}
                   className="relative overflow-hidden rounded-2xl p-5"
@@ -987,6 +993,7 @@ export default function PredictionsPage() {
 
           </AnimatePresence>
         )}
+
       </div>
 
       <TourButton steps={getTourSteps(locale, 'predictions')} />

@@ -87,6 +87,14 @@ public class AppUser {
     private Integer tokenVersion = 0;
 
     /**
+     * ¿El usuario ya completó (u omitió) el onboarding inicial?
+     * El frontend lo usa tras el login: false → redirigir a /onboarding;
+     * true → entrar directo con idioma y favoritos ya configurados.
+     */
+    @Column(name = "onboarding_completed", nullable = false)
+    private Boolean onboardingCompleted = false;
+
+    /**
      * Equipo favorito del usuario.
      * Lo usa el plan FREE para determinar qué 3 partidos puede predecir gratis
      * (los de fase de grupos del equipo). El plan PREMIUM lo ignora — puede

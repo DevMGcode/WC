@@ -21,7 +21,7 @@ function TeamLineup({ team, side }: { team: LineupTeam; side: 'home' | 'away' })
       <div className={`flex items-center gap-2 mb-4 ${side === 'away' ? 'flex-row-reverse' : ''}`}>
         {team.teamLogoUrl && (
           <div className="relative w-8 h-8 shrink-0">
-            <Image src={team.teamLogoUrl} alt={team.teamName} fill className="object-contain" />
+            <Image src={team.teamLogoUrl} alt={team.teamName} fill sizes="32px" className="object-contain" />
           </div>
         )}
         <div className={side === 'away' ? 'text-right' : ''}>

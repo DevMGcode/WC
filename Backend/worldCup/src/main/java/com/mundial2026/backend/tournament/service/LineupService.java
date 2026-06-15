@@ -19,7 +19,6 @@ import java.util.List;
 public class LineupService {
 
     private static final Duration PRE_KICKOFF_WINDOW = Duration.ofHours(3);
-    private static final Duration POST_KICKOFF_WINDOW = Duration.ofHours(3);
 
     private final LineupDataPort lineupDataPort;
     private final FixtureRepository fixtureRepository;
@@ -34,14 +33,16 @@ public class LineupService {
                 .toList();
     }
 
+    /**
+     * Las alineaciones se publican ~1h antes del kickoff: consultar antes de la
+     * ventana previa es gastar cuota en vacío. DESPUÉS del partido son dato
+     * histórico estable que la API conserva — siempre se pueden consultar
+     * (y quedan cacheadas). Solo se bloquea el "demasiado pronto".
+     */
     private boolean isWithinUsefulWindow(Long fixtureExternalId) {
         return fixtureRepository.findByExternalProviderId(fixtureExternalId)
-                .map(f -> {
-                    OffsetDateTime now = OffsetDateTime.now(ZoneOffset.UTC);
-                    OffsetDateTime windowStart = f.getKickoffAt().minus(PRE_KICKOFF_WINDOW);
-                    OffsetDateTime windowEnd = f.getKickoffAt().plus(POST_KICKOFF_WINDOW);
-                    return !now.isBefore(windowStart) && !now.isAfter(windowEnd);
-                })
+                .map(f -> !OffsetDateTime.now(ZoneOffset.UTC)
+                        .isBefore(f.getKickoffAt().minus(PRE_KICKOFF_WINDOW)))
                 .orElse(true);
     }
 

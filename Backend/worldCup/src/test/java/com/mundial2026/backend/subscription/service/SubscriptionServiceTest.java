@@ -14,12 +14,14 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.math.BigDecimal;
+import java.time.OffsetDateTime;
 import java.util.Optional;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -74,17 +76,23 @@ class SubscriptionServiceTest {
         assertThat(sub.getStatus()).isEqualTo(SubscriptionStatus.FAILED);
     }
 
+    /**
+     * Cuando MP cobra en COP (moneda diferente a USD de la suscripción) se confía
+     * en la aprobación de MP y se activa — se saltea la comparación de montos.
+     * Cubre el caso real de Bancolombia débito donde MP convierte USD→COP.
+     */
     @Test
-    void activateById_wrongCurrency_rejects() {
-        Subscription sub = pendingSub();
+    void activateById_differentCurrencies_skipsAmountCheck_activates() {
+        Subscription sub = pendingSub();   // amount=9.99 USD
         when(subscriptionRepository.findById(1L)).thenReturn(Optional.of(sub));
         when(subscriptionRepository.save(any(Subscription.class))).thenAnswer(inv -> inv.getArgument(0));
 
-        assertThatThrownBy(() -> subscriptionService.activateById(
-                1L, "pay_x", new BigDecimal("9.99"), "ARS"))
-                .isInstanceOf(BusinessRuleException.class);
+        // MP reporta 35009 COP — moneda distinta → se activa sin comparar monto
+        Subscription result = subscriptionService.activateById(
+                1L, "pay_cop", new BigDecimal("35009"), "COP");
 
-        assertThat(sub.getStatus()).isEqualTo(SubscriptionStatus.FAILED);
+        assertThat(result.getStatus()).isEqualTo(SubscriptionStatus.ACTIVE);
+        assertThat(result.getPaymentId()).isEqualTo("pay_cop");
     }
 
     @Test
@@ -147,5 +155,227 @@ class SubscriptionServiceTest {
         // Ya estaba activa: no se toca ni se valida monto, no se persiste de nuevo
         assertThat(result.getStatus()).isEqualTo(SubscriptionStatus.ACTIVE);
         verify(subscriptionRepository, never()).save(any(Subscription.class));
+    }
+
+    // ─── Reembolso (requestRefund) ───────────────────────────────────────────
+
+    private Subscription activeSub(OffsetDateTime startedAt, String paymentId) {
+        AppUser user = new AppUser();
+        user.setId(7L);
+        Subscription sub = new Subscription();
+        sub.setUser(user);
+        sub.setStatus(SubscriptionStatus.ACTIVE);
+        sub.setStartedAt(startedAt);
+        sub.setPaymentId(paymentId);
+        return sub;
+    }
+
+    @Test
+    void requestRefund_within24h_refundsAndMarksRefunded() {
+        Subscription sub = activeSub(OffsetDateTime.now().minusHours(2), "123456");
+        when(subscriptionRepository.findFirstByUserIdAndStatus(7L, SubscriptionStatus.REFUNDED))
+                .thenReturn(Optional.empty());
+        when(subscriptionRepository.findActiveByUserId(eq(7L), any())).thenReturn(Optional.of(sub));
+        when(subscriptionRepository.save(any(Subscription.class))).thenAnswer(inv -> inv.getArgument(0));
+
+        subscriptionService.requestRefund(7L);
+
+        verify(mercadoPagoGateway).refund("123456");
+        assertThat(sub.getStatus()).isEqualTo(SubscriptionStatus.REFUNDED);
+        assertThat(sub.getRefundedAt()).isNotNull();
+    }
+
+    @Test
+    void requestRefund_windowExpired_rejectsWithoutCallingGateway() {
+        Subscription sub = activeSub(OffsetDateTime.now().minusHours(30), "123456");
+        when(subscriptionRepository.findFirstByUserIdAndStatus(7L, SubscriptionStatus.REFUNDED))
+                .thenReturn(Optional.empty());
+        when(subscriptionRepository.findActiveByUserId(eq(7L), any())).thenReturn(Optional.of(sub));
+
+        assertThatThrownBy(() -> subscriptionService.requestRefund(7L))
+                .isInstanceOf(BusinessRuleException.class)
+                .hasMessageContaining("24 horas");
+
+        verify(mercadoPagoGateway, never()).refund(any());
+        assertThat(sub.getStatus()).isEqualTo(SubscriptionStatus.ACTIVE);
+    }
+
+    @Test
+    void requestRefund_justOver24h_rejects() {
+        // La ventana es de 24h exactas: a las 24h30m ya no aplica
+        // (antes toHours() > 24 aceptaba hasta 24h59m)
+        Subscription sub = activeSub(OffsetDateTime.now().minusHours(24).minusMinutes(30), "123456");
+        when(subscriptionRepository.findFirstByUserIdAndStatus(7L, SubscriptionStatus.REFUNDED))
+                .thenReturn(Optional.empty());
+        when(subscriptionRepository.findActiveByUserId(eq(7L), any())).thenReturn(Optional.of(sub));
+
+        assertThatThrownBy(() -> subscriptionService.requestRefund(7L))
+                .isInstanceOf(BusinessRuleException.class);
+
+        verify(mercadoPagoGateway, never()).refund(any());
+    }
+
+    @Test
+    void requestRefund_alreadyRefundedOnce_rejects() {
+        when(subscriptionRepository.findFirstByUserIdAndStatus(7L, SubscriptionStatus.REFUNDED))
+                .thenReturn(Optional.of(new Subscription()));
+
+        assertThatThrownBy(() -> subscriptionService.requestRefund(7L))
+                .isInstanceOf(BusinessRuleException.class)
+                .hasMessageContaining("un reembolso por cuenta");
+
+        verify(mercadoPagoGateway, never()).refund(any());
+    }
+
+    @Test
+    void requestRefund_noActiveSubscription_rejects() {
+        when(subscriptionRepository.findFirstByUserIdAndStatus(7L, SubscriptionStatus.REFUNDED))
+                .thenReturn(Optional.empty());
+        when(subscriptionRepository.findActiveByUserId(eq(7L), any())).thenReturn(Optional.empty());
+
+        assertThatThrownBy(() -> subscriptionService.requestRefund(7L))
+                .isInstanceOf(BusinessRuleException.class);
+
+        verify(mercadoPagoGateway, never()).refund(any());
+    }
+
+    @Test
+    void requestRefund_missingPaymentId_rejects() {
+        Subscription sub = activeSub(OffsetDateTime.now().minusHours(1), null);
+        when(subscriptionRepository.findFirstByUserIdAndStatus(7L, SubscriptionStatus.REFUNDED))
+                .thenReturn(Optional.empty());
+        when(subscriptionRepository.findActiveByUserId(eq(7L), any())).thenReturn(Optional.of(sub));
+
+        assertThatThrownBy(() -> subscriptionService.requestRefund(7L))
+                .isInstanceOf(BusinessRuleException.class);
+
+        verify(mercadoPagoGateway, never()).refund(any());
+    }
+
+    @Test
+    void requestRefund_gatewayFails_subscriptionStaysActive() {
+        Subscription sub = activeSub(OffsetDateTime.now().minusHours(1), "123456");
+        when(subscriptionRepository.findFirstByUserIdAndStatus(7L, SubscriptionStatus.REFUNDED))
+                .thenReturn(Optional.empty());
+        when(subscriptionRepository.findActiveByUserId(eq(7L), any())).thenReturn(Optional.of(sub));
+        doThrow(new IllegalStateException("MP caído")).when(mercadoPagoGateway).refund("123456");
+
+        assertThatThrownBy(() -> subscriptionService.requestRefund(7L))
+                .isInstanceOf(BusinessRuleException.class);
+
+        // Si MP falla, la suscripción NO debe quedar marcada REFUNDED
+        assertThat(sub.getStatus()).isEqualTo(SubscriptionStatus.ACTIVE);
+        verify(subscriptionRepository, never()).save(any(Subscription.class));
+    }
+
+    // ─── reconcilePendingForUser (conciliación en login/refresh) ─────────────────
+
+    private Subscription pendingSubWithProvider(Long userId, String preferenceId) {
+        AppUser user = new AppUser();
+        user.setId(userId);
+        Subscription sub = new Subscription();
+        sub.setId(10L);
+        sub.setUser(user);
+        sub.setStatus(SubscriptionStatus.PENDING);
+        sub.setAmount(SubscriptionService.MUNDIAL_PASS_PRICE);
+        sub.setCurrency(SubscriptionService.MUNDIAL_PASS_CURRENCY);
+        sub.setProviderOrderId(preferenceId);
+        return sub;
+    }
+
+    @Test
+    void reconcilePendingForUser_alreadyPremium_skipsEverything() {
+        // Si ya es premium no se hace ninguna consulta a MP
+        when(userRepository.findById(5L)).thenReturn(Optional.of(userWithRole("USER")));
+        when(subscriptionRepository.findActiveByUserId(eq(5L), any()))
+                .thenReturn(Optional.of(new Subscription()));
+
+        subscriptionService.reconcilePendingForUser(5L);
+
+        verify(subscriptionRepository, never()).findFirstByUserIdAndStatus(any(), any());
+        verify(mercadoPagoGateway, never()).fetchApprovedPaymentByExternalRef(any());
+    }
+
+    @Test
+    void reconcilePendingForUser_noPendingSubscription_doesNothing() {
+        when(userRepository.findById(5L)).thenReturn(Optional.of(userWithRole("USER")));
+        when(subscriptionRepository.findActiveByUserId(eq(5L), any())).thenReturn(Optional.empty());
+        when(subscriptionRepository.findFirstByUserIdAndStatus(5L, SubscriptionStatus.PENDING))
+                .thenReturn(Optional.empty());
+
+        subscriptionService.reconcilePendingForUser(5L);
+
+        verify(mercadoPagoGateway, never()).fetchApprovedPaymentByExternalRef(any());
+    }
+
+    @Test
+    void reconcilePendingForUser_pendingWithoutProviderOrderId_doesNothing() {
+        Subscription sub = pendingSubWithProvider(5L, null); // sin preferenceId
+        when(userRepository.findById(5L)).thenReturn(Optional.of(userWithRole("USER")));
+        when(subscriptionRepository.findActiveByUserId(eq(5L), any())).thenReturn(Optional.empty());
+        when(subscriptionRepository.findFirstByUserIdAndStatus(5L, SubscriptionStatus.PENDING))
+                .thenReturn(Optional.of(sub));
+
+        subscriptionService.reconcilePendingForUser(5L);
+
+        verify(mercadoPagoGateway, never()).fetchApprovedPaymentByExternalRef(any());
+    }
+
+    @Test
+    void reconcilePendingForUser_mpApprovedPayment_activatesSubscription() {
+        Subscription sub = pendingSubWithProvider(5L, "PREF_ABC123");
+        when(userRepository.findById(5L)).thenReturn(Optional.of(userWithRole("USER")));
+        when(subscriptionRepository.findActiveByUserId(eq(5L), any())).thenReturn(Optional.empty());
+        when(subscriptionRepository.findFirstByUserIdAndStatus(5L, SubscriptionStatus.PENDING))
+                .thenReturn(Optional.of(sub));
+        when(subscriptionRepository.findById(10L)).thenReturn(Optional.of(sub));
+        when(subscriptionRepository.save(any(Subscription.class))).thenAnswer(inv -> inv.getArgument(0));
+
+        MercadoPagoGateway.PaymentStatus approved = new MercadoPagoGateway.PaymentStatus(
+                "approved", "pay_789",
+                true, false,
+                SubscriptionService.MUNDIAL_PASS_PRICE,
+                SubscriptionService.MUNDIAL_PASS_CURRENCY
+        );
+        // El código pasa String.valueOf(sub.getId()) = "10" como external_reference
+        when(mercadoPagoGateway.fetchApprovedPaymentByExternalRef("10"))
+                .thenReturn(Optional.of(approved));
+
+        subscriptionService.reconcilePendingForUser(5L);
+
+        assertThat(sub.getStatus()).isEqualTo(SubscriptionStatus.ACTIVE);
+        assertThat(sub.getPaymentId()).isEqualTo("pay_789");
+    }
+
+    @Test
+    void reconcilePendingForUser_mpNoApprovedPayment_staysPending() {
+        Subscription sub = pendingSubWithProvider(5L, "PREF_ABC123");
+        when(userRepository.findById(5L)).thenReturn(Optional.of(userWithRole("USER")));
+        when(subscriptionRepository.findActiveByUserId(eq(5L), any())).thenReturn(Optional.empty());
+        when(subscriptionRepository.findFirstByUserIdAndStatus(5L, SubscriptionStatus.PENDING))
+                .thenReturn(Optional.of(sub));
+        when(mercadoPagoGateway.fetchApprovedPaymentByExternalRef("10"))
+                .thenReturn(Optional.empty());
+
+        subscriptionService.reconcilePendingForUser(5L);
+
+        assertThat(sub.getStatus()).isEqualTo(SubscriptionStatus.PENDING);
+        verify(subscriptionRepository, never()).save(any(Subscription.class));
+    }
+
+    @Test
+    void reconcilePendingForUser_mpThrows_doesNotBubbleException() {
+        Subscription sub = pendingSubWithProvider(5L, "PREF_ERR");
+        when(userRepository.findById(5L)).thenReturn(Optional.of(userWithRole("USER")));
+        when(subscriptionRepository.findActiveByUserId(eq(5L), any())).thenReturn(Optional.empty());
+        when(subscriptionRepository.findFirstByUserIdAndStatus(5L, SubscriptionStatus.PENDING))
+                .thenReturn(Optional.of(sub));
+        when(mercadoPagoGateway.fetchApprovedPaymentByExternalRef("10"))
+                .thenThrow(new RuntimeException("timeout MP"));
+
+        // El error de MP no debe romper el login del usuario
+        subscriptionService.reconcilePendingForUser(5L);
+
+        assertThat(sub.getStatus()).isEqualTo(SubscriptionStatus.PENDING);
     }
 }

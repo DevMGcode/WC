@@ -9,6 +9,7 @@ import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.context.annotation.Lazy;
 import org.springframework.stereotype.Service;
 
+import java.util.Optional;
 import java.util.UUID;
 
 /**
@@ -78,6 +79,13 @@ public class MercadoPagoMockGateway implements MercadoPagoGateway {
         // conciliación anti-fraude del webhook pase en pruebas locales.
         return new PaymentStatus("approved", paymentId, true, false,
                 SubscriptionService.MUNDIAL_PASS_PRICE, SubscriptionService.MUNDIAL_PASS_CURRENCY);
+    }
+
+    @Override
+    public Optional<PaymentStatus> fetchApprovedPaymentByExternalRef(String subscriptionId) {
+        log.info("[MOCK MercadoPago] Búsqueda por external_reference={} → APPROVED (simulado)", subscriptionId);
+        return Optional.of(new PaymentStatus("approved", subscriptionId, true, false,
+                SubscriptionService.MUNDIAL_PASS_PRICE, SubscriptionService.MUNDIAL_PASS_CURRENCY));
     }
 
     @Override

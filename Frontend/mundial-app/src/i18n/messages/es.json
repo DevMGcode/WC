@@ -275,6 +275,9 @@
     "pending": "PENDIENTE",
     "finished": "FINALIZADO",
     "makePrediction": "⚡ Hacer Porra",
+    "predictionDone": "Ya predicho",
+    "predictionClosed": "Cerrada",
+    "edit": "Editar",
     "ongoing": "En curso",
     "worldCupStart": "Inicio del",
     "stats": {
@@ -358,6 +361,8 @@
       "mundial": "MUNDIAL",
       "tagline": "FOOTBALL TECH EXPERIENCE",
       "countdownLabel": "⚡ Faltan para el Mundial",
+      "liveLabel": "⚽ El Mundial está en juego",
+      "liveTagline": "Juega porras y analiza predicciones",
       "days": "DÍAS",
       "hours": "HRS",
       "minutes": "MIN",
@@ -397,6 +402,7 @@
     "passwordRepeat": "Repite tu contraseña",
     "passwordMismatch": "Las contraseñas no coinciden.",
     "passwordTooShort": "La contraseña debe tener al menos 5 caracteres.",
+    "usernameTooShort": "El nombre de usuario debe tener al menos 3 caracteres.",
     "successTitle": "¡Cuenta creada! ✓",
     "successMessage": "¡Cuenta creada! Inicia sesión con tus credenciales.",
     "successPending": "Cuenta creada. Revisa tu correo y haz clic en el enlace de verificación para activarla.",
@@ -535,7 +541,10 @@
     "confirmDelete": "¿Eliminar esta liga? Esta acción no se puede deshacer.",
     "back": "Volver",
     "isOwner": "Eres propietario",
-    "loading": "Cargando"
+    "loading": "Cargando",
+    "accessDeniedTitle": "Liga privada",
+    "accessDenied": "Solo puedes ver el ranking y los miembros de las ligas a las que perteneces. Hazte Premium para ver cualquier liga.",
+    "goPremium": "Hazte Premium"
   },
   "onboarding": {
     "welcome": "Bienvenido",
@@ -547,7 +556,8 @@
       "label": "Equipos",
       "selected": "{count} seleccionados",
       "title": "Equipos favoritos",
-      "subtitle": "Selecciona los equipos que quieres seguir"
+      "subtitle": "Selecciona los equipos que quieres seguir",
+      "freeLimit": "Plan gratuito: máximo {max} equipos favoritos. ¡Hazte Premium para elegir más!"
     },
     "step3": {
       "label": "Notificaciones",
@@ -571,7 +581,8 @@
       "back": "Atrás",
       "next": "Siguiente",
       "start": "Comenzar",
-      "skip": "Omitir configuración"
+      "skip": "Omitir configuración",
+      "saving": "Guardando..."
     }
   }
 }

@@ -12,7 +12,9 @@ import com.mundial2026.backend.tournament.domain.Team;
 import com.mundial2026.backend.tournament.domain.Tournament;
 import com.mundial2026.backend.tournament.repository.FixtureRepository;
 import com.mundial2026.backend.user.domain.AppUser;
+import com.mundial2026.backend.user.domain.UserFavoriteTeam;
 import com.mundial2026.backend.user.repository.AppUserRepository;
+import com.mundial2026.backend.user.repository.UserFavoriteTeamRepository;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
@@ -20,11 +22,13 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.time.OffsetDateTime;
+import java.util.List;
 import java.util.Optional;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyLong;
 import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
@@ -34,6 +38,7 @@ class PredictionServiceTest {
     @Mock AppUserRepository appUserRepository;
     @Mock FixtureRepository fixtureRepository;
     @Mock PremiumGuard premiumGuard;
+    @Mock UserFavoriteTeamRepository userFavoriteTeamRepository;
 
     @InjectMocks PredictionService predictionService;
 
@@ -160,6 +165,53 @@ class PredictionServiceTest {
                 .hasMessageContaining("bloqueada");
     }
 
+    // ── gate Free ────────────────────────────────────────────────────────────
+
+    @Test
+    void create_freeUser_noFavorites_throwsBusinessRule() {
+        when(userPredictionRepository.findByUserIdAndFixtureId(1L, 10L)).thenReturn(Optional.empty());
+        when(appUserRepository.findById(1L)).thenReturn(Optional.of(buildUser(1L)));
+        when(fixtureRepository.findById(10L)).thenReturn(Optional.of(buildOpenFixture(10L)));
+        when(premiumGuard.isPremium(any(AppUser.class))).thenReturn(false);
+        when(userFavoriteTeamRepository.findByUserIdOrderByPositionAscIdAsc(1L)).thenReturn(List.of());
+
+        assertThatThrownBy(() -> predictionService.create(new CreatePredictionRequest(1L, 10L, 1, 0)))
+                .isInstanceOf(BusinessRuleException.class)
+                .hasMessageContaining("equipos favoritos");
+    }
+
+    @Test
+    void create_freeUser_favoriteInMatch_succeeds() {
+        Fixture fixture = buildOpenFixture(10L);
+        when(userPredictionRepository.findByUserIdAndFixtureId(1L, 10L)).thenReturn(Optional.empty());
+        when(appUserRepository.findById(1L)).thenReturn(Optional.of(buildUser(1L)));
+        when(fixtureRepository.findById(10L)).thenReturn(Optional.of(fixture));
+        when(premiumGuard.isPremium(any(AppUser.class))).thenReturn(false);
+        when(userFavoriteTeamRepository.findByUserIdOrderByPositionAscIdAsc(1L))
+                .thenReturn(List.of(buildFav(fixture.getHomeTeam())));
+        when(userPredictionRepository.save(any(UserPrediction.class))).thenAnswer(inv -> inv.getArgument(0));
+
+        UserPrediction result = predictionService.create(new CreatePredictionRequest(1L, 10L, 2, 1));
+
+        assertThat(result.getPredictedHomeScore()).isEqualTo(2);
+    }
+
+    @Test
+    void create_freeUser_noFavoriteInMatch_throwsBusinessRule() {
+        Fixture fixture = buildOpenFixture(10L);
+        Team otherTeam = new Team(); otherTeam.setId(99L); otherTeam.setName("Otro");
+        when(userPredictionRepository.findByUserIdAndFixtureId(1L, 10L)).thenReturn(Optional.empty());
+        when(appUserRepository.findById(1L)).thenReturn(Optional.of(buildUser(1L)));
+        when(fixtureRepository.findById(10L)).thenReturn(Optional.of(fixture));
+        when(premiumGuard.isPremium(any(AppUser.class))).thenReturn(false);
+        when(userFavoriteTeamRepository.findByUserIdOrderByPositionAscIdAsc(1L))
+                .thenReturn(List.of(buildFav(otherTeam)));
+
+        assertThatThrownBy(() -> predictionService.create(new CreatePredictionRequest(1L, 10L, 1, 0)))
+                .isInstanceOf(BusinessRuleException.class)
+                .hasMessageContaining("favoritos");
+    }
+
     // ── helpers ───────────────────────────────────────────────────────────────
 
     private AppUser buildUser(Long id) {
@@ -206,5 +258,13 @@ class PredictionServiceTest {
         p.setLockedAt(fixture.getPredictionLockedAt());
         p.setIsLocked(false);
         return p;
+    }
+
+    private UserFavoriteTeam buildFav(Team team) {
+        UserFavoriteTeam f = new UserFavoriteTeam();
+        f.setTeam(team);
+        f.setIsPrimary(false);
+        f.setPosition(0);
+        return f;
     }
 }

@@ -42,9 +42,13 @@ export interface Fixture {
   homeTeamId: number;
   awayTeamId: number;
   kickoffAt: Date;
+  /** Momento en que se bloquea la porra (por defecto kickoff − 5 min). */
+  predictionLockedAt?: Date;
   status: 'SCHEDULED' | 'FINISHED' | 'POSTPONED' | 'CANCELLED' | 'LIVE';
   homeScore?: number;
   awayScore?: number;
+  /** Minutos de reposición (90' + X). Fuente: API-Football o EXTENDER del admin. */
+  extraMinutes?: number;
   createdAt: Date;
   providerUpdatedAt?: Date;
 }

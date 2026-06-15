@@ -31,7 +31,7 @@ import {
   useGlobalRanking,
 } from '@/hooks/useTournamentData';
 import { WORLD_CUP_START, MS, RANKING_PAGE } from '@/constants/tournament';
-import { fmtTodayHeader } from '@/utils/format';
+import { fmtTodayHeader, dayKey } from '@/utils/format';
 import TourButton from '@/components/Tour/TourButton';
 import { getTourSteps } from '@/components/Tour/tourSteps';
 
@@ -41,7 +41,7 @@ import { TabSkeleton } from '@/components/PageSkeleton';
 
 import { KPIChip } from './home/_components/HomeUtils';
 import PremiumOnboardingModal from '@/components/premium/PremiumOnboardingModal';
-import { AdsterraBanner } from '@/components/ads';
+import { AdSlot } from '@/components/ads';
 
 // Lazy load de secciones pesadas — se descargan en paralelo pero no bloquean el render inicial
 const HomeCountdown   = dynamic(() => import('./home/_components/HomeCountdown'),   { loading: () => <TabSkeleton /> });
@@ -91,7 +91,7 @@ export default function HomePage() {
   const { data: allFixtures = [], isLoading: loading }  = useTournamentFixtures(tid);
   const { data: rawPredictions = [] }                   = useUserPredictions(userId);
   const { data: scoreData }                             = useUserScore(userId, tid);
-  const { data: rankingData = [] }                      = useGlobalRanking(tid, RANKING_PAGE.home);
+  const { data: rankingData = [] }                      = useGlobalRanking(tid, RANKING_PAGE.home, isPremium);
 
   // ── Derived state ──
   const todayUpcoming = useMemo(() =>
@@ -102,13 +102,17 @@ export default function HomePage() {
     [allFixtures]
   );
 
-  const recentResults = useMemo(() =>
-    (allFixtures as any[])
+  const recentResults = useMemo(() => {
+    const finished = (allFixtures as any[])
       .filter(f => f.status === 'FINISHED')
-      .sort((a, b) => new Date(b.kickoffAt).getTime() - new Date(a.kickoffAt).getTime())
-      .slice(0, 5),
-    [allFixtures]
-  );
+      .sort((a, b) => new Date(b.kickoffAt).getTime() - new Date(a.kickoffAt).getTime());
+    if (finished.length === 0) return [];
+    // Solo la jornada más reciente: partidos del mismo día (en la TZ del torneo,
+    // igual que el calendario) que el último finalizado. El historial completo
+    // vive en "Mis porras".
+    const lastDay = dayKey(finished[0].kickoffAt);
+    return finished.filter(f => dayKey(f.kickoffAt) === lastDay);
+  }, [allFixtures]);
 
   const myPredictions = useMemo(() => {
     const predMap: Record<number, any> = {};
@@ -118,6 +122,12 @@ export default function HomePage() {
     });
     return predMap;
   }, [recentResults, rawPredictions]);
+
+  // IDs de partidos que el usuario ya predijo → el botón "Porra" muestra "Editar".
+  const predictedFixtureIds = useMemo(
+    () => new Set((rawPredictions as any[]).map((p: any) => Number(p.fixtureId))),
+    [rawPredictions]
+  );
 
   const stats = useMemo(() => ({
     predictions: (rawPredictions as any[]).length,
@@ -310,12 +320,15 @@ export default function HomePage() {
         {/* ── ROW 2 — COUNTDOWN / MUNDIAL EN CURSO ── */}
         <HomeCountdown countdown={countdown} mundialStarted={mundialStarted} t={t} />
 
+        {/* ── PUBLICIDAD (solo Free) — entre countdown y contenido principal ── */}
+        <AdSlot />
+
         {/* ── ROW 3 — BENTO GRID ── */}
         <div className="grid grid-cols-1 lg:grid-cols-[1fr_316px] gap-5">
 
           {/* LEFT COLUMN */}
           <div className="flex flex-col gap-5">
-            <UpcomingMatches fixtures={todayUpcoming} t={t} />
+            <UpcomingMatches fixtures={todayUpcoming} predictedFixtureIds={predictedFixtureIds} t={t} />
             <RecentResults fixtures={recentResults} predictions={myPredictions} t={t} />
           </div>
 
@@ -332,9 +345,6 @@ export default function HomePage() {
 
         {/* ── ROW 4 — QUICK ACCESS BENTO ── */}
         <QuickAccessBento t={t} />
-
-        {/* ── PUBLICIDAD (solo Free) ── */}
-        <AdsterraBanner slot="rect300x250" className="mt-8" />
       </div>
 
       <TourButton steps={getTourSteps(locale, 'dashboard')} />

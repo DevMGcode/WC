@@ -7,10 +7,12 @@ import Image from 'next/image';
 import Link from 'next/link';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useRouter } from 'next/navigation';
-import { useTranslations } from 'next-intl';
+import { useTranslations, useLocale } from 'next-intl';
 import { getFixtureById } from '@/services/publicTournament';
 import { predictionService } from '@/services/predictions';
 import { useAuth } from '@/contexts/AuthContext';
+import { usePremium } from '@/hooks/usePremium';
+import { favoriteTeamsService, type FavoriteTeam } from '@/services/favoriteTeams';
 import {
   FiTarget, FiZap, FiCheck, FiX, FiEdit2, FiArrowLeft,
   FiMapPin, FiAlertCircle, FiList, FiBarChart2, FiUsers, FiRepeat,
@@ -22,6 +24,7 @@ import { alpha, alphaOf, borders, gradients } from '@/lib/design/effects';
 import dynamic from 'next/dynamic';
 import { TabSkeleton } from '@/components/PageSkeleton';
 import { ErrorBoundary } from '@/components/ErrorBoundary';
+import { AdSlot } from '@/components/ads';
 
 const LineupsTab    = dynamic(() => import('./_components/LineupsTab'),    { loading: () => <TabSkeleton /> });
 const StatisticsTab = dynamic(() => import('./_components/StatisticsTab'), { loading: () => <TabSkeleton /> });
@@ -68,6 +71,8 @@ export default function FixtureDetailPage({ params }: { params: { id: string } }
   const router = useRouter();
   const t      = useTranslations();
   const { user, isAuthenticated } = useAuth();
+  const { isPremium } = usePremium();
+  const locale = useLocale();
   const fixtureId = parseInt(params.id, 10);
 
   /* Tabs y reglas de puntuación dependen de t() ⇒ se construyen dentro del
@@ -95,6 +100,8 @@ export default function FixtureDetailPage({ params }: { params: { id: string } }
   const [predError,   setPredError]   = useState('');
   const [predSuccess, setPredSuccess] = useState(false);
   const [detailTab,   setDetailTab]   = useState<DetailTab>('lineups');
+  const [favTeams,    setFavTeams]    = useState<FavoriteTeam[]>([]);
+  const [favsLoaded,  setFavsLoaded]  = useState(false);
 
   // WebSocket — tiempo real (solo activo cuando el partido está LIVE)
   const liveDelta  = useMatchLive(fixture?.status === 'LIVE' ? fixtureId : null);
@@ -119,14 +126,28 @@ export default function FixtureDetailPage({ params }: { params: { id: string } }
   useEffect(() => {
     if (!isAuthenticated || !user || !fixture) return;
     const userId = Number(user.id);
-    if (!userId) return;
-    predictionService.getUserPredictions(userId)
-      .then((preds: any[]) => {
-        const existing = preds.find((p: any) => Number(p.fixtureId) === fixture.id);
-        if (existing) { setPrediction(existing); setPredHome(existing.predictedHomeScore); setPredAway(existing.predictedAwayScore); }
+    predictionService.getUserPredictionForFixture(fixture.id)
+      .then((pred) => {
+        if (pred) { setPrediction(pred); setPredHome(pred.predictedHomeScore); setPredAway(pred.predictedAwayScore); return; }
+        // Fallback: busca entre todas las predicciones del usuario
+        if (!userId) return;
+        return predictionService.getUserPredictions(userId).then((preds) => {
+          const existing = preds.find((p: any) => Number(p.fixtureId) === fixture.id);
+          if (existing) { setPrediction(existing); setPredHome(existing.predictedHomeScore); setPredAway(existing.predictedAwayScore); }
+        });
       })
       .catch(() => {});
   }, [isAuthenticated, user, fixture]);
+
+  // Carga equipos favoritos para usuarios Free — determina si pueden predecir este partido
+  useEffect(() => {
+    if (!isAuthenticated || !user) { setFavsLoaded(true); return; }
+    if (isPremium) { setFavsLoaded(true); return; }
+    favoriteTeamsService.list(user.id)
+      .then(teams => setFavTeams(teams))
+      .catch(() => {})
+      .finally(() => setFavsLoaded(true));
+  }, [isAuthenticated, user, isPremium]);
 
   const handleSubmit = async () => {
     if (!user) return;
@@ -138,12 +159,29 @@ export default function FixtureDetailPage({ params }: { params: { id: string } }
         const updated = await predictionService.updatePrediction(prediction.id, { predictedHomeScore: predHome, predictedAwayScore: predAway });
         setPrediction(updated);
       } else {
-        const created = await predictionService.createPrediction({ userId, fixtureId: fixture.id, predictedHomeScore: predHome, predictedAwayScore: predAway });
-        setPrediction(created);
+        try {
+          const created = await predictionService.createPrediction({ userId, fixtureId: fixture.id, predictedHomeScore: predHome, predictedAwayScore: predAway });
+          setPrediction(created);
+        } catch (createErr: any) {
+          const status = createErr?.response?.status;
+          // 422 / 409 = ya existe una predicción que el GET inicial no detectó
+          if (status === 422 || status === 409) {
+            const existing = await predictionService.getUserPredictionForFixture(fixture.id);
+            if (existing) {
+              const updated = await predictionService.updatePrediction(existing.id, { predictedHomeScore: predHome, predictedAwayScore: predAway });
+              setPrediction(updated);
+            } else {
+              throw createErr;
+            }
+          } else {
+            throw createErr;
+          }
+        }
       }
       setPredSuccess(true); setEditing(false);
     } catch (err: any) {
-      setPredError(err?.response?.data?.error || err?.message || t('fixture.saveError'));
+      const d = err?.response?.data;
+      setPredError(d?.message || d?.error || d?.detail || err?.message || t('fixture.saveError'));
     } finally { setSubmitting(false); }
   };
 
@@ -175,8 +213,24 @@ export default function FixtureDetailPage({ params }: { params: { id: string } }
   const isScheduled = liveStatus === 'SCHEDULED';
   const isLive      = liveStatus === 'LIVE';
   const isFinished  = liveStatus === 'FINISHED';
-  const canPredict  = isScheduled && isAuthenticated;
-  const showForm    = canPredict && (!prediction || editing);
+
+  // Lógica de negocio — quién puede hacer porras
+  // Free:    puede predecir partidos donde CUALQUIER equipo favorito (del onboarding) participe.
+  // Premium: puede predecir CUALQUIER partido (ilimitado, sin importar favoritos).
+  //
+  // La comparación usa primero ID y luego fifaCode como fallback por si los IDs
+  // difieren entre el endpoint de favoritos y el de fixtures.
+  const isFavInMatch = !isPremium && favTeams.some(f =>
+    f.teamId === fixture?.homeTeamId ||
+    f.teamId === fixture?.awayTeamId ||
+    !!(f.fifaCode && (
+      f.fifaCode === fixture?.homeTeam?.fifaCode ||
+      f.fifaCode === fixture?.awayTeam?.fifaCode
+    ))
+  );
+  const hasFavs = favTeams.length > 0;
+  // Mientras favTeams carga (!favsLoaded) mostramos el formulario optimistamente
+  const canPredict = isPremium || !favsLoaded || !!prediction || isFavInMatch;
 
   const predCorrect = isFinished && prediction &&
     prediction.predictedHomeScore === fixture.homeScore &&
@@ -291,8 +345,8 @@ export default function FixtureDetailPage({ params }: { params: { id: string } }
             </DarkCard>
           )}
 
-          {/* Logged in — scheduled match */}
-          {isAuthenticated && isScheduled && (
+          {/* Logged in — scheduled match (solo si puede predecir o ya tiene porra) */}
+          {isAuthenticated && isScheduled && canPredict && (
             <DarkCard accent="green" delay={0.08}>
               <div className="p-5">
 
@@ -469,6 +523,44 @@ export default function FixtureDetailPage({ params }: { params: { id: string } }
             </DarkCard>
           )}
 
+          {/* Free gate — partido no elegible para predicción */}
+          {isAuthenticated && isScheduled && favsLoaded && !canPredict && (
+            <DarkCard accent="gold" delay={0.08}>
+              <div className="p-6 text-center">
+                <div className="w-14 h-14 rounded-2xl flex items-center justify-center mx-auto mb-4"
+                  style={{ background: alpha(hex.bg.primary, 0.85), border: `1px solid ${alphaOf('gold', 0.22)}` }}>
+                  <span style={{ fontSize: 26 }}>🔒</span>
+                </div>
+                <p className="text-white font-black text-base mb-2">
+                  {!hasFavs
+                    ? 'Elige tus equipos favoritos'
+                    : 'Ninguno de tus favoritos juega este partido'}
+                </p>
+                <p className="text-[12px] leading-relaxed mb-5"
+                  style={{ color: alpha(hex.text.muted, 0.80) }}>
+                  {!hasFavs
+                    ? 'Ve a tu perfil y agrega equipos favoritos. Con el plan Free puedes predecir todos sus partidos del Mundial.'
+                    : 'Con el plan Free puedes predecir los partidos de tus equipos favoritos. Hazte Premium para predecir todos los partidos del Mundial.'}
+                </p>
+                <div className="flex flex-col gap-2">
+                  {!hasFavs && (
+                    <Link href={`/${locale}/profile`}
+                      onClick={() => { try { sessionStorage.setItem('profile-tab', 'FAVORITES'); } catch {} }}
+                      className="inline-flex items-center justify-center py-2.5 px-6 rounded-xl text-[12px] font-black"
+                      style={{ background: alphaOf('gold', 0.12), border: `1px solid ${alphaOf('gold', 0.28)}`, color: hex.gold.base }}>
+                      Ir a mi perfil ⭐
+                    </Link>
+                  )}
+                  <Link href={`/${locale}/premium`}
+                    className="inline-flex items-center justify-center py-2.5 px-6 rounded-xl text-[12px] font-black text-black"
+                    style={{ background: `linear-gradient(135deg, ${hex.gold.base}, ${hex.gold.muted})` }}>
+                    Hazte Premium
+                  </Link>
+                </div>
+              </div>
+            </DarkCard>
+          )}
+
           {/* Logged in — finished match result comparison */}
           {isAuthenticated && isFinished && prediction && (
             <DarkCard accent={resultCfg.color} delay={0.08}>
@@ -550,7 +642,7 @@ export default function FixtureDetailPage({ params }: { params: { id: string } }
         )}
 
         {/* ── GOLEADORES ── */}
-        {isFinished && fixture.scorers && fixture.scorers.length > 0 && (
+        {(isFinished || isLive) && fixture.scorers && fixture.scorers.length > 0 && (
           <DarkCard accent="gold" delay={0.22} className="mb-4">
             <div className="p-5">
               <div className="flex items-center justify-between mb-4">
@@ -676,6 +768,9 @@ export default function FixtureDetailPage({ params }: { params: { id: string } }
             </AnimatePresence>
           </div>
         </DarkCard>
+
+        {/* ── PUBLICIDAD (solo Free) — antes de los botones de navegación ── */}
+        <AdSlot />
 
         {/* ── BOTTOM BUTTONS ── */}
         <div className="flex gap-3">

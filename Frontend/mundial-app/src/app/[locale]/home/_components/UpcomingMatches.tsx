@@ -4,7 +4,7 @@ import React from 'react';
 import { motion } from 'framer-motion';
 import Link from 'next/link';
 import { useLocale } from 'next-intl';
-import { FiChevronRight, FiZap } from 'react-icons/fi';
+import { FiChevronRight, FiZap, FiCheck, FiEdit2, FiLock } from 'react-icons/fi';
 import { hex } from '@/lib/design/tokens';
 import { alpha, alphaOf } from '@/lib/design/effects';
 import { fmtDate, fmtTime, fmtDay } from '@/utils/format';
@@ -13,11 +13,22 @@ import { localizeTeamName } from '@/lib/i18n/teamNames';
 
 interface UpcomingMatchesProps {
   fixtures: any[];
+  /** IDs de partidos para los que el usuario YA hizo su porra (cambia el botón a "Editar"). */
+  predictedFixtureIds?: Set<number>;
   t: (key: string) => string;
 }
 
-const UpcomingMatches = ({ fixtures, t }: UpcomingMatchesProps) => {
+const UpcomingMatches = ({ fixtures, predictedFixtureIds, t }: UpcomingMatchesProps) => {
   const locale = useLocale();
+  const isPredicted = (id: number) => predictedFixtureIds?.has(id) ?? false;
+  // La porra se bloquea en predictionLockedAt (por defecto kickoff − 5 min).
+  // Si no viene ese campo, lo calculamos como kickoff − 5 min.
+  const isLocked = (fx: any) => {
+    const lockMs = fx?.predictionLockedAt
+      ? new Date(fx.predictionLockedAt).getTime()
+      : new Date(fx?.kickoffAt).getTime() - 5 * 60_000;
+    return Date.now() >= lockMs;
+  };
   return (
   <motion.div
     data-tour="matches"
@@ -124,25 +135,85 @@ const UpcomingMatches = ({ fixtures, t }: UpcomingMatchesProps) => {
               style={{ background: `linear-gradient(90deg, transparent, ${alphaOf('green', 0.20)}, transparent)` }} />
 
             <Link href={`/fixtures/${fixtures[0].id}`}>
-              <motion.button
-                whileHover={{ scale: 1.02, boxShadow: `0 18px 52px ${alphaOf('success', 0.65)}` }}
-                whileTap={{ scale: 0.97 }}
-                className="relative w-full py-4 rounded-xl font-black text-white tracking-wide overflow-hidden flex items-center justify-center gap-2.5"
-                style={{
-                  background: `linear-gradient(135deg, ${hex.green.dark}, ${hex.green.base}, ${hex.green.hover})`,
-                  boxShadow: `0 6px 28px ${alphaOf('success', 0.40)}`,
-                  fontSize: '15px',
-                  letterSpacing: '0.07em',
-                }}
-              >
-                <motion.div className="absolute inset-0"
-                  style={{ background: `linear-gradient(105deg, transparent 30%, ${alpha(hex.neutral.white, 0.22)} 50%, transparent 70%)` }}
-                  animate={{ x: ['-130%', '130%'] }}
-                  transition={{ duration: 2.4, repeat: Infinity, ease: 'linear', repeatDelay: 2.5 }} />
-                <FiZap className="relative" size={16} />
-                <span className="relative">{t('home.makePrediction')}</span>
-                <FiChevronRight className="relative" size={15} />
-              </motion.button>
+              {isLocked(fixtures[0]) ? (
+                isPredicted(fixtures[0].id) ? (
+                  /* Bloqueado + predicho: muestra check y candado */
+                  <motion.button
+                    whileHover={{ scale: 1.01 }}
+                    whileTap={{ scale: 0.98 }}
+                    className="relative w-full py-4 rounded-xl font-black tracking-wide flex items-center justify-center gap-2.5"
+                    style={{
+                      background: alpha(hex.neutral.white, 0.04),
+                      border: `1px solid ${alpha(hex.neutral.white, 0.12)}`,
+                      color: hex.text.secondary,
+                      fontSize: '15px',
+                      letterSpacing: '0.07em',
+                    }}
+                  >
+                    <FiCheck size={16} style={{ color: hex.green.bright }} />
+                    <span>{t('home.predictionDone')}</span>
+                    <FiLock size={13} />
+                  </motion.button>
+                ) : (
+                  /* Bloqueado + sin predecir: solo candado, no se puede predecir */
+                  <motion.button
+                    whileHover={{ scale: 1.01 }}
+                    whileTap={{ scale: 0.98 }}
+                    className="relative w-full py-4 rounded-xl font-black tracking-wide flex items-center justify-center gap-2.5"
+                    style={{
+                      background: alpha(hex.neutral.white, 0.04),
+                      border: `1px solid ${alpha(hex.neutral.white, 0.10)}`,
+                      color: hex.text.muted,
+                      fontSize: '15px',
+                      letterSpacing: '0.07em',
+                    }}
+                  >
+                    <FiLock size={14} />
+                    <span>{t('home.predictionClosed')}</span>
+                  </motion.button>
+                )
+              ) : isPredicted(fixtures[0].id) ? (
+                /* A tiempo + predicho: invita a editar */
+                <motion.button
+                  whileHover={{ scale: 1.02 }}
+                  whileTap={{ scale: 0.97 }}
+                  className="relative w-full py-4 rounded-xl font-black tracking-wide flex items-center justify-center gap-2.5"
+                  style={{
+                    background: alphaOf('green', 0.10),
+                    border: `1px solid ${alphaOf('green', 0.45)}`,
+                    color: hex.green.bright,
+                    fontSize: '15px',
+                    letterSpacing: '0.07em',
+                  }}
+                >
+                  <FiCheck size={17} />
+                  <span>{t('home.predictionDone')}</span>
+                  <span className="opacity-60">·</span>
+                  <FiEdit2 size={13} />
+                  <span>{t('home.edit')}</span>
+                </motion.button>
+              ) : (
+                /* A tiempo + sin predecir: botón Porra */
+                <motion.button
+                  whileHover={{ scale: 1.02, boxShadow: `0 18px 52px ${alphaOf('success', 0.65)}` }}
+                  whileTap={{ scale: 0.97 }}
+                  className="relative w-full py-4 rounded-xl font-black text-white tracking-wide overflow-hidden flex items-center justify-center gap-2.5"
+                  style={{
+                    background: `linear-gradient(135deg, ${hex.green.dark}, ${hex.green.base}, ${hex.green.hover})`,
+                    boxShadow: `0 6px 28px ${alphaOf('success', 0.40)}`,
+                    fontSize: '15px',
+                    letterSpacing: '0.07em',
+                  }}
+                >
+                  <motion.div className="absolute inset-0"
+                    style={{ background: `linear-gradient(105deg, transparent 30%, ${alpha(hex.neutral.white, 0.22)} 50%, transparent 70%)` }}
+                    animate={{ x: ['-130%', '130%'] }}
+                    transition={{ duration: 2.4, repeat: Infinity, ease: 'linear', repeatDelay: 2.5 }} />
+                  <FiZap className="relative" size={16} />
+                  <span className="relative">{t('home.makePrediction')}</span>
+                  <FiChevronRight className="relative" size={15} />
+                </motion.button>
+              )}
             </Link>
           </>
         ) : (
@@ -199,23 +270,82 @@ const UpcomingMatches = ({ fixtures, t }: UpcomingMatchesProps) => {
                     </span>
                   </div>
 
-                  {/* CTA Button */}
+                  {/* CTA Button — 3 estados: sin predecir / predicho editable / predicho bloqueado */}
                   <Link href={`/fixtures/${fixture.id}`} className="shrink-0">
-                    <motion.button
-                      whileHover={{ scale: 1.08, boxShadow: `0 8px 26px ${alphaOf('success', 0.58)}` }}
-                      whileTap={{ scale: 0.93 }}
-                      aria-label={t('common.predict')}
-                      className="flex items-center gap-1.5 px-2.5 py-2.5 sm:px-4 sm:py-2.5 rounded-xl font-black text-white whitespace-nowrap"
-                      style={{
-                        background: `linear-gradient(135deg, ${hex.green.dark}, ${hex.green.base})`,
-                        boxShadow: `0 3px 14px ${alphaOf('success', 0.35)}`,
-                        fontSize: '12px',
-                        letterSpacing: '0.04em',
-                      }}
-                    >
-                      <FiZap size={12} />
-                      <span className="hidden sm:inline">{t('common.predict')}</span>
-                    </motion.button>
+                    {isLocked(fixture) ? (
+                      isPredicted(fixture.id) ? (
+                        /* Bloqueado + predicho */
+                        <motion.button
+                          whileHover={{ scale: 1.05 }}
+                          whileTap={{ scale: 0.95 }}
+                          aria-label={t('home.predictionDone')}
+                          className="flex items-center gap-1.5 px-2.5 py-2.5 sm:px-4 sm:py-2.5 rounded-xl font-black whitespace-nowrap"
+                          style={{
+                            background: alpha(hex.neutral.white, 0.04),
+                            border: `1px solid ${alpha(hex.neutral.white, 0.12)}`,
+                            color: hex.text.secondary,
+                            fontSize: '12px',
+                            letterSpacing: '0.04em',
+                          }}
+                        >
+                          <FiCheck size={12} style={{ color: hex.green.bright }} />
+                          <FiLock size={11} />
+                        </motion.button>
+                      ) : (
+                        /* Bloqueado + sin predecir */
+                        <motion.button
+                          whileHover={{ scale: 1.05 }}
+                          whileTap={{ scale: 0.95 }}
+                          aria-label={t('home.predictionClosed')}
+                          className="flex items-center gap-1.5 px-2.5 py-2.5 sm:px-4 sm:py-2.5 rounded-xl font-black whitespace-nowrap"
+                          style={{
+                            background: alpha(hex.neutral.white, 0.04),
+                            border: `1px solid ${alpha(hex.neutral.white, 0.10)}`,
+                            color: hex.text.muted,
+                            fontSize: '12px',
+                            letterSpacing: '0.04em',
+                          }}
+                        >
+                          <FiLock size={12} />
+                          <span className="hidden sm:inline">{t('home.predictionClosed')}</span>
+                        </motion.button>
+                      )
+                    ) : isPredicted(fixture.id) ? (
+                      /* A tiempo + predicho */
+                      <motion.button
+                        whileHover={{ scale: 1.08 }}
+                        whileTap={{ scale: 0.93 }}
+                        aria-label={t('home.predictionDone')}
+                        className="flex items-center gap-1.5 px-2.5 py-2.5 sm:px-4 sm:py-2.5 rounded-xl font-black whitespace-nowrap"
+                        style={{
+                          background: alphaOf('green', 0.10),
+                          border: `1px solid ${alphaOf('green', 0.45)}`,
+                          color: hex.green.bright,
+                          fontSize: '12px',
+                          letterSpacing: '0.04em',
+                        }}
+                      >
+                        <FiCheck size={13} />
+                        <span className="hidden sm:inline">{t('home.edit')}</span>
+                      </motion.button>
+                    ) : (
+                      /* A tiempo + sin predecir */
+                      <motion.button
+                        whileHover={{ scale: 1.08, boxShadow: `0 8px 26px ${alphaOf('success', 0.58)}` }}
+                        whileTap={{ scale: 0.93 }}
+                        aria-label={t('common.predict')}
+                        className="flex items-center gap-1.5 px-2.5 py-2.5 sm:px-4 sm:py-2.5 rounded-xl font-black text-white whitespace-nowrap"
+                        style={{
+                          background: `linear-gradient(135deg, ${hex.green.dark}, ${hex.green.base})`,
+                          boxShadow: `0 3px 14px ${alphaOf('success', 0.35)}`,
+                          fontSize: '12px',
+                          letterSpacing: '0.04em',
+                        }}
+                      >
+                        <FiZap size={12} />
+                        <span className="hidden sm:inline">{t('common.predict')}</span>
+                      </motion.button>
+                    )}
                   </Link>
                 </div>
               </motion.div>

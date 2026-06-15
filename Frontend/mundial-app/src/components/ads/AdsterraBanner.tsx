@@ -60,6 +60,7 @@ export function AdsterraBanner({ slot, className = '' }: { slot: BannerSlot; cla
         scrolling="no"
         loading="lazy"
         referrerPolicy="no-referrer-when-downgrade"
+        sandbox="allow-scripts allow-popups allow-popups-to-escape-sandbox"
         style={{
           border: `1px solid ${alpha(hex.neutral.white, 0.05)}`,
           borderRadius: 12,

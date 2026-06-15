@@ -62,63 +62,86 @@ public class EmailService {
         return ("""
             <!DOCTYPE html>
             <html lang="es">
-            <head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0"></head>
-            <body style="margin:0;padding:0;background:#030810;font-family:'Segoe UI',Arial,sans-serif;">
-              <table width="100%%" cellpadding="0" cellspacing="0" style="background:#030810;padding:36px 16px;">
+            <head>
+              <meta charset="UTF-8">
+              <meta name="viewport" content="width=device-width,initial-scale=1.0">
+              <meta name="color-scheme" content="light">
+              <meta name="supported-color-schemes" content="light">
+              <style>:root{color-scheme:light;}</style>
+            </head>
+            <body style="margin:0;padding:0;background:#030810;font-family:'Segoe UI',Arial,sans-serif;" bgcolor="#030810">
+              <table width="100%%" cellpadding="0" cellspacing="0" bgcolor="#030810"
+                     style="background:#030810;padding:36px 16px;">
                 <tr><td align="center">
                   <table width="520" cellpadding="0" cellspacing="0" style="max-width:520px;width:100%%;">
                     <tr>
-                      <td style="background:linear-gradient(160deg,#06101e 0%%,#070d1c 55%%,#04090f 100%%);
-                                 border-radius:20px;border:1px solid rgba(34,211,238,0.18);
-                                 box-shadow:0 28px 80px rgba(0,0,0,0.80);">
+                      <td bgcolor="#06101e"
+                          style="background:linear-gradient(160deg,#06101e 0%%,#070d1c 55%%,#04090f 100%%);
+                                 border-radius:20px;border:1px solid #0d3545;">
                         <table width="100%%" cellpadding="0" cellspacing="0">
-                          <tr><td style="height:4px;background:linear-gradient(90deg,#22d3ee 0%%,#10b981 40%%,#38bdf8 70%%,#22d3ee 100%%);border-radius:20px 20px 0 0;"></td></tr>
                           <tr>
-                            <td style="padding:40px 36px 28px;text-align:center;background:linear-gradient(180deg,rgba(34,211,238,0.05) 0%%,transparent 100%%);">
+                            <td bgcolor="#10b981" height="4"
+                                style="height:4px;font-size:0;line-height:0;
+                                       background:linear-gradient(90deg,#22d3ee 0%%,#10b981 40%%,#38bdf8 70%%,#22d3ee 100%%);
+                                       border-radius:20px 20px 0 0;">&nbsp;</td>
+                          </tr>
+                          <tr>
+                            <td bgcolor="#06101e" style="padding:40px 36px 28px;text-align:center;">
                               <img src="%s" alt="Orionix Gol" width="200"
                                    style="display:block;margin:0 auto;width:200px;height:auto;border:0;" />
-                              <div style="height:1px;background:linear-gradient(90deg,transparent,rgba(34,211,238,0.30),transparent);margin:24px auto 0;width:75%%;"></div>
+                              <div style="height:1px;background:#0d3040;margin:24px auto 0;width:75%%;"></div>
                               <div style="display:inline-block;margin-top:18px;padding:6px 20px;border-radius:20px;
-                                          background:rgba(34,211,238,0.07);border:1px solid rgba(34,211,238,0.20);">
-                                <span style="color:rgba(148,163,184,0.75);font-size:10px;letter-spacing:3px;text-transform:uppercase;font-weight:700;">
+                                          background:#051a26;border:1px solid #0e3545;">
+                                <span style="color:#8096a8;font-size:10px;letter-spacing:3px;text-transform:uppercase;font-weight:700;">
                                   Verificacion de Cuenta
                                 </span>
                               </div>
                             </td>
                           </tr>
                           <tr>
-                            <td style="padding:8px 36px 36px;">
+                            <td bgcolor="#06101e" style="padding:8px 36px 36px;">
                               <p style="color:#22d3ee;font-size:20px;font-weight:700;text-align:center;margin:0 0 12px;">
                                 Hola, %s &#128075;
                               </p>
-                              <p style="color:rgba(148,163,184,0.80);font-size:14px;line-height:1.75;margin:0 0 28px;text-align:center;">
+                              <p style="color:#8096a8;font-size:14px;line-height:1.75;margin:0 0 28px;text-align:center;">
                                 Gracias por registrarte en <strong style="color:#38bdf8;">Orionix Gol</strong>.<br>
                                 Haz clic en el boton para activar tu cuenta y comenzar a predecir.
                               </p>
                               <table width="100%%" cellpadding="0" cellspacing="0" style="margin-bottom:24px;">
                                 <tr>
                                   <td align="center">
-                                    <a href="%s"
-                                       style="display:inline-block;padding:16px 40px;
-                                              background:linear-gradient(135deg,#22d3ee,#10b981);
-                                              color:#030810;font-size:15px;font-weight:800;
-                                              text-decoration:none;border-radius:12px;
-                                              letter-spacing:0.5px;">
-                                      &#10003; Verificar mi cuenta
-                                    </a>
+                                    <table cellpadding="0" cellspacing="0">
+                                      <tr>
+                                        <td align="center" bgcolor="#10b981"
+                                            style="background:linear-gradient(135deg,#22d3ee,#10b981);
+                                                   border-radius:12px;">
+                                          <a href="%s"
+                                             style="display:inline-block;padding:16px 40px;
+                                                    color:#030810;font-size:15px;font-weight:800;
+                                                    text-decoration:none;border-radius:12px;
+                                                    letter-spacing:0.5px;">
+                                            &#10003; Verificar mi cuenta
+                                          </a>
+                                        </td>
+                                      </tr>
+                                    </table>
                                   </td>
                                 </tr>
                               </table>
-                              <p style="color:rgba(71,85,105,0.75);font-size:11px;line-height:1.65;margin:0;text-align:center;">
+                              <p style="color:#3e4d5c;font-size:11px;line-height:1.65;margin:0;text-align:center;">
                                 Si no creaste esta cuenta, ignora este correo.<br>
                                 El enlace expira en 24 horas.
                               </p>
                             </td>
                           </tr>
-                          <tr><td style="padding:0 36px;"><div style="height:1px;background:linear-gradient(90deg,transparent,rgba(255,255,255,0.06),transparent);"></div></td></tr>
                           <tr>
-                            <td style="padding:18px 36px 26px;text-align:center;">
-                              <p style="margin:0;color:rgba(51,65,85,0.85);font-size:10px;letter-spacing:1px;">
+                            <td bgcolor="#06101e" style="padding:0 36px;">
+                              <div style="height:1px;background:#111827;"></div>
+                            </td>
+                          </tr>
+                          <tr>
+                            <td bgcolor="#06101e" style="padding:18px 36px 26px;text-align:center;">
+                              <p style="margin:0;color:#404e5f;font-size:10px;letter-spacing:1px;">
                                 &#169; 2026 Orionix Gol &#8212; Todos los derechos reservados
                               </p>
                             </td>
@@ -189,52 +212,55 @@ public class EmailService {
             <head>
               <meta charset="UTF-8">
               <meta name="viewport" content="width=device-width, initial-scale=1.0">
+              <meta name="color-scheme" content="light">
+              <meta name="supported-color-schemes" content="light">
+              <style>:root{color-scheme:light;}</style>
             </head>
-            <body style="margin:0;padding:0;background:#030810;font-family:'Segoe UI',Arial,sans-serif;">
-              <table width="100%%" cellpadding="0" cellspacing="0"
+            <body style="margin:0;padding:0;background:#030810;font-family:'Segoe UI',Arial,sans-serif;" bgcolor="#030810">
+              <table width="100%%" cellpadding="0" cellspacing="0" bgcolor="#030810"
                      style="background:#030810;padding:36px 16px;">
                 <tr><td align="center">
                   <table width="520" cellpadding="0" cellspacing="0"
                          style="max-width:520px;width:100%%;">
                     <tr>
-                      <td style="background:linear-gradient(160deg,#06101e 0%%,#070d1c 55%%,#04090f 100%%);
-                                 border-radius:20px;border:1px solid rgba(34,211,238,0.18);
-                                 box-shadow:0 28px 80px rgba(0,0,0,0.80);">
+                      <td bgcolor="#06101e"
+                          style="background:linear-gradient(160deg,#06101e 0%%,#070d1c 55%%,#04090f 100%%);
+                                 border-radius:20px;border:1px solid #0d3545;">
                         <table width="100%%" cellpadding="0" cellspacing="0">
                           <tr>
-                            <td style="height:4px;background:linear-gradient(90deg,#22d3ee 0%%,#10b981 40%%,#38bdf8 70%%,#22d3ee 100%%);
-                                       border-radius:20px 20px 0 0;"></td>
+                            <td bgcolor="#10b981" height="4"
+                                style="height:4px;font-size:0;line-height:0;
+                                       background:linear-gradient(90deg,#22d3ee 0%%,#10b981 40%%,#38bdf8 70%%,#22d3ee 100%%);
+                                       border-radius:20px 20px 0 0;">&nbsp;</td>
                           </tr>
                           <tr>
-                            <td style="padding:40px 36px 28px;text-align:center;
-                                       background:linear-gradient(180deg,rgba(34,211,238,0.05) 0%%,transparent 100%%);">
+                            <td bgcolor="#06101e" style="padding:40px 36px 28px;text-align:center;">
                               <img src="%s" alt="Orionix Gol" width="200"
                                    style="display:block;margin:0 auto;width:200px;height:auto;border:0;" />
-                              <div style="height:1px;background:linear-gradient(90deg,transparent,rgba(34,211,238,0.30),transparent);
-                                          margin:24px auto 0;width:75%%;"></div>
+                              <div style="height:1px;background:#0d3040;margin:24px auto 0;width:75%%;"></div>
                               <div style="display:inline-block;margin-top:18px;padding:6px 20px;border-radius:20px;
-                                          background:rgba(16,185,129,0.07);border:1px solid rgba(16,185,129,0.20);">
-                                <span style="color:rgba(148,163,184,0.75);font-size:10px;letter-spacing:3px;
+                                          background:#051c13;border:1px solid #0a2e1c;">
+                                <span style="color:#8096a8;font-size:10px;letter-spacing:3px;
                                              text-transform:uppercase;font-weight:700;">&#161;Bienvenido!</span>
                               </div>
                             </td>
                           </tr>
                           <tr>
-                            <td style="padding:8px 36px 36px;">
+                            <td bgcolor="#06101e" style="padding:8px 36px 36px;">
                               <p style="color:#22d3ee;font-size:22px;font-weight:700;text-align:center;margin:0 0 16px;">
                                 Hola, %s &#128075;
                               </p>
-                              <p style="color:rgba(148,163,184,0.80);font-size:14px;line-height:1.75;
+                              <p style="color:#8096a8;font-size:14px;line-height:1.75;
                                         margin:0 0 24px;text-align:center;">
                                 Tu cuenta en <strong style="color:#38bdf8;">Orionix Gol</strong> est&#225; lista.<br>
                                 Ya puedes hacer tus predicciones del Mundial 2026 y competir con amigos.
                               </p>
                               <table width="100%%" cellpadding="0" cellspacing="0" style="margin-bottom:24px;">
                                 <tr>
-                                  <td style="background:linear-gradient(145deg,rgba(16,185,129,0.08),rgba(4,12,28,0.85));
-                                             border:1.5px solid rgba(16,185,129,0.25);border-radius:14px;
-                                             padding:20px;text-align:center;">
-                                    <p style="margin:0;color:rgba(148,163,184,0.85);font-size:13px;line-height:1.65;">
+                                  <td bgcolor="#04120d"
+                                      style="background:#04120d;border:1.5px solid #0e3a22;
+                                             border-radius:14px;padding:20px;text-align:center;">
+                                    <p style="margin:0;color:#8096a8;font-size:13px;line-height:1.65;">
                                       &#9917; Predice resultados &middot; &#127942; Sube en el ranking &middot; &#127757; Sigue todos los partidos
                                     </p>
                                   </td>
@@ -243,29 +269,37 @@ public class EmailService {
                               <table width="100%%" cellpadding="0" cellspacing="0" style="margin-bottom:20px;">
                                 <tr>
                                   <td align="center">
-                                    <a href="%s" target="_blank"
-                                       style="display:inline-block;background:linear-gradient(90deg,#16a34a,#22c55e);
-                                              color:#ffffff;font-size:14px;font-weight:700;text-decoration:none;
-                                              padding:14px 36px;border-radius:10px;letter-spacing:0.05em;">
-                                      Ir a Orionix Gol &#8594;
-                                    </a>
+                                    <table cellpadding="0" cellspacing="0">
+                                      <tr>
+                                        <td align="center" bgcolor="#16a34a"
+                                            style="background:linear-gradient(90deg,#16a34a,#22c55e);
+                                                   border-radius:10px;">
+                                          <a href="%s" target="_blank"
+                                             style="display:inline-block;color:#ffffff;font-size:14px;
+                                                    font-weight:700;text-decoration:none;
+                                                    padding:14px 36px;border-radius:10px;letter-spacing:0.05em;">
+                                            Ir a Orionix Gol &#8594;
+                                          </a>
+                                        </td>
+                                      </tr>
+                                    </table>
                                   </td>
                                 </tr>
                               </table>
-                              <p style="color:rgba(71,85,105,0.75);font-size:11px;line-height:1.65;
+                              <p style="color:#3e4d5c;font-size:11px;line-height:1.65;
                                         margin:0;text-align:center;">
                                 Si no creaste esta cuenta, puedes ignorar este mensaje.
                               </p>
                             </td>
                           </tr>
                           <tr>
-                            <td style="padding:0 36px;">
-                              <div style="height:1px;background:linear-gradient(90deg,transparent,rgba(255,255,255,0.06),transparent);"></div>
+                            <td bgcolor="#06101e" style="padding:0 36px;">
+                              <div style="height:1px;background:#111827;"></div>
                             </td>
                           </tr>
                           <tr>
-                            <td style="padding:18px 36px 26px;text-align:center;">
-                              <p style="margin:0;color:rgba(51,65,85,0.85);font-size:10px;letter-spacing:1px;">
+                            <td bgcolor="#06101e" style="padding:18px 36px 26px;text-align:center;">
+                              <p style="margin:0;color:#404e5f;font-size:10px;letter-spacing:1px;">
                                 &#169; 2026 Orionix Gol &#8212; Todos los derechos reservados
                               </p>
                             </td>
@@ -288,44 +322,45 @@ public class EmailService {
             <head>
               <meta charset="UTF-8">
               <meta name="viewport" content="width=device-width, initial-scale=1.0">
+              <meta name="color-scheme" content="light">
+              <meta name="supported-color-schemes" content="light">
+              <style>:root{color-scheme:light;}</style>
             </head>
-            <body style="margin:0;padding:0;background:#030810;font-family:'Segoe UI',Arial,sans-serif;">
+            <body style="margin:0;padding:0;background:#030810;font-family:'Segoe UI',Arial,sans-serif;" bgcolor="#030810">
 
-              <table width="100%%" cellpadding="0" cellspacing="0"
+              <table width="100%%" cellpadding="0" cellspacing="0" bgcolor="#030810"
                      style="background:#030810;padding:36px 16px;">
                 <tr><td align="center">
                   <table width="520" cellpadding="0" cellspacing="0"
                          style="max-width:520px;width:100%%;">
 
                     <tr>
-                      <td style="background:linear-gradient(160deg,#06101e 0%%,#070d1c 55%%,#04090f 100%%);
+                      <td bgcolor="#06101e"
+                          style="background:linear-gradient(160deg,#06101e 0%%,#070d1c 55%%,#04090f 100%%);
                                  border-radius:20px;
-                                 border:1px solid rgba(34,211,238,0.18);
-                                 box-shadow:0 28px 80px rgba(0,0,0,0.80);">
+                                 border:1px solid #0d3545;">
                         <table width="100%%" cellpadding="0" cellspacing="0">
 
                           <tr>
-                            <td style="height:4px;
+                            <td bgcolor="#10b981" height="4"
+                                style="height:4px;font-size:0;line-height:0;
                                        background:linear-gradient(90deg,#22d3ee 0%%,#10b981 40%%,#38bdf8 70%%,#22d3ee 100%%);
-                                       border-radius:20px 20px 0 0;"></td>
+                                       border-radius:20px 20px 0 0;">&nbsp;</td>
                           </tr>
 
                           <tr>
-                            <td style="padding:40px 36px 28px;text-align:center;
-                                       background:linear-gradient(180deg,rgba(34,211,238,0.05) 0%%,transparent 100%%);">
+                            <td bgcolor="#06101e" style="padding:40px 36px 28px;text-align:center;">
                               <img src="%s"
                                    alt="Orionix Gol"
                                    width="200"
                                    style="display:block;margin:0 auto;width:200px;max-width:200px;
                                           height:auto;border:0;outline:none;" />
-                              <div style="height:1px;
-                                          background:linear-gradient(90deg,transparent,rgba(34,211,238,0.30),transparent);
-                                          margin:24px auto 0;width:75%%;"></div>
+                              <div style="height:1px;background:#0d3040;margin:24px auto 0;width:75%%;"></div>
                               <div style="display:inline-block;margin-top:18px;
                                           padding:6px 20px;border-radius:20px;
-                                          background:rgba(34,211,238,0.07);
-                                          border:1px solid rgba(34,211,238,0.20);">
-                                <span style="color:rgba(148,163,184,0.75);font-size:10px;
+                                          background:#051a26;
+                                          border:1px solid #0e3545;">
+                                <span style="color:#8096a8;font-size:10px;
                                              letter-spacing:3px;text-transform:uppercase;font-weight:700;">
                                   Recuperacion de Contrasena
                                 </span>
@@ -334,8 +369,8 @@ public class EmailService {
                           </tr>
 
                           <tr>
-                            <td style="padding:8px 36px 36px;">
-                              <p style="color:rgba(148,163,184,0.80);font-size:14px;
+                            <td bgcolor="#06101e" style="padding:8px 36px 36px;">
+                              <p style="color:#8096a8;font-size:14px;
                                         line-height:1.75;margin:0 0 28px;text-align:center;">
                                 Recibimos una solicitud para restablecer tu contrasena.<br>
                                 Haz clic en el boton para elegir una nueva.
@@ -343,27 +378,34 @@ public class EmailService {
                               <table width="100%%" cellpadding="0" cellspacing="0" style="margin-bottom:24px;">
                                 <tr>
                                   <td align="center">
-                                    <a href="%s" target="_blank"
-                                       style="display:inline-block;padding:16px 40px;
-                                              background:linear-gradient(135deg,#22d3ee,#10b981);
-                                              color:#030810;font-size:15px;font-weight:800;
-                                              text-decoration:none;border-radius:12px;
-                                              letter-spacing:0.5px;">
-                                      &#128273; Restablecer contrasena
-                                    </a>
+                                    <table cellpadding="0" cellspacing="0">
+                                      <tr>
+                                        <td align="center" bgcolor="#10b981"
+                                            style="background:linear-gradient(135deg,#22d3ee,#10b981);
+                                                   border-radius:12px;">
+                                          <a href="%s" target="_blank"
+                                             style="display:inline-block;padding:16px 40px;
+                                                    color:#030810;font-size:15px;font-weight:800;
+                                                    text-decoration:none;border-radius:12px;
+                                                    letter-spacing:0.5px;">
+                                            &#128273; Restablecer contrasena
+                                          </a>
+                                        </td>
+                                      </tr>
+                                    </table>
                                   </td>
                                 </tr>
                               </table>
                               <table width="100%%" cellpadding="0" cellspacing="0"
-                                     style="background:rgba(251,191,36,0.06);
-                                            border:1px solid rgba(251,191,36,0.16);
+                                     style="border:1px solid #3b2a08;
                                             border-radius:10px;margin-bottom:16px;">
                                 <tr>
-                                  <td style="padding:14px 18px;">
-                                    <p style="color:rgba(148,163,184,0.85);font-size:12px;
+                                  <td bgcolor="#1a1408"
+                                      style="background:#1a1408;padding:14px 18px;border-radius:10px;">
+                                    <p style="color:#8096a8;font-size:12px;
                                               line-height:1.65;margin:0;">
                                       &#x26A0;&#xFE0F;&nbsp;
-                                      <strong style="color:rgba(251,191,36,0.95);">
+                                      <strong style="color:#f9b900;">
                                         El enlace expira en 1 hora.
                                       </strong>
                                       Tu contrasena actual sigue funcionando hasta que la cambies.
@@ -371,7 +413,7 @@ public class EmailService {
                                   </td>
                                 </tr>
                               </table>
-                              <p style="color:rgba(71,85,105,0.75);font-size:11px;
+                              <p style="color:#3e4d5c;font-size:11px;
                                         line-height:1.65;margin:0;text-align:center;">
                                 Si no solicitaste esto, ignora este correo &mdash; tu cuenta sigue segura.
                               </p>
@@ -379,15 +421,14 @@ public class EmailService {
                           </tr>
 
                           <tr>
-                            <td style="padding:0 36px;">
-                              <div style="height:1px;
-                                          background:linear-gradient(90deg,transparent,rgba(255,255,255,0.06),transparent);"></div>
+                            <td bgcolor="#06101e" style="padding:0 36px;">
+                              <div style="height:1px;background:#111827;"></div>
                             </td>
                           </tr>
 
                           <tr>
-                            <td style="padding:18px 36px 26px;text-align:center;">
-                              <p style="margin:0;color:rgba(51,65,85,0.85);font-size:10px;letter-spacing:1px;">
+                            <td bgcolor="#06101e" style="padding:18px 36px 26px;text-align:center;">
+                              <p style="margin:0;color:#404e5f;font-size:10px;letter-spacing:1px;">
                                 &#169; 2026 Orionix Gol &#8212; Todos los derechos reservados
                               </p>
                             </td>
