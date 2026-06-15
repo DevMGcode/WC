@@ -26,7 +26,7 @@ function TeamLogo({ url, name }: { url: string; name: string }) {
   }
   return (
     <div className="relative w-6 h-6 shrink-0">
-      <Image src={url} alt={name} fill className="object-contain" onError={() => setErr(true)} />
+      <Image src={url} alt={name} fill sizes="24px" className="object-contain" onError={() => setErr(true)} />
     </div>
   );
 }

@@ -31,7 +31,7 @@ import {
   useGlobalRanking,
 } from '@/hooks/useTournamentData';
 import { WORLD_CUP_START, MS, RANKING_PAGE } from '@/constants/tournament';
-import { fmtTodayHeader } from '@/utils/format';
+import { fmtTodayHeader, dayKey } from '@/utils/format';
 import TourButton from '@/components/Tour/TourButton';
 import { getTourSteps } from '@/components/Tour/tourSteps';
 
@@ -107,10 +107,11 @@ export default function HomePage() {
       .filter(f => f.status === 'FINISHED')
       .sort((a, b) => new Date(b.kickoffAt).getTime() - new Date(a.kickoffAt).getTime());
     if (finished.length === 0) return [];
-    // Solo la jornada más reciente: partidos del mismo día (calendario local)
-    // que el último finalizado. El historial completo vive en "Mis porras".
-    const lastDay = new Date(finished[0].kickoffAt).toDateString();
-    return finished.filter(f => new Date(f.kickoffAt).toDateString() === lastDay);
+    // Solo la jornada más reciente: partidos del mismo día (en la TZ del torneo,
+    // igual que el calendario) que el último finalizado. El historial completo
+    // vive en "Mis porras".
+    const lastDay = dayKey(finished[0].kickoffAt);
+    return finished.filter(f => dayKey(f.kickoffAt) === lastDay);
   }, [allFixtures]);
 
   const myPredictions = useMemo(() => {
@@ -121,6 +122,12 @@ export default function HomePage() {
     });
     return predMap;
   }, [recentResults, rawPredictions]);
+
+  // IDs de partidos que el usuario ya predijo → el botón "Porra" muestra "Editar".
+  const predictedFixtureIds = useMemo(
+    () => new Set((rawPredictions as any[]).map((p: any) => Number(p.fixtureId))),
+    [rawPredictions]
+  );
 
   const stats = useMemo(() => ({
     predictions: (rawPredictions as any[]).length,
@@ -321,7 +328,7 @@ export default function HomePage() {
 
           {/* LEFT COLUMN */}
           <div className="flex flex-col gap-5">
-            <UpcomingMatches fixtures={todayUpcoming} t={t} />
+            <UpcomingMatches fixtures={todayUpcoming} predictedFixtureIds={predictedFixtureIds} t={t} />
             <RecentResults fixtures={recentResults} predictions={myPredictions} t={t} />
           </div>
 

@@ -51,6 +51,7 @@ export default function LeagueDetailPage() {
   const [members, setMembers]                 = useState<any[]>([]);
   const [ranking, setRanking]                 = useState<any[]>([]);
   const [loading, setLoading]                 = useState(true);
+  const [accessDenied, setAccessDenied]       = useState<string | null>(null);
   const [actionError, setActionError]         = useState('');
   const [actionLoading, setActionLoading]     = useState(false);
   const [selectedNewOwnerId, setSelectedNewOwnerId] = useState('');
@@ -70,12 +71,21 @@ export default function LeagueDetailPage() {
   const loadLeagueData = async () => {
     try {
       setLoading(true);
+      setAccessDenied(null);
+      // La ficha de la liga es visible; el ranking y los miembros están
+      // protegidos en el backend (solo miembros o Premium). Si el usuario no
+      // pertenece y no es Premium, esas dos llamadas devuelven 422.
       const leagueData  = await leagueService.getLeague(leagueId);
       setLeague(leagueData);
-      const membersData = await leagueService.getLeagueMembers(leagueId);
-      setMembers(membersData);
-      const rankingData = await leagueService.getLeagueRanking(leagueId);
-      setRanking(rankingData);
+      try {
+        const membersData = await leagueService.getLeagueMembers(leagueId);
+        setMembers(membersData);
+        const rankingData = await leagueService.getLeagueRanking(leagueId);
+        setRanking(rankingData);
+      } catch (gateErr: any) {
+        // Acceso denegado al contenido interno (no miembro y no Premium).
+        setAccessDenied(gateErr?.message || t('league.accessDenied'));
+      }
     } catch (e) { console.error(e); }
     finally { setLoading(false); }
   };
@@ -157,6 +167,35 @@ export default function LeagueDetailPage() {
             className="px-5 py-2 rounded-xl text-sm font-bold text-green-300 border border-green-500/30">
             ← {t('league.back')}
           </button>
+        </div>
+      </div>
+    );
+  }
+
+  // Acceso denegado al contenido interno: el usuario no es miembro y no es
+  // Premium. Mostramos un mensaje claro en vez de una página vacía.
+  if (accessDenied) {
+    return (
+      <div className="flex items-center justify-center h-screen px-6"
+        style={{ background: `radial-gradient(ellipse at 30% 50%, ${hex.bg.primary} 0%, ${hex.bg.secondary} 42%, ${hex.bg.primary} 100%)` }}>
+        <div className="text-center max-w-sm">
+          <div className="w-14 h-14 mx-auto mb-4 rounded-2xl flex items-center justify-center"
+            style={{ background: alpha(hex.gold.base, 0.12), border: `1px solid ${alpha(hex.gold.base, 0.3)}` }}>
+            <FiShield size={24} style={{ color: hex.gold.base }} />
+          </div>
+          <p className="text-white font-bold mb-2">{t('league.accessDeniedTitle')}</p>
+          <p className="text-orionix-text-muted text-sm mb-5">{accessDenied}</p>
+          <div className="flex gap-3 justify-center">
+            <button onClick={() => router.back()}
+              className="px-5 py-2 rounded-xl text-sm font-bold text-green-300 border border-green-500/30">
+              ← {t('league.back')}
+            </button>
+            <button onClick={() => router.push('/premium')}
+              className="px-5 py-2 rounded-xl text-sm font-black text-black"
+              style={{ background: hex.gold.base }}>
+              {t('league.goPremium')}
+            </button>
+          </div>
         </div>
       </div>
     );

@@ -199,6 +199,29 @@ public class LeagueService {
         privateLeagueRepository.delete(league);
     }
 
+    /**
+     * Verifica que el usuario pueda ver el contenido interno de una liga
+     * (ranking y miembros).
+     *
+     * Reglas (acuerdo Free/Premium):
+     *   - Premium: ve el ranking/miembros de CUALQUIER liga (Tabla 2).
+     *     Como ADMIN siempre es Premium vía SubscriptionService, también pasa.
+     *   - Free: solo si es MIEMBRO de esa liga (Tabla 1: "solo de la liga
+     *     donde fue invitado").
+     *
+     * Sin este gate, cualquier usuario autenticado podía leer el ranking y los
+     * miembros de ligas privadas ajenas adivinando el id (fuga de privacidad).
+     */
+    @Transactional(readOnly = true)
+    public void requireCanViewLeague(Long leagueId, Long userId) {
+        if (premiumGuard.isPremium(userId)) return;
+        if (privateLeagueMemberRepository.existsByLeagueIdAndUserId(leagueId, userId)) return;
+        throw new BusinessRuleException(
+                "Solo puedes ver el ranking y los miembros de las ligas a las que perteneces. " +
+                "Hazte Premium para ver cualquier liga."
+        );
+    }
+
     @Transactional(readOnly = true)
     public List<LeagueRankingResponse> findRanking(Long leagueId) {
         PrivateLeague league = findLeague(leagueId);
