@@ -322,7 +322,7 @@ export default function GroupsClient({ initialTournament, initialGroups, initial
                             </span>
                             {(row.teamFlagUrl || row.flagUrl) && (
                               <div className="relative w-5 h-4 rounded-sm overflow-hidden shrink-0">
-                                <Image src={row.teamFlagUrl ?? row.flagUrl} alt={row.teamName ?? ''} fill className="object-cover" />
+                                <Image src={row.teamFlagUrl ?? row.flagUrl} alt={row.teamName ?? ''} fill sizes="20px" className="object-cover" />
                               </div>
                             )}
                             <span className="flex-1 text-[11px] font-bold truncate" style={{ color: hex.text.primary }}>

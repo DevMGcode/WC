@@ -47,7 +47,7 @@ function PlayerPhoto({ url, name }: { url: string; name: string }) {
     );
   }
   return (
-    <Image src={url} alt={name} fill className="object-cover rounded-full"
+    <Image src={url} alt={name} fill sizes="64px" className="object-cover rounded-full"
       onError={() => setErr(true)} />
   );
 }
@@ -92,7 +92,7 @@ function PodiumCard({ player, rank, stat }: { player: PlayerStat; rank: number; 
       <div className="flex items-center gap-1 mb-3">
         {player.teamLogoUrl && (
           <div className="relative w-4 h-4 shrink-0">
-            <Image src={player.teamLogoUrl} alt={player.teamName} fill className="object-contain" />
+            <Image src={player.teamLogoUrl} alt={player.teamName} fill sizes="16px" className="object-contain" />
           </div>
         )}
         <span className="text-[9px] font-bold tracking-widest uppercase truncate max-w-[80px]"
