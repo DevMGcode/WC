@@ -12,7 +12,7 @@ import {
 import { Header } from '@/components/Navigation';
 import { useAllFixtures } from '@/hooks/useTournamentData';
 import { LIVE_REFETCH_INTERVAL_MS } from '@/constants/tournament';
-import { fmtDayLong } from '@/utils/format';
+import { fmtDayLong, dayKey } from '@/utils/format';
 import { useTranslations, useLocale } from 'next-intl';
 import TourButton from '@/components/Tour/TourButton';
 import { getTourSteps } from '@/components/Tour/tourSteps';
@@ -150,7 +150,9 @@ export default function FixturesClient({ initialFixtures }: { initialFixtures?: 
     const map = new Map<string, { key: string; label: string; items: any[] }>();
     fixtures.forEach(f => {
       const d = new Date(f.kickoffAt);
-      const key = d.toISOString().slice(0, 10);
+      // Agrupar por el día en la TZ del torneo (igual que el encabezado y las
+      // tarjetas), no por la fecha UTC, para no mezclar días cercanos a medianoche.
+      const key = dayKey(f.kickoffAt);
       const label = fmtDayLong(d, locale);
       if (!map.has(key)) map.set(key, { key, label, items: [] });
       map.get(key)!.items.push(f);
