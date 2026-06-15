@@ -642,7 +642,7 @@ export default function FixtureDetailPage({ params }: { params: { id: string } }
         )}
 
         {/* ── GOLEADORES ── */}
-        {isFinished && fixture.scorers && fixture.scorers.length > 0 && (
+        {(isFinished || isLive) && fixture.scorers && fixture.scorers.length > 0 && (
           <DarkCard accent="gold" delay={0.22} className="mb-4">
             <div className="p-5">
               <div className="flex items-center justify-between mb-4">

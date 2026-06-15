@@ -256,30 +256,27 @@ export default function ScorersClient() {
           })}
         </motion.div>
 
-        {/* ── Banner de plan ── */}
-        <motion.div
-          initial={{ opacity: 0, y: 6 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.15 }}
-          className="mb-4 flex items-center gap-2 rounded-xl px-3 py-2"
-          style={{
-            background: isPremium ? alpha(hex.gold.base, 0.08) : alpha(hex.neutral.white, 0.04),
-            border: isPremium ? `1px solid ${alpha(hex.gold.base, 0.30)}` : `1px solid ${alpha(hex.neutral.white, 0.08)}`,
-          }}
-        >
-          <FiAward size={12} style={{ color: isPremium ? hex.gold.base : alpha(hex.text.secondary, 0.55) }} />
-          <p className="text-[11px] tracking-wide" style={{ color: isPremium ? hex.gold.base : hex.text.secondary }}>
-            {tab === 'goals' ? (
-              isPremium
-                ? <>Mostrando <strong>Top 50</strong> goleadores con tu Pase Mundial.</>
-                : <>Mostrando <strong>Top 10</strong> del plan gratuito. Hazte Premium para ver hasta <strong>Top 50</strong> + filtros por equipo.</>
-            ) : (
-              isPremium
-                ? <>Mostrando <strong>Top 50</strong> asistentes con tu Pase Mundial.</>
+        {/* ── Banner de plan — solo visible para usuarios Free ── */}
+        {!isPremium && (
+          <motion.div
+            initial={{ opacity: 0, y: 6 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.15 }}
+            className="mb-4 flex items-center gap-2 rounded-xl px-3 py-2"
+            style={{
+              background: alpha(hex.neutral.white, 0.04),
+              border: `1px solid ${alpha(hex.neutral.white, 0.08)}`,
+            }}
+          >
+            <FiAward size={12} style={{ color: alpha(hex.text.secondary, 0.55) }} />
+            <p className="text-[11px] tracking-wide" style={{ color: hex.text.secondary }}>
+              {tab === 'goals'
+                ? <>Mostrando <strong>Top 10</strong> del plan gratuito. Hazte Premium para ver hasta <strong>Top 50</strong> + filtros por equipo.</>
                 : <>Top asistentes es <strong>exclusivo del Pase Mundial</strong>.</>
-            )}
-          </p>
-        </motion.div>
+              }
+            </p>
+          </motion.div>
+        )}
 
         {/* ── Si Free intenta ver asistentes, mostramos paywall ── */}
         {tab === 'assists' && !isPremium ? (
