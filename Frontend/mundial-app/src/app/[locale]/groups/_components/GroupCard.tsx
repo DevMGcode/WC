@@ -122,7 +122,7 @@ const GroupCard = ({ group, index, t }: GroupCardProps) => {
       {group.standings.map((s, idx) => {
         const q = idx < 2 ? QUALIFY_CFG[idx] : null;
         return (
-          <motion.div key={s.team.id}
+          <motion.div key={`standing-${s.team.id}-${idx}`}
             initial={{ opacity: 0, x: -12 }} animate={{ opacity: 1, x: 0 }}
             transition={{ delay: index * 0.07 + idx * 0.05 + 0.2 }}
             style={{
