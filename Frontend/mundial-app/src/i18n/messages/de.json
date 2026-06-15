@@ -264,6 +264,9 @@
     "pending": "AUSSTEHEND",
     "finished": "BEENDET",
     "makePrediction": "⚡ Tipp abgeben",
+    "predictionDone": "Getippt",
+    "predictionClosed": "Gesperrt",
+    "edit": "Bearbeiten",
     "ongoing": "Läuft",
     "worldCupStart": "Beginn der",
     "stats": {
@@ -388,6 +391,7 @@
     "passwordRepeat": "Wiederhole dein Passwort",
     "passwordMismatch": "Die Passwörter stimmen nicht überein.",
     "passwordTooShort": "Das Passwort muss mindestens 5 Zeichen lang sein.",
+    "usernameTooShort": "Der Benutzername muss mindestens 3 Zeichen lang sein.",
     "successTitle": "Konto erstellt! ✓",
     "successMessage": "Konto erstellt! Melde dich mit deinen Zugangsdaten an.",
     "successPending": "Konto erstellt. Überprüfe deine E-Mail und klicke auf den Bestätigungslink.",
@@ -537,7 +541,10 @@
     "confirmDelete": "Diese Liga löschen? Diese Aktion kann nicht rückgängig gemacht werden.",
     "back": "Zurück",
     "isOwner": "Du bist der Besitzer",
-    "loading": "Laden"
+    "loading": "Laden",
+    "accessDeniedTitle": "Private Liga",
+    "accessDenied": "Du kannst nur die Rangliste und Mitglieder von Ligen sehen, denen du angehörst. Hol dir Premium, um jede Liga zu sehen.",
+    "goPremium": "Premium holen"
   },
   "onboarding": {
     "welcome": "Willkommen",

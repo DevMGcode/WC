@@ -42,6 +42,8 @@ export interface Fixture {
   homeTeamId: number;
   awayTeamId: number;
   kickoffAt: Date;
+  /** Momento en que se bloquea la porra (por defecto kickoff − 5 min). */
+  predictionLockedAt?: Date;
   status: 'SCHEDULED' | 'FINISHED' | 'POSTPONED' | 'CANCELLED' | 'LIVE';
   homeScore?: number;
   awayScore?: number;

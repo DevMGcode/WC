@@ -11,6 +11,10 @@ import java.util.Optional;
 
 public interface UserPredictionRepository extends JpaRepository<UserPrediction, Long> {
 
+    // Carga user y fixture de forma anticipada (EntityGraph): el resultado se
+    // mapea fuera de la transacción en PredictionController.findByFixture, y sin
+    // esto los proxies lazy lanzaban LazyInitializationException → 500 en prod.
+    @EntityGraph(attributePaths = {"user", "fixture"})
     Optional<UserPrediction> findByUserIdAndFixtureId(Long userId, Long fixtureId);
 
     /** Cuántas predicciones lleva un usuario en total (para limitar al plan FREE). */

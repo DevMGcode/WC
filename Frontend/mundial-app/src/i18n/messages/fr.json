@@ -264,6 +264,9 @@
     "pending": "EN ATTENTE",
     "finished": "TERMINÉ",
     "makePrediction": "⚡ Faire un pronostic",
+    "predictionDone": "Pronostiqué",
+    "predictionClosed": "Fermé",
+    "edit": "Modifier",
     "ongoing": "En cours",
     "worldCupStart": "Début de la",
     "stats": {
@@ -388,6 +391,7 @@
     "passwordRepeat": "Répétez votre mot de passe",
     "passwordMismatch": "Les mots de passe ne correspondent pas.",
     "passwordTooShort": "Le mot de passe doit comporter au moins 5 caractères.",
+    "usernameTooShort": "Le nom d'utilisateur doit comporter au moins 3 caractères.",
     "successTitle": "Compte créé ! ✓",
     "successMessage": "Compte créé ! Connectez-vous avec vos identifiants.",
     "successPending": "Compte créé. Vérifiez votre e-mail et cliquez sur le lien de vérification pour l'activer.",
@@ -537,7 +541,10 @@
     "confirmDelete": "Supprimer cette ligue ? Cette action est irréversible.",
     "back": "Retour",
     "isOwner": "Tu es le propriétaire",
-    "loading": "Chargement"
+    "loading": "Chargement",
+    "accessDeniedTitle": "Ligue privée",
+    "accessDenied": "Vous ne pouvez voir le classement et les membres que des ligues auxquelles vous appartenez. Passez Premium pour voir n'importe quelle ligue.",
+    "goPremium": "Passer Premium"
   },
   "onboarding": {
     "welcome": "Bienvenue",

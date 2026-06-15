@@ -95,6 +95,7 @@ function normalizeFixture(raw: RawFixture, fallbackIndex = 0, fallbackTournament
     homeTeamId: raw.homeTeamId ?? homeTeam.id,
     awayTeamId: raw.awayTeamId ?? awayTeam.id,
     kickoffAt: toDate(raw.kickoffAt),
+    predictionLockedAt: raw.predictionLockedAt ? toDate(raw.predictionLockedAt) : undefined,
     status: normalizeStatus(raw.status),
     homeScore: raw.homeScore ?? undefined,
     awayScore: raw.awayScore ?? undefined,

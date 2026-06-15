@@ -43,7 +43,11 @@ export function CustomTour({ steps, run, locale, onFinish }: Props) {
     setRect(null);
 
     const el = document.querySelector(step.target) as HTMLElement | null;
-    if (!el) return;
+    if (!el) {
+      // elemento no encontrado → mostrar tooltip centrado sin spotlight
+      rafRef.current = requestAnimationFrame(() => setReady(true));
+      return;
+    }
 
     el.scrollIntoView({ behavior: 'smooth', block: 'center' });
 
@@ -51,9 +55,8 @@ export function CustomTour({ steps, run, locale, onFinish }: Props) {
     const t = setTimeout(() => {
       const r = el.getBoundingClientRect();
       setRect({ top: r.top, left: r.left, width: r.width, height: r.height });
-      // small extra delay for paint
       rafRef.current = requestAnimationFrame(() => setReady(true));
-    }, 480);
+    }, 380);
 
     return () => {
       clearTimeout(t);

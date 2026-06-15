@@ -10,6 +10,7 @@ import org.springframework.stereotype.Service;
 
 import java.util.Comparator;
 import java.util.List;
+import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -52,7 +53,13 @@ public class StandingsService {
 
     public List<StandingResponse> findFewestGoalsAgainst(int limit) {
         return findAll().stream()
-                .filter(s -> s.goalsAgainst() != null)
+                .filter(s -> s.goalsAgainst() != null && s.teamId() != null)
+                .collect(Collectors.toMap(
+                        StandingResponse::teamId,
+                        s -> s,
+                        (a, b) -> a   // API-Football 2026 devuelve cada equipo duplicado; conservar la primera aparición
+                ))
+                .values().stream()
                 .sorted(Comparator.comparingInt(StandingResponse::goalsAgainst))
                 .limit(limit)
                 .toList();
