@@ -36,6 +36,7 @@
     "tabs": {
       "profile": "Profil",
       "favorites": "Favoriten",
+      "achievements": "Erfolge",
       "settings": "Einstellungen"
     },
     "memberSince": "Mitglied seit",
@@ -545,6 +546,18 @@
     "accessDeniedTitle": "Private Liga",
     "accessDenied": "Du kannst nur die Rangliste und Mitglieder von Ligen sehen, denen du angehörst. Hol dir Premium, um jede Liga zu sehen.",
     "goPremium": "Premium holen"
+  },
+  "achievements": {
+    "title": "Abzeichen",
+    "currentStreak": "Aktuelle Serie",
+    "bestStreak": "Beste Serie",
+    "hit": "Treffer",
+    "hits": "Treffer in Folge",
+    "exact": "Exakt",
+    "points": "Punkte",
+    "unlocked": "Freigeschaltet",
+    "error": "Erfolge konnten nicht geladen werden",
+    "empty": "Noch keine Erfolge. Gib deinen ersten Tipp ab!"
   },
   "onboarding": {
     "welcome": "Willkommen",

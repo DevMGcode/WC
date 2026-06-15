@@ -36,6 +36,7 @@
     "tabs": {
       "profile": "Perfil",
       "favorites": "Favoritos",
+      "achievements": "Conquistas",
       "settings": "Configurações"
     },
     "memberSince": "Membro desde",
@@ -545,6 +546,18 @@
     "accessDeniedTitle": "Liga privada",
     "accessDenied": "Você só pode ver o ranking e os membros das ligas às quais pertence. Assine o Premium para ver qualquer liga.",
     "goPremium": "Assinar Premium"
+  },
+  "achievements": {
+    "title": "Insígnias",
+    "currentStreak": "Sequência atual",
+    "bestStreak": "Melhor sequência",
+    "hit": "acerto",
+    "hits": "acertos seguidos",
+    "exact": "Exatos",
+    "points": "Pontos",
+    "unlocked": "Desbloqueadas",
+    "error": "Não foi possível carregar suas conquistas",
+    "empty": "Ainda sem conquistas. Faça o seu primeiro palpite!"
   },
   "onboarding": {
     "welcome": "Bem-vindo",

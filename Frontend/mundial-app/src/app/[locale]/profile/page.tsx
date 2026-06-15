@@ -4,7 +4,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { useRouter, usePathname } from 'next/navigation';
 import { locales } from '@/i18n/locales';
 import { motion, AnimatePresence } from 'framer-motion';
-import { FiUser, FiHeart, FiSettings } from 'react-icons/fi';
+import { FiUser, FiHeart, FiSettings, FiAward } from 'react-icons/fi';
 import { useAuth } from '@/contexts/AuthContext';
 import { Header } from '@/components/Navigation';
 import { getCurrentTournament } from '@/services/publicTournament';
@@ -16,6 +16,7 @@ import { apiFetch } from '@/lib/apiFetch';
 import { Particle } from './_components/ui';
 import ProfileTab        from './_components/ProfileTab';
 import FavoritesTab      from './_components/FavoritesTab';
+import AchievementsTab   from './_components/AchievementsTab';
 import SettingsTab       from './_components/SettingsTab';
 import EditProfileModal  from './_components/EditProfileModal';
 import ChangePasswordModal from './_components/ChangePasswordModal';
@@ -38,9 +39,10 @@ export default function ProfilePage() {
   const [allTeams,      setAllTeams]      = useState<PublicTeam[]>([]);
   const [favsLoading,   setFavsLoading]   = useState(true);
   const [favsError,     setFavsError]     = useState<string | null>(null);
-  const [activeTab, setActiveTab]         = useState<'PROFILE' | 'FAVORITES' | 'SETTINGS'>(
+  const [activeTab, setActiveTab]         = useState<'PROFILE' | 'FAVORITES' | 'ACHIEVEMENTS' | 'SETTINGS'>(
     () => (typeof window !== 'undefined' ? (sessionStorage.getItem('profile-tab') as any) || 'PROFILE' : 'PROFILE')
   );
+  const [tournamentId, setTournamentId]   = useState<number>(1);
   const [language, setLanguage]           = useState('es');
   const [langOpen, setLangOpen]           = useState(false);
   const langRef                           = useRef<HTMLDivElement>(null);
@@ -105,6 +107,7 @@ export default function ProfilePage() {
         try {
           const tournament = await getCurrentTournament();
           const tournamentId = tournament?.id ?? 1;
+          setTournamentId(tournamentId);
           const userId = authUser.id;
           const [predRes, scoreRes] = await Promise.all([
             apiFetch(`/api/v1/predictions/user/${userId}`),
@@ -277,6 +280,7 @@ export default function ProfilePage() {
   const tabs = [
     { key: 'PROFILE',   label: t('profile.tabs.profile'),   icon: <FiUser size={14} />,     color: hex.green.bright },
     { key: 'FAVORITES', label: t('profile.tabs.favorites'), icon: <FiHeart size={14} />,    color: hex.accent.pink },
+    { key: 'ACHIEVEMENTS', label: t('profile.tabs.achievements'), icon: <FiAward size={14} />, color: hex.gold.base },
     { key: 'SETTINGS',  label: t('profile.tabs.settings'),  icon: <FiSettings size={14} />, color: hex.green.hover },
   ] as const;
 
@@ -379,6 +383,13 @@ export default function ProfilePage() {
               onAdd={handleAddFavorite}
               onRemove={handleRemoveFavorite}
               onSetPrimary={handleSetPrimaryFavorite}
+              t={t}
+            />
+          )}
+          {activeTab === 'ACHIEVEMENTS' && (
+            <AchievementsTab
+              tournamentId={tournamentId}
+              userId={authUser?.id ? Number(authUser.id) : null}
               t={t}
             />
           )}

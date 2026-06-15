@@ -1,5 +1,6 @@
 package com.mundial2026.backend.scoring.service;
 
+import com.mundial2026.backend.achievement.service.AchievementCatalog;
 import com.mundial2026.backend.common.exception.ResourceNotFoundException;
 import com.mundial2026.backend.common.response.PaginatedResponse;
 import com.mundial2026.backend.league.api.dto.LeagueRankingResponse;
@@ -20,6 +21,7 @@ import org.springframework.transaction.annotation.Transactional;
 import java.time.OffsetDateTime;
 import java.util.ArrayList;
 import java.util.Comparator;
+import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -86,10 +88,15 @@ public class ScoringService {
     public List<LeagueRankingResponse> getLeagueRanking(Long leagueId, Long tournamentId, List<Long> memberIds) {
         Map<Long, UserTournamentScoreResponse> scoresByUser = calculateTournamentRanking(tournamentId).stream()
                 .collect(Collectors.toMap(UserTournamentScoreResponse::userId, score -> score));
+        // Mejores rachas de TODOS en una sola pasada → medallas por miembro sin N+1.
+        Map<Long, Integer> bestStreaks = bestStreaksByUser(tournamentId);
 
         List<LeagueRankingResponse> ranking = new ArrayList<>();
         for (Long memberId : memberIds) {
             UserTournamentScoreResponse score = scoresByUser.getOrDefault(memberId, buildEmptyScore(memberId, tournamentId));
+            List<String> unlocked = AchievementCatalog.unlockedCodes(
+                    nz(score.exactScores()), nz(score.totalPoints()), nz(score.matchesScored()),
+                    nz(score.rankPosition()), bestStreaks.getOrDefault(memberId, 0));
             ranking.add(new LeagueRankingResponse(
                     0,
                     score.userId(),
@@ -101,7 +108,8 @@ public class ScoringService {
                     score.bonusPoints(),
                     score.matchesScored(),
                     score.lastScoredAt(),
-                    premiumGuard.isPremium(score.userId())
+                    premiumGuard.isPremium(score.userId()),
+                    unlocked
             ));
         }
 
@@ -125,7 +133,8 @@ public class ScoringService {
                     entry.bonusPoints(),
                     entry.matchesScored(),
                     entry.lastScoredAt(),
-                    entry.isPremium()
+                    entry.isPremium(),
+                    entry.unlockedAchievements()
             ));
         }
 
@@ -231,6 +240,42 @@ public class ScoringService {
                 OffsetDateTime.now(),
                 premiumGuard.isPremium(user.getId())
         );
+    }
+
+    /**
+     * Mejor racha de aciertos de CADA usuario del torneo, en una sola consulta.
+     * Agrupa todas las porras puntuadas por usuario, las ordena por fixtureId
+     * (proxy cronológico) y calcula la racha más larga con puntos > 0.
+     * Lo usa el ranking de liga para mostrar las medallas de racha por miembro
+     * sin disparar una consulta por cada uno.
+     */
+    @Transactional(readOnly = true)
+    public Map<Long, Integer> bestStreaksByUser(Long tournamentId) {
+        Map<Long, List<UserPrediction>> byUser = new HashMap<>();
+        for (UserPrediction p : userPredictionRepository.findByFixtureTournamentIdOrderBySubmittedAtDesc(tournamentId)) {
+            Fixture f = p.getFixture();
+            if (f.getStatus() == FixtureStatus.FINISHED && f.getHomeScore() != null && f.getAwayScore() != null) {
+                byUser.computeIfAbsent(p.getUser().getId(), k -> new ArrayList<>()).add(p);
+            }
+        }
+
+        Map<Long, Integer> result = new HashMap<>();
+        byUser.forEach((userId, preds) -> {
+            preds.sort(Comparator.comparing(p -> p.getFixture().getId()));
+            int best = 0, run = 0;
+            for (UserPrediction p : preds) {
+                Fixture f = p.getFixture();
+                int pts = calculatePoints(p.getPredictedHomeScore(), p.getPredictedAwayScore(),
+                        f.getHomeScore(), f.getAwayScore());
+                if (pts > 0) { run++; best = Math.max(best, run); } else { run = 0; }
+            }
+            result.put(userId, best);
+        });
+        return result;
+    }
+
+    private int nz(Integer v) {
+        return v == null ? 0 : v;
     }
 
     private int calculatePoints(int predictedHomeScore, int predictedAwayScore, int actualHomeScore, int actualAwayScore) {

@@ -47,6 +47,7 @@
     "tabs": {
       "profile": "Perfil",
       "favorites": "Favoritos",
+      "achievements": "Logros",
       "settings": "Configuración"
     },
     "memberSince": "Miembro desde",
@@ -545,6 +546,18 @@
     "accessDeniedTitle": "Liga privada",
     "accessDenied": "Solo puedes ver el ranking y los miembros de las ligas a las que perteneces. Hazte Premium para ver cualquier liga.",
     "goPremium": "Hazte Premium"
+  },
+  "achievements": {
+    "title": "Insignias",
+    "currentStreak": "Racha actual",
+    "bestStreak": "Mejor racha",
+    "hit": "acierto",
+    "hits": "aciertos seguidos",
+    "exact": "Exactas",
+    "points": "Puntos",
+    "unlocked": "Logros",
+    "error": "No se pudieron cargar tus logros",
+    "empty": "Aún no tienes logros. ¡Haz tu primera porra!"
   },
   "onboarding": {
     "welcome": "Bienvenido",

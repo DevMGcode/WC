@@ -47,6 +47,7 @@
     "tabs": {
       "profile": "Profile",
       "favorites": "Favorites",
+      "achievements": "Achievements",
       "settings": "Settings"
     },
     "memberSince": "Member since",
@@ -545,6 +546,18 @@
     "accessDeniedTitle": "Private league",
     "accessDenied": "You can only see the ranking and members of leagues you belong to. Go Premium to view any league.",
     "goPremium": "Go Premium"
+  },
+  "achievements": {
+    "title": "Badges",
+    "currentStreak": "Current streak",
+    "bestStreak": "Best streak",
+    "hit": "hit",
+    "hits": "hits in a row",
+    "exact": "Exact",
+    "points": "Points",
+    "unlocked": "Unlocked",
+    "error": "Couldn't load your achievements",
+    "empty": "No achievements yet. Make your first prediction!"
   },
   "onboarding": {
     "welcome": "Welcome",
