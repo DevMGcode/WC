@@ -16,7 +16,7 @@ const STEPS: Record<Locale, TourSteps> = {
       {
         target: '[data-tour="stats"]',
         title: '📊 Tus estadísticas',
-        content: 'Las 4 fichas resumen tu actividad: porras realizadas, exactas (marcador perfecto), puntos acumulados y tu posición #X en el ranking global. Se actualizan automáticamente cuando los árbitros pitan el final.',
+        content: 'Las 4 fichas resumen tu actividad: porras realizadas, exactas (marcador perfecto), puntos acumulados y tu posición en el ranking global. Se actualizan automáticamente cuando los árbitros pitan el final.',
         placement: 'bottom',
       },
       {
@@ -27,8 +27,8 @@ const STEPS: Record<Locale, TourSteps> = {
       },
       {
         target: '[data-tour="matches"]',
-        title: '⚽ Partidos y cómo apostar',
-        content: 'Aquí aparecen los próximos partidos. Pulsa "+ Porra" en cualquier tarjeta para escribir tu marcador predicho (ej: 2-1). Solo puedes apostar antes del pitido inicial — una vez empezado el partido, el botón desaparece.',
+        title: '⚽ Cómo hacer una porra',
+        content: 'Pulsa "⚡ Porra" en cualquier partido pendiente → escribe tu marcador (ej: 2-1) → confirma. El botón se cierra con 🔒 unos minutos antes del pitido del partido. Si ya predijiste, aparece "✓ Editar" para cambiar tu apuesta mientras siga abierto.',
         placement: 'top',
       },
       {
@@ -68,7 +68,7 @@ const STEPS: Record<Locale, TourSteps> = {
       {
         target: '[data-tour="groups-grid"]',
         title: '📊 Cómo leer la tabla de grupos',
-        content: 'Cada fila es un equipo: posición, bandera, puntos (columna azul), partidos jugados, victorias (verde), empates (amarillo) y derrotas (rojo). Los dos primeros tienen borde cyan/verde — son los que pasan a octavos de final.',
+        content: 'Cada fila es un equipo. Las columnas son: PJ = cuántos partidos jugó · G = cuántos ganó (verde) · E = empates (amarillo) · P = cuántos perdió (rojo) · PTS = puntos totales. Ganar da 3 pts, empatar 1 pt, perder 0. Los 2 equipos con más PTS pasan a la siguiente ronda — están marcados en verde brillante.',
         placement: 'top',
       },
     ],
@@ -95,6 +95,12 @@ const STEPS: Record<Locale, TourSteps> = {
         target: '[data-tour="predictions-list"]',
         title: '🔮 Historial de tus porras',
         content: 'Cada tarjeta muestra el partido, tu predicción y el resultado real. El color del borde indica el resultado: verde = exacto (3 pts), cyan = acertaste el ganador (1 pt), rojo = fallaste (0 pts), amarillo = partido aún pendiente.',
+        placement: 'top',
+      },
+      {
+        target: '[data-tour="leagues-create-join"]',
+        title: '🏅 Ligas privadas',
+        content: 'Compite solo contra tu círculo. Para UNIRTE: pulsa "Unirse" e ingresa el código de 6 letras que te compartió el creador. Para CREAR (requiere Pase Mundial ⚡): dale nombre a tu liga y comparte el código generado. Cada liga tiene su propio ranking y clasificación.',
         placement: 'top',
       },
     ],
@@ -206,6 +212,12 @@ const STEPS: Record<Locale, TourSteps> = {
         content: 'Each card shows the match, your prediction and the real result. Border colour tells the outcome: green = exact (3 pts), cyan = correct winner (1 pt), red = missed (0 pts), yellow = match still pending.',
         placement: 'top',
       },
+      {
+        target: '[data-tour="leagues-create-join"]',
+        title: '🏅 Private leagues',
+        content: 'Compete only within your circle. To JOIN: tap "Join" and enter the 6-letter code shared by the creator. To CREATE (requires World Cup Pass ⚡): name your league and share the generated code. Each league has its own leaderboard.',
+        placement: 'top',
+      },
     ],
     admin: [
       {
@@ -315,6 +327,12 @@ const STEPS: Record<Locale, TourSteps> = {
         content: 'Chaque carte montre le match, votre pronostic et le vrai résultat. La couleur de bordure indique: vert = exact (3 pts), cyan = bon vainqueur (1 pt), rouge = raté (0 pt), jaune = match en attente.',
         placement: 'top',
       },
+      {
+        target: '[data-tour="leagues-create-join"]',
+        title: '🏅 Ligues privées',
+        content: 'Concourez uniquement avec vos amis. Pour REJOINDRE: appuyez sur "Rejoindre" et entrez le code à 6 lettres partagé par le créateur. Pour CRÉER (Pass Coupe du Monde ⚡ requis): nommez votre ligue et partagez le code généré. Chaque ligue a son propre classement.',
+        placement: 'top',
+      },
     ],
     admin: [
       { target: '[data-tour="admin-fixtures"]', title: '⚙️ Gestion des matchs',   content: 'Liste complète des matchs du tournoi. Mettez à jour le résultat réel ici. À la sauvegarde, le système recalcule automatiquement les points pour tous ceux qui ont pronostiqué ce match.', placement: 'bottom' },
@@ -407,6 +425,12 @@ const STEPS: Record<Locale, TourSteps> = {
         target: '[data-tour="predictions-list"]',
         title: '🔮 Ihre Tipp-Historie',
         content: 'Jede Karte zeigt Spiel, Ihren Tipp und das echte Ergebnis. Rahmenfarbe zeigt das Resultat: grün = genau (3 Pkt), cyan = richtiger Sieger (1 Pkt), rot = falsch (0 Pkt), gelb = Spiel ausstehend.',
+        placement: 'top',
+      },
+      {
+        target: '[data-tour="leagues-create-join"]',
+        title: '🏅 Private Ligen',
+        content: 'Spielen Sie nur gegen Ihre Gruppe. Zum BEITRETEN: "Beitreten" tippen und 6-Buchstaben-Code eingeben. Zum ERSTELLEN (WM-Pass ⚡ erforderlich): Liga benennen und generierten Code teilen. Jede Liga hat eine eigene Rangliste.',
         placement: 'top',
       },
     ],
@@ -503,6 +527,12 @@ const STEPS: Record<Locale, TourSteps> = {
         content: 'Cada card mostra a partida, sua previsão e o resultado real. A cor da borda indica: verde = exato (3 pts), ciano = vencedor certo (1 pt), vermelho = errou (0 pts), amarelo = jogo ainda pendente.',
         placement: 'top',
       },
+      {
+        target: '[data-tour="leagues-create-join"]',
+        title: '🏅 Ligas privadas',
+        content: 'Compita apenas com seu grupo. Para ENTRAR: toque em "Entrar" e insira o código de 6 letras compartilhado pelo criador. Para CRIAR (requer Passe Copa ⚡): dê nome à liga e compartilhe o código gerado. Cada liga tem seu próprio ranking.',
+        placement: 'top',
+      },
     ],
     admin: [
       { target: '[data-tour="admin-fixtures"]', title: '⚙️ Gestão de partidas',    content: 'Lista completa das partidas. Atualize o resultado real aqui. Ao salvar, o sistema recalcula automaticamente os pontos de todos que apostaram nesse jogo.', placement: 'bottom' },
@@ -597,6 +627,12 @@ const STEPS: Record<Locale, TourSteps> = {
         content: 'Каждая карточка показывает матч, ваш прогноз и реальный счёт. Цвет рамки: зелёный = точно (3 очка), cyan = правильный победитель (1 очко), красный = промах (0 очков), жёлтый = матч ещё не сыгран.',
         placement: 'top',
       },
+      {
+        target: '[data-tour="leagues-create-join"]',
+        title: '🏅 Приватные лиги',
+        content: 'Соревнуйтесь только со своими. Чтобы ВСТУПИТЬ: нажмите "Вступить" и введите 6-буквенный код. Чтобы СОЗДАТЬ (требуется Пасс ЧМ ⚡): дайте название лиге и поделитесь кодом. У каждой лиги свой рейтинг.',
+        placement: 'top',
+      },
     ],
     admin: [
       { target: '[data-tour="admin-fixtures"]', title: '⚙️ Управление матчами',    content: 'Полный список матчей турнира. Введите реальный результат здесь. При сохранении система автоматически пересчитывает очки для всех, кто прогнозировал этот матч.', placement: 'bottom' },
@@ -689,6 +725,12 @@ const STEPS: Record<Locale, TourSteps> = {
         target: '[data-tour="predictions-list"]',
         title: '🔮 سجل توقعاتك',
         content: 'كل بطاقة تُظهر المباراة وتوقعك والنتيجة الحقيقية. لون الإطار يشير: أخضر = دقيق (3 نقاط)، سماوي = الفائز صحيح (نقطة)، أحمر = خطأ (0 نقاط)، أصفر = مباراة لم تُلعب بعد.',
+        placement: 'top',
+      },
+      {
+        target: '[data-tour="leagues-create-join"]',
+        title: '🏅 الدوريات الخاصة',
+        content: 'تنافس فقط مع مجموعتك. للانضمام: اضغط "انضم" وأدخل الرمز المكون من 6 أحرف. لإنشاء دوري (يتطلب تصريح كأس العالم ⚡): سمِّ الدوري وشارك الرمز المُولَّد. لكل دوري ترتيبه الخاص.',
         placement: 'top',
       },
     ],
