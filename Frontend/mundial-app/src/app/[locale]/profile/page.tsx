@@ -22,6 +22,7 @@ import EditProfileModal  from './_components/EditProfileModal';
 import ChangePasswordModal from './_components/ChangePasswordModal';
 import LogoutModal       from './_components/LogoutModal';
 import { favoriteTeamsService, type FavoriteTeam, type PublicTeam } from '@/services/favoriteTeams';
+import { notificationsService } from '@/services/notifications';
 import { usePremium } from '@/hooks/usePremium';
 import { AdSlot } from '@/components/ads';
 
@@ -93,6 +94,17 @@ export default function ProfilePage() {
     document.addEventListener('mousedown', handler);
     return () => document.removeEventListener('mousedown', handler);
   }, []);
+
+  // Carga las preferencias de notificación reales del backend (fuente única,
+  // compartida con el onboarding). Antes el tab arrancaba con defaults fijos.
+  useEffect(() => {
+    if (!authUser?.id) return;
+    let alive = true;
+    notificationsService.get(authUser.id)
+      .then(prefs => { if (alive) setNotifications(prefs); })
+      .catch(() => { /* sin red: se quedan los defaults locales */ });
+    return () => { alive = false; };
+  }, [authUser?.id]);
 
   useEffect(() => {
     if (!authLoading && !isAuthenticated) { router.replace('/login'); return; }
@@ -262,7 +274,11 @@ export default function ProfilePage() {
 
   const handleSaveSettings = () => {
     localStorage.setItem('language', language);
-    localStorage.setItem('notifications', JSON.stringify(notifications));
+    // Persiste las preferencias en el backend (fuente única). El onboarding lee
+    // estas mismas. Si falla la red, no bloquea el resto de "Guardar".
+    if (authUser?.id) {
+      notificationsService.update(authUser.id, notifications).catch(() => { /* reintenta al volver */ });
+    }
     const segments = pathname.split('/');
     const currentLocale = segments[1];
     setSettingsSaved(true);
@@ -398,7 +414,7 @@ export default function ProfilePage() {
               language={language} langOpen={langOpen} langRef={langRef}
               setLangOpen={setLangOpen} onSelectLanguage={setLanguage}
               notifications={notifications} setNotifications={setNotifications}
-              onSave={handleSaveSettings} saved={settingsSaved} t={t}
+              onSave={handleSaveSettings} saved={settingsSaved} userId={authUser?.id} t={t}
             />
           )}
         </AnimatePresence>

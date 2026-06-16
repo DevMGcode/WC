@@ -95,6 +95,14 @@ app:
       # URL pública del backend donde Mercado Pago notifica los pagos.
       # En local, expón tu backend con ngrok (https://ngrok.com) y pega aquí la URL.
       notification-url: "${MERCADO_PAGO_NOTIFICATION_URL:}"
+  # Web Push (VAPID) — notificaciones push gratuitas vía los servicios de los
+  # navegadores. Las claves de abajo son SOLO de desarrollo; en producción
+  # genera las tuyas (npx web-push generate-vapid-keys) y ponlas como env vars.
+  push:
+    vapid:
+      public-key:  "${VAPID_PUBLIC_KEY:BF9Qg9vBREBzvVj2M7sRFmLuTXb8gB6ul5tFVmOht9ySWl3gvT5ciN-cBXd74YTXVOTQ7k2UX0vE-FYQ6rYUZUo}"
+      private-key: "${VAPID_PRIVATE_KEY:zmKk7S0VRka9s1SamqHVdXXO4wshhdXrFVpJ_nbXZJY}"
+      subject:     "${VAPID_SUBJECT:mailto:admin@orionixgol.com}"
 
 apifootball:
   base-url: "${APIFOOTBALL_BASE_URL:https://v3.football.api-sports.io}"

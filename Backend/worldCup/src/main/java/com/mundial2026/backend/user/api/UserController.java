@@ -6,6 +6,8 @@ import com.mundial2026.backend.user.api.dto.AddFavoriteTeamRequest;
 import com.mundial2026.backend.user.api.dto.ChangePasswordRequest;
 import com.mundial2026.backend.user.api.dto.CreateUserRequest;
 import com.mundial2026.backend.user.api.dto.FavoriteTeamResponse;
+import com.mundial2026.backend.user.api.dto.NotificationPreferencesRequest;
+import com.mundial2026.backend.user.api.dto.NotificationPreferencesResponse;
 import com.mundial2026.backend.user.api.dto.SetFavoriteTeamRequest;
 import com.mundial2026.backend.user.api.dto.UpdateUserProfileRequest;
 import com.mundial2026.backend.user.api.dto.UserResponse;
@@ -76,6 +78,30 @@ public class UserController {
         return ResponseEntity.ok(ApiResponse.ok(
                 "Equipo favorito actualizado",
                 userMapper.toResponse(user)
+        ));
+    }
+
+    /** Lee las preferencias de notificación del usuario (onboarding + Configuración). */
+    @GetMapping("/{id}/notifications")
+    public ResponseEntity<ApiResponse<NotificationPreferencesResponse>> getNotifications(@PathVariable Long id) {
+        securityUtils.requireSelfOrAdmin(id);
+        AppUser user = userService.getForNotifications(id);
+        return ResponseEntity.ok(ApiResponse.ok(
+                "Preferencias de notificación",
+                NotificationPreferencesResponse.from(user)
+        ));
+    }
+
+    /** Actualiza las preferencias de notificación (fuente única, compartida). */
+    @PutMapping("/{id}/notifications")
+    public ResponseEntity<ApiResponse<NotificationPreferencesResponse>> updateNotifications(
+            @PathVariable Long id,
+            @Valid @RequestBody NotificationPreferencesRequest request) {
+        securityUtils.requireSelfOrAdmin(id);
+        AppUser user = userService.updateNotificationPreferences(id, request);
+        return ResponseEntity.ok(ApiResponse.ok(
+                "Preferencias de notificación actualizadas",
+                NotificationPreferencesResponse.from(user)
         ));
     }
 

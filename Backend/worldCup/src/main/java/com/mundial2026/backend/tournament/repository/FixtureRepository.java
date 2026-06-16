@@ -36,4 +36,16 @@ public interface FixtureRepository extends JpaRepository<Fixture, Long> {
             FixtureStatus status, OffsetDateTime since);
 
     boolean existsByKickoffAtBetween(OffsetDateTime from, OffsetDateTime to);
+
+    // ── Notificaciones push (Fase C) ──────────────────────────────────────────
+
+    /** Partidos próximos a empezar (recordatorio) que aún no se han notificado. */
+    @EntityGraph(attributePaths = {"homeTeam", "awayTeam"})
+    List<Fixture> findByStatusAndReminderNotifiedFalseAndKickoffAtBetween(
+            FixtureStatus status, OffsetDateTime from, OffsetDateTime to);
+
+    /** Partidos ya finalizados con marcador cuyo resultado aún no se notificó. */
+    @EntityGraph(attributePaths = {"homeTeam", "awayTeam"})
+    List<Fixture> findByStatusAndResultNotifiedFalseAndHomeScoreIsNotNullAndAwayScoreIsNotNull(
+            FixtureStatus status);
 }

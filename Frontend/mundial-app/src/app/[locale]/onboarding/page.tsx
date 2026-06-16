@@ -19,6 +19,7 @@ import { usePremium } from '@/hooks/usePremium';
 import { authService, type AuthUser } from '@/services/auth';
 import { apiFetch } from '@/lib/apiFetch';
 import { favoriteTeamsService } from '@/services/favoriteTeams';
+import { notificationsService } from '@/services/notifications';
 
 /** Tope de equipos favoritos para el plan FREE (mismo valor que el backend). */
 const FREE_MAX_FAVORITE_TEAMS = 3;
@@ -308,6 +309,18 @@ export default function OnboardingPage() {
     }).catch(() => { /* keep fallback */ });
   }, []);
 
+  // Si el usuario reentra al onboarding, precarga sus preferencias guardadas
+  // (no pisar con defaults una elección previa). Misma fuente que Configuración.
+  useEffect(() => {
+    const u = authService.getUser();
+    if (!u?.id) return;
+    let alive = true;
+    notificationsService.get(u.id)
+      .then(prefs => { if (alive) setNotifications(prefs); })
+      .catch(() => { /* usuario nuevo / sin red: quedan los defaults */ });
+    return () => { alive = false; };
+  }, []);
+
   const toggleTeam = (id: number) =>
     setSelectedTeams(p => {
       if (p.includes(id)) {
@@ -364,6 +377,12 @@ export default function OnboardingPage() {
               await favoriteTeamsService.add(u.id, selectedTeams[i], i === 0);
             } catch { /* duplicado o tope: el backend ya protege, seguimos */ }
           }
+
+          // 3. Preferencias de notificación → backend (misma fuente que Configuración).
+          //    Solo en "Comenzar": si OMITE, no se sobrescriben (quedan los defaults).
+          try {
+            await notificationsService.update(u.id, notifications);
+          } catch { /* sin red: se pueden ajustar luego en Configuración */ }
         }
 
         // 3. Marcar onboarding completado (también en "omitir": no perseguir al usuario).

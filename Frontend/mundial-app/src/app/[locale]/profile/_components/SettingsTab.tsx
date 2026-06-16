@@ -1,12 +1,13 @@
 'use client';
 
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { FiCalendar, FiZap, FiBarChart2, FiBell, FiCheck, FiSave, FiChevronDown } from 'react-icons/fi';
+import { FiCalendar, FiZap, FiBarChart2, FiBell, FiBellOff, FiCheck, FiSave, FiChevronDown } from 'react-icons/fi';
 import { localeConfig, locales } from '@/i18n/locales';
 import { hex } from '@/lib/design/tokens';
 import { alpha, alphaOf, surfaces } from '@/lib/design/effects';
 import { SectionLabel, Toggle } from './ui';
+import { pushService } from '@/services/push';
 
 interface Notifications {
   fixtureReminders: boolean;
@@ -25,14 +26,43 @@ interface SettingsTabProps {
   setNotifications: React.Dispatch<React.SetStateAction<Notifications>>;
   onSave: () => void;
   saved: boolean;
+  userId?: string | number | null;
   t: (key: string) => string;
 }
 
 export default function SettingsTab({
   language, langOpen, langRef, setLangOpen, onSelectLanguage,
-  notifications, setNotifications, onSave, saved, t,
+  notifications, setNotifications, onSave, saved, userId, t,
 }: SettingsTabProps) {
   const activeCfg  = localeConfig[language as keyof typeof localeConfig];
+
+  // ── Estado del push de ESTE dispositivo ──
+  const [pushSupported, setPushSupported] = useState(false);
+  const [pushOn, setPushOn]               = useState(false);
+  const [pushBusy, setPushBusy]           = useState(false);
+  const [pushDenied, setPushDenied]       = useState(false);
+
+  useEffect(() => {
+    setPushSupported(pushService.isSupported());
+    setPushDenied(pushService.permission() === 'denied');
+    pushService.isSubscribed().then(setPushOn);
+  }, []);
+
+  const handlePushToggle = async () => {
+    if (!userId || pushBusy) return;
+    setPushBusy(true);
+    try {
+      if (pushOn) {
+        await pushService.unsubscribe(userId);
+        setPushOn(false);
+      } else {
+        const ok = await pushService.subscribe(userId);
+        setPushOn(ok);
+        setPushDenied(pushService.permission() === 'denied');
+        if (ok) { try { await pushService.sendTest(userId); } catch {} }
+      }
+    } finally { setPushBusy(false); }
+  };
   const GOLD        = hex.gold.base;
   const GOLD_BG     = alpha(hex.gold.base, 0.12);
   const GOLD_BORDER = alpha(hex.gold.base, 0.28);
@@ -170,6 +200,44 @@ export default function SettingsTab({
         <div className="absolute inset-x-0 top-0 h-px"
           style={{ background: `linear-gradient(90deg, transparent, ${alpha(hex.gold.base, 0.40)}, transparent)` }} />
         <SectionLabel color={hex.gold.base}>{t('profile.settings.notifications')}</SectionLabel>
+
+        {/* Activar/desactivar push en ESTE dispositivo */}
+        {pushSupported && (
+          <button
+            type="button"
+            onClick={handlePushToggle}
+            disabled={pushBusy || pushDenied}
+            className="w-full flex items-center justify-between px-4 py-3 rounded-2xl mb-3 transition-all"
+            style={{
+              background: pushOn ? alphaOf('green', 0.10) : alpha(hex.gold.base, 0.08),
+              border: `1px solid ${pushOn ? alphaOf('green', 0.35) : alpha(hex.gold.base, 0.28)}`,
+              cursor: pushBusy || pushDenied ? 'not-allowed' : 'pointer',
+              opacity: pushBusy ? 0.6 : 1,
+            }}
+          >
+            <div className="flex items-center gap-3 text-left">
+              <span style={{ color: pushOn ? hex.green.bright : hex.gold.base }}>
+                {pushOn ? <FiBell size={16} /> : <FiBellOff size={16} />}
+              </span>
+              <div>
+                <p className="text-sm font-bold" style={{ color: pushOn ? hex.green.bright : hex.gold.base }}>
+                  {pushDenied
+                    ? t('profile.settings.pushBlocked')
+                    : pushOn ? t('profile.settings.pushOn') : t('profile.settings.pushActivate')}
+                </p>
+                <p className="text-[10px] mt-0.5" style={{ color: hex.text.muted }}>
+                  {t('profile.settings.pushHint')}
+                </p>
+              </div>
+            </div>
+            {pushBusy && (
+              <motion.div className="w-4 h-4 rounded-full border-2"
+                style={{ borderColor: alpha(hex.gold.base, 0.25), borderTopColor: hex.gold.base }}
+                animate={{ rotate: 360 }} transition={{ duration: 0.8, repeat: Infinity, ease: 'linear' }} />
+            )}
+          </button>
+        )}
+
         <div className="space-y-2">
           {[
             { key: 'fixtureReminders',    label: t('profile.settings.fixtureReminders'),    icon: <FiCalendar size={14} />,  color: hex.green.bright },

@@ -265,8 +265,12 @@ export type MatchEventType =
 export interface MatchEvent {
   matchId: number;
   type: MatchEventType;
-  teamId: number;
-  playerId: number;
+  teamId: number | null;
+  playerId: number | null;
+  /** Presente en eventos manuales del admin; null en eventos de API-Football */
+  playerName?: string | null;
+  /** Presente en eventos manuales del admin; null en eventos de API-Football */
+  teamFifaCode?: string | null;
   minute: number;
   extraMinute?: number;
   detail?: string;

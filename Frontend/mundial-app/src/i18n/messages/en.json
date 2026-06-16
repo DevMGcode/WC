@@ -74,7 +74,11 @@
       "leagueUpdates": "League updates",
       "newsUpdates": "News and updates",
       "save": "Save Changes",
-      "saved": "Saved"
+      "saved": "Saved",
+      "pushActivate": "Enable notifications",
+      "pushOn": "Notifications on",
+      "pushBlocked": "Blocked in browser",
+      "pushHint": "On this device"
     },
     "edit": {
       "title": "Edit Profile",

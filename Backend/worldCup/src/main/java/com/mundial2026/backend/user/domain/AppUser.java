@@ -95,6 +95,23 @@ public class AppUser {
     private Boolean onboardingCompleted = false;
 
     /**
+     * Preferencias de notificación (fuente única, compartida por onboarding y
+     * perfil → Configuración). Con defaults para que existan aunque se omita el
+     * onboarding. Las consumirá el envío de push (fases siguientes).
+     */
+    @Column(name = "notify_fixture_reminders", nullable = false)
+    private Boolean notifyFixtureReminders = true;
+
+    @Column(name = "notify_result_notifications", nullable = false)
+    private Boolean notifyResultNotifications = true;
+
+    @Column(name = "notify_league_updates", nullable = false)
+    private Boolean notifyLeagueUpdates = true;
+
+    @Column(name = "notify_news_updates", nullable = false)
+    private Boolean notifyNewsUpdates = false;
+
+    /**
      * Equipo favorito del usuario.
      * Lo usa el plan FREE para determinar qué 3 partidos puede predecir gratis
      * (los de fase de grupos del equipo). El plan PREMIUM lo ignora — puede

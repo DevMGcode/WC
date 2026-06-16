@@ -6,7 +6,7 @@ import LocaleClientLayout from './LocaleClientLayout';
 
 type Locale = 'es' | 'en' | 'fr' | 'de' | 'pt' | 'ru' | 'ar';
 
-const APP_URL = process.env.NEXT_PUBLIC_APP_URL ?? 'https://orionixgol.azurewebsites.net';
+const APP_URL = process.env.NEXT_PUBLIC_APP_URL ?? 'https://www.orionixgol.com';
 
 const META: Record<Locale, { title: string; description: string }> = {
   es: {
@@ -45,6 +45,7 @@ export function generateMetadata(
   const locale = (locales.includes(params.locale as Locale) ? params.locale : 'es') as Locale;
   const meta = META[locale];
   const ogUrl = `${APP_URL}/og?locale=${locale}`;
+  const canonical = `${APP_URL}/${locale}`;
 
   return {
     title: meta.title,
@@ -52,6 +53,7 @@ export function generateMetadata(
     openGraph: {
       title: meta.title,
       description: meta.description,
+      url: canonical,
       images: [{ url: ogUrl, width: 1200, height: 630, alt: meta.title }],
     },
     twitter: {
