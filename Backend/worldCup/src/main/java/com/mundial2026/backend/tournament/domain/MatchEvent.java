@@ -45,6 +45,9 @@ public class MatchEvent {
     @Column(name = "api_player_name", length = 150)
     private String apiPlayerName;
 
+    @Column(name = "player_out", length = 150)
+    private String playerOut;
+
     @Column(nullable = false)
     private Boolean mismatch = false;
 

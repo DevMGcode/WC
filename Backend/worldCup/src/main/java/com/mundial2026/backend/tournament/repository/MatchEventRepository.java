@@ -22,4 +22,8 @@ public interface MatchEventRepository extends JpaRepository<MatchEvent, Long> {
     /** Dedup para eventos live: evita insertar el mismo gol dos veces (minuto + equipo). */
     @Query("SELECT CASE WHEN COUNT(e) > 0 THEN TRUE ELSE FALSE END FROM MatchEvent e WHERE e.fixture.id = :fixtureId AND e.minute = :minute AND e.team.id = :teamId")
     boolean existsGoalAt(Long fixtureId, Integer minute, Long teamId);
+
+    /** Dedup para sustituciones: evita insertar la misma dos veces (minuto + jugador que entra). */
+    @Query("SELECT CASE WHEN COUNT(e) > 0 THEN TRUE ELSE FALSE END FROM MatchEvent e WHERE e.fixture.id = :fixtureId AND e.minute = :minute AND e.playerName = :playerIn AND e.eventType = 'SUBSTITUTION'")
+    boolean existsSubstitutionAt(Long fixtureId, Integer minute, String playerIn);
 }

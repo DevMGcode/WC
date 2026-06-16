@@ -314,10 +314,11 @@ type ViewMode = 'pitch' | 'list';
 
 export default function LineupsTab({ fixtureId, liveEvents = [] }: { fixtureId: number; liveEvents?: MatchEvent[] }) {
   const t = useTranslations();
-  const [lineups, setLineups] = useState<LineupTeam[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [empty,   setEmpty]   = useState(false);
-  const [view,    setView]    = useState<ViewMode>('pitch');
+  const [lineups,   setLineups]   = useState<LineupTeam[]>([]);
+  const [loading,   setLoading]   = useState(true);
+  const [empty,     setEmpty]     = useState(false);
+  const [view,      setView]      = useState<ViewMode>('pitch');
+  const [pastSubs,  setPastSubs]  = useState<MatchEvent[]>([]);
 
   useEffect(() => {
     apiFetch(`/api/v1/public/fixtures/${fixtureId}/lineups`)
@@ -329,6 +330,29 @@ export default function LineupsTab({ fixtureId, liveEvents = [] }: { fixtureId: 
       })
       .catch(() => setEmpty(true))
       .finally(() => setLoading(false));
+  }, [fixtureId]);
+
+  // Carga sustituciones ya persistidas en BD (para quien abre la página tarde)
+  useEffect(() => {
+    apiFetch(`/api/v1/public/fixtures/${fixtureId}/events`)
+      .then(r => r.ok ? r.json() : null)
+      .then(d => {
+        const events: Array<{ playerName: string; playerOut?: string | null; minute: number; eventType: string; teamId?: number | null }> = d?.data ?? [];
+        const subs = events
+          .filter(e => e.eventType === 'SUBSTITUTION')
+          .map(e => ({
+            matchId: fixtureId,
+            type: 'SUBSTITUTION' as const,
+            teamId: e.teamId ?? null,
+            playerId: null,
+            playerName: e.playerName,
+            playerOut: e.playerOut ?? null,
+            minute: e.minute,
+            occurredAt: '',
+          }));
+        setPastSubs(subs);
+      })
+      .catch(() => {});
   }, [fixtureId]);
 
   if (loading) return (
@@ -358,6 +382,17 @@ export default function LineupsTab({ fixtureId, liveEvents = [] }: { fixtureId: 
 
   const [home, away] = lineups;
 
+  // Merge sustituciones pasadas (REST) + en tiempo real (WebSocket), dedup por minuto+jugador
+  const allLiveEvents = useMemo(() => {
+    const wsSubKeys = new Set(
+      liveEvents
+        .filter(e => e.type === 'SUBSTITUTION')
+        .map(e => `${e.minute}|${e.playerName}`)
+    );
+    const dedupedPast = pastSubs.filter(s => !wsSubKeys.has(`${s.minute}|${s.playerName}`));
+    return [...dedupedPast, ...liveEvents];
+  }, [pastSubs, liveEvents]);
+
   return (
     <div className="space-y-4">
       {/* ── Toggle ── */}
@@ -379,7 +414,7 @@ export default function LineupsTab({ fixtureId, liveEvents = [] }: { fixtureId: 
       {/* ── Contenido ── */}
       <AnimatePresence mode="wait">
         {view === 'pitch' ? (
-          <PitchView key="pitch" home={home} away={away} liveEvents={liveEvents} />
+          <PitchView key="pitch" home={home} away={away} liveEvents={allLiveEvents} />
         ) : (
           <motion.div key="list"
             initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}

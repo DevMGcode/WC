@@ -91,7 +91,7 @@ public class LiveEventPollingService {
                         MatchEvent.Type mappedType = mapType(ext);
                         events.publishEvent(new FixtureEventOccurredEvent(toPayload(f.getId(), ext, mappedType)));
                         published++;
-                        persistGoalIfNeeded(f.getId(), ext, mappedType);
+                        persistEventIfNeeded(f.getId(), ext, mappedType);
                     }
                 }
             } catch (Exception ex) {
@@ -105,9 +105,22 @@ public class LiveEventPollingService {
         return new PollResult(polled, published);
     }
 
-    /** Persiste en BD solo los goles (no tarjetas ni sustituciones) para que
-     *  clientes que abran la página después del gol lo vean sin WebSocket. */
-    private void persistGoalIfNeeded(Long fixtureId, ExternalMatchEvent ext, MatchEvent.Type mappedType) {
+    /** Persiste en BD goles y sustituciones para que clientes que abran la
+     *  página después del evento lo vean sin depender del WebSocket. */
+    private void persistEventIfNeeded(Long fixtureId, ExternalMatchEvent ext, MatchEvent.Type mappedType) {
+        if (mappedType == MatchEvent.Type.SUBSTITUTION) {
+            if (ext.playerName() == null || ext.playerName().isBlank()) return;
+            Long internalTeamId = resolveInternalTeamId(ext.teamId());
+            try {
+                matchEventService.persistLiveSub(fixtureId, ext.playerName(),
+                        ext.assistPlayerName(), internalTeamId, ext.elapsedMinute());
+            } catch (Exception ex) {
+                log.warn("No se pudo persistir sustitución en vivo (partido {}, jugador {}): {}",
+                        fixtureId, ext.playerName(), ex.getMessage());
+            }
+            return;
+        }
+
         if (mappedType != MatchEvent.Type.GOAL
                 && mappedType != MatchEvent.Type.OWN_GOAL
                 && mappedType != MatchEvent.Type.PENALTY_GOAL) {
