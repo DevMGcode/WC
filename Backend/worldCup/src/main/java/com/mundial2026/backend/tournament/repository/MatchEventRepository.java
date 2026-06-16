@@ -18,4 +18,8 @@ public interface MatchEventRepository extends JpaRepository<MatchEvent, Long> {
     List<MatchEvent> findGoalEvents();
 
     void deleteByFixtureId(Long fixtureId);
+
+    /** Dedup para eventos live: evita insertar el mismo gol dos veces (minuto + equipo). */
+    @Query("SELECT CASE WHEN COUNT(e) > 0 THEN TRUE ELSE FALSE END FROM MatchEvent e WHERE e.fixture.id = :fixtureId AND e.minute = :minute AND e.team.id = :teamId")
+    boolean existsGoalAt(Long fixtureId, Integer minute, Long teamId);
 }

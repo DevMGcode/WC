@@ -13,6 +13,7 @@ public record MatchEvent(
         Long teamId,
         Long playerId,
         String playerName,
+        String playerOut,
         String teamFifaCode,
         Integer minute,
         Integer extraMinute,

@@ -166,6 +166,18 @@ export default function FixtureDetailPage({ params }: { params: { id: string } }
     loadFixture();
   }, [fixtureId]);
 
+  // Mientras el partido está LIVE: re-fetch cada 30 s para mostrar goleadores
+  // que el backend fue persistiendo desde API-Football sin necesitar WebSocket.
+  useEffect(() => {
+    if (fixture?.status !== 'LIVE') return;
+    const interval = setInterval(() => {
+      getFixtureById(fixtureId)
+        .then(data => { if (data) setFixture(data); })
+        .catch(() => {});
+    }, 30_000);
+    return () => clearInterval(interval);
+  }, [fixture?.status, fixtureId]);
+
   useEffect(() => {
     if (!isAuthenticated || !user || !fixture) return;
     const userId = Number(user.id);
@@ -789,7 +801,7 @@ export default function FixtureDetailPage({ params }: { params: { id: string } }
                 transition={{ duration: 0.2 }}
               >
                 <ErrorBoundary fallbackMessage={t('fixture.sectionDataError')}>
-                  {detailTab === 'lineups'  && <LineupsTab    fixtureId={fixture.id} />}
+                  {detailTab === 'lineups'  && <LineupsTab    fixtureId={fixture.id} liveEvents={liveEvents} />}
                   {detailTab === 'stats'    && <StatisticsTab fixtureId={fixture.id} />}
                   {detailTab === 'players'  && (
                     <PlayersTab

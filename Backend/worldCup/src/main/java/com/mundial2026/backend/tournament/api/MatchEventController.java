@@ -48,6 +48,7 @@ public class MatchEventController {
                 saved.teamId(),
                 null,
                 saved.playerName(),
+                null,
                 saved.teamFifaCode(),
                 saved.minute(),
                 null,

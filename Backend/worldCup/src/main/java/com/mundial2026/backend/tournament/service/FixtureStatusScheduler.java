@@ -20,7 +20,9 @@ import java.util.Set;
 @RequiredArgsConstructor
 public class FixtureStatusScheduler {
 
-    private static final int MATCH_DURATION_MINUTES = 105;
+    // 90' regulares + hasta ~15' descuento por tiempo + 15' margen de seguridad.
+    // El scheduler es solo fallback: API-Football actualiza el estado real vía polling.
+    private static final int MATCH_DURATION_MINUTES = 130;
 
     private final FixtureRepository          fixtureRepository;
     private final StandingsCalculatorService standingsCalculator;

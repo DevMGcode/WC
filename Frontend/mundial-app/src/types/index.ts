@@ -267,9 +267,8 @@ export interface MatchEvent {
   type: MatchEventType;
   teamId: number | null;
   playerId: number | null;
-  /** Presente en eventos manuales del admin; null en eventos de API-Football */
   playerName?: string | null;
-  /** Presente en eventos manuales del admin; null en eventos de API-Football */
+  playerOut?: string | null;
   teamFifaCode?: string | null;
   minute: number;
   extraMinute?: number;

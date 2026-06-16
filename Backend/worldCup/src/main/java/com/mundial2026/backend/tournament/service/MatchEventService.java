@@ -152,6 +152,40 @@ public class MatchEventService {
         }
     }
 
+    /* ── Persistencia de goles en vivo desde LiveEventPollingService ──
+     *
+     * Llamado cada vez que el polling detecta un GOAL/OWN_GOAL/PENALTY_GOAL nuevo.
+     * Usa source=API, verified=false para que el admin pueda corregir si hay error.
+     * Deduplicado por (fixtureId, minute, internalTeamId) — el mismo dedup que el
+     * Caffeine de LiveEventPollingService pero persistente ante reinicios.
+     */
+    @Transactional
+    public void persistLiveGoal(Long fixtureId, String playerName,
+                                Long internalTeamId, Integer minute, String eventType) {
+        if (playerName == null || playerName.isBlank()) return;
+        if (internalTeamId != null && minute != null
+                && matchEventRepository.existsGoalAt(fixtureId, minute, internalTeamId)) {
+            return;
+        }
+        Fixture fixture = fixtureRepository.findById(fixtureId).orElse(null);
+        if (fixture == null) return;
+
+        Team team = internalTeamId != null ? teamRepository.findById(internalTeamId).orElse(null) : null;
+
+        MatchEvent event = new MatchEvent();
+        event.setFixture(fixture);
+        event.setPlayerName(playerName.trim());
+        event.setTeam(team);
+        event.setMinute(minute);
+        event.setEventType(eventType != null ? eventType : "GOAL");
+        event.setSource(MatchEvent.Source.API);
+        event.setVerified(false);
+        event.setMismatch(false);
+
+        matchEventRepository.save(event);
+        log.info("[MatchEvent] Gol en vivo persistido: {} min {} (partido {})", playerName, minute, fixtureId);
+    }
+
     /* ── Record para transportar datos del gol desde la API ── */
     public record ApiGoal(String playerName, Integer minute, Long teamId) {}
 

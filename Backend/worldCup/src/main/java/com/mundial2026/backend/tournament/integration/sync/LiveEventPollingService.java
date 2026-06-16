@@ -6,9 +6,12 @@ import com.mundial2026.backend.realtime.event.FixtureEventOccurredEvent;
 import com.mundial2026.backend.realtime.payload.MatchEvent;
 import com.mundial2026.backend.tournament.domain.Fixture;
 import com.mundial2026.backend.tournament.domain.FixtureStatus;
+import com.mundial2026.backend.tournament.domain.Team;
 import com.mundial2026.backend.tournament.integration.port.ExternalMatchEvent;
 import com.mundial2026.backend.tournament.integration.port.MatchEventDataPort;
 import com.mundial2026.backend.tournament.repository.FixtureRepository;
+import com.mundial2026.backend.tournament.repository.TeamRepository;
+import com.mundial2026.backend.tournament.service.MatchEventService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
@@ -28,6 +31,10 @@ import java.util.List;
  * pre-Mundial), el poll devuelve vacío sin tocar la API. Cuando el proveedor
  * activa el flag (el día del kick-off), el polling arranca solo sin
  * intervención manual ni redeploy.
+ *
+ * <p>Persistencia: los goles detectados durante el polling también se guardan
+ * en la tabla match_event (source=API, verified=false) para que cualquier
+ * cliente que abra la página después del gol lo vea sin depender del WebSocket.
  */
 @Service
 @Slf4j
@@ -37,17 +44,23 @@ public class LiveEventPollingService {
     private final MatchEventDataPort matchEventDataPort;
     private final ApplicationEventPublisher events;
     private final CoverageService coverageService;
+    private final TeamRepository teamRepository;
+    private final MatchEventService matchEventService;
 
     private final Cache<String, Boolean> seenEvents;
 
     public LiveEventPollingService(FixtureRepository fixtureRepository,
                                    MatchEventDataPort matchEventDataPort,
                                    ApplicationEventPublisher events,
-                                   CoverageService coverageService) {
+                                   CoverageService coverageService,
+                                   TeamRepository teamRepository,
+                                   MatchEventService matchEventService) {
         this.fixtureRepository = fixtureRepository;
         this.matchEventDataPort = matchEventDataPort;
         this.events = events;
         this.coverageService = coverageService;
+        this.teamRepository = teamRepository;
+        this.matchEventService = matchEventService;
         this.seenEvents = Caffeine.newBuilder()
                 .expireAfterWrite(Duration.ofHours(6))
                 .maximumSize(20000)
@@ -75,8 +88,10 @@ public class LiveEventPollingService {
                     String key = ext.dedupKey(f.getExternalProviderId());
                     if (seenEvents.getIfPresent(key) == null) {
                         seenEvents.put(key, Boolean.TRUE);
-                        events.publishEvent(new FixtureEventOccurredEvent(toPayload(f.getId(), ext)));
+                        MatchEvent.Type mappedType = mapType(ext);
+                        events.publishEvent(new FixtureEventOccurredEvent(toPayload(f.getId(), ext, mappedType)));
                         published++;
+                        persistGoalIfNeeded(f.getId(), ext, mappedType);
                     }
                 }
             } catch (Exception ex) {
@@ -90,14 +105,47 @@ public class LiveEventPollingService {
         return new PollResult(polled, published);
     }
 
-    private MatchEvent toPayload(Long internalMatchId, ExternalMatchEvent ext) {
+    /** Persiste en BD solo los goles (no tarjetas ni sustituciones) para que
+     *  clientes que abran la página después del gol lo vean sin WebSocket. */
+    private void persistGoalIfNeeded(Long fixtureId, ExternalMatchEvent ext, MatchEvent.Type mappedType) {
+        if (mappedType != MatchEvent.Type.GOAL
+                && mappedType != MatchEvent.Type.OWN_GOAL
+                && mappedType != MatchEvent.Type.PENALTY_GOAL) {
+            return;
+        }
+        if (ext.playerName() == null || ext.playerName().isBlank()) return;
+
+        Long internalTeamId = resolveInternalTeamId(ext.teamId());
+        String eventTypeStr = switch (mappedType) {
+            case OWN_GOAL     -> "OWN_GOAL";
+            case PENALTY_GOAL -> "PENALTY_GOAL";
+            default           -> "GOAL";
+        };
+        try {
+            matchEventService.persistLiveGoal(fixtureId, ext.playerName(),
+                    internalTeamId, ext.elapsedMinute(), eventTypeStr);
+        } catch (Exception ex) {
+            log.warn("No se pudo persistir gol en vivo (partido {}, jugador {}): {}",
+                    fixtureId, ext.playerName(), ex.getMessage());
+        }
+    }
+
+    private Long resolveInternalTeamId(Long externalTeamId) {
+        if (externalTeamId == null) return null;
+        return teamRepository.findByExternalProviderId(externalTeamId)
+                .map(Team::getId)
+                .orElse(null);
+    }
+
+    private MatchEvent toPayload(Long internalMatchId, ExternalMatchEvent ext, MatchEvent.Type mappedType) {
         return new MatchEvent(
                 internalMatchId,
-                mapType(ext),
+                mappedType,
                 ext.teamId(),
                 ext.playerId(),
-                ext.playerName(),   // API-Football sí lo manda en tiempo real
-                null,               // teamFifaCode: no disponible en eventos live — el frontend usa teamId para resolver
+                ext.playerName(),        // jugador que entra (o protagonista del evento)
+                ext.assistPlayerName(),  // jugador que sale en sustituciones; null en goles/tarjetas
+                null,                    // teamFifaCode: no disponible en eventos live
                 ext.elapsedMinute(),
                 ext.extraMinute(),
                 ext.detail(),
