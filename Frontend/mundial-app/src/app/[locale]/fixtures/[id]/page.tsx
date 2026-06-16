@@ -13,6 +13,7 @@ import { predictionService } from '@/services/predictions';
 import { useAuth } from '@/contexts/AuthContext';
 import { usePremium } from '@/hooks/usePremium';
 import { favoriteTeamsService, type FavoriteTeam } from '@/services/favoriteTeams';
+import type { MatchEventScorer } from '@/types';
 import {
   FiTarget, FiZap, FiCheck, FiX, FiEdit2, FiArrowLeft,
   FiMapPin, FiAlertCircle, FiList, FiBarChart2, FiUsers, FiRepeat,
@@ -136,7 +137,7 @@ export default function FixtureDetailPage({ params }: { params: { id: string } }
     if (wsGoals.length === 0) return dbScorers;
 
     const wsOnlyGoals = wsGoals
-      .filter(e => !dbScorers.some(s => s.minute === e.minute && s.teamId === e.teamId))
+      .filter(e => !dbScorers.some((s: MatchEventScorer) => s.minute === e.minute && s.teamId === e.teamId))
       .map((e, i) => ({
         id: -(i + 1),
         fixtureId,

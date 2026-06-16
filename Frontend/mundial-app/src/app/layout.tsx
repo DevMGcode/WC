@@ -2,7 +2,7 @@ import type { Metadata, Viewport } from 'next';
 import './globals.css';
 import ServiceWorkerRegistration from '@/components/ServiceWorkerRegistration';
 
-const APP_URL = process.env.NEXT_PUBLIC_APP_URL ?? 'https://orionixgol.azurewebsites.net';
+const APP_URL = process.env.NEXT_PUBLIC_APP_URL ?? 'https://www.orionixgol.com';
 
 export const viewport: Viewport = {
   width: 'device-width',
