@@ -62,7 +62,11 @@
       "leagueUpdates": "Liga-Updates",
       "newsUpdates": "Neuigkeiten",
       "save": "Änderungen speichern",
-      "saved": "Gespeichert"
+      "saved": "Gespeichert",
+      "pushActivate": "Benachrichtigungen aktivieren",
+      "pushOn": "Benachrichtigungen aktiv",
+      "pushBlocked": "Im Browser blockiert",
+      "pushHint": "Auf diesem Gerät"
     },
     "edit": {
       "title": "Profil bearbeiten",
