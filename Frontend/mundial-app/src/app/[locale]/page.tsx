@@ -34,6 +34,7 @@ import { WORLD_CUP_START, MS, RANKING_PAGE } from '@/constants/tournament';
 import { fmtTodayHeader, dayKey } from '@/utils/format';
 import TourButton from '@/components/Tour/TourButton';
 import { getTourSteps } from '@/components/Tour/tourSteps';
+import WhatsAppButton from '@/components/WhatsAppButton';
 
 import { hex } from '@/lib/design/tokens';
 import { alpha, alphaOf, gradients } from '@/lib/design/effects';
@@ -347,6 +348,7 @@ export default function HomePage() {
         <QuickAccessBento t={t} />
       </div>
 
+      <WhatsAppButton />
       <TourButton steps={getTourSteps(locale, 'dashboard')} />
     </div>
   );
