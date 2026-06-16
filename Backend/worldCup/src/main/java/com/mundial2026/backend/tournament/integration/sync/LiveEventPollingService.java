@@ -96,6 +96,8 @@ public class LiveEventPollingService {
                 mapType(ext),
                 ext.teamId(),
                 ext.playerId(),
+                ext.playerName(),   // API-Football sí lo manda en tiempo real
+                null,               // teamFifaCode: no disponible en eventos live — el frontend usa teamId para resolver
                 ext.elapsedMinute(),
                 ext.extraMinute(),
                 ext.detail(),

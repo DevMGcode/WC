@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef, useMemo } from 'react';
 import { Header } from '@/components/Navigation';
 import { FixtureCard } from '@/components/Cards';
 import Image from 'next/image';
@@ -107,11 +107,53 @@ export default function FixtureDetailPage({ params }: { params: { id: string } }
   const liveDelta  = useMatchLive(fixture?.status === 'LIVE' ? fixtureId : null);
   const liveEvents = useMatchEvents(fixture?.status === 'LIVE' ? fixtureId : null);
 
+  // Cuando llega un gol manual (guardado en BD) → refetch para obtener el MatchEventScorer completo
+  const prevGoalCountRef = useRef(0);
+  useEffect(() => {
+    const manualGoals = liveEvents.filter(
+      e => (e.type === 'GOAL' || e.type === 'OWN_GOAL' || e.type === 'PENALTY_GOAL') && e.playerName
+    );
+    if (manualGoals.length > prevGoalCountRef.current) {
+      prevGoalCountRef.current = manualGoals.length;
+      getFixtureById(fixtureId).then(data => { if (data) setFixture(data); }).catch(() => {});
+    }
+  }, [liveEvents, fixtureId]);
+
   // Scores y status en vivo (WebSocket tiene prioridad sobre el snapshot HTTP)
   const liveHomeScore    = liveDelta?.homeScore    ?? fixture?.homeScore;
   const liveAwayScore    = liveDelta?.awayScore    ?? fixture?.awayScore;
   const liveStatus       = liveDelta?.status       ?? fixture?.status;
   const elapsedMinutes   = liveDelta?.elapsedMinutes ?? null;
+
+  // Lista de goleadores combinada: BD (fixture.scorers) + eventos WebSocket de API-Football en vivo.
+  // Los eventos de la API no se persisten en BD durante el partido, así que se agregan directamente
+  // desde el WebSocket. Se deduplican por minute+teamId para evitar dobles.
+  const allScorers = useMemo(() => {
+    const dbScorers = fixture?.scorers ?? [];
+    const wsGoals = liveEvents.filter(
+      e => (e.type === 'GOAL' || e.type === 'OWN_GOAL' || e.type === 'PENALTY_GOAL') && e.playerName
+    );
+    if (wsGoals.length === 0) return dbScorers;
+
+    const wsOnlyGoals = wsGoals
+      .filter(e => !dbScorers.some(s => s.minute === e.minute && s.teamId === e.teamId))
+      .map((e, i) => ({
+        id: -(i + 1),
+        fixtureId,
+        playerName: e.playerName!,
+        teamId: e.teamId ?? null,
+        teamName: null,
+        teamFifaCode: e.teamFifaCode ?? null,
+        minute: e.minute ?? null,
+        eventType: e.type,
+        source: 'API' as const,
+        verified: false,
+        apiPlayerName: null,
+        mismatch: false,
+      }));
+
+    return [...dbScorers, ...wsOnlyGoals].sort((a, b) => (a.minute ?? 0) - (b.minute ?? 0));
+  }, [fixture?.scorers, liveEvents, fixtureId]);
 
   useEffect(() => {
     const loadFixture = async () => {
@@ -642,7 +684,7 @@ export default function FixtureDetailPage({ params }: { params: { id: string } }
         )}
 
         {/* ── GOLEADORES ── */}
-        {(isFinished || isLive) && fixture.scorers && fixture.scorers.length > 0 && (
+        {(isFinished || isLive) && allScorers.length > 0 && (
           <DarkCard accent="gold" delay={0.22} className="mb-4">
             <div className="p-5">
               <div className="flex items-center justify-between mb-4">
@@ -652,17 +694,17 @@ export default function FixtureDetailPage({ params }: { params: { id: string } }
                   <span className="text-[10px] font-black text-orionix-text-muted tracking-[0.24em] uppercase">{t('fixture.scorers')}</span>
                   <span className="text-[8px] font-black px-1.5 py-0.5 rounded-full"
                     style={{ background: alphaOf('gold', 0.10), color: hex.gold.bright, border: borders.brand('gold', 0.20) }}>
-                    {fixture.scorers.length}
+                    {allScorers.length}
                   </span>
                 </div>
-                {fixture.scorers.some((s: any) => s.mismatch) && (
+                {allScorers.some((s: any) => s.mismatch) && (
                   <span className="text-[8px] font-bold text-amber-400/60 flex items-center gap-1">
                     ⚠ Corregido por API
                   </span>
                 )}
               </div>
               <div className="space-y-2">
-                {fixture.scorers.map((scorer: any) => {
+                {allScorers.map((scorer: any) => {
                   const isHome = scorer.teamId === fixture.homeTeam.id;
                   const accentColor: BrandColor = isHome ? 'green' : 'danger';
                   const accentHex = isHome ? hex.green.bright : hex.status.danger;
