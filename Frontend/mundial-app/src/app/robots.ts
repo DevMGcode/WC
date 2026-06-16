@@ -11,6 +11,8 @@ export default function robots(): MetadataRoute.Robots {
         // Rutas privadas o sin valor para buscadores
         disallow: [
           '/api/',
+          '/*/login',
+          '/*/register',
           '/*/admin',
           '/*/profile',
           '/*/checkout',

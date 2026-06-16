@@ -929,6 +929,7 @@ export default function PredictionsPage() {
 
                 {/* Create / Join card */}
                 <motion.div
+                  data-tour="leagues-create-join"
                   initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }}
                   transition={{ delay: myLeagues.length * 0.07 + 0.1 }}
                   className="relative overflow-hidden rounded-2xl p-5"
