@@ -164,7 +164,7 @@ public class MatchEventService {
                                 Long internalTeamId, Integer minute, String eventType) {
         if (playerName == null || playerName.isBlank()) return;
         if (internalTeamId != null && minute != null
-                && matchEventRepository.existsGoalAt(fixtureId, minute, internalTeamId)) {
+                && matchEventRepository.existsSimilarGoal(fixtureId, playerName, internalTeamId, minute - 5, minute + 5)) {
             return;
         }
         Fixture fixture = fixtureRepository.findById(fixtureId).orElse(null);

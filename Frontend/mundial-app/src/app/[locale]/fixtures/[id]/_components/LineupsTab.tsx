@@ -18,7 +18,7 @@ function lastName(full: string): string {
   const parts = full.trim().split(' ');
   if (parts.length === 1) return full;
   const last = parts[parts.length - 1];
-  return last.length > 9 ? last.slice(0, 8) + '.' : last;
+  return last.length > 13 ? last.slice(0, 12) + '.' : last;
 }
 
 function groupByGrid(players: LineupPlayer[]): LineupPlayer[][] {
@@ -57,7 +57,7 @@ function PlayerDot({ player, x, y, color, bg, subbed, subInfo }: {
   return (
     <div
       className="absolute flex flex-col items-center pointer-events-none"
-      style={{ left: `${x}%`, top: `${y}%`, transform: 'translate(-50%, -50%)', width: 44, zIndex: 10 }}
+      style={{ left: `${x}%`, top: `${y}%`, transform: 'translate(-50%, -50%)', width: 68, zIndex: 10 }}
     >
       <motion.div
         initial={{ scale: 0, opacity: 0 }}
@@ -65,21 +65,21 @@ function PlayerDot({ player, x, y, color, bg, subbed, subInfo }: {
         transition={{ type: 'spring', stiffness: 260, damping: 20, delay: Math.random() * 0.3 }}
         className="relative rounded-full flex items-center justify-center font-black"
         style={{
-          width: 24, height: 24,
+          width: 26, height: 26,
           background: bg,
           border: `1.5px solid ${subbed ? '#666' : color}`,
-          fontSize: 8,
+          fontSize: 9,
           color: subbed ? '#888' : color,
           boxShadow: subbed ? 'none' : `0 0 8px ${color}50`,
         }}
       >
         {player.shirtNumber}
         {subbed && (
-          <span className="absolute -top-1 -right-1 text-[8px] leading-none">🔴</span>
+          <span className="absolute -top-1 -right-1 text-[9px] leading-none">🔴</span>
         )}
       </motion.div>
-      <span className="text-center font-bold leading-tight mt-0.5 truncate w-full"
-        style={{ fontSize: 6.5, color: subbed ? '#777' : '#fff', textShadow: '0 1px 3px rgba(0,0,0,0.9)' }}>
+      <span className="text-center font-bold leading-tight mt-0.5 w-full"
+        style={{ fontSize: 8, color: subbed ? '#777' : '#fff', textShadow: '0 1px 3px rgba(0,0,0,0.9)', whiteSpace: 'nowrap' }}>
         {lastName(player.playerName)}
       </span>
       {subInfo && (
@@ -87,11 +87,11 @@ function PlayerDot({ player, x, y, color, bg, subbed, subInfo }: {
           initial={{ opacity: 0, y: -4 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.4 }}
-          className="flex items-center gap-0.5 mt-0.5 px-1 rounded-sm"
-          style={{ background: 'rgba(0,200,80,0.2)', border: '1px solid rgba(0,200,80,0.4)' }}
+          className="mt-0.5 px-1.5 rounded-sm"
+          style={{ background: 'rgba(0,200,80,0.2)', border: '1px solid rgba(0,200,80,0.4)', display: 'inline-flex', alignItems: 'center', gap: 2 }}
         >
-          <span style={{ fontSize: 6 }}>🟢</span>
-          <span className="font-bold truncate" style={{ fontSize: 6, color: '#6fff9e', maxWidth: 34 }}>
+          <span style={{ fontSize: 7, flexShrink: 0 }}>🟢</span>
+          <span className="font-bold" style={{ fontSize: 7, color: '#6fff9e', whiteSpace: 'nowrap', flexShrink: 0 }}>
             {lastName(subInfo.playerInName)} {subInfo.minute}'
           </span>
         </motion.div>
@@ -102,9 +102,16 @@ function PlayerDot({ player, x, y, color, bg, subbed, subInfo }: {
 
 // ── PitchView (horizontal) ────────────────────────────────────────────────────
 
+function normName(n: string): string {
+  return n.trim().split(' ').pop()?.toLowerCase()
+    .replace(/[áàä]/g, 'a').replace(/[éèë]/g, 'e')
+    .replace(/[íìï]/g, 'i').replace(/[óòö]/g, 'o')
+    .replace(/[úùü]/g, 'u').replace(/ñ/g, 'n') ?? '';
+}
 function matchName(fullName: string, eventName: string): boolean {
-  const last = (n: string) => n.trim().split(' ').pop()?.toLowerCase() ?? '';
-  return last(fullName) === last(eventName) && last(fullName).length > 1;
+  const a = normName(fullName);
+  const b = normName(eventName);
+  return a === b && a.length > 1;
 }
 
 function PitchView({ home, away, liveEvents }: { home: LineupTeam; away: LineupTeam; liveEvents: MatchEvent[] }) {
@@ -355,6 +362,19 @@ export default function LineupsTab({ fixtureId, liveEvents = [] }: { fixtureId: 
       .catch(() => {});
   }, [fixtureId]);
 
+  // Merge sustituciones pasadas (REST) + en tiempo real (WebSocket), dedup por minuto+jugador
+  // Debe estar ANTES de cualquier return condicional (reglas de hooks de React)
+  const allLiveEvents = useMemo(() => {
+    const wsSubKeys = new Set(
+      liveEvents
+        .filter(e => e.type === 'SUBSTITUTION')
+        .map(e => `${e.minute}|${e.playerName}`)
+    );
+    const dedupedPast = pastSubs.filter(s => !wsSubKeys.has(`${s.minute}|${s.playerName}`));
+    return [...dedupedPast, ...liveEvents];
+  }, [pastSubs, liveEvents]);
+
+
   if (loading) return (
     <div className="grid grid-cols-2 gap-4">
       {[0, 1].map(i => (
@@ -382,16 +402,20 @@ export default function LineupsTab({ fixtureId, liveEvents = [] }: { fixtureId: 
 
   const [home, away] = lineups;
 
-  // Merge sustituciones pasadas (REST) + en tiempo real (WebSocket), dedup por minuto+jugador
-  const allLiveEvents = useMemo(() => {
-    const wsSubKeys = new Set(
-      liveEvents
-        .filter(e => e.type === 'SUBSTITUTION')
-        .map(e => `${e.minute}|${e.playerName}`)
-    );
-    const dedupedPast = pastSubs.filter(s => !wsSubKeys.has(`${s.minute}|${s.playerName}`));
-    return [...dedupedPast, ...liveEvents];
-  }, [pastSubs, liveEvents]);
+  // Reconstruye el XI real para la cancha: API-Football actualiza el startXI durante
+  // el partido poniendo al suplente que entró en lugar del titular que salió.
+  // Lo revertimos usando los eventos persistidos: si un jugador del startXI
+  // aparece como "el que entró" en una sustitución, lo reemplazamos por "el que salió".
+  const pitchSubs = allLiveEvents.filter(e => e.type === 'SUBSTITUTION' && e.playerOut);
+  const fixStartXI = (team: LineupTeam): LineupTeam => ({
+    ...team,
+    startXI: team.startXI.map(player => {
+      const sub = pitchSubs.find(s => matchName(player.playerName, s.playerName ?? ''));
+      return sub?.playerOut ? { ...player, playerName: sub.playerOut } : player;
+    }),
+  });
+  const pitchHome = pitchSubs.length > 0 ? fixStartXI(home) : home;
+  const pitchAway = pitchSubs.length > 0 ? fixStartXI(away) : away;
 
   return (
     <div className="space-y-4">
@@ -414,7 +438,7 @@ export default function LineupsTab({ fixtureId, liveEvents = [] }: { fixtureId: 
       {/* ── Contenido ── */}
       <AnimatePresence mode="wait">
         {view === 'pitch' ? (
-          <PitchView key="pitch" home={home} away={away} liveEvents={allLiveEvents} />
+          <PitchView key="pitch" home={pitchHome} away={pitchAway} liveEvents={allLiveEvents} />
         ) : (
           <motion.div key="list"
             initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}

@@ -29,8 +29,13 @@ public class TournamentMapper {
         );
     }
 
+    private static final java.util.Set<String> GOAL_TYPES = java.util.Set.of("GOAL", "OWN_GOAL", "PENALTY_GOAL");
+
     public FixtureResponse toResponse(Fixture fixture) {
-        List<MatchEventResponse> scorers = matchEventService.getEvents(fixture.getId());
+        List<MatchEventResponse> scorers = matchEventService.getEvents(fixture.getId())
+                .stream()
+                .filter(e -> GOAL_TYPES.contains(e.eventType()))
+                .toList();
         return new FixtureResponse(
                 fixture.getId(),
                 fixture.getName(),

@@ -19,9 +19,13 @@ public interface MatchEventRepository extends JpaRepository<MatchEvent, Long> {
 
     void deleteByFixtureId(Long fixtureId);
 
-    /** Dedup para eventos live: evita insertar el mismo gol dos veces (minuto + equipo). */
-    @Query("SELECT CASE WHEN COUNT(e) > 0 THEN TRUE ELSE FALSE END FROM MatchEvent e WHERE e.fixture.id = :fixtureId AND e.minute = :minute AND e.team.id = :teamId")
-    boolean existsGoalAt(Long fixtureId, Integer minute, Long teamId);
+    /**
+     * Dedup para goles en vivo: mismo jugador + mismo equipo dentro de una ventana de ±5 min.
+     * Evita duplicados cuando API-Football cambia el elapsed minute entre polls sucesivos
+     * (ej: gol detectado en min 76 y vuelto a detectar en min 77 en el siguiente poll).
+     */
+    @Query("SELECT CASE WHEN COUNT(e) > 0 THEN TRUE ELSE FALSE END FROM MatchEvent e WHERE e.fixture.id = :fixtureId AND e.playerName = :playerName AND e.team.id = :teamId AND e.minute BETWEEN :minMinute AND :maxMinute AND e.eventType IN ('GOAL','OWN_GOAL','PENALTY_GOAL')")
+    boolean existsSimilarGoal(Long fixtureId, String playerName, Long teamId, Integer minMinute, Integer maxMinute);
 
     /** Dedup para sustituciones: evita insertar la misma dos veces (minuto + jugador que entra). */
     @Query("SELECT CASE WHEN COUNT(e) > 0 THEN TRUE ELSE FALSE END FROM MatchEvent e WHERE e.fixture.id = :fixtureId AND e.minute = :minute AND e.playerName = :playerIn AND e.eventType = 'SUBSTITUTION'")

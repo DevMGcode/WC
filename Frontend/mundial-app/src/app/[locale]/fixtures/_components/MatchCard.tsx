@@ -28,10 +28,16 @@ export const STATUS_CFG: Record<string, { labelKey: string; color: BrandColor }>
      kickoffAt <= now < +120min → LIVE
 ══════════════════════════════════════════ */
 export function getEffectiveStatus(fixture: { status: string; kickoffAt: string | Date }): string {
-  if (fixture.status === 'FINISHED' || fixture.status === 'LIVE') return fixture.status;
+  if (fixture.status === 'FINISHED') return 'FINISHED';
+  const kickoff = new Date(fixture.kickoffAt).getTime();
+  const now     = Date.now();
+  // Si el backend dice LIVE pero ya pasaron más de 150 min desde el kickoff
+  // (90' regulares + 30' tiempo extra + buffer), forzamos FINISHED como red de seguridad.
+  if (fixture.status === 'LIVE') {
+    if (now >= kickoff + 150 * 60 * 1000) return 'FINISHED';
+    return 'LIVE';
+  }
   if (fixture.status === 'SCHEDULED') {
-    const kickoff = new Date(fixture.kickoffAt).getTime();
-    const now     = Date.now();
     if (now >= kickoff + MATCH_DURATION_MS) return 'FINISHED';
     if (now >= kickoff) return 'LIVE';
   }
@@ -234,7 +240,26 @@ const MatchCard = ({ fixture, index, isFirst, t }: MatchCardProps) => {
           </div>
 
           {/* ── GOLEADORES (solo FINISHED con scorers) ── */}
-          {isFinished && fixture.scorers && fixture.scorers.length > 0 && (
+          {isFinished && fixture.scorers && fixture.scorers.length > 0 && (() => {
+            const homeId    = fixture.homeTeam?.id;
+            const awayId    = fixture.awayTeam?.id;
+            const homeScore = fixture.homeScore ?? 0;
+            const awayScore = fixture.awayScore ?? 0;
+            // Cap: nunca mostrar más goles por equipo de los que indica el marcador oficial
+            const cappedScorers = [
+              ...fixture.scorers
+                .filter((s: any) => s.teamId === homeId)
+                .sort((a: any, b: any) => (a.minute ?? 0) - (b.minute ?? 0))
+                .slice(0, homeScore),
+              ...fixture.scorers
+                .filter((s: any) => s.teamId === awayId)
+                .sort((a: any, b: any) => (a.minute ?? 0) - (b.minute ?? 0))
+                .slice(0, awayScore),
+            ];
+            if (cappedScorers.length === 0) return null;
+            const homeScorers = cappedScorers.filter((s: any) => s.teamId === homeId);
+            const awayScorers = cappedScorers.filter((s: any) => s.teamId === awayId);
+            return (
             <div className="px-4 pb-3">
               <div className="rounded-xl px-3 py-2.5"
                 style={{ background: alpha(hex.neutral.black, 0.28), border: `1px solid ${alpha(hex.neutral.white, 0.05)}` }}>
@@ -244,38 +269,35 @@ const MatchCard = ({ fixture, index, isFirst, t }: MatchCardProps) => {
                   <span className="text-[7px] font-black px-1.5 py-0.5 rounded-full"
                     style={{ background: alpha(hex.gold.muted, 0.08), color: alpha(hex.gold.muted, 0.7),
                              border: `1px solid ${alpha(hex.gold.muted, 0.18)}` }}>
-                    {fixture.scorers.length}
+                    {cappedScorers.length}
                   </span>
                 </div>
                 <div className="flex gap-2">
                   <div className="flex-1 space-y-1 min-w-0">
-                    {fixture.scorers
-                      .filter((s: any) => s.teamId === fixture.homeTeam?.id)
-                      .map((s: any) => (
-                        <div key={s.id} className="flex items-center gap-1 text-[9px] text-orionix-green-bright">
-                          <span className="shrink-0">⚽</span>
-                          <span className="font-bold truncate">{s.playerName}</span>
-                          {s.minute && <span className="shrink-0 opacity-50">{s.minute}&apos;</span>}
-                        </div>
-                      ))}
+                    {homeScorers.map((s: any) => (
+                      <div key={s.id} className="flex items-center gap-1 text-[9px] text-orionix-green-bright">
+                        <span className="shrink-0">⚽</span>
+                        <span className="font-bold truncate">{s.playerName}</span>
+                        {s.minute && <span className="shrink-0 opacity-50">{s.minute}&apos;</span>}
+                      </div>
+                    ))}
                   </div>
                   <div className="w-px shrink-0" style={{ background: alpha(hex.neutral.white, 0.07) }} />
                   <div className="flex-1 space-y-1 min-w-0">
-                    {fixture.scorers
-                      .filter((s: any) => s.teamId === fixture.awayTeam?.id)
-                      .map((s: any) => (
-                        <div key={s.id} className="flex items-center justify-end gap-1 text-[9px]"
-                          style={{ color: hex.gold.bright }}>
-                          {s.minute && <span className="shrink-0 opacity-50">{s.minute}&apos;</span>}
-                          <span className="font-bold truncate">{s.playerName}</span>
-                          <span className="shrink-0">⚽</span>
-                        </div>
-                      ))}
+                    {awayScorers.map((s: any) => (
+                      <div key={s.id} className="flex items-center justify-end gap-1 text-[9px]"
+                        style={{ color: hex.gold.bright }}>
+                        {s.minute && <span className="shrink-0 opacity-50">{s.minute}&apos;</span>}
+                        <span className="font-bold truncate">{s.playerName}</span>
+                        <span className="shrink-0">⚽</span>
+                      </div>
+                    ))}
                   </div>
                 </div>
               </div>
             </div>
-          )}
+            );
+          })()}
 
           {/* ── FOOTER ── */}
           <div className="flex items-center justify-between px-5 py-2.5 gap-3"

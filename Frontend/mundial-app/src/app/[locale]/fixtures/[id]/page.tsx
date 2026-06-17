@@ -126,18 +126,57 @@ export default function FixtureDetailPage({ params }: { params: { id: string } }
   const liveStatus       = liveDelta?.status       ?? fixture?.status;
   const elapsedMinutes   = liveDelta?.elapsedMinutes ?? null;
 
-  // Lista de goleadores combinada: BD (fixture.scorers) + eventos WebSocket de API-Football en vivo.
-  // Los eventos de la API no se persisten en BD durante el partido, así que se agregan directamente
-  // desde el WebSocket. Se deduplican por minute+teamId para evitar dobles.
+  // Goleadores: fuente principal = BD (fixture.scorers, refrescada cada 30s).
+  // El WebSocket solo aporta un gol nuevo si la BD todavía no lo registró
+  // (ventana de hasta 30s antes del próximo refetch). El marcador real
+  // (homeScore/awayScore) actúa como tope: nunca se muestran más goles
+  // por equipo de los que indica el score.
   const allScorers = useMemo(() => {
     const dbScorers = fixture?.scorers ?? [];
+    const homeId    = fixture?.homeTeam?.id;
+    const awayId    = fixture?.awayTeam?.id;
+    const homeScore = fixture?.homeScore ?? 0;
+    const awayScore = fixture?.awayScore ?? 0;
+
+    // Siempre recortar la BD al marcador oficial. Evita que goles erróneos
+    // persistidos durante el live (y luego corregidos por la API) sigan visibles
+    // incluso cuando el partido terminó y el WS ya no envía eventos.
+    const cappedDbScorers = [
+      ...dbScorers
+        .filter((s: MatchEventScorer) => s.teamId === homeId)
+        .sort((a: MatchEventScorer, b: MatchEventScorer) => (a.minute ?? 0) - (b.minute ?? 0))
+        .slice(0, homeScore),
+      ...dbScorers
+        .filter((s: MatchEventScorer) => s.teamId === awayId)
+        .sort((a: MatchEventScorer, b: MatchEventScorer) => (a.minute ?? 0) - (b.minute ?? 0))
+        .slice(0, awayScore),
+      // Goles sin teamId identificado: se mantienen tal cual
+      ...dbScorers.filter((s: MatchEventScorer) => s.teamId !== homeId && s.teamId !== awayId),
+    ];
+
     const wsGoals = liveEvents.filter(
       e => (e.type === 'GOAL' || e.type === 'OWN_GOAL' || e.type === 'PENALTY_GOAL') && e.playerName
     );
-    if (wsGoals.length === 0) return dbScorers;
+    if (wsGoals.length === 0) return cappedDbScorers;
 
+    const dbHomeCount = cappedDbScorers.filter((s: MatchEventScorer) => s.teamId === homeId).length;
+    const dbAwayCount = cappedDbScorers.filter((s: MatchEventScorer) => s.teamId === awayId).length;
+
+    // Solo agregar eventos WS si la BD aún no alcanzó el total de goles del equipo.
+    // Se lleva un contador por equipo para no superar el cap aunque haya varios WS simultáneos.
+    const wsAdded = { home: 0, away: 0 };
     const wsOnlyGoals = wsGoals
-      .filter(e => !dbScorers.some((s: MatchEventScorer) => s.minute === e.minute && s.teamId === e.teamId))
+      .filter(e => {
+        const isHome   = e.teamId === homeId;
+        const dbCount  = isHome ? dbHomeCount : dbAwayCount;
+        const added    = isHome ? wsAdded.home : wsAdded.away;
+        const maxGoals = isHome ? homeScore    : awayScore;
+        if (dbCount + added < maxGoals) {
+          if (isHome) wsAdded.home++; else wsAdded.away++;
+          return true;
+        }
+        return false;
+      })
       .map((e, i) => ({
         id: -(i + 1),
         fixtureId,
@@ -153,8 +192,8 @@ export default function FixtureDetailPage({ params }: { params: { id: string } }
         mismatch: false,
       }));
 
-    return [...dbScorers, ...wsOnlyGoals].sort((a, b) => (a.minute ?? 0) - (b.minute ?? 0));
-  }, [fixture?.scorers, liveEvents, fixtureId]);
+    return [...cappedDbScorers, ...wsOnlyGoals].sort((a, b) => (a.minute ?? 0) - (b.minute ?? 0));
+  }, [fixture?.scorers, fixture?.homeTeam?.id, fixture?.awayTeam?.id, fixture?.homeScore, fixture?.awayScore, liveEvents, fixtureId]);
 
   useEffect(() => {
     const loadFixture = async () => {

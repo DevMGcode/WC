@@ -154,7 +154,7 @@ public class LiveEventPollingService {
         return new MatchEvent(
                 internalMatchId,
                 mappedType,
-                ext.teamId(),
+                resolveInternalTeamId(ext.teamId()),  // ID interno para que el frontend deduplique correctamente
                 ext.playerId(),
                 ext.playerName(),        // jugador que entra (o protagonista del evento)
                 ext.assistPlayerName(),  // jugador que sale en sustituciones; null en goles/tarjetas
