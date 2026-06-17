@@ -200,6 +200,7 @@ const PredictionCard = ({ pred, index, t, locale }: { pred: any; index: number; 
             size="sm"
             title="⚽ Orionix Gol — Mundial 2026"
             text={`⚽ Predije ${pred.predictedHomeScore}-${pred.predictedAwayScore} en ${fixture.homeTeam?.name ?? '?'} vs ${fixture.awayTeam?.name ?? '?'}\n🔮 ¿Acertaré? Juega conmigo en Orionix Gol 👇`}
+            url={`/${locale}/fixtures/${fixture.id}`}
             label="Compartir porra"
           />
         </div>

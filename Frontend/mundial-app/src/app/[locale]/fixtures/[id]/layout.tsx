@@ -49,6 +49,23 @@ export async function generateMetadata({
   const locale = params.locale ?? 'es';
   const canonical = `${APP_URL}/${locale}/fixtures/${fixtureId}`;
 
+  // Imagen OG dinámica: tarjeta del partido (banderas + códigos + marcador/VS).
+  // La pinta /og en "modo partido"; así el link compartido muestra una foto real.
+  const og = new URL(`${APP_URL}/og`);
+  og.searchParams.set('locale', locale);
+  og.searchParams.set('home', homeName);
+  og.searchParams.set('away', awayName);
+  og.searchParams.set('hc', homeCode);
+  og.searchParams.set('ac', awayCode);
+  if (fixture.homeTeam?.flagUrl) og.searchParams.set('hf', fixture.homeTeam.flagUrl);
+  if (fixture.awayTeam?.flagUrl) og.searchParams.set('af', fixture.awayTeam.flagUrl);
+  og.searchParams.set('st', fixture.status ?? 'SCHEDULED');
+  if (fixture.status === 'LIVE' || fixture.status === 'FINISHED') {
+    og.searchParams.set('hs', String(fixture.homeScore ?? 0));
+    og.searchParams.set('as', String(fixture.awayScore ?? 0));
+  }
+  const ogImage = og.toString();
+
   return {
     title,
     description,
@@ -64,12 +81,13 @@ export async function generateMetadata({
       url: canonical,
       type: 'website',
       siteName: 'Orionix Gol',
-      images: [{ url: '/og', width: 1200, height: 630, alt: title }],
+      images: [{ url: ogImage, width: 1200, height: 630, alt: title }],
     },
     twitter: {
       card: 'summary_large_image',
       title,
       description,
+      images: [ogImage],
     },
   };
 }

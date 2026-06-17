@@ -23,7 +23,13 @@ export default function ShareButton({
 }: ShareButtonProps) {
   const [state, setState] = useState<'idle' | 'copied' | 'shared'>('idle');
 
-  const shareUrl = url ?? (typeof window !== 'undefined' ? window.location.href : '');
+  const rawUrl = url ?? (typeof window !== 'undefined' ? window.location.href : '');
+  // Si nos pasan una ruta relativa (p. ej. /es/fixtures/12), la volvemos absoluta
+  // para que el link compartido lleve dominio y muestre la vista previa con foto.
+  const shareUrl =
+    rawUrl && !rawUrl.startsWith('http') && typeof window !== 'undefined'
+      ? window.location.origin + (rawUrl.startsWith('/') ? rawUrl : `/${rawUrl}`)
+      : rawUrl;
 
   const handleShare = async () => {
     if (navigator.share) {
