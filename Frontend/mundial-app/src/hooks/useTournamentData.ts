@@ -82,6 +82,7 @@ export function useAllFixtures(status?: string, initialData?: FixtureDetail[], r
   return useQuery({
     queryKey: QUERY_KEYS.fixtures(status),
     queryFn:  () => getAllFixtures(status),
+    refetchOnWindowFocus: true,
     ...(refetchInterval !== undefined ? { refetchInterval } : {}),
     ...(initialData ? { initialData, initialDataUpdatedAt: Date.now() } : {}),
   });
@@ -175,6 +176,7 @@ export function useTournamentFixtures(tournamentId: number | null, initialData?:
     queryKey: QUERY_KEYS.tournamentFixtures(tournamentId ?? 0),
     queryFn:  () => getTournamentFixtures(tournamentId!),
     enabled:  tournamentId != null,
+    refetchOnWindowFocus: true,
     ...(initialData ? { initialData, initialDataUpdatedAt: Date.now() } : {}),
   });
 }

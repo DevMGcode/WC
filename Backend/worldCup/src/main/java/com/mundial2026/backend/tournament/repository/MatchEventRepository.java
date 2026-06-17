@@ -27,7 +27,7 @@ public interface MatchEventRepository extends JpaRepository<MatchEvent, Long> {
     @Query("SELECT CASE WHEN COUNT(e) > 0 THEN TRUE ELSE FALSE END FROM MatchEvent e WHERE e.fixture.id = :fixtureId AND e.playerName = :playerName AND e.team.id = :teamId AND e.minute BETWEEN :minMinute AND :maxMinute AND e.eventType IN ('GOAL','OWN_GOAL','PENALTY_GOAL')")
     boolean existsSimilarGoal(Long fixtureId, String playerName, Long teamId, Integer minMinute, Integer maxMinute);
 
-    /** Dedup para sustituciones: evita insertar la misma dos veces (minuto + jugador que entra). */
-    @Query("SELECT CASE WHEN COUNT(e) > 0 THEN TRUE ELSE FALSE END FROM MatchEvent e WHERE e.fixture.id = :fixtureId AND e.minute = :minute AND e.playerName = :playerIn AND e.eventType = 'SUBSTITUTION'")
-    boolean existsSubstitutionAt(Long fixtureId, Integer minute, String playerIn);
+    /** Dedup para sustituciones: ventana ±2 min para absorber cambios de minuto entre polls. */
+    @Query("SELECT CASE WHEN COUNT(e) > 0 THEN TRUE ELSE FALSE END FROM MatchEvent e WHERE e.fixture.id = :fixtureId AND e.playerName = :playerIn AND e.eventType = 'SUBSTITUTION' AND e.minute BETWEEN :minMinute AND :maxMinute")
+    boolean existsSubstitutionAt(Long fixtureId, String playerIn, Integer minMinute, Integer maxMinute);
 }

@@ -192,7 +192,7 @@ public class MatchEventService {
                                Long internalTeamId, Integer minute) {
         if (playerIn == null || playerIn.isBlank()) return;
         if (minute != null
-                && matchEventRepository.existsSubstitutionAt(fixtureId, minute, playerIn)) {
+                && matchEventRepository.existsSubstitutionAt(fixtureId, playerIn, minute - 2, minute + 2)) {
             return;
         }
         Fixture fixture = fixtureRepository.findById(fixtureId).orElse(null);

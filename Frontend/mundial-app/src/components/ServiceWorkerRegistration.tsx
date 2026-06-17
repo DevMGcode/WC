@@ -22,6 +22,16 @@ const STALE_AFTER_MS = 6 * 60 * 60 * 1000;
  *     plano, recargar de una — cubre los deploys donde sw.js no cambió.
  */
 export default function ServiceWorkerRegistration() {
+  // Desbloquea la orientación en runtime para PWAs ya instaladas con manifest portrait-primary.
+  // screen.orientation.unlock() solo funciona en modo standalone (PWA) o fullscreen.
+  useEffect(() => {
+    try {
+      if (screen?.orientation && typeof screen.orientation.unlock === 'function') {
+        screen.orientation.unlock()
+      }
+    } catch (_) {}
+  }, [])
+
   useEffect(() => {
     if (!('serviceWorker' in navigator)) return;
 
