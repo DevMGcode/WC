@@ -332,6 +332,35 @@ class UserServiceTest {
                 .isInstanceOf(ResourceNotFoundException.class);
     }
 
+    // ── notificaciones ──────────────────────────────────────────────────────
+
+    @Test
+    void updateNotificationPreferences_savesLas4Preferencias() {
+        AppUser existing = buildActiveVerifiedUser("a@b.com", "$h");
+        existing.setId(30L);
+
+        when(appUserRepository.findById(30L)).thenReturn(Optional.of(existing));
+        when(appUserRepository.save(any(AppUser.class))).thenAnswer(inv -> inv.getArgument(0));
+
+        var req = new com.mundial2026.backend.user.api.dto.NotificationPreferencesRequest(false, true, false, true);
+        AppUser updated = userService.updateNotificationPreferences(30L, req);
+
+        assertThat(updated.getNotifyFixtureReminders()).isFalse();
+        assertThat(updated.getNotifyResultNotifications()).isTrue();
+        assertThat(updated.getNotifyLeagueUpdates()).isFalse();
+        assertThat(updated.getNotifyNewsUpdates()).isTrue();
+        verify(appUserRepository).save(existing);
+    }
+
+    @Test
+    void updateNotificationPreferences_missingUser_throwsResourceNotFound() {
+        when(appUserRepository.findById(404L)).thenReturn(Optional.empty());
+        var req = new com.mundial2026.backend.user.api.dto.NotificationPreferencesRequest(true, true, true, false);
+
+        assertThatThrownBy(() -> userService.updateNotificationPreferences(404L, req))
+                .isInstanceOf(ResourceNotFoundException.class);
+    }
+
     @Test
     void updateProfile_missingUser_throwsResourceNotFound() {
         when(appUserRepository.findById(999L)).thenReturn(Optional.empty());

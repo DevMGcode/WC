@@ -11,10 +11,42 @@ import { useAuth } from '@/contexts/AuthContext';
 import {
   FiShield, FiUsers, FiCopy, FiCheck, FiArrowLeft,
   FiLogOut, FiTrash2, FiRepeat, FiAlertCircle,
+  FiTarget, FiCrosshair, FiEye, FiZap, FiAward, FiStar, FiDollarSign, FiCheckSquare,
 } from 'react-icons/fi';
 import { hex } from '@/lib/design/tokens';
 import { alpha, alphaOf } from '@/lib/design/effects';
 import { PremiumBadge } from '@/components/premium/PremiumBadge';
+
+/** Código de logro → icono (medallas ganadas que se muestran bajo cada miembro). */
+const ACH_ICONS: Record<string, React.ComponentType<{ size?: number; style?: React.CSSProperties }>> = {
+  FIRST_BLOOD: FiTarget, SNIPER: FiCrosshair, PROPHET: FiEye,
+  ON_FIRE: FiZap, UNSTOPPABLE: FiZap, PODIUM: FiAward,
+  LEADER: FiStar, CENTURION: FiDollarSign, STEADY: FiCheckSquare,
+};
+
+/** Tira compacta de medallas ganadas por un miembro en el ranking de liga. */
+const AchievementStrip = ({ codes }: { codes?: string[] }) => {
+  if (!codes || codes.length === 0) return null;
+  const shown = codes.slice(0, 6);
+  const extra = codes.length - shown.length;
+  return (
+    <div className="flex items-center gap-1 mt-1.5">
+      {shown.map(code => {
+        const Icon = ACH_ICONS[code] ?? FiAward;
+        return (
+          <span key={code} title={code}
+            className="inline-flex items-center justify-center rounded-md"
+            style={{ width: 18, height: 18, background: alpha(hex.gold.base, 0.12), border: `1px solid ${alpha(hex.gold.base, 0.30)}` }}>
+            <Icon size={10} style={{ color: hex.gold.bright }} />
+          </span>
+        );
+      })}
+      {extra > 0 && (
+        <span className="text-[9px] font-black" style={{ color: hex.gold.base }}>+{extra}</span>
+      )}
+    </div>
+  );
+};
 
 /* ── GlowBar ── */
 const GlowBar = ({ value, max = 100, color, height = 4 }: {
@@ -399,7 +431,11 @@ export default function LeagueDetailPage() {
                         </span>
                       </div>
                       <div className="px-3 pb-2">
-                        <GlowBar value={player.totalPoints} max={maxPts} color={rowColor} height={2} />
+                        {/* Medallas ganadas del miembro (compacto) */}
+                        <AchievementStrip codes={player.unlockedAchievements} />
+                        <div className="mt-1.5">
+                          <GlowBar value={player.totalPoints} max={maxPts} color={rowColor} height={2} />
+                        </div>
                       </div>
                     </motion.div>
                   );

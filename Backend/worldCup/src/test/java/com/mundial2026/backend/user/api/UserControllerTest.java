@@ -135,6 +135,60 @@ class UserControllerTest {
         verify(userService, never()).completeOnboarding(99L);
     }
 
+    // ── notificaciones ─────────────────────────────────────────────────────────
+
+    @Test
+    void getNotifications_returnsPreferences() throws Exception {
+        AppUser user = new AppUser();
+        user.setId(3L);
+        user.setNotifyFixtureReminders(true);
+        user.setNotifyResultNotifications(false);
+        user.setNotifyLeagueUpdates(true);
+        user.setNotifyNewsUpdates(false);
+
+        when(userService.getForNotifications(3L)).thenReturn(user);
+
+        mockMvc.perform(get("/api/v1/users/3/notifications"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.data.fixtureReminders").value(true))
+                .andExpect(jsonPath("$.data.resultNotifications").value(false));
+    }
+
+    @Test
+    void updateNotifications_returnsUpdatedPreferences() throws Exception {
+        AppUser user = new AppUser();
+        user.setId(3L);
+        user.setNotifyFixtureReminders(false);
+        user.setNotifyResultNotifications(true);
+        user.setNotifyLeagueUpdates(false);
+        user.setNotifyNewsUpdates(true);
+
+        when(userService.updateNotificationPreferences(org.mockito.ArgumentMatchers.eq(3L), org.mockito.ArgumentMatchers.any()))
+                .thenReturn(user);
+
+        mockMvc.perform(put("/api/v1/users/3/notifications")
+                        .contentType(org.springframework.http.MediaType.APPLICATION_JSON)
+                        .content("{\"fixtureReminders\":false,\"resultNotifications\":true,\"leagueUpdates\":false,\"newsUpdates\":true}"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.data.newsUpdates").value(true))
+                .andExpect(jsonPath("$.data.fixtureReminders").value(false));
+    }
+
+    /** Anti-IDOR: no puedo cambiar las notificaciones de otro usuario. */
+    @Test
+    void updateNotifications_otherUser_isRejected() throws Exception {
+        doThrow(new com.mundial2026.backend.common.exception.BusinessRuleException(
+                "Acceso denegado: el userId no corresponde al usuario autenticado"))
+                .when(securityUtils).requireSelfOrAdmin(99L);
+
+        mockMvc.perform(put("/api/v1/users/99/notifications")
+                        .contentType(org.springframework.http.MediaType.APPLICATION_JSON)
+                        .content("{\"fixtureReminders\":true,\"resultNotifications\":true,\"leagueUpdates\":true,\"newsUpdates\":false}"))
+                .andExpect(status().isUnprocessableEntity());
+
+        verify(userService, never()).updateNotificationPreferences(org.mockito.ArgumentMatchers.eq(99L), org.mockito.ArgumentMatchers.any());
+    }
+
     // ── helpers ───────────────────────────────────────────────────────────────
 
     private UserResponse buildUserResponse(Long id, String username, boolean onboardingCompleted) {

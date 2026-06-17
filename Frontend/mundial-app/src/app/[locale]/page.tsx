@@ -34,6 +34,7 @@ import { WORLD_CUP_START, MS, RANKING_PAGE } from '@/constants/tournament';
 import { fmtTodayHeader, dayKey } from '@/utils/format';
 import TourButton from '@/components/Tour/TourButton';
 import { getTourSteps } from '@/components/Tour/tourSteps';
+import WhatsAppButton from '@/components/WhatsAppButton';
 
 import { hex } from '@/lib/design/tokens';
 import { alpha, alphaOf, gradients } from '@/lib/design/effects';
@@ -42,6 +43,7 @@ import { TabSkeleton } from '@/components/PageSkeleton';
 import { KPIChip } from './home/_components/HomeUtils';
 import PremiumOnboardingModal from '@/components/premium/PremiumOnboardingModal';
 import { AdSlot } from '@/components/ads';
+import { achievementsService } from '@/services/achievements';
 
 // Lazy load de secciones pesadas — se descargan en paralelo pero no bloquean el render inicial
 const HomeCountdown   = dynamic(() => import('./home/_components/HomeCountdown'),   { loading: () => <TabSkeleton /> });
@@ -128,6 +130,17 @@ export default function HomePage() {
     () => new Set((rawPredictions as any[]).map((p: any) => Number(p.fixtureId))),
     [rawPredictions]
   );
+
+  // Racha de aciertos para el chip 🔥 del panel RENDIMIENTO.
+  const [currentStreak, setCurrentStreak] = useState(0);
+  useEffect(() => {
+    if (!userId || !tid) return;
+    let alive = true;
+    achievementsService.get(tid, userId)
+      .then(r => { if (alive) setCurrentStreak(r.currentStreak); })
+      .catch(() => {});
+    return () => { alive = false; };
+  }, [userId, tid]);
 
   const stats = useMemo(() => ({
     predictions: (rawPredictions as any[]).length,
@@ -339,6 +352,7 @@ export default function HomePage() {
             myPredictions={myPredictions}
             topRanking={topRanking}
             maxRankPts={maxRankPts}
+            currentStreak={currentStreak}
             t={t}
           />
         </div>
@@ -347,6 +361,7 @@ export default function HomePage() {
         <QuickAccessBento t={t} />
       </div>
 
+      <WhatsAppButton />
       <TourButton steps={getTourSteps(locale, 'dashboard')} />
     </div>
   );

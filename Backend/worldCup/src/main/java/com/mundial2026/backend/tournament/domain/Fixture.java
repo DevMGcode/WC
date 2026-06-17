@@ -67,4 +67,12 @@ public class Fixture {
 
     @Column(name = "extra_minutes", nullable = false)
     private Integer extraMinutes = 0;
+
+    /** Ya se envió el recordatorio push de este partido (evita duplicados). */
+    @Column(name = "reminder_notified", nullable = false)
+    private Boolean reminderNotified = false;
+
+    /** Ya se envió el aviso push de resultado de este partido. */
+    @Column(name = "result_notified", nullable = false)
+    private Boolean resultNotified = false;
 }

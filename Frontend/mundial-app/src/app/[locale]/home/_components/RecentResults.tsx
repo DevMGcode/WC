@@ -188,39 +188,50 @@ const RecentResults = ({ fixtures, predictions, t }: RecentResultsProps) => {
                     </div>
                   </div>
 
-                  {/* Scorers — 12px mínimo */}
-                  {fixture.scorers && fixture.scorers.length > 0 && (
+                  {/* Scorers — 12px mínimo — capped al marcador oficial */}
+                  {fixture.scorers && fixture.scorers.length > 0 && (() => {
+                    const homeId    = fixture.homeTeam?.id;
+                    const awayId    = fixture.awayTeam?.id;
+                    const homeScore = fixture.homeScore ?? 0;
+                    const awayScore = fixture.awayScore ?? 0;
+                    const homeScorers = fixture.scorers
+                      .filter((s: any) => s.teamId === homeId)
+                      .sort((a: any, b: any) => (a.minute ?? 0) - (b.minute ?? 0))
+                      .slice(0, homeScore);
+                    const awayScorers = fixture.scorers
+                      .filter((s: any) => s.teamId === awayId)
+                      .sort((a: any, b: any) => (a.minute ?? 0) - (b.minute ?? 0))
+                      .slice(0, awayScore);
+                    if (homeScorers.length === 0 && awayScorers.length === 0) return null;
+                    return (
                     <div className="mt-3.5 pt-3.5"
                       style={{ borderTop: `1px solid ${alpha(hex.neutral.white, 0.07)}` }}>
                       <div className="flex gap-3">
                         <div className="flex-1 space-y-1 min-w-0">
-                          {fixture.scorers
-                            .filter((s: any) => s.teamId === fixture.homeTeam.id)
-                            .map((s: any) => (
-                              <div key={s.id} className="flex items-center gap-1.5 text-[12px]"
-                                style={{ color: hex.green.soft }}>
-                                <span className="shrink-0">⚽</span>
-                                <span className="font-bold truncate">{s.playerName}</span>
-                                {s.minute && <span className="shrink-0 opacity-55">{s.minute}&apos;</span>}
-                              </div>
+                          {homeScorers.map((s: any) => (
+                            <div key={s.id} className="flex items-center gap-1.5 text-[12px]"
+                              style={{ color: hex.green.soft }}>
+                              <span className="shrink-0">⚽</span>
+                              <span className="font-bold truncate">{s.playerName}</span>
+                              {s.minute && <span className="shrink-0 opacity-55">{s.minute}&apos;</span>}
+                            </div>
                           ))}
                         </div>
                         <div className="w-px shrink-0" style={{ background: alpha(hex.neutral.white, 0.08) }} />
                         <div className="flex-1 space-y-1 min-w-0">
-                          {fixture.scorers
-                            .filter((s: any) => s.teamId === fixture.awayTeam.id)
-                            .map((s: any) => (
-                              <div key={s.id} className="flex items-center justify-end gap-1.5 text-[12px]"
-                                style={{ color: hex.gold.bright }}>
-                                {s.minute && <span className="shrink-0 opacity-55">{s.minute}&apos;</span>}
-                                <span className="font-bold truncate">{s.playerName}</span>
-                                <span className="shrink-0">⚽</span>
-                              </div>
+                          {awayScorers.map((s: any) => (
+                            <div key={s.id} className="flex items-center justify-end gap-1.5 text-[12px]"
+                              style={{ color: hex.gold.bright }}>
+                              {s.minute && <span className="shrink-0 opacity-55">{s.minute}&apos;</span>}
+                              <span className="font-bold truncate">{s.playerName}</span>
+                              <span className="shrink-0">⚽</span>
+                            </div>
                           ))}
                         </div>
                       </div>
                     </div>
-                  )}
+                    );
+                  })()}
 
                   {/* Prediction result */}
                   {pred ? (

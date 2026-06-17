@@ -4,13 +4,17 @@ import java.time.Instant;
 
 /**
  * Discrete in-match event pushed on /topic/matches/{id}/events.
- * The client looks up team/player details via REST cache using the IDs.
+ * playerName/teamFifaCode are populated for manual admin entries; null for external API events
+ * (where the client refetches via REST to get full scorer details).
  */
 public record MatchEvent(
         Long matchId,
         Type type,
         Long teamId,
         Long playerId,
+        String playerName,
+        String playerOut,
+        String teamFifaCode,
         Integer minute,
         Integer extraMinute,
         String detail,

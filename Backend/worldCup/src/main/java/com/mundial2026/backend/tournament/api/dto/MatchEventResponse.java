@@ -4,6 +4,7 @@ public record MatchEventResponse(
         Long id,
         Long fixtureId,
         String playerName,
+        String playerOut,
         Long teamId,
         String teamName,
         String teamFifaCode,

@@ -3,7 +3,7 @@
 import React from 'react';
 import { motion } from 'framer-motion';
 import Link from 'next/link';
-import { FiChevronRight } from 'react-icons/fi';
+import { FiChevronRight, FiZap } from 'react-icons/fi';
 import { hex } from '@/lib/design/tokens';
 import { alpha, alphaOf } from '@/lib/design/effects';
 import ShareButton from '@/components/ShareButton';
@@ -32,10 +32,11 @@ interface RightColumnProps {
   myPredictions: Record<number, any>;
   topRanking: RankEntry[];
   maxRankPts: number;
+  currentStreak?: number;
   t: (key: string) => string;
 }
 
-const RightColumn = ({ stats, recentResults, myPredictions, topRanking, maxRankPts, t }: RightColumnProps) => {
+const RightColumn = ({ stats, recentResults, myPredictions, topRanking, maxRankPts, currentStreak = 0, t }: RightColumnProps) => {
   const accuracyPct = stats.predictions > 0
     ? Math.round((stats.exactas / stats.predictions) * 100)
     : 0;
@@ -57,7 +58,19 @@ const RightColumn = ({ stats, recentResults, myPredictions, topRanking, maxRankP
           style={{ background: `radial-gradient(circle, ${alphaOf('success', 0.12)} 0%, transparent 65%)`, filter: 'blur(28px)' }} />
 
         <div className="relative p-5 sm:p-6">
-          <SectionHeader label={t('home.performance')} accent={hex.green.hover} />
+          <SectionHeader
+            label={t('home.performance')}
+            accent={hex.green.hover}
+            right={currentStreak >= 2 ? (
+              <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-full"
+                style={{ background: alphaOf('gold', 0.12), border: `1px solid ${alphaOf('gold', 0.30)}` }}>
+                <FiZap size={12} style={{ color: hex.gold.bright }} />
+                <span className="text-[12px] font-black tabular-nums" style={{ color: hex.gold.bright }}>
+                  {currentStreak}
+                </span>
+              </div>
+            ) : undefined}
+          />
 
           <div className="flex items-center gap-5">
             {/* Ring más grande: 96px */}

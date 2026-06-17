@@ -36,6 +36,7 @@
     "tabs": {
       "profile": "Profil",
       "favorites": "Favoris",
+      "achievements": "Succès",
       "settings": "Paramètres"
     },
     "memberSince": "Membre depuis",
@@ -62,7 +63,11 @@
       "leagueUpdates": "Mises à jour des ligues",
       "newsUpdates": "Actualités et nouveautés",
       "save": "Enregistrer",
-      "saved": "Enregistré"
+      "saved": "Enregistré",
+      "pushActivate": "Activer les notifications",
+      "pushOn": "Notifications activées",
+      "pushBlocked": "Bloquées dans le navigateur",
+      "pushHint": "Sur cet appareil"
     },
     "edit": {
       "title": "Modifier le Profil",
@@ -545,6 +550,18 @@
     "accessDeniedTitle": "Ligue privée",
     "accessDenied": "Vous ne pouvez voir le classement et les membres que des ligues auxquelles vous appartenez. Passez Premium pour voir n'importe quelle ligue.",
     "goPremium": "Passer Premium"
+  },
+  "achievements": {
+    "title": "Badges",
+    "currentStreak": "Série actuelle",
+    "bestStreak": "Meilleure série",
+    "hit": "réussite",
+    "hits": "réussites d'affilée",
+    "exact": "Exacts",
+    "points": "Points",
+    "unlocked": "Débloqués",
+    "error": "Impossible de charger vos succès",
+    "empty": "Pas encore de succès. Faites votre premier pronostic !"
   },
   "onboarding": {
     "welcome": "Bienvenue",

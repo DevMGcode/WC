@@ -4,6 +4,7 @@ import com.mundial2026.backend.common.exception.BusinessRuleException;
 import com.mundial2026.backend.common.exception.ResourceNotFoundException;
 import com.mundial2026.backend.user.api.dto.ChangePasswordRequest;
 import com.mundial2026.backend.user.api.dto.CreateUserRequest;
+import com.mundial2026.backend.user.api.dto.NotificationPreferencesRequest;
 import com.mundial2026.backend.user.api.dto.UpdateUserProfileRequest;
 import com.mundial2026.backend.tournament.domain.Team;
 import com.mundial2026.backend.tournament.repository.TeamRepository;
@@ -250,6 +251,27 @@ public class UserService {
         user.setPasswordHash(passwordEncoder.encode(request.newPassword()));
         user.setTokenVersion((user.getTokenVersion() != null ? user.getTokenVersion() : 0) + 1);
 
+        return appUserRepository.save(user);
+    }
+
+    /** Lee las preferencias de notificación del usuario. */
+    @Transactional(readOnly = true)
+    public AppUser getForNotifications(Long userId) {
+        return findById(userId);
+    }
+
+    /**
+     * Actualiza las 4 preferencias de notificación.
+     * La usan tanto el onboarding (primera vez) como Configuración (editor
+     * permanente): es la única fuente de verdad, así ambos quedan consistentes.
+     */
+    @Transactional
+    public AppUser updateNotificationPreferences(Long userId, NotificationPreferencesRequest request) {
+        AppUser user = findById(userId);
+        user.setNotifyFixtureReminders(request.fixtureReminders());
+        user.setNotifyResultNotifications(request.resultNotifications());
+        user.setNotifyLeagueUpdates(request.leagueUpdates());
+        user.setNotifyNewsUpdates(request.newsUpdates());
         return appUserRepository.save(user);
     }
 

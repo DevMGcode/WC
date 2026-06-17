@@ -4,7 +4,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { useRouter, usePathname } from 'next/navigation';
 import { locales } from '@/i18n/locales';
 import { motion, AnimatePresence } from 'framer-motion';
-import { FiUser, FiHeart, FiSettings } from 'react-icons/fi';
+import { FiUser, FiHeart, FiSettings, FiAward } from 'react-icons/fi';
 import { useAuth } from '@/contexts/AuthContext';
 import { Header } from '@/components/Navigation';
 import { getCurrentTournament } from '@/services/publicTournament';
@@ -16,11 +16,13 @@ import { apiFetch } from '@/lib/apiFetch';
 import { Particle } from './_components/ui';
 import ProfileTab        from './_components/ProfileTab';
 import FavoritesTab      from './_components/FavoritesTab';
+import AchievementsTab   from './_components/AchievementsTab';
 import SettingsTab       from './_components/SettingsTab';
 import EditProfileModal  from './_components/EditProfileModal';
 import ChangePasswordModal from './_components/ChangePasswordModal';
 import LogoutModal       from './_components/LogoutModal';
 import { favoriteTeamsService, type FavoriteTeam, type PublicTeam } from '@/services/favoriteTeams';
+import { notificationsService } from '@/services/notifications';
 import { usePremium } from '@/hooks/usePremium';
 import { AdSlot } from '@/components/ads';
 
@@ -38,9 +40,10 @@ export default function ProfilePage() {
   const [allTeams,      setAllTeams]      = useState<PublicTeam[]>([]);
   const [favsLoading,   setFavsLoading]   = useState(true);
   const [favsError,     setFavsError]     = useState<string | null>(null);
-  const [activeTab, setActiveTab]         = useState<'PROFILE' | 'FAVORITES' | 'SETTINGS'>(
+  const [activeTab, setActiveTab]         = useState<'PROFILE' | 'FAVORITES' | 'ACHIEVEMENTS' | 'SETTINGS'>(
     () => (typeof window !== 'undefined' ? (sessionStorage.getItem('profile-tab') as any) || 'PROFILE' : 'PROFILE')
   );
+  const [tournamentId, setTournamentId]   = useState<number>(1);
   const [language, setLanguage]           = useState('es');
   const [langOpen, setLangOpen]           = useState(false);
   const langRef                           = useRef<HTMLDivElement>(null);
@@ -92,6 +95,17 @@ export default function ProfilePage() {
     return () => document.removeEventListener('mousedown', handler);
   }, []);
 
+  // Carga las preferencias de notificación reales del backend (fuente única,
+  // compartida con el onboarding). Antes el tab arrancaba con defaults fijos.
+  useEffect(() => {
+    if (!authUser?.id) return;
+    let alive = true;
+    notificationsService.get(authUser.id)
+      .then(prefs => { if (alive) setNotifications(prefs); })
+      .catch(() => { /* sin red: se quedan los defaults locales */ });
+    return () => { alive = false; };
+  }, [authUser?.id]);
+
   useEffect(() => {
     if (!authLoading && !isAuthenticated) { router.replace('/login'); return; }
     if (authUser) {
@@ -105,6 +119,7 @@ export default function ProfilePage() {
         try {
           const tournament = await getCurrentTournament();
           const tournamentId = tournament?.id ?? 1;
+          setTournamentId(tournamentId);
           const userId = authUser.id;
           const [predRes, scoreRes] = await Promise.all([
             apiFetch(`/api/v1/predictions/user/${userId}`),
@@ -259,7 +274,11 @@ export default function ProfilePage() {
 
   const handleSaveSettings = () => {
     localStorage.setItem('language', language);
-    localStorage.setItem('notifications', JSON.stringify(notifications));
+    // Persiste las preferencias en el backend (fuente única). El onboarding lee
+    // estas mismas. Si falla la red, no bloquea el resto de "Guardar".
+    if (authUser?.id) {
+      notificationsService.update(authUser.id, notifications).catch(() => { /* reintenta al volver */ });
+    }
     const segments = pathname.split('/');
     const currentLocale = segments[1];
     setSettingsSaved(true);
@@ -277,6 +296,7 @@ export default function ProfilePage() {
   const tabs = [
     { key: 'PROFILE',   label: t('profile.tabs.profile'),   icon: <FiUser size={14} />,     color: hex.green.bright },
     { key: 'FAVORITES', label: t('profile.tabs.favorites'), icon: <FiHeart size={14} />,    color: hex.accent.pink },
+    { key: 'ACHIEVEMENTS', label: t('profile.tabs.achievements'), icon: <FiAward size={14} />, color: hex.gold.base },
     { key: 'SETTINGS',  label: t('profile.tabs.settings'),  icon: <FiSettings size={14} />, color: hex.green.hover },
   ] as const;
 
@@ -382,12 +402,19 @@ export default function ProfilePage() {
               t={t}
             />
           )}
+          {activeTab === 'ACHIEVEMENTS' && (
+            <AchievementsTab
+              tournamentId={tournamentId}
+              userId={authUser?.id ? Number(authUser.id) : null}
+              t={t}
+            />
+          )}
           {activeTab === 'SETTINGS' && (
             <SettingsTab
               language={language} langOpen={langOpen} langRef={langRef}
               setLangOpen={setLangOpen} onSelectLanguage={setLanguage}
               notifications={notifications} setNotifications={setNotifications}
-              onSave={handleSaveSettings} saved={settingsSaved} t={t}
+              onSave={handleSaveSettings} saved={settingsSaved} userId={authUser?.id} t={t}
             />
           )}
         </AnimatePresence>
