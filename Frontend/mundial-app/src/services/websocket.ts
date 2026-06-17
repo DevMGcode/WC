@@ -64,7 +64,8 @@ function connect() {
   ws = new WebSocket(WS_URL)
 
   ws.onopen = () => {
-    ws!.send(stompFrame('CONNECT', { 'accept-version': '1.2', 'heart-beat': '0,0' }))
+    // Heartbeat cada 20s: mantiene la conexión viva a través de Nginx y proxies intermediarios
+    ws!.send(stompFrame('CONNECT', { 'accept-version': '1.2', 'heart-beat': '20000,20000' }))
   }
 
   ws.onmessage = (event) => {
@@ -72,6 +73,10 @@ function connect() {
 
     if (frame.command === 'CONNECTED') {
       connected = true
+      // Re-suscribir las suscripciones activas que sobrevivieron una reconexión
+      for (const sub of subscriptions.values()) {
+        ws!.send(stompFrame('SUBSCRIBE', { destination: sub.destination, id: sub.id, ack: 'auto' }))
+      }
       // Suscribir los que estaban esperando
       for (const sub of pendingSubs) {
         doSubscribe(sub)

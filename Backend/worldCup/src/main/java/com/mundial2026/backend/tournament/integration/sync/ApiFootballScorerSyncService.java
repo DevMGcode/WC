@@ -66,41 +66,68 @@ public class ApiFootballScorerSyncService {
             if (recentlyAttempted.getIfPresent(fixture.getId()) != null) {
                 continue;
             }
-            boolean alreadySynced = !matchEventRepository
-                    .findByFixtureIdAndSource(fixture.getId(), MatchEvent.Source.API)
-                    .isEmpty();
-            if (!alreadySynced) {
-                recentlyAttempted.put(fixture.getId(), Boolean.TRUE);
-                syncOne(fixture);
+            recentlyAttempted.put(fixture.getId(), Boolean.TRUE);
+
+            List<com.mundial2026.backend.tournament.domain.MatchEvent> existing =
+                    matchEventRepository.findByFixtureIdAndSource(fixture.getId(), MatchEvent.Source.API);
+
+            // Solo consideramos "ya sincronizados" los goles — las sustituciones
+            // solo se capturan en vivo y pueden faltar aunque los goles ya estén.
+            boolean goalsAlreadySynced = existing.stream()
+                    .anyMatch(e -> "GOAL".equals(e.getEventType())
+                            || "OWN_GOAL".equals(e.getEventType())
+                            || "PENALTY_GOAL".equals(e.getEventType()));
+            boolean subsAlreadySynced = existing.stream()
+                    .anyMatch(e -> "SUBSTITUTION".equals(e.getEventType()));
+
+            if (!goalsAlreadySynced || !subsAlreadySynced) {
+                syncOne(fixture, !goalsAlreadySynced, !subsAlreadySynced);
             }
         }
     }
 
-    private void syncOne(Fixture fixture) {
+    private void syncOne(Fixture fixture, boolean syncGoals, boolean syncSubs) {
         try {
             List<ExternalMatchEvent> events =
                     matchEventDataPort.fetchEventsByFixture(fixture.getExternalProviderId());
 
-            List<MatchEventService.ApiGoal> goals = events.stream()
-                    .filter(e -> "goal".equalsIgnoreCase(e.type()))
-                    // Tanda de penales no cuenta como gol del partido
-                    .filter(e -> !e.isPenaltyShootout())
-                    // "Missed Penalty" comparte type=Goal pero no es gol
-                    .filter(e -> e.detail() == null || !e.detail().toLowerCase().contains("missed"))
-                    .filter(e -> e.playerName() != null)
-                    .map(e -> new MatchEventService.ApiGoal(
-                            e.playerName(),
-                            totalMinute(e),
-                            resolveInternalTeamId(e.teamId())))
-                    .toList();
+            if (syncGoals) {
+                List<MatchEventService.ApiGoal> goals = events.stream()
+                        .filter(e -> "goal".equalsIgnoreCase(e.type()))
+                        .filter(e -> !e.isPenaltyShootout())
+                        .filter(e -> e.detail() == null || !e.detail().toLowerCase().contains("missed"))
+                        .filter(e -> e.playerName() != null)
+                        .map(e -> new MatchEventService.ApiGoal(
+                                e.playerName(),
+                                totalMinute(e),
+                                resolveInternalTeamId(e.teamId())))
+                        .toList();
 
-            if (!goals.isEmpty()) {
-                matchEventService.syncFromApi(fixture.getId(), goals);
-                log.info("[ScorerSync/ApiFootball] {} goles sincronizados para fixture {} (extId={})",
-                        goals.size(), fixture.getId(), fixture.getExternalProviderId());
+                if (!goals.isEmpty()) {
+                    matchEventService.syncFromApi(fixture.getId(), goals);
+                    log.info("[ScorerSync/ApiFootball] {} goles sincronizados para fixture {} (extId={})",
+                            goals.size(), fixture.getId(), fixture.getExternalProviderId());
+                }
+            }
+
+            if (syncSubs) {
+                List<ExternalMatchEvent> subs = events.stream()
+                        .filter(e -> e.type() != null && e.type().toLowerCase().startsWith("subst"))
+                        .filter(e -> e.playerName() != null && !e.playerName().isBlank())
+                        .toList();
+
+                for (ExternalMatchEvent sub : subs) {
+                    Long teamId = resolveInternalTeamId(sub.teamId());
+                    matchEventService.persistLiveSub(fixture.getId(), sub.playerName(),
+                            sub.assistPlayerName(), teamId, totalMinute(sub));
+                }
+                if (!subs.isEmpty()) {
+                    log.info("[ScorerSync/ApiFootball] {} sustituciones sincronizadas para fixture {} (extId={})",
+                            subs.size(), fixture.getId(), fixture.getExternalProviderId());
+                }
             }
         } catch (Exception ex) {
-            log.warn("[ScorerSync/ApiFootball] No se pudieron sincronizar goleadores para extId={}: {}",
+            log.warn("[ScorerSync/ApiFootball] Error al sincronizar eventos para extId={}: {}",
                     fixture.getExternalProviderId(), ex.getMessage());
         }
     }
