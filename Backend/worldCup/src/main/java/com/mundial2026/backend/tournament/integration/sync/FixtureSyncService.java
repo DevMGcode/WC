@@ -27,6 +27,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import com.mundial2026.backend.tournament.integration.port.ExternalStanding;
 
+import java.time.Duration;
 import java.time.Instant;
 import java.time.OffsetDateTime;
 import java.time.ZoneOffset;
@@ -37,6 +38,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -77,7 +79,56 @@ public class FixtureSyncService {
     @Transactional
     public SyncResult syncLiveFixtures() {
         // Live syncs are score-only; we don't need to recompute the group mapping here.
-        return persist(matchDataPort.fetchLiveMatches(), Map.of());
+        List<ExternalMatch> liveFromApi = matchDataPort.fetchLiveMatches();
+        SyncResult result = persist(liveFromApi, Map.of());
+        // Detect fixtures that were LIVE in DB but disappeared from the API live list → finished
+        detectAndMarkFinished(liveFromApi);
+        return result;
+    }
+
+    /**
+     * Compara los partidos LIVE de la BD contra los que la API devuelve ahora mismo.
+     * Si un partido está LIVE en BD pero ya NO aparece en la lista de la API,
+     * significa que la API dejó de reportarlo como en curso (es decir, terminó).
+     * Lo marcamos FINISHED siempre que hayan pasado al menos 90 minutos desde el
+     * kick-off, para evitar falsos positivos por errores transitorios de red.
+     */
+    private void detectAndMarkFinished(List<ExternalMatch> currentlyLiveFromApi) {
+        Set<Long> apiLiveIds = currentlyLiveFromApi.stream()
+                .map(m -> parseLong(m.externalId()))
+                .filter(id -> id != null)
+                .collect(Collectors.toSet());
+
+        List<Fixture> dbLiveFixtures = fixtureRepository.findByStatusOrderByKickoffAtAsc(FixtureStatus.LIVE);
+        if (dbLiveFixtures.isEmpty()) return;
+
+        Instant now = Instant.now();
+        Set<GroupStage> groupsToRecalculate = new LinkedHashSet<>();
+
+        for (Fixture f : dbLiveFixtures) {
+            if (f.getExternalProviderId() != null && apiLiveIds.contains(f.getExternalProviderId())) {
+                continue; // La API lo sigue reportando como LIVE — sin cambios
+            }
+            if (f.getKickoffAt() == null) continue;
+            long minutesElapsed = Duration.between(f.getKickoffAt().toInstant(), now).toMinutes();
+            if (minutesElapsed < 90) {
+                log.debug("[FixtureSync] Fixture {} no está en la lista live de la API pero solo han pasado {}min — ignorando",
+                        f.getId(), minutesElapsed);
+                continue;
+            }
+            log.info("[FixtureSync] Fixture {} (extId={}) desapareció de la lista live de API tras {}min — marcando FINISHED",
+                    f.getId(), f.getExternalProviderId(), minutesElapsed);
+            f.setStatus(FixtureStatus.FINISHED);
+            fixtureRepository.save(f);
+
+            events.publishEvent(new FixtureScoreUpdatedEvent(new MatchLiveDelta(
+                    f.getId(), f.getHomeScore(), f.getAwayScore(),
+                    null, MatchStatus.FINISHED, now)));
+
+            if (f.getGroupStage() != null) groupsToRecalculate.add(f.getGroupStage());
+        }
+
+        groupsToRecalculate.forEach(standingsCalculator::recalculateForGroup);
     }
 
     /**
@@ -254,10 +305,14 @@ public class FixtureSyncService {
             existing.setAwayScore(ext.awayScore());
             changed = true;
         }
-        // Minutos de reposición (90' + X): igual que el marcador, la API manda
-        // cuando publica el dato; el botón EXTENDER del admin queda como respaldo
-        // (la API lo deja en null cuando no cubre el partido y no se pisa nada).
-        if (ext.stoppageMinutes() != null && !ext.stoppageMinutes().equals(existing.getExtraMinutes())) {
+        // Minutos de reposición del 2º tiempo (90' + X): solo se persisten cuando el
+        // partido NO está en descanso (HT). La API devuelve stoppageMinutes en HT para
+        // reportar el descuento del 1er tiempo, pero ese valor no debe afectar
+        // extra_minutes porque el FixtureStatusScheduler lo usa para decidir cuándo
+        // marcar FINISHED (kickoff + 130 + extra_minutes).
+        if (ext.stoppageMinutes() != null
+                && ext.status() != MatchStatus.HALFTIME
+                && !ext.stoppageMinutes().equals(existing.getExtraMinutes())) {
             existing.setExtraMinutes(ext.stoppageMinutes());
             changed = true;
         }

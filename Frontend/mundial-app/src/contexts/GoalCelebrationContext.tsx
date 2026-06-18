@@ -79,9 +79,6 @@ export function GoalCelebrationProvider({ children }: { children: ReactNode }) {
               const isFav  = ev.teamId !== null && ev.teamId !== undefined
                               && favs.has(Number(ev.teamId))
 
-              // Si el usuario tiene favoritos y este no es uno → ignorar
-              if (!isFav && favs.size > 0) return
-
               const homeCode = fixture.homeTeam?.fifaCode
                 ?? fixture.homeTeam?.shortName
                 ?? fixture.homeTeam?.name
