@@ -137,11 +137,11 @@ export default function LoginCard({ onShowForgot }: LoginCardProps) {
                 BETA
               </motion.div>
               <motion.div
-                className="relative w-20 h-20 sm:w-14 sm:h-14 rounded-2xl overflow-hidden flex items-center justify-center shrink-0 sm:order-1"
-                style={{ background: `linear-gradient(135deg, ${alphaOf('green', 0.15)}, ${alpha(hex.green.hover, 0.10)})`, border: `1px solid ${alphaOf('green', 0.35)}`, boxShadow: `0 0 20px ${alphaOf('green', 0.10)}` }}
-                whileHover={{ scale: 1.08, rotate: 5 }} transition={{ type: 'spring', stiffness: 280, damping: 18 }}>
-                <div className="w-14 h-14 sm:w-9 sm:h-9 relative">
-                  <Image src="/logotipo_Orionix_Gol_transparente.png" alt="logo" fill sizes="56px" style={{ objectFit: 'contain' }} />
+                className="relative w-28 h-28 sm:w-20 sm:h-20 rounded-2xl overflow-hidden flex items-center justify-center shrink-0 sm:order-1"
+                style={{ background: `linear-gradient(135deg, ${alphaOf('green', 0.12)}, ${alpha(hex.green.hover, 0.07)})`, border: `1px solid ${alphaOf('green', 0.28)}`, boxShadow: `0 0 24px ${alphaOf('green', 0.08)}` }}
+                whileHover={{ scale: 1.06, rotate: 4 }} transition={{ type: 'spring', stiffness: 280, damping: 18 }}>
+                <div className="w-24 h-24 sm:w-16 sm:h-16 relative">
+                  <Image src="/logotipo_Orionix_Gol_transparente.png" alt="logo" fill sizes="96px" style={{ objectFit: 'contain' }} />
                 </div>
               </motion.div>
               <div className="flex-1 min-w-0 sm:order-2">

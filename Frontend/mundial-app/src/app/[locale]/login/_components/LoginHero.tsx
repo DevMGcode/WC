@@ -68,24 +68,23 @@ export default function LoginHero({ countdown, predCount, started }: LoginHeroPr
         transition={{ duration: 0.7, ease: [0.22, 1, 0.36, 1] }}
         className="flex lg:hidden flex-col items-center gap-4 w-full pt-2"
       >
-        <div className="flex items-center gap-4">
-          <motion.div className="relative shrink-0" style={{ width: 52, height: 52 }}
-            animate={{ rotate: [-3, 3, -3] }} transition={{ duration: 4.5, repeat: Infinity, ease: 'easeInOut' }}>
-            <Image src="/Logo_Pestaña.png" alt="Orionix Gol" fill sizes="52px"
-              style={{ objectFit: 'contain', filter: `drop-shadow(0 0 14px ${alpha(hex.gold.base, 0.85)}) drop-shadow(0 0 30px ${alpha(hex.accent.orange, 0.45)})` }} />
+        {/* Logo completo mobile */}
+        <motion.div className="flex flex-col items-center gap-2">
+          <motion.div className="relative shrink-0" style={{ width: 160, height: 160 }}
+            animate={{ filter: [`drop-shadow(0 0 14px ${alpha(hex.gold.base, 0.60)})`, `drop-shadow(0 0 28px ${alpha(hex.gold.base, 0.90)})`, `drop-shadow(0 0 14px ${alpha(hex.gold.base, 0.60)})`] }}
+            transition={{ duration: 3.5, repeat: Infinity, ease: 'easeInOut' }}>
+            <Image src="/logotipo_Orionix_Gol_transparente.png" alt="Orionix Gol" fill sizes="160px"
+              style={{ objectFit: 'contain' }} />
           </motion.div>
-          <div className="leading-none">
-            <div className="text-[2rem] font-black tracking-tight text-white leading-none"
-              style={{ textShadow: `0 0 24px ${alpha(hex.neutral.white, 0.15)}` }}>{t('hero.mundial')}</div>
-            <div className="text-[2rem] font-black tracking-tight leading-none"
-              style={{ color: hex.green.bright, textShadow: `0 0 22px ${alphaOf('green', 0.75)}` }}>2026</div>
+          <div className="flex items-center gap-2">
+            <div style={{ width: 20, height: 1, background: `linear-gradient(90deg, transparent, ${alpha(hex.gold.base, 0.55)})` }} />
+            <span className="text-[11px] font-black tracking-[0.28em] uppercase"
+              style={{ color: hex.gold.base, textShadow: `0 0 16px ${alpha(hex.gold.base, 0.50)}` }}>
+              MUNDIAL 2026
+            </span>
+            <div style={{ width: 20, height: 1, background: `linear-gradient(90deg, ${alpha(hex.gold.base, 0.55)}, transparent)` }} />
           </div>
-        </div>
-        <div className="flex items-center gap-2">
-          <div style={{ width: 24, height: 1, background: `linear-gradient(90deg, transparent, ${alpha(hex.gold.base, 0.55)})` }} />
-          <p className="text-[9px] font-bold tracking-[0.30em] uppercase" style={{ color: alphaOf('green', 0.45) }}>Football Tech Experience</p>
-          <div style={{ width: 24, height: 1, background: `linear-gradient(90deg, ${alpha(hex.gold.base, 0.55)}, transparent)` }} />
-        </div>
+        </motion.div>
         <div className="flex flex-wrap justify-center gap-2">
           {FEATURES.map((chip, i) => <FeatureChipItem key={chip.label} chip={chip} index={i} sm />)}
         </div>
@@ -97,19 +96,37 @@ export default function LoginHero({ countdown, predCount, started }: LoginHeroPr
         transition={{ duration: 1.0, ease: [0.22, 1, 0.36, 1] }}
         className="hidden lg:flex flex-1 flex-col items-center gap-4"
       >
-        {/* Title */}
+        {/* Logo completo desktop */}
         <motion.div initial={{ opacity: 0, y: 24 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.2, duration: 0.85 }}
-          className="flex items-center gap-5">
-          <motion.div className="relative shrink-0" style={{ width: 80, height: 80 }}
-            animate={{ rotate: [-3, 3, -3] }} transition={{ duration: 4.5, repeat: Infinity, ease: 'easeInOut' }}>
-            <Image src="/Logo_Pestaña.png" alt="Orionix Gol" fill sizes="80px"
-              style={{ objectFit: 'contain', filter: `drop-shadow(0 0 18px ${alpha(hex.gold.base, 0.90)}) drop-shadow(0 0 40px ${alpha(hex.accent.orange, 0.55)})` }} />
-          </motion.div>
-          <div className="leading-none">
-            <div className="text-[3.2rem] font-black tracking-tight text-white leading-none"
-              style={{ textShadow: `0 0 30px ${alpha(hex.neutral.white, 0.18)}, 0 0 60px ${alphaOf('green', 0.12)}` }}>{t('hero.mundial')}</div>
-            <div className="text-[3.2rem] font-black tracking-tight leading-none"
-              style={{ color: hex.green.bright, textShadow: `0 0 28px ${alphaOf('green', 0.80)}, 0 0 60px ${alphaOf('green', 0.35)}` }}>2026</div>
+          className="flex flex-col items-center gap-0">
+          {/* Halo dorado pulsante detrás del logo */}
+          <div className="relative flex items-center justify-center">
+            <motion.div className="absolute rounded-full pointer-events-none"
+              style={{ width: 300, height: 300, background: `radial-gradient(circle, ${alpha(hex.gold.base, 0.04)} 0%, transparent 68%)`, filter: 'blur(28px)' }}
+              animate={{ opacity: [0.5, 0.9, 0.5] }}
+              transition={{ duration: 5.0, repeat: Infinity, ease: 'easeInOut' }}
+            />
+            <motion.div className="relative" style={{ width: 220, height: 220 }}
+              animate={{ filter: [
+                `drop-shadow(0 0 8px ${alpha(hex.gold.base, 0.18)})`,
+                `drop-shadow(0 0 16px ${alpha(hex.gold.base, 0.30)}) drop-shadow(0 0 32px ${alpha(hex.gold.base, 0.10)})`,
+                `drop-shadow(0 0 8px ${alpha(hex.gold.base, 0.18)})`,
+              ]}}
+              transition={{ duration: 5.0, repeat: Infinity, ease: 'easeInOut' }}>
+              <Image src="/logotipo_Orionix_Gol_transparente.png" alt="Orionix Gol" fill sizes="220px"
+                style={{ objectFit: 'contain' }} />
+            </motion.div>
+          </div>
+          {/* MUNDIAL 2026 debajo del logo */}
+          <div className="flex items-center gap-3" style={{ marginTop: -18 }}>
+            <motion.div initial={{ scaleX: 0, opacity: 0 }} animate={{ scaleX: 1, opacity: 1 }} transition={{ delay: 0.5, duration: 0.6 }}
+              style={{ width: 36, height: 1.5, background: `linear-gradient(90deg, transparent, ${alpha(hex.gold.base, 0.65)})`, borderRadius: 1 }} />
+            <span className="text-[13px] font-black tracking-[0.35em] uppercase"
+              style={{ color: hex.gold.base, textShadow: `0 0 20px ${alpha(hex.gold.base, 0.55)}` }}>
+              MUNDIAL 2026
+            </span>
+            <motion.div initial={{ scaleX: 0, opacity: 0 }} animate={{ scaleX: 1, opacity: 1 }} transition={{ delay: 0.5, duration: 0.6 }}
+              style={{ width: 36, height: 1.5, background: `linear-gradient(90deg, ${alpha(hex.gold.base, 0.65)}, transparent)`, borderRadius: 1 }} />
           </div>
         </motion.div>
 
