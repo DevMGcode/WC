@@ -129,13 +129,6 @@ export default function LoginCard({ onShowForgot }: LoginCardProps) {
 
             {/* Card header — vertical centrado en mobile, horizontal desde sm: */}
             <div className="flex flex-col sm:flex-row items-center sm:items-center gap-3 sm:gap-4 mb-7 sm:mb-9 text-center sm:text-left relative">
-              {/* BETA en esquina superior derecha en mobile */}
-              <motion.div className="absolute top-0 right-0 sm:static sm:order-3 px-3 py-1.5 rounded-full text-[9px] font-black tracking-widest uppercase shrink-0"
-                style={{ background: alphaOf('green', 0.08), border: `1px solid ${alphaOf('green', 0.28)}`, color: hex.green.soft }}
-                animate={{ boxShadow: [`0 0 8px ${alphaOf('green', 0.08)}`, `0 0 18px ${alphaOf('green', 0.22)}`, `0 0 8px ${alphaOf('green', 0.08)}`] }}
-                transition={{ duration: 2.5, repeat: Infinity, ease: 'easeInOut' }}>
-                BETA
-              </motion.div>
               <motion.div
                 className="relative w-28 h-28 sm:w-20 sm:h-20 rounded-2xl overflow-hidden flex items-center justify-center shrink-0 sm:order-1"
                 style={{ background: `linear-gradient(135deg, ${alphaOf('green', 0.12)}, ${alpha(hex.green.hover, 0.07)})`, border: `1px solid ${alphaOf('green', 0.28)}`, boxShadow: `0 0 24px ${alphaOf('green', 0.08)}` }}
@@ -278,22 +271,51 @@ export default function LoginCard({ onShowForgot }: LoginCardProps) {
             </form>
 
             {/* Footer links */}
-            <div className="mt-7 flex items-center justify-between">
+            <div className="mt-6">
               <button type="button" onClick={onShowForgot}
                 className="text-xs transition-colors duration-200 text-orionix-text-muted hover:text-white/70">
                 {t('auth.forgotPassword')}
               </button>
-              <button onClick={() => router.push('/register')}
-                className="text-xs font-semibold transition-colors duration-200 flex items-center gap-1"
-                style={{ color: alphaOf('green', 0.85) }}>
-                {t('auth.createAccount')}
-                <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-                  <path d="M5 12h14M12 5l7 7-7 7" />
-                </svg>
-              </button>
             </div>
 
-            <div className="mt-7 pt-5 border-t text-center" style={{ borderColor: alpha(hex.neutral.white, 0.04) }}>
+            {/* Register CTA */}
+            <div className="mt-5 space-y-3">
+              <div className="relative flex items-center gap-3">
+                <div className="flex-1 h-px" style={{ background: `linear-gradient(90deg, transparent, ${alpha(hex.neutral.white, 0.07)})` }} />
+                <span className="text-[10px] font-semibold tracking-widest uppercase shrink-0"
+                  style={{ color: alpha(hex.accent.slate, 0.40) }}>
+                  ¿Primera vez aquí?
+                </span>
+                <div className="flex-1 h-px" style={{ background: `linear-gradient(90deg, ${alpha(hex.neutral.white, 0.07)}, transparent)` }} />
+              </div>
+
+              <motion.button
+                onClick={() => router.push('/register')}
+                whileHover={{ scale: 1.02, boxShadow: `0 8px 28px ${alpha(hex.gold.base, 0.30)}` }}
+                whileTap={{ scale: 0.97 }}
+                className="w-full py-3.5 rounded-xl font-black text-sm tracking-[0.10em] uppercase flex items-center justify-center gap-2.5 transition-all duration-300"
+                style={{
+                  background: `linear-gradient(135deg, ${alpha(hex.gold.base, 0.12)}, ${alpha(hex.gold.bright, 0.08)})`,
+                  border: `1px solid ${alpha(hex.gold.base, 0.38)}`,
+                  color: hex.gold.bright,
+                  boxShadow: `0 0 20px ${alpha(hex.gold.base, 0.08)}`,
+                }}>
+                Crear cuenta
+                <span className="px-2 py-0.5 rounded-full text-[9px] font-black tracking-widest"
+                  style={{ background: alpha(hex.gold.base, 0.20), border: `1px solid ${alpha(hex.gold.base, 0.35)}` }}>
+                  GRATIS
+                </span>
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M5 12h14M12 5l7 7-7 7" />
+                </svg>
+              </motion.button>
+
+              <p className="text-center text-[10px]" style={{ color: alpha(hex.accent.slate, 0.38) }}>
+                Sin tarjeta de crédito &nbsp;·&nbsp; Empieza en 30 segundos
+              </p>
+            </div>
+
+            <div className="mt-5 pt-5 border-t text-center" style={{ borderColor: alpha(hex.neutral.white, 0.04) }}>
               <p className="text-[10px] tracking-widest uppercase text-orionix-text-muted">
                 {t('auth.copyright')}
               </p>

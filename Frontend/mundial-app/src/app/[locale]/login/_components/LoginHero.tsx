@@ -237,6 +237,33 @@ export default function LoginHero({ countdown, predCount, started }: LoginHeroPr
           className="flex flex-wrap justify-center gap-3">
           {FEATURES.map((chip, i) => <FeatureChipItem key={chip.label} chip={chip} index={i} sm={false} />)}
         </motion.div>
+
+        {/* CTA registro gratuito */}
+        <motion.div
+          initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 1.2, duration: 0.7 }}
+          className="flex flex-col items-center gap-2">
+          <motion.div
+            className="flex items-center gap-2.5 px-5 py-2.5 rounded-full"
+            style={{ background: alpha(hex.gold.base, 0.07), border: `1px solid ${alpha(hex.gold.base, 0.25)}` }}
+            animate={{ boxShadow: [`0 0 10px ${alpha(hex.gold.base, 0.08)}`, `0 0 22px ${alpha(hex.gold.base, 0.20)}`, `0 0 10px ${alpha(hex.gold.base, 0.08)}`] }}
+            transition={{ duration: 3, repeat: Infinity, ease: 'easeInOut' }}>
+            <motion.div className="w-1.5 h-1.5 rounded-full shrink-0"
+              style={{ background: hex.gold.bright }}
+              animate={{ opacity: [1, 0.3, 1] }} transition={{ duration: 1.2, repeat: Infinity }} />
+            <span className="text-[11px] font-black tracking-[0.22em] uppercase"
+              style={{ color: hex.gold.base }}>
+              Registro gratuito
+            </span>
+            <span className="text-[10px]" style={{ color: alpha(hex.accent.slateLight, 0.40) }}>·</span>
+            <span className="text-[11px] font-semibold" style={{ color: alpha(hex.accent.slateLight, 0.55) }}>
+              Sin tarjeta de crédito
+            </span>
+          </motion.div>
+          <p className="text-[10px] text-center" style={{ color: alpha(hex.accent.slateLight, 0.35) }}>
+            Sigue el Mundial en vivo · Compite con amigos · Sube en el ranking
+          </p>
+        </motion.div>
       </motion.div>
     </>
   );
