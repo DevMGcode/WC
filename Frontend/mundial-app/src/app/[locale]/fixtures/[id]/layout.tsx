@@ -111,16 +111,46 @@ export default async function FixtureDetailLayout({ params, children }: Props) {
         ? 'https://schema.org/EventCancelled'
         : 'https://schema.org/EventScheduled';
 
+    const startDate = fixture.kickoffAt ? new Date(fixture.kickoffAt) : null;
+    const endDate   = startDate ? new Date(startDate.getTime() + 2 * 60 * 60 * 1000) : null;
+
+    // OG image URL para el campo image del schema
+    const og = new URL(`${APP_URL}/og`);
+    og.searchParams.set('locale', locale);
+    og.searchParams.set('home', homeName);
+    og.searchParams.set('away', awayName);
+    if (fixture.homeTeam?.fifaCode) og.searchParams.set('hc', fixture.homeTeam.fifaCode);
+    if (fixture.awayTeam?.fifaCode) og.searchParams.set('ac', fixture.awayTeam.fifaCode);
+    if (fixture.homeTeam?.flagUrl)  og.searchParams.set('hf', fixture.homeTeam.flagUrl);
+    if (fixture.awayTeam?.flagUrl)  og.searchParams.set('af', fixture.awayTeam.flagUrl);
+    og.searchParams.set('st', fixture.status ?? 'SCHEDULED');
+    if (fixture.status === 'LIVE' || fixture.status === 'FINISHED') {
+      og.searchParams.set('hs', String(fixture.homeScore ?? 0));
+      og.searchParams.set('as', String(fixture.awayScore ?? 0));
+    }
+
     jsonLd = {
       '@context': 'https://schema.org',
       '@type': 'SportsEvent',
       name: `${homeName} vs ${awayName} — FIFA World Cup 2026`,
       description: `Partido de la Copa Mundial FIFA 2026. ${homeName} vs ${awayName}.`,
       url: canonical,
-      startDate: fixture.kickoffAt
-        ? new Date(fixture.kickoffAt).toISOString()
-        : undefined,
+      startDate: startDate?.toISOString(),
+      endDate:   endDate?.toISOString(),
       eventStatus,
+      image: og.toString(),
+      offers: {
+        '@type': 'Offer',
+        name: 'Predicción gratuita',
+        price: '0',
+        priceCurrency: 'COP',
+        url: canonical,
+        availability: 'https://schema.org/InStock',
+      },
+      performer: [
+        { '@type': 'SportsTeam', name: homeName, sport: 'Soccer' },
+        { '@type': 'SportsTeam', name: awayName, sport: 'Soccer' },
+      ],
       organizer: {
         '@type': 'Organization',
         name: 'FIFA',
@@ -153,7 +183,6 @@ export default async function FixtureDetailLayout({ params, children }: Props) {
         name: awayName,
         sport: 'Soccer',
       },
-      // Scores — non-standard but recognized by Google for rich snippets
       ...(fixture.status === 'FINISHED' || fixture.status === 'LIVE'
         ? {
             homeTeamScore: {
