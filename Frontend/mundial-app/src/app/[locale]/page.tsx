@@ -42,7 +42,7 @@ import { TabSkeleton } from '@/components/PageSkeleton';
 
 import { KPIChip } from './home/_components/HomeUtils';
 import PremiumOnboardingModal from '@/components/premium/PremiumOnboardingModal';
-import { AdSlot } from '@/components/ads';
+import { AdSlot, PromoCarousel } from '@/components/ads';
 import { achievementsService } from '@/services/achievements';
 
 // Lazy load de secciones pesadas — se descargan en paralelo pero no bloquean el render inicial
@@ -333,8 +333,11 @@ export default function HomePage() {
         {/* ── ROW 2 — COUNTDOWN / MUNDIAL EN CURSO ── */}
         <HomeCountdown countdown={countdown} mundialStarted={mundialStarted} t={t} />
 
-        {/* ── PUBLICIDAD (solo Free) — entre countdown y contenido principal ── */}
-        <AdSlot />
+        {/* ── PROMO + PUBLICIDAD simétrico (solo Free) ── */}
+        <div className="my-5 grid grid-cols-1 sm:grid-cols-2 gap-4">
+          <PromoCarousel className="" />
+          <AdSlot className="my-0" />
+        </div>
 
         {/* ── ROW 3 — BENTO GRID ── */}
         <div className="grid grid-cols-1 lg:grid-cols-[1fr_316px] gap-5">
