@@ -1,6 +1,6 @@
 import { ImageResponse } from 'next/og';
-
-export const runtime = 'edge';
+import { readFileSync } from 'fs';
+import { join } from 'path';
 
 type Locale = 'es' | 'en' | 'fr' | 'de' | 'pt' | 'ru' | 'ar';
 
@@ -52,6 +52,15 @@ const C = {
   red:         '#EF5350',
   redGlow:     'rgba(239,83,80,0.35)',
 };
+
+function loadLocalImage(filename: string): string {
+  try {
+    const buf = readFileSync(join(process.cwd(), 'public', filename));
+    return `data:image/png;base64,${buf.toString('base64')}`;
+  } catch {
+    return '';
+  }
+}
 
 async function loadImage(url: string): Promise<string> {
   try {
@@ -123,7 +132,7 @@ export async function GET(request: Request) {
   const raw = searchParams.get('locale') ?? 'es';
   const locale: Locale = VALID.includes(raw as Locale) ? (raw as Locale) : 'es';
 
-  const logoSrc = await loadImage(`${origin}/logotipo_Orionix_Gol_transparente.png`);
+  const logoSrc = loadLocalImage('logotipo_Orionix_Gol_transparente.png');
 
   // ══════════════════════════════════════════════════
   // MODO PARTIDO
