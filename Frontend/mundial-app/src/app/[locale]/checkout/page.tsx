@@ -13,13 +13,13 @@ import { alpha, alphaOf }             from '@/lib/design/effects';
 import type { ProductDetails }        from '@/lib/payments/types';
 
 // Valores por defecto del Pase Mundial 2026 (un solo plan, pago único)
-// Precio: $9.99 USD ≈ $36.000 COP (cobramos en USD, mostramos COP en la UI para el usuario colombiano)
+// Precio: $5.80 USD ≈ $20.000 COP (cobramos en USD, mostramos COP en la UI para el usuario colombiano)
 const MUNDIAL_PASS: ProductDetails = {
   id:             'mundial-pass-2026',
   name:           'Pase Mundial 2026',
   description:    'Acceso premium hasta el 19 de julio de 2026',
   quantity:       1,
-  unitPrice:      9.99,
+  unitPrice:      5.80,
   fiatCurrency:   'USD',
   cryptoCurrency: 'USDT',
   type:           'DIGITAL', // bien digital — el Pase Mundial solo se vende desde web/PWA (App Store y Play Store exigen IAP para digitales)

@@ -149,7 +149,7 @@ export function PremiumGate({
               border: `1px solid ${alpha(hex.neutral.white, 0.10)}`,
             }}
           >
-            Comprar ahora — $36.000 COP
+            Comprar ahora — $20.000 COP
           </Link>
         </div>
       )}

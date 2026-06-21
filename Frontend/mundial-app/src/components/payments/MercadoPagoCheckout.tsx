@@ -245,7 +245,7 @@ function OrderSummary({ productDetails, amount }: { productDetails: ProductDetai
         >
           <span className="text-white">Total</span>
           <div className="flex flex-col items-end">
-            <span style={{ color: hex.gold.base }}>$36.000 COP</span>
+            <span style={{ color: hex.gold.base }}>$20.000 COP</span>
             <span className="text-[10px] font-medium mt-0.5" style={{ color: hex.text.muted }}>
               ≈ {amount.toFixed(2)} {productDetails.fiatCurrency}
             </span>

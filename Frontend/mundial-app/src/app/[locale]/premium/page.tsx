@@ -124,14 +124,14 @@ export default function PremiumPage() {
           <div className="inline-flex flex-col items-center gap-1 mb-6">
             <div className="flex items-baseline gap-2">
               <span className="text-4xl sm:text-5xl font-black" style={{ color: hex.gold.base }}>
-                $36.000
+                $20.000
               </span>
               <span className="text-base font-bold" style={{ color: hex.text.secondary }}>
                 COP
               </span>
             </div>
             <span className="text-[11px]" style={{ color: hex.text.muted }}>
-              ≈ 9.99 USD · pago único · hasta fin del Mundial
+              ≈ 5.80 USD · pago único · hasta fin del Mundial
             </span>
           </div>
 
@@ -261,7 +261,7 @@ export default function PremiumPage() {
               }}
             >
               <FiZap size={18} />
-              {isAuthenticated ? 'Hacerme Premium — $36.000 COP' : 'Inicia sesión para comprar'}
+              {isAuthenticated ? 'Hacerme Premium — $20.000 COP' : 'Inicia sesión para comprar'}
             </button>
             <p className="mt-3 text-[11px]" style={{ color: hex.text.muted }}>
               Pago seguro procesado por Mercado Pago · Nequi, PSE, Tarjeta, Efectivo

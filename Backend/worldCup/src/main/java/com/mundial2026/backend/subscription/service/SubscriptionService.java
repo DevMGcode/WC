@@ -47,7 +47,7 @@ public class SubscriptionService {
      * manipularlo (p.ej. ?amount=1) para pagar menos y obtener Premium.
      * Este es el único valor que se cobra y contra el que se concilia el webhook.
      */
-    public static final BigDecimal MUNDIAL_PASS_PRICE = new BigDecimal("9.99");
+    public static final BigDecimal MUNDIAL_PASS_PRICE = new BigDecimal("5.80");
     public static final String     MUNDIAL_PASS_CURRENCY = "USD";
 
     /** Fecha de expiración del Pase Mundial (fin del torneo + buffer). */

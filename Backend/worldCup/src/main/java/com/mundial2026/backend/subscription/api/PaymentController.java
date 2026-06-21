@@ -74,7 +74,7 @@ public class PaymentController {
     ) {
         AppUser user = securityUtils.currentUser();
 
-        // SEGURIDAD: el precio NO se toma del cliente. Partimos de 9.99 USD
+        // SEGURIDAD: el precio NO se toma del cliente. Partimos de 5.80 USD
         // y lo convertimos a COP en tiempo real para que MP y la BD coincidan.
         final BigDecimal usdPrice = SubscriptionService.MUNDIAL_PASS_PRICE;
         final BigDecimal copPrice = currencyConversionService.usdToCop(usdPrice);
