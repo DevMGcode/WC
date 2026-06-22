@@ -8,6 +8,7 @@ import Link from 'next/link';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useRouter } from 'next/navigation';
 import { useTranslations, useLocale } from 'next-intl';
+import ShareButton from '@/components/ShareButton';
 import { getFixtureById } from '@/services/publicTournament';
 import { predictionService } from '@/services/predictions';
 import { useAuth } from '@/contexts/AuthContext';
@@ -490,7 +491,7 @@ export default function FixtureDetailPage({ params }: { params: { id: string } }
                   {/* Saved prediction display */}
                   {prediction && !editing ? (
                     <motion.div key="saved" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
-                      className="flex items-center justify-center gap-8 py-2">
+                      className="relative flex items-center justify-center gap-8 py-2">
                       <div className="text-center">
                         <div className="flex items-center gap-2 justify-center mb-2">
                           {fixture.homeTeam?.flagUrl && (
@@ -518,11 +519,22 @@ export default function FixtureDetailPage({ params }: { params: { id: string } }
                           {prediction.predictedAwayScore}
                         </p>
                       </div>
+
+                      <div className="absolute right-0 top-1/2 -translate-y-1/2">
+                        <ShareButton
+                          variant="icon"
+                          size="sm"
+                          title="⚽ Orionix Gol — Mundial 2026"
+                          text={`⚽ Predije ${prediction.predictedHomeScore}-${prediction.predictedAwayScore} en ${fixture.homeTeam?.name ?? '?'} vs ${fixture.awayTeam?.name ?? '?'}\n🔮 ¿Acertaré? Juega conmigo en Orionix Gol 👇`}
+                          url={`/${locale}/fixtures/${fixture.id}`}
+                          label="Compartir porra"
+                        />
+                      </div>
                     </motion.div>
                   ) : (
                     /* Score input form */
                     <motion.div key="form" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}>
-                      <div className="flex items-center justify-center gap-6 mb-5">
+                      <div className="relative flex items-center justify-center gap-6 mb-5">
                         {/* Home score */}
                         <div className="text-center">
                           <div className="flex items-center gap-1.5 justify-center mb-2">
@@ -567,6 +579,17 @@ export default function FixtureDetailPage({ params }: { params: { id: string } }
                               className="w-9 h-9 rounded-xl font-black text-lg text-white"
                               style={{ background: alphaOf('green', 0.15), border: borders.brand('green', 0.30) }}>+</motion.button>
                           </div>
+                        </div>
+
+                        <div className="absolute right-0 top-1/2 -translate-y-1/2">
+                          <ShareButton
+                            variant="icon"
+                            size="sm"
+                            title="⚽ Orionix Gol — Mundial 2026"
+                            text={`⚽ Mi porra: ${predHome}-${predAway} en ${fixture.homeTeam?.name ?? '?'} vs ${fixture.awayTeam?.name ?? '?'}\n🔮 ¿Acertaré? Juega conmigo en Orionix Gol 👇`}
+                            url={`/${locale}/fixtures/${fixture.id}`}
+                            label="Compartir porra"
+                          />
                         </div>
                       </div>
 
