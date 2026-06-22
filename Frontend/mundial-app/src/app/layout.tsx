@@ -63,7 +63,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
           rel="stylesheet"
         />
       </head>
-      <body className="tech-app-bg text-football-dark overflow-x-hidden" suppressHydrationWarning>
+      <body className="tech-app-bg text-football-dark overflow-x-clip" suppressHydrationWarning>
         <ServiceWorkerRegistration />
         {children}
       </body>
