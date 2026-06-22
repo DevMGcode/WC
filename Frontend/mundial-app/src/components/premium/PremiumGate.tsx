@@ -12,14 +12,15 @@
  *   </PremiumGate>
  */
 
-import { ReactNode } from 'react';
+import { ReactNode, useState } from 'react';
 import Link from 'next/link';
 import { motion } from 'framer-motion';
-import { FiLock, FiZap } from 'react-icons/fi';
+import { FiLock, FiZap, FiPlay } from 'react-icons/fi';
 import { useLocale } from 'next-intl';
 import { hex } from '@/lib/design/tokens';
 import { alpha } from '@/lib/design/effects';
 import { usePremium } from '@/hooks/usePremium';
+import PremiumVideoModal from './PremiumVideoModal';
 
 interface PremiumGateProps {
   /** Contenido protegido — solo se muestra a usuarios Premium */
@@ -40,6 +41,7 @@ export function PremiumGate({
 }: PremiumGateProps) {
   const { isPremium, isLoading, isAuthenticated } = usePremium();
   const locale = useLocale();
+  const [videoOpen, setVideoOpen] = useState(false);
 
   // Mientras carga, evitamos flash de paywall
   if (isLoading && hideWhileLoading) {
@@ -65,6 +67,7 @@ export function PremiumGate({
 
   // Free → paywall
   return (
+    <>
     <motion.div
       initial={{ opacity: 0, y: 12 }}
       animate={{ opacity: 1, y: 0 }}
@@ -115,6 +118,20 @@ export function PremiumGate({
           `Esta funcionalidad es exclusiva del Pase Mundial 2026. Hazte Premium para acceder a ${feature} y mucho más.`}
       </p>
 
+      {/* Trigger del video comercial — abre el modal, no es intrusivo (lo pulsa el usuario) */}
+      <button
+        onClick={() => setVideoOpen(true)}
+        className="mb-5 inline-flex items-center gap-2 rounded-2xl px-5 py-2.5 font-bold tracking-wide transition-all active:scale-[0.98] hover:bg-white/5"
+        style={{
+          color: hex.gold.base,
+          border: `1px solid ${alpha(hex.gold.base, 0.45)}`,
+          background: alpha(hex.gold.base, 0.06),
+        }}
+      >
+        <FiPlay size={15} style={{ fill: hex.gold.base }} />
+        Mira en 30 seg lo que te llevas
+      </button>
+
       {!isAuthenticated ? (
         <Link
           href={`/${locale}/login`}
@@ -154,5 +171,8 @@ export function PremiumGate({
         </div>
       )}
     </motion.div>
+
+    <PremiumVideoModal open={videoOpen} onClose={() => setVideoOpen(false)} locale={locale} />
+    </>
   );
 }

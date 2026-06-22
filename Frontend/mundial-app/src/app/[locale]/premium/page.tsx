@@ -10,14 +10,16 @@
  *   - Mensaje "Ya eres Premium" si ya pagó
  */
 
+import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { motion } from 'framer-motion';
-import { FiCheck, FiX, FiZap, FiAward, FiTrendingUp } from 'react-icons/fi';
+import { FiCheck, FiX, FiZap, FiAward, FiTrendingUp, FiPlay } from 'react-icons/fi';
 import { useLocale } from 'next-intl';
 import { Header } from '@/components/Navigation';
 import { hex } from '@/lib/design/tokens';
 import { alpha, alphaOf } from '@/lib/design/effects';
 import { usePremium } from '@/hooks/usePremium';
+import PremiumVideoModal from '@/components/premium/PremiumVideoModal';
 
 interface FeatureRow {
   feature: string;
@@ -46,6 +48,7 @@ export default function PremiumPage() {
   const { isPremium, isAuthenticated, isLoading } = usePremium();
   const router = useRouter();
   const locale = useLocale();
+  const [videoOpen, setVideoOpen] = useState(false);
 
   const handleCTA = () => {
     if (!isAuthenticated) {
@@ -162,6 +165,24 @@ export default function PremiumPage() {
               {isAuthenticated ? 'Hacerme Premium ahora' : 'Inicia sesión para comprar'}
             </button>
           )}
+
+          {/* Trigger del video comercial — solo Free, opcional (lo abre el usuario) */}
+          {!isLoading && !isPremium && (
+            <div className="mt-4">
+              <button
+                onClick={() => setVideoOpen(true)}
+                className="inline-flex items-center gap-2 rounded-2xl px-5 py-2.5 font-bold tracking-wide transition-all active:scale-[0.98] hover:bg-white/5"
+                style={{
+                  color: hex.gold.base,
+                  border: `1px solid ${alpha(hex.gold.base, 0.45)}`,
+                  background: alpha(hex.gold.base, 0.06),
+                }}
+              >
+                <FiPlay size={15} style={{ fill: hex.gold.base }} />
+                Mira en 30 seg lo que te llevas
+              </button>
+            </div>
+          )}
         </motion.div>
 
         {/* ── Tabla comparativa ──────────────────────────────────────────── */}
@@ -269,6 +290,8 @@ export default function PremiumPage() {
           </motion.div>
         )}
       </div>
+
+      <PremiumVideoModal open={videoOpen} onClose={() => setVideoOpen(false)} locale={locale} />
     </div>
   );
 }
