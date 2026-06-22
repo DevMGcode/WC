@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useRef, useEffect } from 'react';
 import Image from 'next/image';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { useTranslations, useLocale } from 'next-intl';
@@ -284,6 +284,20 @@ export default function PredictionsPage() {
   const [activeTab,       setActiveTab]       = useState<'MY_PREDICTIONS' | 'RANKING' | 'LEAGUES'>(initialTab);
   const [showLeagueModal, setShowLeagueModal] = useState(false);
 
+  // Header sticky: medimos su altura para pegar la barra de pestañas justo
+  // debajo (la barra ya era sticky, pero a top-0 se solapaba con el header).
+  const headerRef = useRef<HTMLDivElement>(null);
+  const [headerH, setHeaderH] = useState(0);
+  useEffect(() => {
+    const el = headerRef.current;
+    if (!el) return;
+    const measure = () => setHeaderH(el.offsetHeight);
+    measure();
+    const ro = new ResizeObserver(measure);
+    ro.observe(el);
+    return () => ro.disconnect();
+  }, []);
+
   const userId = user ? Number(user.id) : null;
   const { data: tournament }               = useCurrentTournament();
   const tournamentId                       = tournament?.id ?? null;
@@ -402,14 +416,15 @@ export default function PredictionsPage() {
           filter: 'blur(60px)', zIndex: 0 }}
         animate={{ scale: [1, 1.22, 1], opacity: [0.4, 0.75, 0.4] }} transition={{ duration: 15, repeat: Infinity, delay: 4 }} />
 
-      {/* Header */}
-      <div className="relative z-10">
+      {/* Header (sticky) */}
+      <div ref={headerRef} className="sticky top-0 z-40">
         <Header title="Orionix Gol" subtitle={t('predictions.subtitle')} centered />
       </div>
 
       {/* ── STICKY TAB BAR — más prominente y legible ── */}
-      <div data-tour="predictions-tabs" className="sticky top-0 z-40"
+      <div data-tour="predictions-tabs" className="sticky z-30"
         style={{
+          top: headerH,
           background: alpha(hex.bg.primary, 0.95),
           borderBottom: `1px solid ${alphaOf('green', 0.14)}`,
           backdropFilter: 'blur(24px)',

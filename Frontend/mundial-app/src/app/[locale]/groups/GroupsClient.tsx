@@ -12,7 +12,7 @@
  *   - BracketBg      → fondo decorativo del bracket en desktop
  */
 
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useRef, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useParams } from 'next/navigation';
 import { FiAward, FiBarChart2, FiUsers } from 'react-icons/fi';
@@ -108,6 +108,20 @@ export default function GroupsClient({ initialTournament, initialGroups, initial
   const { isPremium } = usePremium();
   const [activeRound,  setActiveRound]  = useState<KnockoutRound>('octavos');
 
+  // Header sticky: medimos su altura para pegar la barra de pestañas justo
+  // debajo (la barra ya era sticky, pero a top-0 se solapaba con el header).
+  const headerRef = useRef<HTMLDivElement>(null);
+  const [headerH, setHeaderH] = useState(0);
+  useEffect(() => {
+    const el = headerRef.current;
+    if (!el) return;
+    const measure = () => setHeaderH(el.offsetHeight);
+    measure();
+    const ro = new ResizeObserver(measure);
+    ro.observe(el);
+    return () => ro.disconnect();
+  }, []);
+
   const { data: tournament }                                       = useCurrentTournament(initialTournament);
   const { data: rawGroups   = [], isLoading: loadingGroups }       = useTournamentGroups(tournament?.id ?? null, initialGroups);
   const { data: fixtures    = [], isLoading: loadingFixtures }     = useTournamentFixtures(tournament?.id ?? null, initialFixtures);
@@ -169,7 +183,7 @@ export default function GroupsClient({ initialTournament, initialGroups, initial
         <rect width="100%" height="100%" fill="url(#g-grid)" mask="url(#g-mask)" />
       </svg>
 
-      <div className="relative z-10">
+      <div ref={headerRef} className="sticky top-0 z-40">
         <Header title="⚽ Orionix Gol" subtitle={t('groups.subtitle')} centered />
       </div>
 
@@ -179,8 +193,9 @@ export default function GroupsClient({ initialTournament, initialGroups, initial
       </div>
 
       {/* ── STICKY TAB BAR ── */}
-      <div data-tour="groups-tabs" className="sticky top-0 z-40"
-        style={{ background: alpha(hex.bg.primary, 0.92),
+      <div data-tour="groups-tabs" className="sticky z-30"
+        style={{ top: headerH,
+                 background: alpha(hex.bg.primary, 0.92),
                  borderBottom: `1px solid ${alphaOf('green', 0.10)}`,
                  backdropFilter: 'blur(20px)',
                  boxShadow: `0 4px 32px ${alpha(hex.neutral.black, 0.55)}` }}>
