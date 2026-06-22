@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import Image from 'next/image';
 import { motion, AnimatePresence } from 'framer-motion';
 import { FiAward, FiTarget, FiZap } from 'react-icons/fi';
@@ -19,10 +19,15 @@ interface PlayerStat {
   photoUrl:  string;
   teamName:  string;
   teamLogoUrl: string;
+  nationality?: string;
+  position?:  string;
+  age?:       number;
   goals:     number;
   assists:   number;
   appearances: number;
   minutesPlayed: number;
+  shotsTotal?:    number;
+  shotsOnTarget?: number;
   rating:    string;
 }
 
@@ -34,6 +39,27 @@ const MEDAL = [
   { bg: 'linear-gradient(135deg,#9CA3AF,#D1D5DB)',  shadow: 'rgba(156,163,175,0.45)', label: '2°' },
   { bg: 'linear-gradient(135deg,#92400E,#D97706)',  shadow: 'rgba(146,64,14,0.45)',  label: '3°' },
 ];
+
+/* Rating "8.3" → "8.3"; vacío / "0" / null → "—" */
+function fmtRating(r?: string): string {
+  const n = Number(r);
+  return Number.isFinite(n) && n > 0 ? n.toFixed(1) : '—';
+}
+
+/* Chip compacto de estadística secundaria (PJ, rating, min/gol).
+   `title` muestra un tooltip explicativo al pasar el mouse (cursor-help). */
+function MiniStat({ icon, value, accent, title }: { icon: string; value: React.ReactNode; accent?: boolean; title?: string }) {
+  return (
+    <div title={title}
+      className="flex items-center gap-1 px-1.5 py-0.5 rounded-md cursor-help"
+      style={{ background: alpha(hex.neutral.white, 0.04), border: `1px solid ${alpha(hex.neutral.white, 0.06)}` }}>
+      <span className="text-[8px] font-black tracking-wide uppercase"
+        style={{ color: accent ? hex.gold.base : alpha(hex.text.secondary, 0.5) }}>{icon}</span>
+      <span className="text-[10px] font-black tabular-nums"
+        style={{ color: accent ? hex.gold.bright : hex.text.primary }}>{value}</span>
+    </div>
+  );
+}
 
 /* ── Player avatar with fallback ── */
 function PlayerPhoto({ url, name }: { url: string; name: string }) {
@@ -52,72 +78,94 @@ function PlayerPhoto({ url, name }: { url: string; name: string }) {
   );
 }
 
-/* ── Top-3 podium card ── */
-function PodiumCard({ player, rank, stat }: { player: PlayerStat; rank: number; stat: number }) {
-  const medal = MEDAL[rank];
+/* ── Top-3 podium card — #1 destacado (featured) ── */
+function PodiumCard({ player, rank, stat, statLabel, featured }: {
+  player: PlayerStat; rank: number; stat: number; statLabel: string; featured: boolean;
+}) {
+  const medal  = MEDAL[rank];
+  const rating = fmtRating(player.rating);
+  // Minutos por gol/asistencia: solo tiene sentido si hay al menos 1.
+  const minPer = stat > 0 ? Math.round(player.minutesPlayed / stat) : null;
   return (
     <motion.div
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ delay: rank * 0.08, type: 'spring', stiffness: 260, damping: 24 }}
-      className="relative flex flex-col items-center rounded-2xl overflow-hidden p-4 pb-5"
+      className={`relative flex flex-col items-center rounded-2xl overflow-hidden ${featured ? 'p-4 pb-5' : 'p-3 pb-4'}`}
       style={{
         background: surfaces.card(),
-        border: `1px solid ${rank === 0 ? alpha(hex.gold.base, 0.45) : alpha(hex.neutral.white, 0.08)}`,
-        boxShadow: rank === 0 ? `0 0 32px ${alpha(hex.gold.base, 0.18)}, 0 8px 24px rgba(2,6,23,0.5)` : '0 4px 16px rgba(2,6,23,0.4)',
+        border: `1px solid ${featured ? alpha(hex.gold.base, 0.5) : alpha(hex.neutral.white, 0.08)}`,
+        boxShadow: featured
+          ? `0 0 40px ${alpha(hex.gold.base, 0.22)}, 0 10px 28px rgba(2,6,23,0.55)`
+          : '0 4px 16px rgba(2,6,23,0.4)',
       }}>
       {/* Top accent */}
       <div className="absolute inset-x-0 top-0 h-px"
-        style={{ background: `linear-gradient(90deg, transparent, ${rank === 0 ? hex.gold.base : hex.neutral.white}40, transparent)` }} />
+        style={{ background: `linear-gradient(90deg, transparent, ${featured ? hex.gold.base : hex.neutral.white}40, transparent)` }} />
+
+      {/* Corona del líder */}
+      {featured && <div className="absolute top-1.5 right-2 text-sm" aria-label="Líder">👑</div>}
 
       {/* Medal badge */}
-      <div className="w-8 h-8 rounded-full flex items-center justify-center text-[11px] font-black text-white mb-3 shrink-0"
+      <div className={`rounded-full flex items-center justify-center font-black text-white mb-2 shrink-0 ${featured ? 'w-9 h-9 text-[13px]' : 'w-7 h-7 text-[10px]'}`}
         style={{ background: medal.bg, boxShadow: `0 4px 14px ${medal.shadow}` }}>
         {medal.label}
       </div>
 
       {/* Avatar */}
-      <div className="relative w-16 h-16 rounded-full mb-3 shrink-0"
-        style={{ border: `2px solid ${rank === 0 ? alpha(hex.gold.base, 0.55) : alpha(hex.neutral.white, 0.12)}`, boxShadow: `0 0 18px ${medal.shadow}` }}>
+      <div className={`relative rounded-full mb-2 shrink-0 ${featured ? 'w-16 h-16 sm:w-20 sm:h-20' : 'w-12 h-12 sm:w-14 sm:h-14'}`}
+        style={{ border: `2px solid ${featured ? alpha(hex.gold.base, 0.6) : alpha(hex.neutral.white, 0.12)}`, boxShadow: `0 0 18px ${medal.shadow}` }}>
         <PlayerPhoto url={player.photoUrl} name={player.playerName} />
       </div>
 
       {/* Name */}
-      <p className="text-[11px] font-black text-center leading-snug mb-1 line-clamp-2"
+      <p className={`font-black text-center leading-snug mb-1 line-clamp-2 ${featured ? 'text-[12px]' : 'text-[10px]'}`}
         style={{ color: hex.text.primary, fontFamily: 'var(--font-display)', letterSpacing: '0.03em' }}>
         {player.playerName}
       </p>
 
       {/* Team */}
-      <div className="flex items-center gap-1 mb-3">
+      <div className="flex items-center gap-1 mb-2">
         {player.teamLogoUrl && (
-          <div className="relative w-4 h-4 shrink-0">
-            <Image src={player.teamLogoUrl} alt={player.teamName} fill sizes="16px" className="object-contain" />
+          <div className="relative w-3.5 h-3.5 shrink-0">
+            <Image src={player.teamLogoUrl} alt={player.teamName} fill sizes="14px" className="object-contain" />
           </div>
         )}
-        <span className="text-[9px] font-bold tracking-widest uppercase truncate max-w-[80px]"
+        <span className="text-[8px] font-bold tracking-widest uppercase truncate max-w-[80px]"
           style={{ color: alpha(hex.text.secondary, 0.5) }}>
           {player.teamName}
         </span>
       </div>
 
-      {/* Stat */}
+      {/* Stat principal */}
       <div className="flex items-baseline gap-1">
-        <span className="text-4xl font-black leading-none"
+        <span className={`font-black leading-none ${featured ? 'text-4xl sm:text-5xl' : 'text-2xl sm:text-3xl'}`}
           style={{ fontFamily: 'var(--font-display)', background: medal.bg, WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>
           {stat}
         </span>
-        <span className="text-[9px] font-black tracking-widest uppercase"
+        <span className="text-[8px] font-black tracking-widest uppercase"
           style={{ color: alpha(hex.text.secondary, 0.45) }}>
-          {stat === 1 ? 'gol' : 'goles'}
+          {statLabel}
         </span>
+      </div>
+
+      {/* Mini-stats reales (datos que ya llegan del backend) */}
+      <div className="flex items-center justify-center gap-1.5 mt-2.5 flex-wrap">
+        <MiniStat icon="PJ" value={player.appearances} title="Partidos jugados" />
+        {rating !== '—' && <MiniStat icon="★" value={rating} accent title="Valoración del jugador (0 a 10)" />}
+        {featured && minPer && <MiniStat icon="MIN" value={minPer} title={`Minutos por ${statLabel === 'goles' ? 'gol' : 'asistencia'}`} />}
       </div>
     </motion.div>
   );
 }
 
 /* ── Row for rank 4+ ── */
-function PlayerRow({ player, rank, stat, delay }: { player: PlayerStat; rank: number; stat: number; delay: number }) {
+function PlayerRow({ player, rank, stat, maxStat, delay }: {
+  player: PlayerStat; rank: number; stat: number; maxStat: number; delay: number;
+}) {
+  const rating = fmtRating(player.rating);
+  // % respecto al líder, para la barra de progreso (clamp a 100).
+  const pct = maxStat > 0 ? Math.min(100, Math.round((stat / maxStat) * 100)) : 0;
   return (
     <motion.div
       initial={{ opacity: 0, x: -14 }}
@@ -136,14 +184,25 @@ function PlayerRow({ player, rank, stat, delay }: { player: PlayerStat; rank: nu
         <PlayerPhoto url={player.photoUrl} name={player.playerName} />
       </div>
 
-      {/* Name + team */}
+      {/* Name + team + barra de progreso (vs. líder) */}
       <div className="flex-1 min-w-0">
         <p className="text-[12px] font-black leading-none truncate" style={{ color: hex.text.primary }}>{player.playerName}</p>
         <p className="text-[9px] font-bold tracking-widest uppercase mt-0.5 truncate" style={{ color: alpha(hex.text.secondary, 0.42) }}>{player.teamName}</p>
+        <div className="h-1 rounded-full mt-1.5 overflow-hidden" style={{ background: alpha(hex.neutral.white, 0.06) }}
+          title={`${stat} de ${maxStat} del líder`}>
+          <div className="h-full rounded-full" style={{ width: `${pct}%`, background: `linear-gradient(90deg, ${alphaOf('green', 0.5)}, ${hex.green.bright})` }} />
+        </div>
       </div>
 
+      {/* Rating — visible también en móvil (a petición) */}
+      {rating !== '—' && (
+        <div className="flex shrink-0">
+          <MiniStat icon="★" value={rating} title="Valoración del jugador (0 a 10)" />
+        </div>
+      )}
+
       {/* Stat */}
-      <span className="text-lg font-black shrink-0" style={{ color: hex.green.bright, fontFamily: 'var(--font-display)' }}>
+      <span className="text-lg font-black shrink-0 w-7 text-right" style={{ color: hex.green.bright, fontFamily: 'var(--font-display)' }}>
         {stat}
       </span>
     </motion.div>
@@ -174,6 +233,19 @@ export default function ScorersClient() {
   const [tab, setTab] = useState<Tab>('goals');
   const { isPremium } = usePremium();
 
+  // Header sticky: medimos su altura para pegar las pestañas justo debajo.
+  const headerRef = useRef<HTMLDivElement>(null);
+  const [headerH, setHeaderH] = useState(0);
+  useEffect(() => {
+    const el = headerRef.current;
+    if (!el) return;
+    const measure = () => setHeaderH(el.offsetHeight);
+    measure();
+    const ro = new ResizeObserver(measure);
+    ro.observe(el);
+    return () => ro.disconnect();
+  }, []);
+
   // Free → top 10, Premium → top 50. El backend igual fuerza el cap, pero pedimos
   // explícitamente el número correcto para no traer datos extras y agilizar el cache.
   const desiredLimit = isPremium ? 50 : 10;
@@ -191,8 +263,21 @@ export default function ScorersClient() {
   const error   = (errScorers || errAssists) ? t('common.connectionError') : '';
   const data    = tab === 'goals' ? scorers : assists;
   const statKey = tab === 'goals' ? 'goals' : 'assists';
-  const top3    = data.slice(0, 3);
-  const rest    = data.slice(3);
+  // Orden con desempate estilo Bota de Oro del Mundial (criterio FIFA):
+  // 1) goles/asist.  ·  2) la otra métrica  ·  3) menos minutos (más eficiente).
+  const ranked  = [...data].sort((a, b) => {
+    const pa = (a[statKey as keyof PlayerStat] as number) ?? 0;
+    const pb = (b[statKey as keyof PlayerStat] as number) ?? 0;
+    if (pb !== pa) return pb - pa;
+    const sa = statKey === 'goals' ? (a.assists ?? 0) : (a.goals ?? 0);
+    const sb = statKey === 'goals' ? (b.assists ?? 0) : (b.goals ?? 0);
+    if (sb !== sa) return sb - sa;
+    return (a.minutesPlayed ?? 0) - (b.minutesPlayed ?? 0);
+  });
+  const top3    = ranked.slice(0, 3);
+  const rest    = ranked.slice(3);
+  // Tope para las barras de progreso de las filas: stat del líder.
+  const maxStat = (ranked[0]?.[statKey as keyof PlayerStat] as number) ?? 1;
 
   const tabs: { key: Tab; label: string; icon: React.ReactNode; color: string }[] = [
     { key: 'goals',   label: t('scorers.tabs.goals'),   icon: <FiTarget size={13} />,  color: hex.green.bright },
@@ -211,7 +296,7 @@ export default function ScorersClient() {
         style={{ width: 500, height: 500, bottom: -80, left: -60, background: `radial-gradient(circle, ${alphaOf('green', 0.06)} 0%, transparent 70%)`, filter: 'blur(65px)', zIndex: 0 }}
         animate={{ scale: [1, 1.2, 1], opacity: [0.4, 0.7, 0.4] }} transition={{ duration: 13, repeat: Infinity, delay: 3 }} />
 
-      <div className="relative z-10">
+      <div ref={headerRef} className="sticky top-0 z-40">
         <Header title="⚽ Orionix Gol" subtitle={t('scorers.subtitle')} centered />
       </div>
 
@@ -234,9 +319,12 @@ export default function ScorersClient() {
           </div>
         </motion.div>
 
-        {/* ── Tabs ── */}
+        {/* ── Tabs (sticky, justo bajo el header) ── */}
+        <div className="sticky z-30 mb-6 py-1"
+          style={{ top: headerH, background: alpha(hex.bg.primary, 0.92),
+                   backdropFilter: 'blur(16px)', WebkitBackdropFilter: 'blur(16px)' }}>
         <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 }}
-          className="flex gap-2 p-1 rounded-2xl mb-6"
+          className="flex gap-2 p-1 rounded-2xl"
           style={{ background: alpha(hex.neutral.white, 0.03), border: `1px solid ${alpha(hex.neutral.white, 0.06)}` }}>
           {tabs.map(({ key, label, icon, color }) => {
             const active = tab === key;
@@ -255,6 +343,7 @@ export default function ScorersClient() {
             );
           })}
         </motion.div>
+        </div>
 
         {/* ── Banner de plan — solo visible para usuarios Free ── */}
         {!isPremium && (
@@ -310,13 +399,32 @@ export default function ScorersClient() {
           <AnimatePresence mode="wait">
             <motion.div key={tab} initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }} transition={{ duration: 0.25 }}>
 
-              {/* Top 3 podium */}
+              {/* Top 3 podium — #1 destacado al centro (orden visual 2-1-3) */}
               {top3.length > 0 && (
-                <div className="grid grid-cols-3 gap-3 mb-5">
-                  {top3.map((player, i) => (
-                    <PodiumCard key={player.playerId} player={player} rank={i} stat={player[statKey as keyof PlayerStat] as number} />
-                  ))}
+                <div className="grid grid-cols-3 gap-2.5 items-end mb-5">
+                  {[1, 0, 2].map((idx) => {
+                    const player = top3[idx];
+                    if (!player) return <div key={`empty-${idx}`} />;
+                    return (
+                      <PodiumCard key={player.playerId} player={player} rank={idx}
+                        stat={player[statKey as keyof PlayerStat] as number}
+                        statLabel={tab === 'goals' ? 'goles' : 'asist.'}
+                        featured={idx === 0} />
+                    );
+                  })}
                 </div>
+              )}
+
+              {/* Leyenda de abreviaturas — visible también en móvil (sin hover) */}
+              {top3.length > 0 && (
+                <p className="text-[9px] text-center tracking-wide mb-4 -mt-1"
+                  style={{ color: alpha(hex.text.secondary, 0.45) }}>
+                  <span className="font-black" style={{ color: alpha(hex.text.secondary, 0.65) }}>PJ</span> = partidos
+                  {'  ·  '}
+                  <span className="font-black" style={{ color: hex.gold.base }}>★</span> = valoración
+                  {'  ·  '}
+                  <span className="font-black" style={{ color: alpha(hex.text.secondary, 0.65) }}>MIN</span> = min/{tab === 'goals' ? 'gol' : 'asist.'}
+                </p>
               )}
 
               {/* Publicidad entre podio y resto del ranking */}
@@ -341,6 +449,7 @@ export default function ScorersClient() {
                     player={player}
                     rank={i + 4}
                     stat={player[statKey as keyof PlayerStat] as number}
+                    maxStat={maxStat}
                     delay={i * 0.04}
                   />
                 ))}
