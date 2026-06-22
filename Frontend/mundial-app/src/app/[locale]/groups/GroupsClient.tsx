@@ -12,11 +12,10 @@
  *   - BracketBg      → fondo decorativo del bracket en desktop
  */
 
-import React, { useState, useMemo, useEffect } from 'react';
+import React, { useState, useMemo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useParams } from 'next/navigation';
-import { FiAward, FiBarChart2, FiShield, FiUsers } from 'react-icons/fi';
-import Image from 'next/image';
+import { FiAward, FiBarChart2, FiUsers } from 'react-icons/fi';
 import { Header } from '@/components/Navigation';
 import { Bracket } from '@/components/BracketChampions';  // 🛡️ PROTECTED
 import { useCurrentTournament, useTournamentGroups, useTournamentFixtures } from '@/hooks/useTournamentData';
@@ -26,7 +25,6 @@ import { getTourSteps } from '@/components/Tour/tourSteps';
 
 import { hex, type BrandColor } from '@/lib/design/tokens';
 import { alpha, alphaOf, borders, gradients } from '@/lib/design/effects';
-import { apiFetch } from '@/lib/apiFetch';
 
 import { AdSlot } from '@/components/ads';
 import GroupCard, { EQBars } from './_components/GroupCard';
@@ -109,16 +107,6 @@ export default function GroupsClient({ initialTournament, initialGroups, initial
   const [activeTab,    setActiveTab]    = useState<'grupos' | 'eliminatorias' | 'equipos'>('grupos');
   const { isPremium } = usePremium();
   const [activeRound,  setActiveRound]  = useState<KnockoutRound>('octavos');
-  const [bestDefense,  setBestDefense]  = useState<any[]>([]);
-
-  useEffect(() => {
-    let active = true;
-    apiFetch('/api/v1/public/standings/best-defense')
-      .then(r => r.ok ? r.json() : null)
-      .then(d => { if (active && d?.data) setBestDefense(d.data); })
-      .catch(() => {});
-    return () => { active = false; };
-  }, []);
 
   const { data: tournament }                                       = useCurrentTournament(initialTournament);
   const { data: rawGroups   = [], isLoading: loadingGroups }       = useTournamentGroups(tournament?.id ?? null, initialGroups);
@@ -288,58 +276,6 @@ export default function GroupsClient({ initialTournament, initialGroups, initial
                   ))}
                 </motion.div>
 
-                {/* ── MEJOR DEFENSA ── se oculta si todos los equipos tienen 0 goles concedidos (API Football aún sin datos) */}
-                {bestDefense.length > 0 && bestDefense.some((r: any) => (r.goalsAgainst ?? 0) > 0) && (
-                  <motion.div className="mt-6 relative overflow-hidden rounded-2xl"
-                    initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.6 }}
-                    style={{ background: `linear-gradient(145deg, ${alpha(hex.bg.primary, 0.98)}, ${alpha(hex.bg.secondary, 0.96)})`,
-                      border: `1px solid ${alpha(hex.status.info, 0.12)}`,
-                      boxShadow: `0 12px 40px ${alpha(hex.neutral.black, 0.45)}` }}>
-                    <div className="absolute inset-x-0 top-0 h-px"
-                      style={{ background: `linear-gradient(90deg, transparent, ${alpha(hex.status.info, 0.55)}, transparent)` }} />
-                    <div className="p-4">
-                      <div className="flex items-center gap-2 mb-4">
-                        <div className="w-[3px] h-5 rounded-full"
-                          style={{ background: `linear-gradient(180deg, ${hex.status.info}, ${alpha(hex.status.info, 0.4)})` }} />
-                        <FiShield size={12} style={{ color: hex.status.info }} />
-                        <span className="text-[10px] font-black tracking-[0.24em] uppercase" style={{ color: alpha(hex.text.secondary, 0.6) }}>
-                          {t('groups.bestDefense')}
-                        </span>
-                      </div>
-                      <div className="space-y-2">
-                        {bestDefense.slice(0, 8).map((row: any, i: number) => (
-                          <motion.div key={`defense-${row.teamId ?? 'x'}-${i}`}
-                            initial={{ opacity: 0, x: -8 }} animate={{ opacity: 1, x: 0 }}
-                            transition={{ delay: 0.65 + i * 0.04 }}
-                            className="flex items-center gap-3 px-3 py-2 rounded-xl"
-                            style={{ background: i === 0
-                              ? `linear-gradient(90deg, ${alpha(hex.status.info, 0.08)}, transparent)`
-                              : alpha(hex.neutral.white, 0.02),
-                              border: `1px solid ${i === 0 ? alpha(hex.status.info, 0.18) : alpha(hex.neutral.white, 0.04)}` }}>
-                            <span className="text-[10px] font-black tabular-nums w-4 text-center shrink-0"
-                              style={{ color: i === 0 ? hex.status.info : alpha(hex.text.secondary, 0.4) }}>
-                              {i + 1}
-                            </span>
-                            {(row.teamFlagUrl || row.flagUrl) && (
-                              <div className="relative w-5 h-4 rounded-sm overflow-hidden shrink-0">
-                                <Image src={row.teamFlagUrl ?? row.flagUrl} alt={row.teamName ?? ''} fill sizes="20px" className="object-cover" />
-                              </div>
-                            )}
-                            <span className="flex-1 text-[11px] font-bold truncate" style={{ color: hex.text.primary }}>
-                              {localizeTeamName(row.teamName ?? row.name, locale)}
-                            </span>
-                            <div className="flex items-center gap-1 shrink-0">
-                              <span className="text-[10px] font-black tabular-nums" style={{ color: hex.status.info }}>
-                                {row.goalsAgainst ?? row.goalsConceeded ?? 0}
-                              </span>
-                              <span className="text-[8px]" style={{ color: alpha(hex.text.secondary, 0.35) }}>{t('groups.goalsConceded')}</span>
-                            </div>
-                          </motion.div>
-                        ))}
-                      </div>
-                    </div>
-                  </motion.div>
-                )}
               </motion.div>
             )}
 
