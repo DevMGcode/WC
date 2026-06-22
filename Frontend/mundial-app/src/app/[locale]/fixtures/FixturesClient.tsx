@@ -23,6 +23,14 @@ import { Surface, StatusDot } from '@/components/ui';
 
 import MatchCard, { getEffectiveStatus } from './_components/MatchCard';
 import FixturesFilterBar, { type FilterKey } from './_components/FixturesFilterBar';
+import { PromoCarousel } from '@/components/ads';
+
+const PROMO_IMAGES_B = [
+  '/Propa/P5.png',
+  '/Propa/P6.png',
+  '/Propa/P7.png',
+  '/Propa/P8.png',
+];
 
 /* ══════════════════════════════════════════
    EQ BARS — decorativo
@@ -248,6 +256,9 @@ export default function FixturesClient({ initialFixtures }: { initialFixtures?: 
 
         {/* ── FILTER BAR ── */}
         <FixturesFilterBar filter={filter} counts={counts} onFilter={setFilter} t={t} />
+
+        {/* ── CARRUSEL PROMO (solo Free) ── */}
+        <PromoCarousel images={PROMO_IMAGES_B} />
 
         {/* ── CONTENT ── */}
         {loading ? (

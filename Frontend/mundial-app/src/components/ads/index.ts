@@ -6,3 +6,4 @@ export { AdsterraGlobal } from './AdsterraGlobal';
 export { AdsterraAnchor } from './AdsterraAnchor';
 export { GoogleAdsense } from './GoogleAdsense';
 export { useShowAds } from './useShowAds';
+export { PromoCarousel } from './PromoCarousel';
