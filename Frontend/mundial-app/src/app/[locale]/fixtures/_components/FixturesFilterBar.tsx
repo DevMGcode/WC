@@ -13,10 +13,10 @@ import { Surface } from '@/components/ui';
 export type FilterKey = 'ALL' | 'LIVE' | 'SCHEDULED' | 'FINISHED';
 
 export const FILTERS: { key: FilterKey; labelKey: string; icon: React.ReactNode; color: BrandColor }[] = [
-  { key: 'ALL',       labelKey: 'fixtures.filters.all',      icon: <FiList size={12} />,     color: 'neutral' },
-  { key: 'LIVE',      labelKey: 'fixtures.filters.live',     icon: <FiActivity size={12} />, color: 'danger'  },
   { key: 'SCHEDULED', labelKey: 'fixtures.filters.pending',  icon: <FiClock size={12} />,    color: 'green'   },
+  { key: 'LIVE',      labelKey: 'fixtures.filters.live',     icon: <FiActivity size={12} />, color: 'danger'  },
   { key: 'FINISHED',  labelKey: 'fixtures.filters.finished', icon: <FiCheck size={12} />,    color: 'success' },
+  { key: 'ALL',       labelKey: 'fixtures.filters.all',      icon: <FiList size={12} />,     color: 'neutral' },
 ];
 
 /* ══════════════════════════════════════════

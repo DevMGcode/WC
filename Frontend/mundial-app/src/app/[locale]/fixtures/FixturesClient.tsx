@@ -4,7 +4,7 @@
  * Fixtures page — Calendario del Mundial 2026.
  */
 
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
   FiCalendar, FiClock, FiActivity, FiCheck, FiList,
@@ -23,6 +23,7 @@ import { Surface, StatusDot } from '@/components/ui';
 
 import MatchCard, { getEffectiveStatus } from './_components/MatchCard';
 import FixturesFilterBar, { type FilterKey } from './_components/FixturesFilterBar';
+import FixturesPagination from './_components/FixturesPagination';
 import { PromoCarousel } from '@/components/ads';
 
 const PROMO_IMAGES_B = [
@@ -31,6 +32,11 @@ const PROMO_IMAGES_B = [
   '/Propa/P7.png',
   '/Propa/P8.png',
 ];
+
+// Nº de días completos que se muestran por página en el calendario.
+// Paginar por días (no por partidos) evita partir un mismo día entre
+// dos páginas y mantiene los separadores de fecha íntegros.
+const DAYS_PER_PAGE = 2;
 
 /* ══════════════════════════════════════════
    EQ BARS — decorativo
@@ -145,7 +151,7 @@ const KPIChip = React.memo(function KPIChip({
 export default function FixturesClient({ initialFixtures }: { initialFixtures?: any[] }) {
   const t      = useTranslations();
   const locale = useLocale();
-  const [filter, setFilter] = useState<FilterKey>('ALL');
+  const [filter, setFilter] = useState<FilterKey>('SCHEDULED');
 
   const { data: allFixtures = [], isLoading: loading } = useAllFixtures(undefined, initialFixtures, LIVE_REFETCH_INTERVAL_MS);
 
@@ -180,6 +186,54 @@ export default function FixturesClient({ initialFixtures }: { initialFixtures?: 
     finished:  allFixtures.filter(f => getEffectiveStatus(f) === 'FINISHED').length,
   }), [allFixtures]);
 
+  // ── Paginación por días completos ──
+  // "En vivo" NO se pagina: debe mostrar todos los partidos en vivo del
+  // momento de una sola vez (para eso es esa pestaña). El resto sí pagina.
+  const isPaginated = filter !== 'LIVE';
+  const [page, setPage] = useState(1);
+  const listTopRef = useRef<HTMLDivElement>(null);
+  const headerRef = useRef<HTMLDivElement>(null);
+  const [headerH, setHeaderH] = useState(0);
+
+  const totalPages = isPaginated
+    ? Math.max(1, Math.ceil(grouped.length / DAYS_PER_PAGE))
+    : 1;
+  const pagedGroups = useMemo(
+    () => (isPaginated ? grouped.slice((page - 1) * DAYS_PER_PAGE, page * DAYS_PER_PAGE) : grouped),
+    [grouped, page, isPaginated],
+  );
+
+  // Volver a la página 1 al cambiar de pestaña (filtro).
+  useEffect(() => { setPage(1); }, [filter]);
+
+  // Si los datos en vivo reducen el nº de días por debajo de la página
+  // actual, recolocar el índice para no quedar en una página vacía.
+  useEffect(() => {
+    if (page > totalPages) setPage(totalPages);
+  }, [page, totalPages]);
+
+  // Medimos la altura real del header para pegar la barra de filtros justo
+  // debajo (cambia según el breakpoint, por eso no es un valor fijo).
+  useEffect(() => {
+    const el = headerRef.current;
+    if (!el) return;
+    const measure = () => setHeaderH(el.offsetHeight);
+    measure();
+    const ro = new ResizeObserver(measure);
+    ro.observe(el);
+    return () => ro.disconnect();
+  }, []);
+
+  // Al cambiar de página, llevar el scroll al inicio de la lista dejando
+  // hueco para el header + la barra de filtros, que quedan fijos arriba.
+  const handlePageChange = (p: number) => {
+    setPage(p);
+    const el = listTopRef.current;
+    if (!el) return;
+    const y = el.getBoundingClientRect().top + window.scrollY - headerH - 80;
+    window.scrollTo({ top: Math.max(0, y), behavior: 'smooth' });
+  };
+
   let globalIdx = 0;
 
   return (
@@ -198,7 +252,7 @@ export default function FixturesClient({ initialFixtures }: { initialFixtures?: 
                  background: `radial-gradient(circle, ${alphaOf('green', 0.07)} 0%, transparent 65%)`,
                  filter: 'blur(65px)', zIndex: 0 }} />
 
-      <div className="relative z-10">
+      <div ref={headerRef} className="sticky top-0 z-40">
         <Header title="⚽ Orionix Gol" subtitle={t('fixtures.subtitle')} centered />
       </div>
 
@@ -254,13 +308,16 @@ export default function FixturesClient({ initialFixtures }: { initialFixtures?: 
           </div>
         )}
 
-        {/* ── FILTER BAR ── */}
-        <FixturesFilterBar filter={filter} counts={counts} onFilter={setFilter} t={t} />
+        {/* ── FILTER BAR (sticky, justo bajo el header) ── */}
+        <div className="sticky z-30" style={{ top: headerH }}>
+          <FixturesFilterBar filter={filter} counts={counts} onFilter={setFilter} t={t} />
+        </div>
 
         {/* ── CARRUSEL PROMO (solo Free) ── */}
         <PromoCarousel images={PROMO_IMAGES_B} />
 
         {/* ── CONTENT ── */}
+        <div ref={listTopRef} className="scroll-mt-24" />
         {loading ? (
           <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
             {Array.from({ length: 6 }).map((_, i) => (
@@ -283,8 +340,9 @@ export default function FixturesClient({ initialFixtures }: { initialFixtures?: 
             ))}
           </div>
         ) : grouped.length > 0 ? (
+          <>
           <div className="space-y-8">
-            {grouped.map(({ key, label, items }, gi) => (
+            {pagedGroups.map(({ key, label, items }, gi) => (
               <React.Fragment key={key}>
               <motion.div
                 initial={{ opacity: 0, y: 10 }}
@@ -337,6 +395,15 @@ export default function FixturesClient({ initialFixtures }: { initialFixtures?: 
               </React.Fragment>
             ))}
           </div>
+
+          {totalPages > 1 && (
+            <FixturesPagination
+              page={page}
+              totalPages={totalPages}
+              onPageChange={handlePageChange}
+            />
+          )}
+          </>
         ) : (
           <motion.div initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5 }}
             className="flex flex-col items-center justify-center py-28 gap-6">
