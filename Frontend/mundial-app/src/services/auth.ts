@@ -70,6 +70,7 @@ export const authService = {
           localStorage.setItem('refreshToken', data.data.refreshToken);
         }
         localStorage.setItem('user', JSON.stringify(data.data.user));
+        document.cookie = 'auth_session=1; path=/; max-age=2592000; SameSite=Lax';
       }
 
       return data;
@@ -137,6 +138,7 @@ export const authService = {
     localStorage.removeItem('authToken');
     localStorage.removeItem('refreshToken');
     localStorage.removeItem('user');
+    document.cookie = 'auth_session=; path=/; max-age=0; SameSite=Lax';
   },
 
   async refreshAccessToken(): Promise<string | null> {

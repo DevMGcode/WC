@@ -290,7 +290,7 @@ export default function LoginCard({ onShowForgot }: LoginCardProps) {
               </div>
 
               <motion.button
-                onClick={() => router.push('/register')}
+                onClick={() => router.push(`/${locale}/register`)}
                 whileHover={{ scale: 1.02, boxShadow: `0 8px 28px ${alpha(hex.gold.base, 0.30)}` }}
                 whileTap={{ scale: 0.97 }}
                 className="w-full py-3.5 rounded-xl font-black text-sm tracking-[0.10em] uppercase flex items-center justify-center gap-2.5 transition-all duration-300"
