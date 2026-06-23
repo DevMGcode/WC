@@ -116,6 +116,24 @@ public class FixtureSyncService {
                         f.getId(), minutesElapsed);
                 continue;
             }
+            // Verificar el status real antes de marcar FINISHED — puede ser INT/SUSP (interrumpido)
+            if (f.getExternalProviderId() != null) {
+                Optional<ExternalMatch> current = apiFootballClient.fetchById(String.valueOf(f.getExternalProviderId()));
+                if (current.isPresent()) {
+                    MatchStatus realStatus = current.get().status();
+                    if (realStatus == MatchStatus.LIVE || realStatus == MatchStatus.HALFTIME
+                            || realStatus == MatchStatus.BREAK || realStatus == MatchStatus.PENALTY_SHOOTOUT) {
+                        log.info("[FixtureSync] Fixture {} sigue en curso según fetchById (status={}) — no se marca FINISHED",
+                                f.getId(), realStatus);
+                        continue;
+                    }
+                    if (realStatus != MatchStatus.FINISHED && realStatus != MatchStatus.UNKNOWN) {
+                        log.info("[FixtureSync] Fixture {} tiene status={} (interrumpido/postponed) — no se marca FINISHED",
+                                f.getId(), realStatus);
+                        continue;
+                    }
+                }
+            }
             log.info("[FixtureSync] Fixture {} (extId={}) desapareció de la lista live de API tras {}min — marcando FINISHED",
                     f.getId(), f.getExternalProviderId(), minutesElapsed);
             f.setStatus(FixtureStatus.FINISHED);
