@@ -22,19 +22,15 @@ export const STATUS_CFG: Record<string, { labelKey: string; color: BrandColor }>
 };
 
 /* ══════════════════════════════════════════
-   EFFECTIVE STATUS — override basado en tiempo
-   Si backend no actualizó aún:
-     kickoffAt + 120min < now → FINISHED
-     kickoffAt <= now < +120min → LIVE
+   EFFECTIVE STATUS — el backend es la fuente de verdad.
+   Solo se infiere LIVE/FINISHED para partidos SCHEDULED
+   que el backend todavía no actualizó.
 ══════════════════════════════════════════ */
 export function getEffectiveStatus(fixture: { status: string; kickoffAt: string | Date }): string {
   if (fixture.status === 'FINISHED') return 'FINISHED';
   const kickoff = new Date(fixture.kickoffAt).getTime();
   const now     = Date.now();
-  // Si el backend dice LIVE pero ya pasaron más de 150 min desde el kickoff
-  // (90' regulares + 30' tiempo extra + buffer), forzamos FINISHED como red de seguridad.
   if (fixture.status === 'LIVE') {
-    if (now >= kickoff + 150 * 60 * 1000) return 'FINISHED';
     return 'LIVE';
   }
   if (fixture.status === 'SCHEDULED') {
