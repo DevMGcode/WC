@@ -12,7 +12,7 @@
  *   QuickAccessBento → ROW 4            (quick-access grid)
  */
 
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect, useMemo, useRef } from 'react';
 import { motion } from 'framer-motion';
 import { useRouter } from 'next/navigation';
 import dynamic from 'next/dynamic';
@@ -64,6 +64,20 @@ export default function HomePage() {
 
   const [countdown, setCountdown]           = useState({ days: 0, hours: 0, minutes: 0, seconds: 0 });
   const [mundialStarted, setMundialStarted] = useState(false);
+
+  // Header + barra de bienvenida "sticky": medimos la altura del header para
+  // pegar la barra justo debajo (mismo patrón que en el calendario).
+  const headerRef = useRef<HTMLDivElement>(null);
+  const [headerH, setHeaderH] = useState(0);
+  useEffect(() => {
+    const el = headerRef.current;
+    if (!el) return;
+    const measure = () => setHeaderH(el.offsetHeight);
+    measure();
+    const ro = new ResizeObserver(measure);
+    ro.observe(el);
+    return () => ro.disconnect();
+  }, []);
 
   useEffect(() => {
     if (!authLoading && !isAuthenticated) router.push('/login');
@@ -193,8 +207,8 @@ export default function HomePage() {
         <rect width="100%" height="100%" fill="url(#pgrid)" mask="url(#pmask)" />
       </svg>
 
-      {/* ═══ HEADER ═══ */}
-      <div className="relative" style={{ zIndex: 10 }}>
+      {/* ═══ HEADER (sticky) ═══ */}
+      <div ref={headerRef} className="sticky top-0" style={{ zIndex: 40 }}>
         <Header
           title="⚽ Orionix Gol"
           subtitle="Dashboard"
@@ -239,12 +253,22 @@ export default function HomePage() {
           </div>
         )}
 
-        {/* ── TOURNAMENT MASTHEAD ── */}
+        {/* ── TOURNAMENT MASTHEAD (sticky, justo bajo el header) ── */}
+        <div
+          className="sticky z-30 mb-5 rounded-2xl px-4 py-3"
+          style={{
+            top: headerH,
+            background: alpha(hex.bg.primary, 0.85),
+            backdropFilter: 'blur(16px)',
+            WebkitBackdropFilter: 'blur(16px)',
+            border: `1px solid ${alpha(hex.neutral.white, 0.06)}`,
+          }}
+        >
         <motion.div
           initial={{ opacity: 0, y: -8 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.45, ease: [0.22, 1, 0.36, 1] }}
-          className="flex items-center justify-between mb-5"
+          className="flex items-center justify-between"
         >
           <div>
             {/* Título principal: text-2xl / text-3xl para máxima legibilidad */}
@@ -321,6 +345,7 @@ export default function HomePage() {
             </div>
           </div>
         </motion.div>
+        </div>
 
         {/* ── ROW 1 — KPI CHIPS ── */}
         <div data-tour="stats" className="grid grid-cols-2 sm:grid-cols-4 gap-4 mb-5">

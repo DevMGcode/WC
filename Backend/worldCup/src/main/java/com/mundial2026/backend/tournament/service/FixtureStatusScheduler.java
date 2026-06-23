@@ -3,6 +3,9 @@ package com.mundial2026.backend.tournament.service;
 import com.mundial2026.backend.tournament.domain.Fixture;
 import com.mundial2026.backend.tournament.domain.FixtureStatus;
 import com.mundial2026.backend.tournament.domain.GroupStage;
+import com.mundial2026.backend.tournament.integration.apifootball.ApiFootballClient;
+import com.mundial2026.backend.tournament.integration.port.ExternalMatch;
+import com.mundial2026.backend.tournament.integration.port.MatchStatus;
 import com.mundial2026.backend.tournament.repository.FixtureRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -13,6 +16,7 @@ import org.springframework.transaction.annotation.Transactional;
 import java.time.OffsetDateTime;
 import java.util.LinkedHashSet;
 import java.util.List;
+import java.util.Optional;
 import java.util.Set;
 
 @Slf4j
@@ -26,6 +30,7 @@ public class FixtureStatusScheduler {
 
     private final FixtureRepository          fixtureRepository;
     private final StandingsCalculatorService standingsCalculator;
+    private final ApiFootballClient          apiFootballClient;
 
     @Scheduled(fixedRate = 60_000)
     @Transactional
@@ -46,6 +51,23 @@ public class FixtureStatusScheduler {
         int toFinished = 0;
         for (Fixture f : live) {
             if (!now.isBefore(f.getKickoffAt().plusMinutes(MATCH_DURATION_MINUTES + f.getExtraMinutes()))) {
+                // Verificar con la API antes de marcar FINISHED — puede ser INT/SUSP
+                if (f.getExternalProviderId() != null) {
+                    try {
+                        Optional<ExternalMatch> current = apiFootballClient.fetchById(String.valueOf(f.getExternalProviderId()));
+                        if (current.isPresent()) {
+                            MatchStatus realStatus = current.get().status();
+                            if (realStatus != MatchStatus.FINISHED && realStatus != MatchStatus.UNKNOWN) {
+                                log.info("[StatusScheduler] Fixture {} tiene status={} en API — no se marca FINISHED por tiempo",
+                                        f.getId(), realStatus);
+                                continue;
+                            }
+                        }
+                    } catch (Exception e) {
+                        log.warn("[StatusScheduler] No se pudo verificar status de fixture {} en API — se aplica fallback por tiempo. cause={}",
+                                f.getId(), e.getMessage());
+                    }
+                }
                 f.setStatus(FixtureStatus.FINISHED);
                 toFinished++;
                 if (f.getGroupStage() != null) {

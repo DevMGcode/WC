@@ -73,12 +73,14 @@
 
 html {
   background-color: #020705;
-  overflow-x: hidden;
+  /* `clip` en vez de `hidden`: recorta el desbordamiento horizontal igual,
+     pero NO crea un contenedor de scroll, que rompía `position: sticky`. */
+  overflow-x: clip;
 }
 
 body {
   font-family: var(--font-ui);
-  overflow-x: hidden;
+  overflow-x: clip;
 }
 
 h1,
