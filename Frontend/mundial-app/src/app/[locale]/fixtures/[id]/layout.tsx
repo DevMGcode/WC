@@ -146,6 +146,7 @@ export default async function FixtureDetailLayout({ params, children }: Props) {
         priceCurrency: 'COP',
         url: canonical,
         availability: 'https://schema.org/InStock',
+        validFrom: startDate?.toISOString(),
       },
       performer: [
         { '@type': 'SportsTeam', name: homeName, sport: 'Soccer' },
