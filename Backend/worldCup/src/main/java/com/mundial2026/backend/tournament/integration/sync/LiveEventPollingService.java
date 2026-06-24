@@ -105,17 +105,31 @@ public class LiveEventPollingService {
         return new PollResult(polled, published);
     }
 
-    /** Persiste en BD goles y sustituciones para que clientes que abran la
-     *  página después del evento lo vean sin depender del WebSocket. */
+    /** Persiste en BD goles, tarjetas y sustituciones para que clientes que
+     *  abran la página después del evento lo vean sin depender del WebSocket. */
     private void persistEventIfNeeded(Long fixtureId, ExternalMatchEvent ext, MatchEvent.Type mappedType) {
         if (mappedType == MatchEvent.Type.SUBSTITUTION) {
             if (ext.playerName() == null || ext.playerName().isBlank()) return;
             Long internalTeamId = resolveInternalTeamId(ext.teamId());
             try {
                 matchEventService.persistLiveSub(fixtureId, ext.playerName(),
-                        ext.assistPlayerName(), internalTeamId, ext.elapsedMinute());
+                        ext.assistPlayerName(), internalTeamId, ext.elapsedMinute(), ext.extraMinute());
             } catch (Exception ex) {
                 log.warn("No se pudo persistir sustitución en vivo (partido {}, jugador {}): {}",
+                        fixtureId, ext.playerName(), ex.getMessage());
+            }
+            return;
+        }
+
+        if (mappedType == MatchEvent.Type.YELLOW_CARD || mappedType == MatchEvent.Type.RED_CARD) {
+            if (ext.playerName() == null || ext.playerName().isBlank()) return;
+            Long internalTeamId = resolveInternalTeamId(ext.teamId());
+            String eventTypeStr = mappedType == MatchEvent.Type.RED_CARD ? "RED_CARD" : "YELLOW_CARD";
+            try {
+                matchEventService.persistLiveCard(fixtureId, ext.playerName(),
+                        internalTeamId, ext.elapsedMinute(), ext.extraMinute(), eventTypeStr);
+            } catch (Exception ex) {
+                log.warn("No se pudo persistir tarjeta en vivo (partido {}, jugador {}): {}",
                         fixtureId, ext.playerName(), ex.getMessage());
             }
             return;
@@ -136,7 +150,7 @@ public class LiveEventPollingService {
         };
         try {
             matchEventService.persistLiveGoal(fixtureId, ext.playerName(),
-                    internalTeamId, ext.elapsedMinute(), eventTypeStr);
+                    internalTeamId, ext.elapsedMinute(), ext.extraMinute(), eventTypeStr);
         } catch (Exception ex) {
             log.warn("No se pudo persistir gol en vivo (partido {}, jugador {}): {}",
                     fixtureId, ext.playerName(), ex.getMessage());

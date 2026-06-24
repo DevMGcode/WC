@@ -32,6 +32,9 @@ public class MatchEvent {
     @Column
     private Integer minute;
 
+    @Column(name = "extra_minute")
+    private Integer extraMinute;
+
     @Column(name = "event_type", nullable = false, length = 30)
     private String eventType = "GOAL";
 
@@ -47,6 +50,15 @@ public class MatchEvent {
 
     @Column(name = "player_out", length = 150)
     private String playerOut;
+
+    @Column(length = 100)
+    private String detail;
+
+    @Column(name = "home_score_at_event")
+    private Integer homeScoreAtEvent;
+
+    @Column(name = "away_score_at_event")
+    private Integer awayScoreAtEvent;
 
     @Column(nullable = false)
     private Boolean mismatch = false;

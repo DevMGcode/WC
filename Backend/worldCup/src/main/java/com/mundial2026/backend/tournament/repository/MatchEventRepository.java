@@ -30,4 +30,20 @@ public interface MatchEventRepository extends JpaRepository<MatchEvent, Long> {
     /** Dedup para sustituciones: ventana ±2 min para absorber cambios de minuto entre polls. */
     @Query("SELECT CASE WHEN COUNT(e) > 0 THEN TRUE ELSE FALSE END FROM MatchEvent e WHERE e.fixture.id = :fixtureId AND e.playerName = :playerIn AND e.eventType = 'SUBSTITUTION' AND e.minute BETWEEN :minMinute AND :maxMinute")
     boolean existsSubstitutionAt(Long fixtureId, String playerIn, Integer minMinute, Integer maxMinute);
+
+    /** Dedup para tarjetas: mismo jugador + mismo tipo dentro de ±2 min. */
+    @Query("SELECT CASE WHEN COUNT(e) > 0 THEN TRUE ELSE FALSE END FROM MatchEvent e WHERE e.fixture.id = :fixtureId AND e.playerName = :playerName AND e.eventType = :eventType AND e.minute BETWEEN :minMinute AND :maxMinute")
+    boolean existsCardAt(Long fixtureId, String playerName, String eventType, Integer minMinute, Integer maxMinute);
+
+    /** Dedup para STATUS_CHANGE: un único evento por partido y detalle (halftime, second half, fulltime…). */
+    @Query("SELECT CASE WHEN COUNT(e) > 0 THEN TRUE ELSE FALSE END FROM MatchEvent e WHERE e.fixture.id = :fixtureId AND e.eventType = 'STATUS_CHANGE' AND e.detail = :detail")
+    boolean existsStatusChangeForFixture(Long fixtureId, String detail);
+
+    /** Goles (no autogoles) de un equipo en un partido hasta un minuto dado. Usado para calcular marcador al descanso. */
+    @Query("SELECT COUNT(e) FROM MatchEvent e WHERE e.fixture.id = :fixtureId AND e.team IS NOT NULL AND e.team.id = :teamId AND e.eventType IN ('GOAL','PENALTY_GOAL') AND e.minute IS NOT NULL AND e.minute <= :upToMinute")
+    int countGoalsForTeamUpToMinute(Long fixtureId, Long teamId, Integer upToMinute);
+
+    /** Autogoles de un equipo (que suman al marcador del rival) hasta un minuto dado. */
+    @Query("SELECT COUNT(e) FROM MatchEvent e WHERE e.fixture.id = :fixtureId AND e.team IS NOT NULL AND e.team.id = :teamId AND e.eventType = 'OWN_GOAL' AND e.minute IS NOT NULL AND e.minute <= :upToMinute")
+    int countOwnGoalsByTeamUpToMinute(Long fixtureId, Long teamId, Integer upToMinute);
 }

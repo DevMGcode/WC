@@ -2,6 +2,7 @@ package com.mundial2026.backend.tournament.service;
 
 import com.mundial2026.backend.tournament.api.dto.MatchEventRequest;
 import com.mundial2026.backend.tournament.api.dto.MatchEventResponse;
+import com.mundial2026.backend.realtime.event.FixtureEventOccurredEvent;
 import com.mundial2026.backend.tournament.domain.Fixture;
 import com.mundial2026.backend.tournament.domain.MatchEvent;
 import com.mundial2026.backend.tournament.domain.Team;
@@ -10,6 +11,7 @@ import com.mundial2026.backend.tournament.repository.MatchEventRepository;
 import com.mundial2026.backend.tournament.repository.TeamRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -20,9 +22,10 @@ import java.util.List;
 @RequiredArgsConstructor
 public class MatchEventService {
 
-    private final MatchEventRepository matchEventRepository;
-    private final FixtureRepository    fixtureRepository;
-    private final TeamRepository       teamRepository;
+    private final MatchEventRepository  matchEventRepository;
+    private final FixtureRepository     fixtureRepository;
+    private final TeamRepository        teamRepository;
+    private final ApplicationEventPublisher eventPublisher;
 
     /* ── Lectura pública ── */
 
@@ -162,6 +165,12 @@ public class MatchEventService {
     @Transactional
     public void persistLiveGoal(Long fixtureId, String playerName,
                                 Long internalTeamId, Integer minute, String eventType) {
+        persistLiveGoal(fixtureId, playerName, internalTeamId, minute, null, eventType);
+    }
+
+    @Transactional
+    public void persistLiveGoal(Long fixtureId, String playerName,
+                                Long internalTeamId, Integer minute, Integer extraMinute, String eventType) {
         if (playerName == null || playerName.isBlank()) return;
         if (internalTeamId != null && minute != null
                 && matchEventRepository.existsSimilarGoal(fixtureId, playerName, internalTeamId, minute - 5, minute + 5)) {
@@ -177,19 +186,49 @@ public class MatchEventService {
         event.setPlayerName(playerName.trim());
         event.setTeam(team);
         event.setMinute(minute);
+        event.setExtraMinute(extraMinute);
         event.setEventType(eventType != null ? eventType : "GOAL");
         event.setSource(MatchEvent.Source.API);
         event.setVerified(false);
         event.setMismatch(false);
 
         matchEventRepository.save(event);
-        log.info("[MatchEvent] Gol en vivo persistido: {} min {} (partido {})", playerName, minute, fixtureId);
+        log.info("[MatchEvent] Gol en vivo persistido: {} min {}+{} (partido {})", playerName, minute, extraMinute, fixtureId);
+    }
+
+    /* ── Persistencia de tarjetas en vivo desde LiveEventPollingService ── */
+    @Transactional
+    public void persistLiveCard(Long fixtureId, String playerName,
+                                Long internalTeamId, Integer minute, Integer extraMinute, String eventType) {
+        if (playerName == null || playerName.isBlank()) return;
+        if (minute != null
+                && matchEventRepository.existsCardAt(fixtureId, playerName, eventType, minute - 2, minute + 2)) {
+            return;
+        }
+        Fixture fixture = fixtureRepository.findById(fixtureId).orElse(null);
+        if (fixture == null) return;
+
+        Team team = internalTeamId != null ? teamRepository.findById(internalTeamId).orElse(null) : null;
+
+        MatchEvent event = new MatchEvent();
+        event.setFixture(fixture);
+        event.setPlayerName(playerName.trim());
+        event.setTeam(team);
+        event.setMinute(minute);
+        event.setExtraMinute(extraMinute);
+        event.setEventType(eventType);
+        event.setSource(MatchEvent.Source.API);
+        event.setVerified(false);
+        event.setMismatch(false);
+
+        matchEventRepository.save(event);
+        log.info("[MatchEvent] Tarjeta persistida: {} {} min {}+{} (partido {})", eventType, playerName, minute, extraMinute, fixtureId);
     }
 
     /* ── Persistencia de sustituciones en vivo desde LiveEventPollingService ── */
     @Transactional
     public void persistLiveSub(Long fixtureId, String playerIn, String playerOut,
-                               Long internalTeamId, Integer minute) {
+                               Long internalTeamId, Integer minute, Integer extraMinute) {
         if (playerIn == null || playerIn.isBlank()) return;
         if (minute != null
                 && matchEventRepository.existsSubstitutionAt(fixtureId, playerIn, minute - 2, minute + 2)) {
@@ -206,14 +245,87 @@ public class MatchEventService {
         event.setPlayerOut(playerOut != null ? playerOut.trim() : null);
         event.setTeam(team);
         event.setMinute(minute);
+        event.setExtraMinute(extraMinute);
         event.setEventType("SUBSTITUTION");
         event.setSource(MatchEvent.Source.API);
         event.setVerified(false);
         event.setMismatch(false);
 
         matchEventRepository.save(event);
-        log.info("[MatchEvent] Sustitución persistida: {} → {} min {} (partido {})",
-                playerOut, playerIn, minute, fixtureId);
+        log.info("[MatchEvent] Sustitución persistida: {} → {} min {}+{} (partido {})",
+                playerOut, playerIn, minute, extraMinute, fixtureId);
+    }
+
+    /* ── Persistencia de cambios de estado (DESCANSO, INICIO 2T, TIEMPO COMPLETO…) ── */
+
+    @Transactional
+    public void persistStatusChange(Long fixtureId, String detail, Integer minute, Integer extraMinute,
+                                    Integer homeScore, Integer awayScore) {
+        if (matchEventRepository.existsStatusChangeForFixture(fixtureId, detail)) return;
+        Fixture fixture = fixtureRepository.findById(fixtureId).orElse(null);
+        if (fixture == null) return;
+
+        MatchEvent event = new MatchEvent();
+        event.setFixture(fixture);
+        event.setPlayerName("");
+        event.setMinute(minute);
+        event.setExtraMinute(extraMinute);
+        event.setDetail(detail);
+        event.setEventType("STATUS_CHANGE");
+        event.setSource(MatchEvent.Source.API);
+        event.setVerified(true);
+        event.setMismatch(false);
+        event.setHomeScoreAtEvent(homeScore);
+        event.setAwayScoreAtEvent(awayScore);
+
+        matchEventRepository.save(event);
+        log.info("[MatchEvent] STATUS_CHANGE '{}' persistido — partido {} ({}:{}) min {}+{}",
+                detail, fixtureId, homeScore, awayScore, minute, extraMinute);
+
+        // Publicar por WebSocket para que los clientes en vivo lo reciban sin recargar
+        eventPublisher.publishEvent(new FixtureEventOccurredEvent(
+                new com.mundial2026.backend.realtime.payload.MatchEvent(
+                        fixtureId,
+                        com.mundial2026.backend.realtime.payload.MatchEvent.Type.STATUS_CHANGE,
+                        null, null, "", null, null,
+                        minute, extraMinute, detail,
+                        java.time.Instant.now()
+                )
+        ));
+    }
+
+    /**
+     * Retroactivo: inserta los tres STATUS_CHANGE (halftime / second half / fulltime)
+     * para un partido ya finalizado que no los tiene aún.
+     * El marcador al descanso se reconstruye contando goles en DB hasta el minuto 45.
+     * Idempotente: si "halftime" ya existe no hace nada.
+     */
+    @Transactional
+    public void backfillStatusChangesIfMissing(Long fixtureId,
+                                               Long homeTeamId, Long awayTeamId,
+                                               Integer finalHomeScore, Integer finalAwayScore,
+                                               Integer fixtureExtraMinutes) {
+        if (matchEventRepository.existsStatusChangeForFixture(fixtureId, "halftime")) return;
+        if (finalHomeScore == null || finalAwayScore == null) return;
+
+        int homeHt = matchEventRepository.countGoalsForTeamUpToMinute(fixtureId, homeTeamId, 45)
+                   + matchEventRepository.countOwnGoalsByTeamUpToMinute(fixtureId, awayTeamId, 45);
+        int awayHt = matchEventRepository.countGoalsForTeamUpToMinute(fixtureId, awayTeamId, 45)
+                   + matchEventRepository.countOwnGoalsByTeamUpToMinute(fixtureId, homeTeamId, 45);
+
+        persistStatusChange(fixtureId, "halftime",    45, null,               homeHt,          awayHt);
+        persistStatusChange(fixtureId, "second half", 46, null,               homeHt,          awayHt);
+        persistStatusChange(fixtureId, "fulltime",    90, fixtureExtraMinutes, finalHomeScore, finalAwayScore);
+        log.info("[MatchEvent] STATUS_CHANGE retroactivos para fixture {} (HT {}-{}, FT {}-{}, +{})",
+                fixtureId, homeHt, awayHt, finalHomeScore, finalAwayScore, fixtureExtraMinutes);
+    }
+
+    /** Persiste el inicio del segundo tiempo solo si ya existe un evento de descanso
+     *  pero todavía no hay uno de inicio de segundo tiempo. Idempotente. */
+    @Transactional
+    public void persistSecondHalfIfNeeded(Long fixtureId, Integer homeScore, Integer awayScore) {
+        if (!matchEventRepository.existsStatusChangeForFixture(fixtureId, "halftime")) return;
+        persistStatusChange(fixtureId, "second half", 46, null, homeScore, awayScore);
     }
 
     /* ── Record para transportar datos del gol desde la API ── */
@@ -273,11 +385,15 @@ public class MatchEventService {
                 e.getTeam() != null ? e.getTeam().getName() : null,
                 e.getTeam() != null ? e.getTeam().getFifaCode() : null,
                 e.getMinute(),
+                e.getExtraMinute(),
                 e.getEventType(),
+                e.getDetail(),
                 e.getSource().name(),
                 e.getVerified(),
                 e.getApiPlayerName(),
-                e.getMismatch()
+                e.getMismatch(),
+                e.getHomeScoreAtEvent(),
+                e.getAwayScoreAtEvent()
         );
     }
 }
