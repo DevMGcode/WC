@@ -37,6 +37,10 @@ public interface FixtureRepository extends JpaRepository<Fixture, Long> {
 
     boolean existsByKickoffAtBetween(OffsetDateTime from, OffsetDateTime to);
 
+    /** Para el backfill de STATUS_CHANGE: todos los finalizados con equipos cargados. */
+    @EntityGraph(attributePaths = {"homeTeam", "awayTeam"})
+    List<Fixture> findByStatus(FixtureStatus status);
+
     // ── Notificaciones push (Fase C) ──────────────────────────────────────────
 
     /** Partidos próximos a empezar (recordatorio) que aún no se han notificado. */

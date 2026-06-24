@@ -10,14 +10,15 @@ import { useRouter } from 'next/navigation';
 import { useTranslations, useLocale } from 'next-intl';
 import ShareButton from '@/components/ShareButton';
 import { getFixtureById } from '@/services/publicTournament';
+import { apiFetch } from '@/lib/apiFetch';
 import { predictionService } from '@/services/predictions';
 import { useAuth } from '@/contexts/AuthContext';
 import { usePremium } from '@/hooks/usePremium';
 import { favoriteTeamsService, type FavoriteTeam } from '@/services/favoriteTeams';
-import type { MatchEventScorer } from '@/types';
+import type { MatchEventScorer, MatchEvent, MatchEventType } from '@/types';
 import {
   FiTarget, FiZap, FiCheck, FiX, FiEdit2, FiArrowLeft,
-  FiMapPin, FiAlertCircle, FiList, FiBarChart2, FiUsers, FiRepeat,
+  FiMapPin, FiAlertCircle, FiList, FiBarChart2, FiUsers, FiRepeat, FiRadio,
 } from 'react-icons/fi';
 
 import { hex, type BrandColor, resolveBrandHex } from '@/lib/design/tokens';
@@ -32,11 +33,12 @@ const LineupsTab    = dynamic(() => import('./_components/LineupsTab'),    { loa
 const StatisticsTab = dynamic(() => import('./_components/StatisticsTab'), { loading: () => <TabSkeleton /> });
 const PlayersTab    = dynamic(() => import('./_components/PlayersTab'),    { loading: () => <TabSkeleton /> });
 const HeadToHeadTab = dynamic(() => import('./_components/HeadToHeadTab'), { loading: () => <TabSkeleton /> });
+const LiveEventFeed = dynamic(() => import('./_components/LiveEventFeed'), { ssr: false });
 
 import { useMatchLive }   from '@/hooks/useMatchLive';
 import { useMatchEvents } from '@/hooks/useMatchEvents';
 
-type DetailTab = 'lineups' | 'stats' | 'players' | 'h2h';
+type DetailTab = 'live' | 'lineups' | 'stats' | 'players' | 'h2h';
 
 /**
  * Local thin wrapper around the card pattern used on this page. We don't use
@@ -79,11 +81,12 @@ export default function FixtureDetailPage({ params }: { params: { id: string } }
 
   /* Tabs y reglas de puntuación dependen de t() ⇒ se construyen dentro del
    * componente para reaccionar al cambio de locale. */
-  const DETAIL_TABS: { key: DetailTab; label: string; icon: React.ReactNode }[] = [
-    { key: 'lineups',  label: t('fixture.tabs.lineups')   ?? 'Alineaciones', icon: <FiList    size={12} /> },
+  const DETAIL_TABS: { key: DetailTab; label: string; icon: React.ReactNode; liveOnly?: boolean }[] = [
+    { key: 'live',    label: 'En Vivo',                                       icon: <FiRadio     size={12} />, liveOnly: true },
+    { key: 'lineups',  label: t('fixture.tabs.lineups')   ?? 'Alineaciones', icon: <FiList      size={12} /> },
     { key: 'stats',    label: t('fixture.tabs.stats')     ?? 'Estadísticas', icon: <FiBarChart2 size={12} /> },
-    { key: 'players',  label: t('fixture.tabs.players')   ?? 'Jugadores',    icon: <FiUsers   size={12} /> },
-    { key: 'h2h',      label: t('fixture.tabs.h2h')       ?? 'H2H',          icon: <FiRepeat  size={12} /> },
+    { key: 'players',  label: t('fixture.tabs.players')   ?? 'Jugadores',    icon: <FiUsers     size={12} /> },
+    { key: 'h2h',      label: t('fixture.tabs.h2h')       ?? 'H2H',          icon: <FiRepeat    size={12} /> },
   ];
 
   const SCORE_RULES: { pts: number; label: string; sublabel: string; color: BrandColor; icon: React.ReactNode }[] = [
@@ -102,12 +105,58 @@ export default function FixtureDetailPage({ params }: { params: { id: string } }
   const [predError,   setPredError]   = useState('');
   const [predSuccess, setPredSuccess] = useState(false);
   const [detailTab,   setDetailTab]   = useState<DetailTab>('lineups');
+  const autoSwitchedToLive = useRef(false);
   const [favTeams,    setFavTeams]    = useState<FavoriteTeam[]>([]);
   const [favsLoaded,  setFavsLoaded]  = useState(false);
+  const [dbEvents,    setDbEvents]    = useState<MatchEvent[]>([]);
 
   // WebSocket — tiempo real (solo activo cuando el partido está LIVE)
   const liveDelta  = useMatchLive(fixture?.status === 'LIVE' ? fixtureId : null);
   const liveEvents = useMatchEvents(fixture?.status === 'LIVE' ? fixtureId : null);
+
+  // Eventos históricos (BD) — se cargan al abrir partido LIVE o FINISHED
+  useEffect(() => {
+    if (!fixture) return;
+    const status = fixture.status;
+    if (status !== 'LIVE' && status !== 'FINISHED') return;
+    apiFetch(`/api/v1/public/fixtures/${fixtureId}/events`)
+      .then(r => r.ok ? r.json() : null)
+      .then(json => {
+        const rows: any[] = json?.data ?? [];
+        const mapped: MatchEvent[] = rows.map(e => ({
+          matchId:      fixtureId,
+          type:         e.eventType as MatchEventType,
+          teamId:       e.teamId ?? null,
+          playerId:     null,
+          playerName:   e.playerName ?? null,
+          playerOut:    e.playerOut ?? null,
+          teamFifaCode: e.teamFifaCode ?? null,
+          minute:       e.minute ?? 0,
+          extraMinute:        e.extraMinute ?? undefined,
+          detail:             e.detail ?? undefined,
+          occurredAt:         new Date(0).toISOString(),
+          homeScoreAtEvent:   e.homeScoreAtEvent ?? undefined,
+          awayScoreAtEvent:   e.awayScoreAtEvent ?? undefined,
+        }));
+        setDbEvents(mapped);
+      })
+      .catch(() => {});
+  }, [fixture?.status, fixtureId]);
+
+  // Merge: eventos del WebSocket + eventos de BD, sin duplicados
+  const allLiveEvents = useMemo(() => {
+    const wsSet = new Set(liveEvents.map(e => `${e.type}|${e.minute}|${e.teamId ?? 'x'}`));
+    const unique = dbEvents.filter(e => !wsSet.has(`${e.type}|${e.minute}|${e.teamId ?? 'x'}`));
+    return [...liveEvents, ...unique];
+  }, [liveEvents, dbEvents]);
+
+  // Cuando llegan eventos (WS o BD) → cambiar automáticamente al tab de eventos
+  useEffect(() => {
+    if (allLiveEvents.length > 0 && !autoSwitchedToLive.current) {
+      autoSwitchedToLive.current = true;
+      setDetailTab('live');
+    }
+  }, [allLiveEvents.length]);
 
   // Cuando llega un gol manual (guardado en BD) → refetch para obtener el MatchEventScorer completo
   const prevGoalCountRef = useRef(0);
@@ -832,8 +881,9 @@ export default function FixtureDetailPage({ params }: { params: { id: string } }
           <div className="p-4">
             {/* Tab bar */}
             <div className="flex gap-1 mb-4 p-1 rounded-xl" style={{ background: alpha(hex.neutral.white, 0.03), border: `1px solid ${alpha(hex.neutral.white, 0.05)}` }}>
-              {DETAIL_TABS.map(tab => {
+              {DETAIL_TABS.filter(tab => !tab.liveOnly || isLive || (isFinished && allLiveEvents.length > 0)).map(tab => {
                 const active = detailTab === tab.key;
+                const isLiveTab = tab.key === 'live';
                 return (
                   <motion.button
                     key={tab.key}
@@ -841,13 +891,34 @@ export default function FixtureDetailPage({ params }: { params: { id: string } }
                     whileTap={{ scale: 0.96 }}
                     className="flex-1 flex items-center justify-center gap-1 py-2 rounded-lg text-[9px] font-black tracking-wide uppercase transition-all"
                     style={{
-                      background: active ? `${hex.green.bright}15` : 'transparent',
-                      border: `1px solid ${active ? `${hex.green.bright}30` : 'transparent'}`,
-                      color: active ? hex.green.bright : alpha(hex.text.secondary, 0.4),
+                      background: active
+                        ? isLiveTab ? 'rgba(239,68,68,0.15)' : `${hex.green.bright}15`
+                        : 'transparent',
+                      border: `1px solid ${active
+                        ? isLiveTab ? 'rgba(239,68,68,0.40)' : `${hex.green.bright}30`
+                        : 'transparent'}`,
+                      color: active
+                        ? isLiveTab ? '#ef4444' : hex.green.bright
+                        : alpha(hex.text.secondary, 0.4),
                     }}
                   >
-                    {tab.icon}
-                    <span className="hidden sm:inline">{tab.label}</span>
+                    {isLiveTab && isLive ? (
+                      <motion.span
+                        animate={{ opacity: [1, 0.4, 1] }}
+                        transition={{ duration: 1.0, repeat: Infinity }}
+                      >
+                        {tab.icon}
+                      </motion.span>
+                    ) : tab.icon}
+                    <span className="hidden sm:inline">
+                      {tab.key === 'live' ? (isLive ? 'En Vivo' : 'Eventos') : tab.label}
+                    </span>
+                    {isLiveTab && allLiveEvents.length > 0 && (
+                      <span className="ml-0.5 text-[7px] font-black px-1 py-0.5 rounded-full"
+                        style={{ background: 'rgba(239,68,68,0.25)', color: '#ef4444' }}>
+                        {allLiveEvents.length}
+                      </span>
+                    )}
                   </motion.button>
                 );
               })}
@@ -863,6 +934,15 @@ export default function FixtureDetailPage({ params }: { params: { id: string } }
                 transition={{ duration: 0.2 }}
               >
                 <ErrorBoundary fallbackMessage={t('fixture.sectionDataError')}>
+                  {detailTab === 'live' && (
+                    <LiveEventFeed
+                      events={allLiveEvents}
+                      isLive={isLive}
+                      homeTeamId={fixture.homeTeam?.id ?? null}
+                      homeCode={fixture.homeTeam?.fifaCode ?? fixture.homeTeam?.shortName}
+                      awayCode={fixture.awayTeam?.fifaCode ?? fixture.awayTeam?.shortName}
+                    />
+                  )}
                   {detailTab === 'lineups'  && <LineupsTab    fixtureId={fixture.id} liveEvents={liveEvents} />}
                   {detailTab === 'stats'    && <StatisticsTab fixtureId={fixture.id} />}
                   {detailTab === 'players'  && (

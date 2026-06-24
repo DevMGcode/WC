@@ -4,6 +4,16 @@ import { routing } from '@/i18n/routing';
 
 const intlMiddleware = createMiddleware(routing);
 
+const SOCIAL_BOTS = [
+  'whatsapp', 'telegrambot', 'facebookexternalhit', 'twitterbot',
+  'linkedinbot', 'slackbot', 'discordbot', 'googlebot', 'bingbot',
+];
+
+function isSocialBot(req: NextRequest): boolean {
+  const ua = req.headers.get('user-agent')?.toLowerCase() ?? '';
+  return SOCIAL_BOTS.some(bot => ua.includes(bot));
+}
+
 // Rutas accesibles sin sesión (relativas al locale, sin el prefijo /es/ /en/ etc.)
 const PUBLIC_PATHS = [
   '/login',
@@ -14,7 +24,6 @@ const PUBLIC_PATHS = [
 ];
 
 function isPublicPath(pathname: string): boolean {
-  // Quitar el prefijo de locale: /es/login → /login
   const withoutLocale = pathname.replace(/^\/[a-z]{2}(\/|$)/, '/');
   return PUBLIC_PATHS.some(p => withoutLocale === p || withoutLocale.startsWith(p + '/'));
 }
@@ -22,7 +31,7 @@ function isPublicPath(pathname: string): boolean {
 export default function middleware(req: NextRequest) {
   const { pathname } = req.nextUrl;
 
-  if (!isPublicPath(pathname)) {
+  if (!isPublicPath(pathname) && !isSocialBot(req)) {
     const hasSession = req.cookies.has('auth_session');
     if (!hasSession) {
       const locale = pathname.match(/^\/([a-z]{2})(\/|$)/)?.[1] ?? 'es';
