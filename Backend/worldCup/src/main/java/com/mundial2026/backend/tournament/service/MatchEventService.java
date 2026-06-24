@@ -331,6 +331,53 @@ public class MatchEventService {
     /* ── Record para transportar datos del gol desde la API ── */
     public record ApiGoal(String playerName, Integer minute, Long teamId) {}
 
+    /* ── Reconciliación de eventos en vivo ──
+     *
+     * El polling es "append": inserta eventos nuevos pero nunca borra los que la
+     * API deja de reportar (gol anulado por VAR, gol reatribuido a otro jugador,
+     * minuto corregido lejos del original…). Eso deja goles fantasma en la lista.
+     *
+     * Este método compara los eventos source=API en BD con los que la API reporta
+     * AHORA y borra los huérfanos. Es seguro:
+     *   - Solo mira source=API (los MANUAL del admin nunca se tocan).
+     *   - Solo tipos que el polling persiste; STATUS_CHANGE y demás quedan fuera.
+     *   - Usa una ventana de minutos por tipo, de modo que un gol real cuyo minuto
+     *     la API ajustó (±) sigue casando y NO se borra; solo cae el que no tiene
+     *     ninguna correspondencia (el fantasma de verdad).
+     */
+    @Transactional
+    public void reconcileLiveApiEvents(Long fixtureId, List<LiveApiEventKey> apiKeys) {
+        List<MatchEvent> dbApiEvents =
+                matchEventRepository.findByFixtureIdAndSource(fixtureId, MatchEvent.Source.API);
+        for (MatchEvent e : dbApiEvents) {
+            int window = reconcileWindow(e.getEventType());
+            if (window < 0 || e.getMinute() == null) continue; // tipo no gestionado o sin minuto: no tocar
+            boolean stillInApi = apiKeys.stream().anyMatch(k ->
+                    k.eventType().equals(e.getEventType())
+                    && k.minute() != null
+                    && Math.abs(k.minute() - e.getMinute()) <= window
+                    && normalizedEquals(k.playerName(), e.getPlayerName()));
+            if (!stillInApi) {
+                matchEventRepository.delete(e);
+                log.info("[MatchEvent] Fantasma eliminado (ya no está en la API): {} '{}' min {} (partido {})",
+                        e.getEventType(), e.getPlayerName(), e.getMinute(), fixtureId);
+            }
+        }
+    }
+
+    /** Ventana de tolerancia de minutos por tipo para emparejar BD↔API.
+     *  Devuelve -1 para tipos que el polling no gestiona (no se reconcilian). */
+    private int reconcileWindow(String eventType) {
+        return switch (eventType) {
+            case "GOAL", "OWN_GOAL", "PENALTY_GOAL"        -> 5;
+            case "YELLOW_CARD", "RED_CARD", "SUBSTITUTION" -> 2;
+            default                                        -> -1;
+        };
+    }
+
+    /** Clave mínima de un evento de la API para reconciliar contra la BD. */
+    public record LiveApiEventKey(String eventType, String playerName, Integer minute) {}
+
     /* ── Helpers privados ── */
 
     private ApiGoal findBestApiMatch(MatchEvent manual, List<ApiGoal> apiGoals) {

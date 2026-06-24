@@ -49,6 +49,8 @@ export interface Fixture {
   awayScore?: number;
   /** Minutos de reposición (90' + X). Fuente: API-Football o EXTENDER del admin. */
   extraMinutes?: number;
+  /** Minuto de juego en curso (status.elapsed). Solo relevante en vivo. */
+  elapsedMinutes?: number | null;
   createdAt: Date;
   providerUpdatedAt?: Date;
 }
@@ -100,6 +102,7 @@ export interface MatchEventScorer {
   teamName: string | null;
   teamFifaCode: string | null;
   minute: number | null;
+  extraMinute?: number | null;
   eventType: string;
   source: 'MANUAL' | 'API';
   verified: boolean;

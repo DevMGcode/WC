@@ -174,7 +174,7 @@ export default function FixtureDetailPage({ params }: { params: { id: string } }
   const liveHomeScore    = liveDelta?.homeScore    ?? fixture?.homeScore;
   const liveAwayScore    = liveDelta?.awayScore    ?? fixture?.awayScore;
   const liveStatus       = liveDelta?.status       ?? fixture?.status;
-  const elapsedMinutes   = liveDelta?.elapsedMinutes ?? null;
+  const elapsedMinutes   = liveDelta?.elapsedMinutes ?? fixture?.elapsedMinutes ?? null;
 
   // Detecta si el partido está en descanso: hay un STATUS_CHANGE halftime
   // pero todavía no hay uno de second half → estamos entre ambos tiempos.
@@ -275,6 +275,7 @@ export default function FixtureDetailPage({ params }: { params: { id: string } }
         teamName: null,
         teamFifaCode: e.teamFifaCode ?? null,
         minute: e.minute ?? null,
+        extraMinute: e.extraMinute ?? null,
         eventType: e.type,
         source: 'API' as const,
         verified: false,
@@ -902,7 +903,7 @@ export default function FixtureDetailPage({ params }: { params: { id: string } }
                         {scorer.minute && (
                           <span className="text-[10px] font-black text-orionix-text-muted px-2 py-1 rounded-lg"
                             style={{ background: alpha(hex.neutral.white, 0.04), border: `1px solid ${alpha(hex.neutral.white, 0.06)}` }}>
-                            {scorer.minute}&apos;
+                            {scorer.minute}{scorer.extraMinute ? `+${scorer.extraMinute}` : ''}&apos;
                           </span>
                         )}
                         {scorer.verified && (

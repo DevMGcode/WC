@@ -21,6 +21,8 @@ public record FixtureResponse(
         Integer awayScore,
         /** Minutos de reposición (90' + X). Fuente: API-Football o botón EXTENDER del admin. */
         Integer extraMinutes,
+        /** Minuto de juego en curso (status.elapsed). null si el partido no está en vivo. */
+        Integer elapsedMinutes,
         Long externalProviderId,
         List<MatchEventResponse> scorers
 ) {

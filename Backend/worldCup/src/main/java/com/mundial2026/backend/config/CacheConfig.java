@@ -61,7 +61,11 @@ public class CacheConfig {
             case SQUAD, HEAD_TO_HEAD     -> base.expireAfterWrite(Duration.ofHours(24));
             case MATCH_EVENTS            -> base.expireAfterWrite(Duration.ofSeconds(30));
             case MATCH_STATISTICS        -> base.expireAfterWrite(Duration.ofMinutes(1));
-            case MATCH_PLAYER_STATS      -> base.expireAfterWrite(Duration.ofHours(6));
+            // 60s para que minutos y rating se refresquen durante partidos en vivo.
+            // Antes eran 6h, que congelaba la tabla de jugadores todo el partido.
+            // El costo en cuota es mínimo (plan Mega, 150k/día): ~1 llamada/min por
+            // partido en vivo que alguien esté mirando, y el caché es compartido.
+            case MATCH_PLAYER_STATS      -> base.expireAfterWrite(Duration.ofSeconds(60));
             // TTL corto pre-Mundial: cuando API-Football active los flags el día del kick-off
             // (11-jun-2026), queremos verlo en ≤30 min, no hasta 6h después. Post-Mundial se
             // puede subir a 6h sin urgencia — la cobertura ya no cambia.

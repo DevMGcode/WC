@@ -68,6 +68,11 @@ public class Fixture {
     @Column(name = "extra_minutes", nullable = false)
     private Integer extraMinutes = 0;
 
+    /** Minuto de juego en curso (API-Football status.elapsed). Solo relevante en LIVE;
+     *  permite que el frontend muestre el reloj desde el snapshot REST. */
+    @Column(name = "elapsed_minutes")
+    private Integer elapsedMinutes;
+
     /** Ya se envió el recordatorio push de este partido (evita duplicados). */
     @Column(name = "reminder_notified", nullable = false)
     private Boolean reminderNotified = false;
