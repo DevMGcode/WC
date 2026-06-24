@@ -272,8 +272,10 @@ export interface MatchEvent {
   teamFifaCode?: string | null;
   minute: number;
   extraMinute?: number;
-  detail?: string;
+  detail?: string | null;
   occurredAt: string;
+  homeScoreAtEvent?: number | null;
+  awayScoreAtEvent?: number | null;
 }
 
 // Equipos favoritos del usuario

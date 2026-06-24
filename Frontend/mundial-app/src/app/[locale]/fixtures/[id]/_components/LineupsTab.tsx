@@ -51,48 +51,103 @@ interface SubInfo { playerInName: string; minute: number; }
 
 function PlayerDot({ player, x, y, color, bg, subbed, subInfo }: {
   player: LineupPlayer; x: number; y: number; color: string; bg: string;
-  subbed?: boolean;    // este jugador salió
-  subInfo?: SubInfo;   // sustituto que entró en su lugar
+  subbed?: boolean;
+  subInfo?: SubInfo;
 }) {
+  const [photoOk, setPhotoOk] = useState(true);
+  const photoUrl = player.playerId
+    ? `https://media.api-sports.io/football/players/${player.playerId}.png`
+    : null;
+
   return (
     <div
       className="absolute flex flex-col items-center pointer-events-none"
-      style={{ left: `${x}%`, top: `${y}%`, transform: 'translate(-50%, -50%)', width: 68, zIndex: 10 }}
+      style={{ left: `${x}%`, top: `${y}%`, transform: 'translate(-50%, -50%)', width: 76, zIndex: 10 }}
     >
       <motion.div
         initial={{ scale: 0, opacity: 0 }}
         animate={{ scale: 1, opacity: subbed ? 0.35 : 1 }}
         transition={{ type: 'spring', stiffness: 260, damping: 20, delay: Math.random() * 0.3 }}
-        className="relative rounded-full flex items-center justify-center font-black"
+        className="relative rounded-full flex items-center justify-center font-black overflow-hidden"
         style={{
-          width: 26, height: 26,
-          background: bg,
-          border: `1.5px solid ${subbed ? '#666' : color}`,
-          fontSize: 9,
+          width: 34, height: 34,
+          background: photoOk && photoUrl ? 'transparent' : bg,
+          border: `2px solid ${subbed ? '#666' : color}`,
+          fontSize: 11,
           color: subbed ? '#888' : color,
-          boxShadow: subbed ? 'none' : `0 0 8px ${color}50`,
+          boxShadow: subbed ? 'none' : `0 0 10px ${color}60`,
         }}
       >
-        {player.shirtNumber}
+        {photoUrl && photoOk ? (
+          // eslint-disable-next-line @next/next/no-img-element
+          <img
+            src={photoUrl}
+            alt={player.playerName}
+            onError={() => setPhotoOk(false)}
+            style={{ width: '100%', height: '100%', objectFit: 'cover', borderRadius: '50%', filter: subbed ? 'grayscale(1)' : 'none' }}
+          />
+        ) : (
+          <span>{player.shirtNumber}</span>
+        )}
+
+        {/* Número de camiseta como badge sobre la foto */}
+        {photoUrl && photoOk && (
+          <span
+            className="absolute bottom-0 right-0 rounded-full flex items-center justify-center font-black"
+            style={{
+              width: 14, height: 14, fontSize: 7,
+              background: subbed ? '#444' : color,
+              color: '#000',
+              border: '1px solid rgba(0,0,0,0.5)',
+              lineHeight: 1,
+            }}
+          >
+            {player.shirtNumber}
+          </span>
+        )}
+
         {subbed && (
-          <span className="absolute -top-1 -right-1 text-[9px] leading-none">🔴</span>
+          <span className="absolute -top-1 -right-1 text-[10px] leading-none">🔴</span>
         )}
       </motion.div>
-      <span className="text-center font-bold leading-tight mt-0.5 w-full"
-        style={{ fontSize: 8, color: subbed ? '#777' : '#fff', textShadow: '0 1px 3px rgba(0,0,0,0.9)', whiteSpace: 'nowrap' }}>
+
+      <span
+        className="text-center font-bold leading-tight mt-1 w-full"
+        style={{
+          fontSize: 10,
+          color: subbed ? '#777' : '#fff',
+          textShadow: '0 1px 4px rgba(0,0,0,1), 0 0 6px rgba(0,0,0,0.9)',
+          whiteSpace: 'nowrap',
+        }}
+      >
         {lastName(player.playerName)}
       </span>
+
       {subInfo && (
         <motion.div
           initial={{ opacity: 0, y: -4 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.4 }}
-          className="mt-0.5 px-1.5 rounded-sm"
-          style={{ background: 'rgba(0,200,80,0.2)', border: '1px solid rgba(0,200,80,0.4)', display: 'inline-flex', alignItems: 'center', gap: 2 }}
+          className="mt-1 px-2 py-0.5 rounded"
+          style={{
+            background: 'rgba(0,200,80,0.30)',
+            border: '1.5px solid rgba(0,230,90,0.55)',
+            boxShadow: '0 0 6px rgba(0,200,80,0.35)',
+            display: 'inline-flex', alignItems: 'center', gap: 3,
+          }}
         >
-          <span style={{ fontSize: 7, flexShrink: 0 }}>🟢</span>
-          <span className="font-bold" style={{ fontSize: 7, color: '#6fff9e', whiteSpace: 'nowrap', flexShrink: 0 }}>
-            {lastName(subInfo.playerInName)} {subInfo.minute}'
+          <span style={{ fontSize: 9, flexShrink: 0 }}>🟢</span>
+          <span
+            className="font-black"
+            style={{
+              fontSize: 10,
+              color: '#7bffaa',
+              whiteSpace: 'nowrap',
+              flexShrink: 0,
+              textShadow: '0 1px 4px rgba(0,0,0,0.9)',
+            }}
+          >
+            {lastName(subInfo.playerInName)} {subInfo.minute}&apos;
           </span>
         </motion.div>
       )}
