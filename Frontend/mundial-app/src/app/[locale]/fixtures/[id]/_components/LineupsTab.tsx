@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useEffect, useState, useMemo } from 'react';
+import React, { useEffect, useState, useMemo, useRef } from 'react';
 import Image from 'next/image';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useTranslations } from 'next-intl';
@@ -49,10 +49,11 @@ function groupByGrid(players: LineupPlayer[]): LineupPlayer[][] {
 
 interface SubInfo { playerInName: string; minute: number; }
 
-function PlayerDot({ player, x, y, color, bg, subbed, subInfo }: {
+function PlayerDot({ player, x, y, color, bg, subbed, subInfo, scale = 1 }: {
   player: LineupPlayer; x: number; y: number; color: string; bg: string;
   subbed?: boolean;
   subInfo?: SubInfo;
+  scale?: number;
 }) {
   const [photoOk, setPhotoOk] = useState(true);
   const photoUrl = player.playerId
@@ -62,7 +63,7 @@ function PlayerDot({ player, x, y, color, bg, subbed, subInfo }: {
   return (
     <div
       className="absolute flex flex-col items-center pointer-events-none"
-      style={{ left: `${x}%`, top: `${y}%`, transform: 'translate(-50%, -50%)', width: 76, zIndex: 10 }}
+      style={{ left: `${x}%`, top: `${y}%`, transform: `translate(-50%, -50%) scale(${scale})`, width: 84, zIndex: 10 }}
     >
       <motion.div
         initial={{ scale: 0, opacity: 0 }}
@@ -70,10 +71,10 @@ function PlayerDot({ player, x, y, color, bg, subbed, subInfo }: {
         transition={{ type: 'spring', stiffness: 260, damping: 20, delay: Math.random() * 0.3 }}
         className="relative rounded-full flex items-center justify-center font-black overflow-hidden"
         style={{
-          width: 34, height: 34,
+          width: 46, height: 46,
           background: photoOk && photoUrl ? 'transparent' : bg,
           border: `2px solid ${subbed ? '#666' : color}`,
-          fontSize: 11,
+          fontSize: 14,
           color: subbed ? '#888' : color,
           boxShadow: subbed ? 'none' : `0 0 10px ${color}60`,
         }}
@@ -95,7 +96,7 @@ function PlayerDot({ player, x, y, color, bg, subbed, subInfo }: {
           <span
             className="absolute bottom-0 right-0 rounded-full flex items-center justify-center font-black"
             style={{
-              width: 14, height: 14, fontSize: 7,
+              width: 17, height: 17, fontSize: 8,
               background: subbed ? '#444' : color,
               color: '#000',
               border: '1px solid rgba(0,0,0,0.5)',
@@ -159,9 +160,11 @@ function PlayerDot({ player, x, y, color, bg, subbed, subInfo }: {
 
 function normName(n: string): string {
   return n.trim().split(' ').pop()?.toLowerCase()
-    .replace(/[áàä]/g, 'a').replace(/[éèë]/g, 'e')
-    .replace(/[íìï]/g, 'i').replace(/[óòö]/g, 'o')
-    .replace(/[úùü]/g, 'u').replace(/ñ/g, 'n') ?? '';
+    .replace(/[áàäãâ]/g, 'a').replace(/[éèëê]/g, 'e')
+    .replace(/[íìï]/g, 'i').replace(/[óòöôõ]/g, 'o')
+    .replace(/[úùü]/g, 'u').replace(/ñ/g, 'n')
+    .replace(/[šŠ]/g, 's').replace(/[ćčĆČ]/g, 'c')
+    .replace(/[žŽ]/g, 'z').replace(/[đĐ]/g, 'd') ?? '';
 }
 function matchName(fullName: string, eventName: string): boolean {
   const a = normName(fullName);
@@ -176,12 +179,26 @@ function PitchView({ home, away, liveEvents }: { home: LineupTeam; away: LineupT
   const awayBg    = alphaOf('gold',  0.35);
   const line      = 'rgba(255,255,255,0.2)';
 
+  // Escala responsive: medimos el ancho real de la cancha y encogemos las fichas
+  // de los jugadores de forma proporcional. En desktop (≥720px) scale = 1 (igual
+  // que ahora); en móvil baja hasta 0.55 para que no se amontonen.
+  const pitchRef = useRef<HTMLDivElement>(null);
+  const [scale, setScale] = useState(1);
+  useEffect(() => {
+    const el = pitchRef.current;
+    if (!el) return;
+    const update = () => setScale(Math.max(0.55, Math.min(1, el.offsetWidth / 720)));
+    update();
+    const ro = new ResizeObserver(update);
+    ro.observe(el);
+    return () => ro.disconnect();
+  }, []);
+
   const homeRows = useMemo(() => groupByGrid(home.startXI), [home.startXI]);
   const awayRows = useMemo(() => groupByGrid(away.startXI), [away.startXI]);
 
-  // Sustituciones recibidas por WebSocket
   const subs = useMemo(() =>
-    liveEvents.filter(e => e.type === 'SUBSTITUTION' && e.playerOut),
+    liveEvents.filter(e => e.type === 'SUBSTITUTION'),
   [liveEvents]);
 
   // Home: GK izquierda (x≈7%), delanteros hacia centro (x≈44%)
@@ -198,6 +215,7 @@ function PitchView({ home, away, liveEvents }: { home: LineupTeam; away: LineupT
   return (
     <motion.div
       key="pitch"
+      ref={pitchRef}
       initial={{ opacity: 0, scale: 0.97 }}
       animate={{ opacity: 1, scale: 1 }}
       exit={{ opacity: 0, scale: 0.97 }}
@@ -259,14 +277,19 @@ function PitchView({ home, away, liveEvents }: { home: LineupTeam; away: LineupT
         {/* ── Jugadores home (mitad izquierda) ── */}
         {homeRows.map((row, ri) =>
           row.map((p, ci) => {
-            const sub = subs.find(s => s.playerOut && matchName(p.playerName, s.playerOut));
+            // Intenta ambas convenciones de API-Football (player=sale o player=entra)
+            const subA = subs.find(s => matchName(p.playerName, s.playerName ?? ''));
+            const subB = !subA ? subs.find(s => s.playerOut && matchName(p.playerName, s.playerOut)) : undefined;
+            const sub = subA ?? subB;
+            const playerIn = subA ? (subA.playerOut ?? '') : (subB?.playerName ?? '');
             return (
               <PlayerDot key={p.playerId} player={p}
                 x={homeX[ri]}
                 y={(ci + 1) / (row.length + 1) * 100}
                 color={homeColor} bg={homeBg}
+                scale={scale}
                 subbed={!!sub}
-                subInfo={sub ? { playerInName: sub.playerName ?? '', minute: sub.minute } : undefined}
+                subInfo={sub ? { playerInName: playerIn, minute: sub.minute } : undefined}
               />
             );
           })
@@ -275,14 +298,18 @@ function PitchView({ home, away, liveEvents }: { home: LineupTeam; away: LineupT
         {/* ── Jugadores away (mitad derecha) ── */}
         {awayRows.map((row, ri) =>
           row.map((p, ci) => {
-            const sub = subs.find(s => s.playerOut && matchName(p.playerName, s.playerOut));
+            const subA = subs.find(s => matchName(p.playerName, s.playerName ?? ''));
+            const subB = !subA ? subs.find(s => s.playerOut && matchName(p.playerName, s.playerOut)) : undefined;
+            const sub = subA ?? subB;
+            const playerIn = subA ? (subA.playerOut ?? '') : (subB?.playerName ?? '');
             return (
               <PlayerDot key={p.playerId} player={p}
                 x={awayX[ri]}
                 y={(ci + 1) / (row.length + 1) * 100}
                 color={awayColor} bg={awayBg}
+                scale={scale}
                 subbed={!!sub}
-                subInfo={sub ? { playerInName: sub.playerName ?? '', minute: sub.minute } : undefined}
+                subInfo={sub ? { playerInName: playerIn, minute: sub.minute } : undefined}
               />
             );
           })
@@ -457,20 +484,10 @@ export default function LineupsTab({ fixtureId, liveEvents = [] }: { fixtureId: 
 
   const [home, away] = lineups;
 
-  // Reconstruye el XI real para la cancha: API-Football actualiza el startXI durante
-  // el partido poniendo al suplente que entró en lugar del titular que salió.
-  // Lo revertimos usando los eventos persistidos: si un jugador del startXI
-  // aparece como "el que entró" en una sustitución, lo reemplazamos por "el que salió".
-  const pitchSubs = allLiveEvents.filter(e => e.type === 'SUBSTITUTION' && e.playerOut);
-  const fixStartXI = (team: LineupTeam): LineupTeam => ({
-    ...team,
-    startXI: team.startXI.map(player => {
-      const sub = pitchSubs.find(s => matchName(player.playerName, s.playerName ?? ''));
-      return sub?.playerOut ? { ...player, playerName: sub.playerOut } : player;
-    }),
-  });
-  const pitchHome = pitchSubs.length > 0 ? fixStartXI(home) : home;
-  const pitchAway = pitchSubs.length > 0 ? fixStartXI(away) : away;
+  // La API no actualiza el startXI durante partidos en vivo; usamos el XI original
+  // y PitchView detecta las sustituciones directamente desde los eventos.
+  const pitchHome = home;
+  const pitchAway = away;
 
   return (
     <div className="space-y-4">

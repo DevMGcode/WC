@@ -176,6 +176,46 @@ export default function FixtureDetailPage({ params }: { params: { id: string } }
   const liveStatus       = liveDelta?.status       ?? fixture?.status;
   const elapsedMinutes   = liveDelta?.elapsedMinutes ?? null;
 
+  // Detecta si el partido está en descanso: hay un STATUS_CHANGE halftime
+  // pero todavía no hay uno de second half → estamos entre ambos tiempos.
+  const isHalftime = useMemo(() => {
+    const sc = allLiveEvents.filter(e => e.type === 'STATUS_CHANGE');
+    const hasHT  = sc.some(e => e.detail === 'halftime' || e.detail === 'half time');
+    const has2T  = sc.some(e => e.detail === 'second half');
+    return hasHT && !has2T;
+  }, [allLiveEvents]);
+
+  // Minuto calculado localmente para que el contador avance sin depender del WebSocket.
+  // Base: último elapsedMinutes del WS + offset desde cuándo llegó. Si no hay WS aún,
+  // calcula desde kickoffAt (cubre el primer semestre con tope en 45').
+  const [displayMinute, setDisplayMinute] = useState<number | null>(null);
+  const minuteBaseRef = useRef<{ minute: number; recordedAt: number } | null>(null);
+
+  useEffect(() => {
+    if (elapsedMinutes != null) {
+      minuteBaseRef.current = { minute: elapsedMinutes, recordedAt: Date.now() };
+      setDisplayMinute(elapsedMinutes);
+    }
+  }, [elapsedMinutes]);
+
+  useEffect(() => {
+    if (liveStatus !== 'LIVE') { setDisplayMinute(null); return; }
+
+    const tick = () => {
+      if (minuteBaseRef.current) {
+        const delta = Math.floor((Date.now() - minuteBaseRef.current.recordedAt) / 60000);
+        setDisplayMinute(minuteBaseRef.current.minute + delta);
+      } else if (fixture?.kickoffAt) {
+        const sinceKickoff = Math.floor((Date.now() - new Date(fixture.kickoffAt).getTime()) / 60000);
+        setDisplayMinute(Math.min(45, sinceKickoff));
+      }
+    };
+
+    tick();
+    const iv = setInterval(tick, 30000);
+    return () => clearInterval(iv);
+  }, [liveStatus, fixture?.kickoffAt]);
+
   // Goleadores: fuente principal = BD (fixture.scorers, refrescada cada 30s).
   // El WebSocket solo aporta un gol nuevo si la BD todavía no lo registró
   // (ventana de hasta 30s antes del próximo refetch). El marcador real
@@ -423,7 +463,8 @@ export default function FixtureDetailPage({ params }: { params: { id: string } }
             awayScore={liveAwayScore}
             kickoffAt={fixture.kickoffAt}
             status={liveStatus}
-            elapsedMinutes={isLive ? elapsedMinutes : undefined}
+            elapsedMinutes={isLive ? (displayMinute ?? elapsedMinutes) : undefined}
+            isHalftime={isHalftime}
           />
         </motion.div>
 

@@ -312,8 +312,8 @@ const MatchCard = ({ fixture, index, isFirst, t }: MatchCardProps) => {
                   </div>
                 </>
               )}
-              {/* Tiempo de reposición (90' + X) — fuente API o EXTENDER del admin */}
-              {(isFinished || isLive) && (fixture.extraMinutes ?? 0) > 0 && (
+              {/* Tiempo de reposición (90' + X) — solo en partidos finalizados */}
+              {isFinished && (fixture.extraMinutes ?? 0) > 0 && (
                 <>
                   <div className="w-px h-2.5" style={{ background: alpha(hex.neutral.white, 0.06) }} />
                   <div className="flex items-center gap-1.5">

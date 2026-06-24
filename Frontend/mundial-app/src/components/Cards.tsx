@@ -87,6 +87,7 @@ interface FixtureCardProps {
   kickoffAt: Date;
   status: 'SCHEDULED' | 'FINISHED' | 'LIVE' | 'POSTPONED' | 'CANCELLED';
   elapsedMinutes?: number | null;
+  isHalftime?: boolean;
   onClick?: () => void;
   showPrediction?: boolean;
   predictions?: { home: number; away: number };
@@ -102,6 +103,7 @@ const FixtureCardInner: React.FC<FixtureCardProps> = ({
   kickoffAt,
   status,
   elapsedMinutes,
+  isHalftime = false,
   onClick,
   showPrediction = false,
   predictions,
@@ -126,7 +128,9 @@ const FixtureCardInner: React.FC<FixtureCardProps> = ({
       <div className={`px-4 py-2 text-center text-white text-sm font-bold ${
         isLive ? 'bg-rose-600 animate-pulse' : isFinished ? 'bg-[#06110A]' : 'bg-green-700'
       }`}>
-        {isLive && `🔴 ${t('status.live')}${elapsedMinutes != null ? ` · ${elapsedMinutes}'` : ''}`}
+        {isLive && (isHalftime
+          ? `⏸ DESCANSO`
+          : `🔴 ${t('status.live')}${elapsedMinutes != null ? ` · ${elapsedMinutes}'` : ''}`)}
         {isFinished && t('status.finished')}
         {status === 'SCHEDULED' && (
           <>

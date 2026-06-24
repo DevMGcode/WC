@@ -6,6 +6,7 @@ import com.mundial2026.backend.tournament.integration.apifootball.ApiFootballPro
 import com.mundial2026.backend.tournament.integration.apifootball.dto.LeagueItem;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Service;
 
@@ -47,6 +48,9 @@ public class CoverageService {
     private final ApiFootballClient apiFootballClient;
     private final ApiFootballProperties props;
 
+    @Value("${tournament.sync.force-events-coverage:false}")
+    private boolean forceEventsCoverage;
+
     // ─── Acceso crudo a la cobertura cacheada ────────────────────────────────
 
     /**
@@ -83,6 +87,10 @@ public class CoverageService {
     // "la API dijo claramente false y aún así llamamos".
 
     public boolean canFetchEvents() {
+        // Durante el torneo activo, API-Football puede tener coverage.events=false
+        // en sus metadatos aunque el endpoint de eventos ya devuelva datos reales.
+        // La propiedad tournament.sync.force-events-coverage=true saltea el flag.
+        if (forceEventsCoverage) return true;
         return flag(c -> c.fixtures() != null ? c.fixtures().events() : null);
     }
 

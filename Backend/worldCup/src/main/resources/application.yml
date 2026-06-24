@@ -123,4 +123,7 @@ tournament:
     # → cero llamadas. El día del kick-off el proveedor flipea a true → arranca
     # solo sin intervención manual ni redeploy.
     event-poll-ms: "${EVENT_POLL_MS:15000}"
+    # Saltear el flag coverage.fixtures.events cuando la API aún lo tiene false
+    # pero el endpoint ya devuelve datos reales (ej. durante el torneo activo).
+    force-events-coverage: "${FORCE_EVENTS_COVERAGE:true}"
     csv-bootstrap-path: classpath:data/fixtures-bootstrap.csv

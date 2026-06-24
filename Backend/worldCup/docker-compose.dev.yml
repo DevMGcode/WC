@@ -42,6 +42,8 @@ services:
 
       SPRING_APPLICATION_JSON: >
         {"spring":{"datasource":{"url":"jdbc:postgresql://postgres:5432/worldcup2026_db","username":"postgres","password":"postgres"}}}
+
+      FORCE_EVENTS_COVERAGE: "true"
     ports:
       - "8080:8080"
     volumes:
