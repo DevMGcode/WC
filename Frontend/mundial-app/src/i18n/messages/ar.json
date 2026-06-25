@@ -192,10 +192,12 @@
     "finalShort": "نهائي",
     "roundUndefined": "الجولة غير محددة بعد",
     "champion": "بطل العالم",
+    "legendPlayed": "مباريات مُلعبة",
     "legendWon": "فاز",
     "legendDrawn": "تعادل",
     "legendLost": "خسر",
     "legendGoals": "فارق الأهداف",
+    "legendPoints": "نقاط",
     "bestDefense": "أفضل دفاع",
     "goalsConceded": "هـ",
     "groupLabel": "المجموعة"

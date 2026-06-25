@@ -192,10 +192,12 @@
     "finalShort": "Finale",
     "roundUndefined": "Tour non encore défini",
     "champion": "Champion du monde",
+    "legendPlayed": "Matchs joués",
     "legendWon": "Victoires",
     "legendDrawn": "Nuls",
     "legendLost": "Défaites",
     "legendGoals": "Diff. de buts",
+    "legendPoints": "Points",
     "bestDefense": "Meilleure Défense",
     "goalsConceded": "bc",
     "groupLabel": "Groupe"

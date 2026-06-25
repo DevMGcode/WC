@@ -192,10 +192,12 @@
     "finalShort": "Фин",
     "roundUndefined": "Раунд ещё не определён",
     "champion": "Чемпион мира",
+    "legendPlayed": "Игры сыграны",
     "legendWon": "Победы",
     "legendDrawn": "Ничьи",
     "legendLost": "Поражения",
     "legendGoals": "Разн. голов",
+    "legendPoints": "Очки",
     "bestDefense": "Лучшая защита",
     "goalsConceded": "ПГ",
     "groupLabel": "Группа"

@@ -105,15 +105,25 @@ const GroupCard = ({ group, index, t }: GroupCardProps) => {
       <div className="grid px-4 py-2"
         style={{ gridTemplateColumns: '28px 1fr 28px 28px 28px 28px 32px 36px',
                  borderBottom: `1px solid ${alpha(hex.neutral.white, 0.04)}` }}>
-        {['#', t('groups.team'), t('groups.played'), t('groups.won'), t('groups.drawn'), t('groups.lost'), t('groups.goals'), t('groups.points')].map((h, hi) => {
+        {[
+          { label: '#',                     title: ''                          },
+          { label: t('groups.team'),        title: ''                          },
+          { label: t('groups.played'),      title: t('groups.legendPlayed')    },
+          { label: t('groups.won'),         title: t('groups.legendWon')       },
+          { label: t('groups.drawn'),       title: t('groups.legendDrawn')     },
+          { label: t('groups.lost'),        title: t('groups.legendLost')      },
+          { label: t('groups.goals'),       title: t('groups.legendGoals')     },
+          { label: t('groups.points'),      title: t('groups.legendPoints')    },
+        ].map(({ label, title }, hi) => {
           const colColor = hi === 3 ? hex.green.hover
                         : hi === 4 ? hex.gold.muted
                         : hi === 5 ? hex.status.danger
                         : hi === 7 ? hex.green.bright
                         : hex.text.muted;
           return (
-            <span key={hi} className={`text-[8px] font-black tracking-[0.22em] uppercase${hi !== 0 && hi !== 1 ? ' text-center' : ''}`}
-              style={{ color: colColor }}>{h}</span>
+            <span key={hi} title={title || undefined}
+              className={`text-[8px] font-black tracking-[0.22em] uppercase${hi !== 0 && hi !== 1 ? ' text-center' : ''}${title ? ' cursor-help' : ''}`}
+              style={{ color: colColor }}>{label}</span>
           );
         })}
       </div>
@@ -184,6 +194,26 @@ const GroupCard = ({ group, index, t }: GroupCardProps) => {
           </motion.div>
         );
       })}
+
+      {/* Column legend — 2 rows × 3 columns */}
+      <div className="grid grid-cols-3 gap-x-2 gap-y-1.5 px-4 py-2.5"
+        style={{ borderTop: `1px solid ${alpha(hex.neutral.white, 0.04)}`, background: alpha(hex.neutral.black, 0.10) }}>
+        {[
+          { abbr: t('groups.played'), full: t('groups.legendPlayed') },
+          { abbr: t('groups.won'),    full: t('groups.legendWon'),    color: hex.green.hover   },
+          { abbr: t('groups.drawn'),  full: t('groups.legendDrawn'),  color: hex.gold.muted    },
+          { abbr: t('groups.lost'),   full: t('groups.legendLost'),   color: hex.status.danger },
+          { abbr: t('groups.goals'),  full: t('groups.legendGoals')                            },
+          { abbr: t('groups.points'), full: t('groups.legendPoints'), color: hex.green.bright  },
+        ].map(({ abbr, full, color }) => (
+          <div key={abbr} className="flex items-center gap-1 min-w-0">
+            <span className="shrink-0 text-[8px] font-black tracking-widest uppercase"
+              style={{ color: color ?? alpha(hex.text.secondary, 0.50) }}>{abbr}</span>
+            <span className="shrink-0 text-[8px]" style={{ color: alpha(hex.text.secondary, 0.25) }}>·</span>
+            <span className="text-[8px] truncate" style={{ color: alpha(hex.text.secondary, 0.40) }}>{full}</span>
+          </div>
+        ))}
+      </div>
 
       {/* Footer */}
       <div className="px-4 py-2.5 flex items-center gap-2"
