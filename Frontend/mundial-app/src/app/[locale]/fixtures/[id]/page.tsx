@@ -143,10 +143,13 @@ export default function FixtureDetailPage({ params }: { params: { id: string } }
       .catch(() => {});
   }, [fixture?.status, fixtureId]);
 
-  // Merge: eventos del WebSocket + eventos de BD, sin duplicados
+  // Merge: eventos del WebSocket + eventos de BD, sin duplicados.
+  // La clave incluye playerName para no descartar múltiples subs del mismo equipo en el mismo minuto.
   const allLiveEvents = useMemo(() => {
-    const wsSet = new Set(liveEvents.map(e => `${e.type}|${e.minute}|${e.teamId ?? 'x'}`));
-    const unique = dbEvents.filter(e => !wsSet.has(`${e.type}|${e.minute}|${e.teamId ?? 'x'}`));
+    const evKey = (e: { type?: string; minute?: number; teamId?: number | null; playerName?: string | null }) =>
+      `${e.type}|${e.minute}|${e.teamId ?? 'x'}|${e.playerName ?? ''}`;
+    const wsSet = new Set(liveEvents.map(evKey));
+    const unique = dbEvents.filter(e => !wsSet.has(evKey(e)));
     return [...liveEvents, ...unique];
   }, [liveEvents, dbEvents]);
 
