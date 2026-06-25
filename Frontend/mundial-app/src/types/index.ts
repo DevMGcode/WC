@@ -264,6 +264,7 @@ export interface MatchLiveDelta {
 export type MatchEventType =
   | 'GOAL' | 'OWN_GOAL' | 'PENALTY_GOAL' | 'PENALTY_MISSED'
   | 'YELLOW_CARD' | 'RED_CARD' | 'SUBSTITUTION' | 'VAR_REVIEW' | 'STATUS_CHANGE'
+  | 'SHOOTOUT_GOAL' | 'SHOOTOUT_MISSED'
 
 export interface MatchEvent {
   matchId: number;
