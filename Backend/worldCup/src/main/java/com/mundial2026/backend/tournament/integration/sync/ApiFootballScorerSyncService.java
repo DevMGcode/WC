@@ -119,7 +119,7 @@ public class ApiFootballScorerSyncService {
                 for (ExternalMatchEvent sub : subs) {
                     Long teamId = resolveInternalTeamId(sub.teamId());
                     matchEventService.persistLiveSub(fixture.getId(), sub.playerName(),
-                            sub.assistPlayerName(), teamId, totalMinute(sub));
+                            sub.assistPlayerName(), teamId, totalMinute(sub), sub.extraMinute());
                 }
                 if (!subs.isEmpty()) {
                     log.info("[ScorerSync/ApiFootball] {} sustituciones sincronizadas para fixture {} (extId={})",

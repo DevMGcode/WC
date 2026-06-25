@@ -9,9 +9,13 @@ public record MatchEventResponse(
         String teamName,
         String teamFifaCode,
         Integer minute,
+        Integer extraMinute,
         String eventType,
+        String detail,
         String source,
         Boolean verified,
         String apiPlayerName,
-        Boolean mismatch
+        Boolean mismatch,
+        Integer homeScoreAtEvent,
+        Integer awayScoreAtEvent
 ) {}

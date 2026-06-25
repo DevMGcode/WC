@@ -18,6 +18,7 @@ import com.mundial2026.backend.tournament.repository.GroupStageRepository;
 import com.mundial2026.backend.tournament.repository.StageRepository;
 import com.mundial2026.backend.tournament.repository.TeamRepository;
 import com.mundial2026.backend.tournament.repository.TournamentRepository;
+import com.mundial2026.backend.tournament.service.MatchEventService;
 import com.mundial2026.backend.tournament.service.StandingsCalculatorService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -58,6 +59,7 @@ public class FixtureSyncService {
     private final VenueSyncService venueSyncService;
     private final StandingsCalculatorService standingsCalculator;
     private final ApplicationEventPublisher events;
+    private final MatchEventService matchEventService;
 
     @Transactional
     public SyncResult syncAllTournamentFixtures() {
@@ -138,6 +140,13 @@ public class FixtureSyncService {
                     f.getId(), f.getExternalProviderId(), minutesElapsed);
             f.setStatus(FixtureStatus.FINISHED);
             fixtureRepository.save(f);
+
+            try {
+                matchEventService.persistStatusChange(f.getId(), "fulltime",
+                        90, f.getExtraMinutes(), f.getHomeScore(), f.getAwayScore());
+            } catch (Exception ex) {
+                log.warn("[FixtureSync] No se pudo persistir STATUS_CHANGE fulltime (partido {}): {}", f.getId(), ex.getMessage());
+            }
 
             events.publishEvent(new FixtureScoreUpdatedEvent(new MatchLiveDelta(
                     f.getId(), f.getHomeScore(), f.getAwayScore(),
@@ -255,6 +264,26 @@ public class FixtureSyncService {
                 // (típicamente el marcador), la tabla del grupo queda obsoleta.
                 if (existing.getStatus() == FixtureStatus.FINISHED && existing.getGroupStage() != null) {
                     groupsToRecalculate.add(existing.getGroupStage());
+                }
+            }
+
+            // Detectar cambios de estado para persistir eventos de separación en el timeline
+            if (existing != null && ext.status() != null) {
+                Integer hs = ext.homeScore() != null ? ext.homeScore() : existing.getHomeScore();
+                Integer as = ext.awayScore() != null ? ext.awayScore() : existing.getAwayScore();
+                try {
+                    if (ext.status() == MatchStatus.HALFTIME) {
+                        matchEventService.persistStatusChange(existing.getId(), "halftime",
+                                45, ext.stoppageMinutes(), hs, as);
+                    } else if (ext.status() == MatchStatus.LIVE) {
+                        matchEventService.persistSecondHalfIfNeeded(existing.getId(), hs, as);
+                    } else if (ext.status() == MatchStatus.PENALTY_SHOOTOUT) {
+                        matchEventService.persistStatusChange(existing.getId(), "penalties",
+                                120, null, hs, as);
+                    }
+                } catch (Exception ex) {
+                    log.warn("[FixtureSync] No se pudo persistir STATUS_CHANGE (partido {}, status {}): {}",
+                            existing.getId(), ext.status(), ex.getMessage());
                 }
             }
         }
