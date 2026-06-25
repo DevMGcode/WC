@@ -20,11 +20,13 @@ export function useMatchEvents(matchId: number | null): MatchEvent[] {
       `/topic/matches/${matchId}/events`,
       (event) => {
         setEvents((prev) => {
+          // Incluir playerName en la clave para permitir múltiples subs del mismo equipo en el mismo minuto
           const isDuplicate = prev.some(
             (e) =>
               e.type === event.type &&
               e.minute === event.minute &&
-              e.teamId === event.teamId
+              e.teamId === event.teamId &&
+              (e.playerName ?? '') === (event.playerName ?? '')
           )
           return isDuplicate ? prev : [...prev, event]
         })

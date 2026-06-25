@@ -340,18 +340,49 @@ export default function LiveEventFeed({ events, isLive = true, homeTeamId, homeC
   }, [sorted.length]);
 
   if (events.length === 0) {
-    return (
+    if (!isLive) return (
       <div className="flex flex-col items-center justify-center py-10 gap-3">
-        <motion.div
-          animate={{ opacity: [0.4, 0.9, 0.4] }}
-          transition={{ duration: 1.6, repeat: Infinity }}
-          className="text-3xl"
-        >
-          {isLive ? '⏳' : '📋'}
-        </motion.div>
+        <span className="text-3xl">📋</span>
         <p className="text-[11px] font-bold tracking-widest uppercase text-center"
-          style={{ color: alpha(hex.text.secondary, 0.45) }}>
-          {isLive ? 'Esperando eventos del partido...' : 'Sin eventos registrados'}
+          style={{ color: alpha(hex.text.secondary, 0.45) }}>Sin eventos registrados</p>
+      </div>
+    );
+
+    return (
+      <div className="flex flex-col items-center justify-center py-12 gap-5">
+        {/* Radar + balón */}
+        <div className="relative flex items-center justify-center" style={{ width: 120, height: 120 }}>
+          {[0, 1, 2].map(i => (
+            <motion.div key={i} className="absolute rounded-full"
+              style={{
+                width: 44 + i * 30, height: 44 + i * 30,
+                border: `1px solid ${alpha(hex.status.danger, 0.55 - i * 0.15)}`,
+              }}
+              animate={{ scale: [1, 1.22, 1], opacity: [0.7, 0.15, 0.7] }}
+              transition={{ duration: 2.2, repeat: Infinity, delay: i * 0.55, ease: 'easeInOut' }}
+            />
+          ))}
+          <motion.span className="text-4xl select-none z-10"
+            animate={{ rotate: [0, 12, -12, 0], scale: [1, 1.08, 1] }}
+            transition={{ duration: 3.5, repeat: Infinity, ease: 'easeInOut' }}>
+            ⚽
+          </motion.span>
+        </div>
+
+        {/* Badge EN VIVO */}
+        <motion.div className="flex items-center gap-1.5 px-3 py-1 rounded-full"
+          style={{ background: alpha(hex.status.danger, 0.10), border: `1px solid ${alpha(hex.status.danger, 0.30)}` }}
+          animate={{ opacity: [1, 0.55, 1] }}
+          transition={{ duration: 1.1, repeat: Infinity }}>
+          <div className="w-1.5 h-1.5 rounded-full" style={{ background: hex.status.danger }} />
+          <span className="text-[8px] font-black tracking-[0.30em] uppercase" style={{ color: hex.status.danger }}>
+            En vivo
+          </span>
+        </motion.div>
+
+        <p className="text-[10px] font-bold tracking-widest uppercase text-center"
+          style={{ color: alpha(hex.text.secondary, 0.38) }}>
+          Esperando el primer evento...
         </p>
       </div>
     );

@@ -192,10 +192,12 @@
     "finalShort": "Finale",
     "roundUndefined": "Runde noch nicht definiert",
     "champion": "Weltmeister",
+    "legendPlayed": "Spiele",
     "legendWon": "Gewonnen",
     "legendDrawn": "Unentschieden",
     "legendLost": "Verloren",
     "legendGoals": "Tordiff.",
+    "legendPoints": "Punkte",
     "bestDefense": "Beste Defensive",
     "goalsConceded": "GT",
     "groupLabel": "Gruppe"

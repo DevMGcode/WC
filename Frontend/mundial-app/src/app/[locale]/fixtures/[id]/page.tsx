@@ -143,10 +143,13 @@ export default function FixtureDetailPage({ params }: { params: { id: string } }
       .catch(() => {});
   }, [fixture?.status, fixtureId]);
 
-  // Merge: eventos del WebSocket + eventos de BD, sin duplicados
+  // Merge: eventos del WebSocket + eventos de BD, sin duplicados.
+  // La clave incluye playerName para no descartar múltiples subs del mismo equipo en el mismo minuto.
   const allLiveEvents = useMemo(() => {
-    const wsSet = new Set(liveEvents.map(e => `${e.type}|${e.minute}|${e.teamId ?? 'x'}`));
-    const unique = dbEvents.filter(e => !wsSet.has(`${e.type}|${e.minute}|${e.teamId ?? 'x'}`));
+    const evKey = (e: { type?: string; minute?: number; teamId?: number | null; playerName?: string | null }) =>
+      `${e.type}|${e.minute}|${e.teamId ?? 'x'}|${e.playerName ?? ''}`;
+    const wsSet = new Set(liveEvents.map(evKey));
+    const unique = dbEvents.filter(e => !wsSet.has(evKey(e)));
     return [...liveEvents, ...unique];
   }, [liveEvents, dbEvents]);
 
@@ -174,7 +177,47 @@ export default function FixtureDetailPage({ params }: { params: { id: string } }
   const liveHomeScore    = liveDelta?.homeScore    ?? fixture?.homeScore;
   const liveAwayScore    = liveDelta?.awayScore    ?? fixture?.awayScore;
   const liveStatus       = liveDelta?.status       ?? fixture?.status;
-  const elapsedMinutes   = liveDelta?.elapsedMinutes ?? null;
+  const elapsedMinutes   = liveDelta?.elapsedMinutes ?? fixture?.elapsedMinutes ?? null;
+
+  // Detecta si el partido está en descanso: hay un STATUS_CHANGE halftime
+  // pero todavía no hay uno de second half → estamos entre ambos tiempos.
+  const isHalftime = useMemo(() => {
+    const sc = allLiveEvents.filter(e => e.type === 'STATUS_CHANGE');
+    const hasHT  = sc.some(e => e.detail === 'halftime' || e.detail === 'half time');
+    const has2T  = sc.some(e => e.detail === 'second half');
+    return hasHT && !has2T;
+  }, [allLiveEvents]);
+
+  // Minuto calculado localmente para que el contador avance sin depender del WebSocket.
+  // Base: último elapsedMinutes del WS + offset desde cuándo llegó. Si no hay WS aún,
+  // calcula desde kickoffAt (cubre el primer semestre con tope en 45').
+  const [displayMinute, setDisplayMinute] = useState<number | null>(null);
+  const minuteBaseRef = useRef<{ minute: number; recordedAt: number } | null>(null);
+
+  useEffect(() => {
+    if (elapsedMinutes != null) {
+      minuteBaseRef.current = { minute: elapsedMinutes, recordedAt: Date.now() };
+      setDisplayMinute(elapsedMinutes);
+    }
+  }, [elapsedMinutes]);
+
+  useEffect(() => {
+    if (liveStatus !== 'LIVE') { setDisplayMinute(null); return; }
+
+    const tick = () => {
+      if (minuteBaseRef.current) {
+        const delta = Math.floor((Date.now() - minuteBaseRef.current.recordedAt) / 60000);
+        setDisplayMinute(minuteBaseRef.current.minute + delta);
+      } else if (fixture?.kickoffAt) {
+        const sinceKickoff = Math.floor((Date.now() - new Date(fixture.kickoffAt).getTime()) / 60000);
+        setDisplayMinute(Math.min(45, sinceKickoff));
+      }
+    };
+
+    tick();
+    const iv = setInterval(tick, 30000);
+    return () => clearInterval(iv);
+  }, [liveStatus, fixture?.kickoffAt]);
 
   // Goleadores: fuente principal = BD (fixture.scorers, refrescada cada 30s).
   // El WebSocket solo aporta un gol nuevo si la BD todavía no lo registró
@@ -235,6 +278,7 @@ export default function FixtureDetailPage({ params }: { params: { id: string } }
         teamName: null,
         teamFifaCode: e.teamFifaCode ?? null,
         minute: e.minute ?? null,
+        extraMinute: e.extraMinute ?? null,
         eventType: e.type,
         source: 'API' as const,
         verified: false,
@@ -423,7 +467,8 @@ export default function FixtureDetailPage({ params }: { params: { id: string } }
             awayScore={liveAwayScore}
             kickoffAt={fixture.kickoffAt}
             status={liveStatus}
-            elapsedMinutes={isLive ? elapsedMinutes : undefined}
+            elapsedMinutes={isLive ? (displayMinute ?? elapsedMinutes) : undefined}
+            isHalftime={isHalftime}
           />
         </motion.div>
 
@@ -861,7 +906,7 @@ export default function FixtureDetailPage({ params }: { params: { id: string } }
                         {scorer.minute && (
                           <span className="text-[10px] font-black text-orionix-text-muted px-2 py-1 rounded-lg"
                             style={{ background: alpha(hex.neutral.white, 0.04), border: `1px solid ${alpha(hex.neutral.white, 0.06)}` }}>
-                            {scorer.minute}&apos;
+                            {scorer.minute}{scorer.extraMinute ? `+${scorer.extraMinute}` : ''}&apos;
                           </span>
                         )}
                         {scorer.verified && (

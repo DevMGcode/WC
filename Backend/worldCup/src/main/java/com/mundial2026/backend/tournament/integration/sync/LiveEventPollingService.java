@@ -94,6 +94,17 @@ public class LiveEventPollingService {
                         persistEventIfNeeded(f.getId(), ext, mappedType);
                     }
                 }
+                // Reconciliar: borrar de la BD los eventos source=API que la API ya
+                // no reporta (anulados por VAR, reatribuidos a otro jugador…). Solo
+                // si la API devolvió eventos, para no borrar por una respuesta vacía
+                // transitoria.
+                if (!apiEvents.isEmpty()) {
+                    List<MatchEventService.LiveApiEventKey> keys = apiEvents.stream()
+                            .map(this::toReconcileKey)
+                            .filter(java.util.Objects::nonNull)
+                            .toList();
+                    matchEventService.reconcileLiveApiEvents(f.getId(), keys);
+                }
             } catch (Exception ex) {
                 log.warn("Failed to poll events for fixture extId={}: {}",
                         f.getExternalProviderId(), ex.getMessage());
@@ -178,6 +189,30 @@ public class LiveEventPollingService {
                 ext.detail(),
                 Instant.now()
         );
+    }
+
+    /** Convierte un evento de la API en la clave de reconciliación, o null si es
+     *  un tipo que el polling no persiste (status, VAR, tanda de penales…). */
+    private MatchEventService.LiveApiEventKey toReconcileKey(ExternalMatchEvent ext) {
+        String type = managedEventType(ext);
+        if (type == null || ext.playerName() == null || ext.playerName().isBlank()) {
+            return null;
+        }
+        return new MatchEventService.LiveApiEventKey(type, ext.playerName(), ext.elapsedMinute());
+    }
+
+    /** Tipo interno (String) si el polling lo persiste y por tanto debe reconciliarse;
+     *  null para los que no se guardan (tanda de penales, VAR, cambios de estado). */
+    private String managedEventType(ExternalMatchEvent ext) {
+        return switch (mapType(ext)) {
+            case GOAL          -> "GOAL";
+            case OWN_GOAL      -> "OWN_GOAL";
+            case PENALTY_GOAL  -> "PENALTY_GOAL";
+            case YELLOW_CARD   -> "YELLOW_CARD";
+            case RED_CARD      -> "RED_CARD";
+            case SUBSTITUTION  -> "SUBSTITUTION";
+            default            -> null;
+        };
     }
 
     private MatchEvent.Type mapType(ExternalMatchEvent ext) {

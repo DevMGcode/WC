@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useEffect, useState, useMemo } from 'react';
+import React, { useEffect, useState, useMemo, useRef } from 'react';
 import Image from 'next/image';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useTranslations } from 'next-intl';
@@ -49,10 +49,11 @@ function groupByGrid(players: LineupPlayer[]): LineupPlayer[][] {
 
 interface SubInfo { playerInName: string; minute: number; }
 
-function PlayerDot({ player, x, y, color, bg, subbed, subInfo }: {
+function PlayerDot({ player, x, y, color, bg, cameIn, prevCameIn, scale = 1 }: {
   player: LineupPlayer; x: number; y: number; color: string; bg: string;
-  subbed?: boolean;
-  subInfo?: SubInfo;
+  cameIn?: SubInfo;
+  prevCameIn?: SubInfo;
+  scale?: number;
 }) {
   const [photoOk, setPhotoOk] = useState(true);
   const photoUrl = player.playerId
@@ -62,20 +63,20 @@ function PlayerDot({ player, x, y, color, bg, subbed, subInfo }: {
   return (
     <div
       className="absolute flex flex-col items-center pointer-events-none"
-      style={{ left: `${x}%`, top: `${y}%`, transform: 'translate(-50%, -50%)', width: 76, zIndex: 10 }}
+      style={{ left: `${x}%`, top: `${y}%`, transform: `translate(-50%, -50%) scale(${scale})`, width: 84, zIndex: 10 }}
     >
       <motion.div
         initial={{ scale: 0, opacity: 0 }}
-        animate={{ scale: 1, opacity: subbed ? 0.35 : 1 }}
+        animate={{ scale: 1, opacity: 1 }}
         transition={{ type: 'spring', stiffness: 260, damping: 20, delay: Math.random() * 0.3 }}
         className="relative rounded-full flex items-center justify-center font-black overflow-hidden"
         style={{
-          width: 34, height: 34,
+          width: 46, height: 46,
           background: photoOk && photoUrl ? 'transparent' : bg,
-          border: `2px solid ${subbed ? '#666' : color}`,
-          fontSize: 11,
-          color: subbed ? '#888' : color,
-          boxShadow: subbed ? 'none' : `0 0 10px ${color}60`,
+          border: `2px solid ${cameIn ? '#00e85a' : color}`,
+          fontSize: 14,
+          color,
+          boxShadow: cameIn ? '0 0 10px rgba(0,232,90,0.5)' : `0 0 10px ${color}60`,
         }}
       >
         {photoUrl && photoOk ? (
@@ -84,19 +85,18 @@ function PlayerDot({ player, x, y, color, bg, subbed, subInfo }: {
             src={photoUrl}
             alt={player.playerName}
             onError={() => setPhotoOk(false)}
-            style={{ width: '100%', height: '100%', objectFit: 'cover', borderRadius: '50%', filter: subbed ? 'grayscale(1)' : 'none' }}
+            style={{ width: '100%', height: '100%', objectFit: 'cover', borderRadius: '50%' }}
           />
         ) : (
-          <span>{player.shirtNumber}</span>
+          <span>{player.shirtNumber || '?'}</span>
         )}
 
-        {/* Número de camiseta como badge sobre la foto */}
         {photoUrl && photoOk && (
           <span
             className="absolute bottom-0 right-0 rounded-full flex items-center justify-center font-black"
             style={{
-              width: 14, height: 14, fontSize: 7,
-              background: subbed ? '#444' : color,
+              width: 17, height: 17, fontSize: 8,
+              background: color,
               color: '#000',
               border: '1px solid rgba(0,0,0,0.5)',
               lineHeight: 1,
@@ -106,8 +106,8 @@ function PlayerDot({ player, x, y, color, bg, subbed, subInfo }: {
           </span>
         )}
 
-        {subbed && (
-          <span className="absolute -top-1 -right-1 text-[10px] leading-none">🔴</span>
+        {cameIn && (
+          <span className="absolute -top-1 -right-1 text-[10px] leading-none">🟢</span>
         )}
       </motion.div>
 
@@ -115,7 +115,7 @@ function PlayerDot({ player, x, y, color, bg, subbed, subInfo }: {
         className="text-center font-bold leading-tight mt-1 w-full"
         style={{
           fontSize: 10,
-          color: subbed ? '#777' : '#fff',
+          color: '#fff',
           textShadow: '0 1px 4px rgba(0,0,0,1), 0 0 6px rgba(0,0,0,0.9)',
           whiteSpace: 'nowrap',
         }}
@@ -123,12 +123,31 @@ function PlayerDot({ player, x, y, color, bg, subbed, subInfo }: {
         {lastName(player.playerName)}
       </span>
 
-      {subInfo && (
+      {prevCameIn && (
         <motion.div
           initial={{ opacity: 0, y: -4 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.4 }}
+          transition={{ delay: 0.35 }}
           className="mt-1 px-2 py-0.5 rounded"
+          style={{
+            background: 'rgba(0,180,70,0.22)',
+            border: '1.5px solid rgba(0,210,80,0.40)',
+            display: 'inline-flex', alignItems: 'center', gap: 3,
+          }}
+        >
+          <span style={{ fontSize: 9, flexShrink: 0 }}>🟢</span>
+          <span className="font-black" style={{ fontSize: 10, color: '#7bffaa', whiteSpace: 'nowrap', flexShrink: 0, textShadow: '0 1px 4px rgba(0,0,0,0.9)' }}>
+            {lastName(prevCameIn.playerInName)} {prevCameIn.minute}&apos;
+          </span>
+        </motion.div>
+      )}
+
+      {cameIn && (
+        <motion.div
+          initial={{ opacity: 0, y: -4 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.45 }}
+          className="mt-0.5 px-2 py-0.5 rounded"
           style={{
             background: 'rgba(0,200,80,0.30)',
             border: '1.5px solid rgba(0,230,90,0.55)',
@@ -147,7 +166,7 @@ function PlayerDot({ player, x, y, color, bg, subbed, subInfo }: {
               textShadow: '0 1px 4px rgba(0,0,0,0.9)',
             }}
           >
-            {lastName(subInfo.playerInName)} {subInfo.minute}&apos;
+            {lastName(cameIn.playerInName)} {cameIn.minute}&apos;
           </span>
         </motion.div>
       )}
@@ -157,16 +176,95 @@ function PlayerDot({ player, x, y, color, bg, subbed, subInfo }: {
 
 // ── PitchView (horizontal) ────────────────────────────────────────────────────
 
+// Aplica los eventos de sustitución al startXI en orden cronológico.
+// Resultado: un slot por cada posición original; el slot muestra al jugador ACTUAL
+// (puede ser el titular o quien entró en su lugar, incluso en cadenas de cambios).
+type PitchSlot = {
+  key: number;          // playerId original (para la key de React)
+  grid?: string; position: string;
+  playerId: number; playerName: string; shirtNumber: number;
+  cameIn?: SubInfo;      // última sustitución en esta posición
+  prevCameIn?: SubInfo;  // sub anterior en la misma posición (cadena)
+};
+
+function computePitchSlots(
+  startXI: LineupPlayer[],
+  bench: LineupPlayer[],
+  teamEvents: MatchEvent[]
+): PitchSlot[] {
+  const slots: PitchSlot[] = startXI.map(p => ({
+    key: p.playerId,
+    grid: p.grid, position: p.position,
+    playerId: p.playerId, playerName: p.playerName, shirtNumber: p.shirtNumber,
+  }));
+
+  // En nuestra BD/API: playerName = quién SALE, playerOut = quién ENTRA.
+  // Aplicar cada sub en orden; el slot actualiza su playerName al entrante
+  // para que la cadena siguiente lo localice (ej: Holes→Soucek→Sojka).
+  const sorted = [...teamEvents].sort((a, b) => a.minute - b.minute);
+
+  for (const ev of sorted) {
+    const saliente = ev.playerName ?? '';  // quién SALE del campo
+    const entrante = ev.playerOut  ?? '';  // quién ENTRA al campo
+    if (!saliente) continue;
+
+    // Caso 1: buscar slot del jugador que SALE (está en el XI actual del slot)
+    let slot = slots.find(s => matchName(s.playerName, saliente));
+
+    if (slot) {
+      const benchPlayer = bench.find(p => matchName(p.playerName, entrante));
+      // Si ya había una sub en este slot, guardarla como prevCameIn (cadena)
+      if (slot.cameIn) slot.prevCameIn = slot.cameIn;
+      slot.cameIn      = { playerInName: saliente, minute: ev.minute };
+      slot.playerName  = entrante;
+      slot.playerId    = benchPlayer?.playerId    ?? 0;
+      slot.shirtNumber = benchPlayer?.shirtNumber ?? 0;
+    } else if (entrante) {
+      // Caso 2: la API ya actualizó el XI con el jugador entrante
+      slot = slots.find(s => matchName(s.playerName, entrante));
+      if (slot && !slot.cameIn) {
+        slot.cameIn = { playerInName: saliente, minute: ev.minute };
+      }
+    }
+  }
+
+  return slots;
+}
+
+function normDiacritics(s: string): string {
+  return s
+    .replace(/[áàäãâ]/g, 'a').replace(/[éèëê]/g, 'e')
+    .replace(/[íìï]/g, 'i').replace(/[óòöôõø]/g, 'o')
+    .replace(/[úùüů]/g, 'u').replace(/[ýÝ]/g, 'y')
+    .replace(/ñ/g, 'n').replace(/[řŘ]/g, 'r').replace(/[ěĚ]/g, 'e')
+    .replace(/[šŠ]/g, 's').replace(/[ćčĆČ]/g, 'c')
+    .replace(/[žŽ]/g, 'z').replace(/[đĐ]/g, 'd');
+}
 function normName(n: string): string {
-  return n.trim().split(' ').pop()?.toLowerCase()
-    .replace(/[áàä]/g, 'a').replace(/[éèë]/g, 'e')
-    .replace(/[íìï]/g, 'i').replace(/[óòö]/g, 'o')
-    .replace(/[úùü]/g, 'u').replace(/ñ/g, 'n') ?? '';
+  return normDiacritics(n.trim().split(' ').pop()?.toLowerCase() ?? '');
+}
+function normTok(t: string): string {
+  return normDiacritics(t.toLowerCase());
+}
+function sortedTokenStr(n: string): string {
+  // Divide por espacios y guiones, normaliza diacríticos, ordena alfabéticamente.
+  // "Jin-gyu Kim" y "Kim Jin-Gyu" → ambos dan "gyu jin kim" → match seguro.
+  return n.trim().split(/[\s-]+/).map(normTok).filter(t => t.length > 1).sort().join(' ');
 }
 function matchName(fullName: string, eventName: string): boolean {
   const a = normName(fullName);
   const b = normName(eventName);
-  return a === b && a.length > 1;
+  // Regla 1: último apellido coincide
+  if (a === b && a.length > 1) return true;
+  // Regla 2: nombre en orden invertido (coreano, etc.) — tokens ordenados idénticos
+  const sa = sortedTokenStr(fullName);
+  const sb = sortedTokenStr(eventName);
+  if (sa.length > 4 && sa === sb) return true;
+  // Regla 3: apellido compuesto español — el último apellido del XI aparece
+  // en cualquier token del evento (p.ej. "Mateo Chávez" vs "M. Chavez Garcia")
+  const tokB = eventName.trim().split(/[\s-]+/).map(normTok).filter(t => t.length > 3);
+  if (a.length > 3 && tokB.includes(a)) return true;
+  return false;
 }
 
 function PitchView({ home, away, liveEvents }: { home: LineupTeam; away: LineupTeam; liveEvents: MatchEvent[] }) {
@@ -176,13 +274,49 @@ function PitchView({ home, away, liveEvents }: { home: LineupTeam; away: LineupT
   const awayBg    = alphaOf('gold',  0.35);
   const line      = 'rgba(255,255,255,0.2)';
 
+  // Escala responsive: medimos el ancho real de la cancha y encogemos las fichas
+  // de los jugadores de forma proporcional. En desktop (≥720px) scale = 1 (igual
+  // que ahora); en móvil baja hasta 0.55 para que no se amontonen.
+  const pitchRef = useRef<HTMLDivElement>(null);
+  const [scale, setScale] = useState(1);
+  useEffect(() => {
+    const el = pitchRef.current;
+    if (!el) return;
+    const update = () => setScale(Math.max(0.55, Math.min(1, el.offsetWidth / 720)));
+    update();
+    const ro = new ResizeObserver(update);
+    ro.observe(el);
+    return () => ro.disconnect();
+  }, []);
+
   const homeRows = useMemo(() => groupByGrid(home.startXI), [home.startXI]);
   const awayRows = useMemo(() => groupByGrid(away.startXI), [away.startXI]);
 
-  // Sustituciones recibidas por WebSocket
   const subs = useMemo(() =>
-    liveEvents.filter(e => e.type === 'SUBSTITUTION' && e.playerOut),
+    liveEvents.filter(e => e.type === 'SUBSTITUTION'),
   [liveEvents]);
+
+  // Estado actual de la cancha: startXI + eventos aplicados en orden cronológico.
+  // Pasamos TODOS los subs (sin filtrar por teamId porque puede venir null);
+  // computePitchSlots solo aplica los que coincidan con jugadores del startXI.
+  const homeSlots = useMemo(() =>
+    computePitchSlots(home.startXI, home.substitutes, subs),
+  [home, subs]);
+  const awaySlots = useMemo(() =>
+    computePitchSlots(away.startXI, away.substitutes, subs),
+  [away, subs]);
+
+  // Mapa playerId_original → slot para localizar rápido al renderizar
+  const homeSlotMap = useMemo(() => {
+    const m = new Map<number, PitchSlot>();
+    home.startXI.forEach((p, i) => m.set(p.playerId, homeSlots[i]));
+    return m;
+  }, [home.startXI, homeSlots]);
+  const awaySlotMap = useMemo(() => {
+    const m = new Map<number, PitchSlot>();
+    away.startXI.forEach((p, i) => m.set(p.playerId, awaySlots[i]));
+    return m;
+  }, [away.startXI, awaySlots]);
 
   // Home: GK izquierda (x≈7%), delanteros hacia centro (x≈44%)
   const homeX = homeRows.map((_, i) => {
@@ -198,6 +332,7 @@ function PitchView({ home, away, liveEvents }: { home: LineupTeam; away: LineupT
   return (
     <motion.div
       key="pitch"
+      ref={pitchRef}
       initial={{ opacity: 0, scale: 0.97 }}
       animate={{ opacity: 1, scale: 1 }}
       exit={{ opacity: 0, scale: 0.97 }}
@@ -258,15 +393,24 @@ function PitchView({ home, away, liveEvents }: { home: LineupTeam; away: LineupT
 
         {/* ── Jugadores home (mitad izquierda) ── */}
         {homeRows.map((row, ri) =>
-          row.map((p, ci) => {
-            const sub = subs.find(s => s.playerOut && matchName(p.playerName, s.playerOut));
+          row.map((origP, ci) => {
+            const slot = homeSlotMap.get(origP.playerId)!;
+            const player: LineupPlayer = {
+              playerId: slot.playerId || origP.playerId,
+              playerName: slot.playerName,
+              shirtNumber: slot.shirtNumber || origP.shirtNumber,
+              position: slot.position,
+              grid: slot.grid,
+            };
             return (
-              <PlayerDot key={p.playerId} player={p}
+              <PlayerDot key={slot.key}
+                player={player}
                 x={homeX[ri]}
                 y={(ci + 1) / (row.length + 1) * 100}
                 color={homeColor} bg={homeBg}
-                subbed={!!sub}
-                subInfo={sub ? { playerInName: sub.playerName ?? '', minute: sub.minute } : undefined}
+                scale={scale}
+                prevCameIn={slot.prevCameIn}
+                cameIn={slot.cameIn}
               />
             );
           })
@@ -274,15 +418,24 @@ function PitchView({ home, away, liveEvents }: { home: LineupTeam; away: LineupT
 
         {/* ── Jugadores away (mitad derecha) ── */}
         {awayRows.map((row, ri) =>
-          row.map((p, ci) => {
-            const sub = subs.find(s => s.playerOut && matchName(p.playerName, s.playerOut));
+          row.map((origP, ci) => {
+            const slot = awaySlotMap.get(origP.playerId)!;
+            const player: LineupPlayer = {
+              playerId: slot.playerId || origP.playerId,
+              playerName: slot.playerName,
+              shirtNumber: slot.shirtNumber || origP.shirtNumber,
+              position: slot.position,
+              grid: slot.grid,
+            };
             return (
-              <PlayerDot key={p.playerId} player={p}
+              <PlayerDot key={slot.key}
+                player={player}
                 x={awayX[ri]}
                 y={(ci + 1) / (row.length + 1) * 100}
                 color={awayColor} bg={awayBg}
-                subbed={!!sub}
-                subInfo={sub ? { playerInName: sub.playerName ?? '', minute: sub.minute } : undefined}
+                scale={scale}
+                prevCameIn={slot.prevCameIn}
+                cameIn={slot.cameIn}
               />
             );
           })
@@ -457,20 +610,10 @@ export default function LineupsTab({ fixtureId, liveEvents = [] }: { fixtureId: 
 
   const [home, away] = lineups;
 
-  // Reconstruye el XI real para la cancha: API-Football actualiza el startXI durante
-  // el partido poniendo al suplente que entró en lugar del titular que salió.
-  // Lo revertimos usando los eventos persistidos: si un jugador del startXI
-  // aparece como "el que entró" en una sustitución, lo reemplazamos por "el que salió".
-  const pitchSubs = allLiveEvents.filter(e => e.type === 'SUBSTITUTION' && e.playerOut);
-  const fixStartXI = (team: LineupTeam): LineupTeam => ({
-    ...team,
-    startXI: team.startXI.map(player => {
-      const sub = pitchSubs.find(s => matchName(player.playerName, s.playerName ?? ''));
-      return sub?.playerOut ? { ...player, playerName: sub.playerOut } : player;
-    }),
-  });
-  const pitchHome = pitchSubs.length > 0 ? fixStartXI(home) : home;
-  const pitchAway = pitchSubs.length > 0 ? fixStartXI(away) : away;
+  // La API no actualiza el startXI durante partidos en vivo; usamos el XI original
+  // y PitchView detecta las sustituciones directamente desde los eventos.
+  const pitchHome = home;
+  const pitchAway = away;
 
   return (
     <div className="space-y-4">

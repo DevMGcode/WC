@@ -314,6 +314,7 @@ public class FixtureSyncService {
         f.setStatus(mapStatus(ext.status()));
         f.setHomeScore(ext.homeScore());
         f.setAwayScore(ext.awayScore());
+        f.setElapsedMinutes(ext.elapsedMinutes());
         if (ext.stoppageMinutes() != null) {
             f.setExtraMinutes(ext.stoppageMinutes());
         }
@@ -350,6 +351,13 @@ public class FixtureSyncService {
         }
         if (ext.awayScore() != null && !ext.awayScore().equals(existing.getAwayScore())) {
             existing.setAwayScore(ext.awayScore());
+            changed = true;
+        }
+        // El minuto en curso también cuenta como cambio, así el snapshot REST y el
+        // WS reflejan el reloj real. Antes el delta solo se emitía al haber un gol o
+        // cambio de estado, dejando el contador del frontend clavado entre eventos.
+        if (ext.elapsedMinutes() != null && !ext.elapsedMinutes().equals(existing.getElapsedMinutes())) {
+            existing.setElapsedMinutes(ext.elapsedMinutes());
             changed = true;
         }
         // Minutos de reposición del 2º tiempo (90' + X): solo se persisten cuando el

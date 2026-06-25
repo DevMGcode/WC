@@ -16,6 +16,7 @@ import com.mundial2026.backend.tournament.repository.GroupStageRepository;
 import com.mundial2026.backend.tournament.repository.StageRepository;
 import com.mundial2026.backend.tournament.repository.TeamRepository;
 import com.mundial2026.backend.tournament.repository.TournamentRepository;
+import com.mundial2026.backend.tournament.service.MatchEventService;
 import com.mundial2026.backend.tournament.service.StandingsCalculatorService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -53,6 +54,7 @@ class FixtureSyncServiceTest {
     @Mock private VenueSyncService venueSyncService;
     @Mock private StandingsCalculatorService standingsCalculator;
     @Mock private ApplicationEventPublisher events;
+    @Mock private MatchEventService matchEventService;
 
     private FixtureSyncService subject;
 
@@ -71,7 +73,8 @@ class FixtureSyncServiceTest {
         subject = new FixtureSyncService(
                 matchDataPort, apiFootballClient, fixtureRepository,
                 tournamentRepository, stageRepository, groupStageRepository,
-                teamRepository, venueSyncService, standingsCalculator, events);
+                teamRepository, venueSyncService, standingsCalculator, events,
+                matchEventService);
 
         tournament = new Tournament();
         tournament.setId(1L);

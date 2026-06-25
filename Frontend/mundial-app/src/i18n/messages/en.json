@@ -203,10 +203,12 @@
     "finalShort": "Final",
     "roundUndefined": "Round not yet defined",
     "champion": "World Champion",
+    "legendPlayed": "Matches Played",
     "legendWon": "Won",
     "legendDrawn": "Drawn",
     "legendLost": "Lost",
     "legendGoals": "Goal Diff.",
+    "legendPoints": "Points",
     "bestDefense": "Best Defense",
     "goalsConceded": "GA",
     "groupLabel": "Group"
