@@ -44,7 +44,7 @@ class SubscriptionServiceTest {
         Subscription sub = new Subscription();
         sub.setUser(user);
         sub.setStatus(SubscriptionStatus.PENDING);
-        sub.setAmount(SubscriptionService.MUNDIAL_PASS_PRICE);   // 9.99
+        sub.setAmount(SubscriptionService.MUNDIAL_PASS_PRICE);
         sub.setCurrency(SubscriptionService.MUNDIAL_PASS_CURRENCY); // USD
         return sub;
     }
@@ -56,7 +56,7 @@ class SubscriptionServiceTest {
         when(subscriptionRepository.save(any(Subscription.class))).thenAnswer(inv -> inv.getArgument(0));
 
         Subscription result = subscriptionService.activateById(
-                1L, "pay_123", new BigDecimal("9.99"), "USD");
+                1L, "pay_123", SubscriptionService.MUNDIAL_PASS_PRICE, "USD");
 
         assertThat(result.getStatus()).isEqualTo(SubscriptionStatus.ACTIVE);
         assertThat(result.getPaymentId()).isEqualTo("pay_123");
