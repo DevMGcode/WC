@@ -203,7 +203,16 @@ function computePitchSlots(
   // para que la cadena siguiente lo localice (ej: Holes→Soucek→Sojka).
   const sorted = [...teamEvents].sort((a, b) => a.minute - b.minute);
 
-  for (const ev of sorted) {
+  // Dedup: mismo apellido saliente + minuto diferente ≤2 → mismo evento con nombre distinto
+  const deduped = sorted.filter((ev, idx) => {
+    const norm = normName(ev.playerName ?? '');
+    if (!norm) return true;
+    return !sorted.slice(0, idx).some(
+      prev => normName(prev.playerName ?? '') === norm && Math.abs(prev.minute - ev.minute) <= 2
+    );
+  });
+
+  for (const ev of deduped) {
     const saliente = ev.playerName ?? '';  // quién SALE del campo
     const entrante = ev.playerOut  ?? '';  // quién ENTRA al campo
     if (!saliente) continue;
