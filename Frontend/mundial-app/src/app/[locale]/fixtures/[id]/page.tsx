@@ -114,8 +114,8 @@ export default function FixtureDetailPage({ params }: { params: { id: string } }
   const liveDelta  = useMatchLive(fixture?.status === 'LIVE' ? fixtureId : null);
   const liveEvents = useMatchEvents(fixture?.status === 'LIVE' ? fixtureId : null);
 
-  // Eventos históricos (BD) — se cargan al abrir partido LIVE o FINISHED
-  useEffect(() => {
+  // Eventos históricos (BD) — carga inicial + refresco cada 30s mientras está LIVE
+  const fetchDbEvents = React.useCallback(() => {
     if (!fixture) return;
     const status = fixture.status;
     if (status !== 'LIVE' && status !== 'FINISHED') return;
@@ -143,14 +143,28 @@ export default function FixtureDetailPage({ params }: { params: { id: string } }
       .catch(() => {});
   }, [fixture?.status, fixtureId]);
 
+  useEffect(() => {
+    fetchDbEvents();
+  }, [fetchDbEvents]);
+
+  useEffect(() => {
+    if (fixture?.status !== 'LIVE') return;
+    const interval = setInterval(fetchDbEvents, 30_000);
+    return () => clearInterval(interval);
+  }, [fixture?.status, fetchDbEvents]);
+
   // Merge: eventos del WebSocket + eventos de BD, sin duplicados.
-  // La clave incluye playerName para no descartar múltiples subs del mismo equipo en el mismo minuto.
+  // Dedup global por type|minute|teamId|playerName para cubrir duplicados dentro de cada fuente.
   const allLiveEvents = useMemo(() => {
     const evKey = (e: { type?: string; minute?: number; teamId?: number | null; playerName?: string | null }) =>
       `${e.type}|${e.minute}|${e.teamId ?? 'x'}|${e.playerName ?? ''}`;
-    const wsSet = new Set(liveEvents.map(evKey));
-    const unique = dbEvents.filter(e => !wsSet.has(evKey(e)));
-    return [...liveEvents, ...unique];
+    const seen = new Set<string>();
+    const result: MatchEvent[] = [];
+    for (const e of [...liveEvents, ...dbEvents]) {
+      const k = evKey(e);
+      if (!seen.has(k)) { seen.add(k); result.push(e); }
+    }
+    return result;
   }, [liveEvents, dbEvents]);
 
   // Cuando llegan eventos (WS o BD) → cambiar automáticamente al tab de eventos

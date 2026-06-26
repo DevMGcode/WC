@@ -39,6 +39,10 @@ public interface MatchEventRepository extends JpaRepository<MatchEvent, Long> {
     @Query("SELECT CASE WHEN COUNT(e) > 0 THEN TRUE ELSE FALSE END FROM MatchEvent e WHERE e.fixture.id = :fixtureId AND e.eventType = 'STATUS_CHANGE' AND e.detail = :detail")
     boolean existsStatusChangeForFixture(Long fixtureId, String detail);
 
+    /** Recupera el STATUS_CHANGE existente para actualizarlo (ej: añadir extra_minute al halftime). */
+    @Query("SELECT e FROM MatchEvent e WHERE e.fixture.id = :fixtureId AND e.eventType = 'STATUS_CHANGE' AND e.detail = :detail")
+    java.util.Optional<MatchEvent> findStatusChangeForFixture(Long fixtureId, String detail);
+
     /** Goles (no autogoles) de un equipo en un partido hasta un minuto dado. Usado para calcular marcador al descanso. */
     @Query("SELECT COUNT(e) FROM MatchEvent e WHERE e.fixture.id = :fixtureId AND e.team IS NOT NULL AND e.team.id = :teamId AND e.eventType IN ('GOAL','PENALTY_GOAL') AND e.minute IS NOT NULL AND e.minute <= :upToMinute")
     int countGoalsForTeamUpToMinute(Long fixtureId, Long teamId, Integer upToMinute);
