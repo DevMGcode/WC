@@ -261,7 +261,18 @@ public class MatchEventService {
     @Transactional
     public void persistStatusChange(Long fixtureId, String detail, Integer minute, Integer extraMinute,
                                     Integer homeScore, Integer awayScore) {
-        if (matchEventRepository.existsStatusChangeForFixture(fixtureId, detail)) return;
+        java.util.Optional<MatchEvent> existing =
+                matchEventRepository.findStatusChangeForFixture(fixtureId, detail);
+        if (existing.isPresent()) {
+            MatchEvent ev = existing.get();
+            // Actualizar extra_minute si llegó después de la inserción inicial (ej: stoppageMinutes en HT)
+            if (extraMinute != null && ev.getExtraMinute() == null) {
+                ev.setExtraMinute(extraMinute);
+                matchEventRepository.save(ev);
+                log.info("[MatchEvent] STATUS_CHANGE '{}' actualizado con extra_minute={} (partido {})", detail, extraMinute, fixtureId);
+            }
+            return;
+        }
         Fixture fixture = fixtureRepository.findById(fixtureId).orElse(null);
         if (fixture == null) return;
 
