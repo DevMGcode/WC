@@ -260,6 +260,16 @@ function sortedTokenStr(n: string): string {
   // "Jin-gyu Kim" y "Kim Jin-Gyu" → ambos dan "gyu jin kim" → match seguro.
   return n.trim().split(/[\s-]+/).map(normTok).filter(t => t.length > 1).sort().join(' ');
 }
+function editDistance(a: string, b: string): number {
+  if (Math.abs(a.length - b.length) > 2) return 99;
+  const dp = Array.from({ length: a.length + 1 }, (_, i) =>
+    Array.from({ length: b.length + 1 }, (_, j) => i === 0 ? j : j === 0 ? i : 0)
+  );
+  for (let i = 1; i <= a.length; i++)
+    for (let j = 1; j <= b.length; j++)
+      dp[i][j] = a[i-1] === b[j-1] ? dp[i-1][j-1] : 1 + Math.min(dp[i-1][j], dp[i][j-1], dp[i-1][j-1]);
+  return dp[a.length][b.length];
+}
 function matchName(fullName: string, eventName: string): boolean {
   const a = normName(fullName);
   const b = normName(eventName);
@@ -269,10 +279,11 @@ function matchName(fullName: string, eventName: string): boolean {
   const sa = sortedTokenStr(fullName);
   const sb = sortedTokenStr(eventName);
   if (sa.length > 4 && sa === sb) return true;
-  // Regla 3: apellido compuesto español — el último apellido del XI aparece
-  // en cualquier token del evento (p.ej. "Mateo Chávez" vs "M. Chavez Garcia")
+  // Regla 3: apellido compuesto — el último apellido del XI aparece en cualquier token del evento
   const tokB = eventName.trim().split(/[\s-]+/).map(normTok).filter(t => t.length > 3);
   if (a.length > 3 && tokB.includes(a)) return true;
+  // Regla 4: transliteración — diferencia de 1 carácter en el apellido (ej: "Hmida" vs "Hamida")
+  if (a.length >= 4 && b.length >= 4 && editDistance(a, b) <= 1) return true;
   return false;
 }
 

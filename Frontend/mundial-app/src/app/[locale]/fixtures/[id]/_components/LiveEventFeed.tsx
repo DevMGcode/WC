@@ -131,18 +131,26 @@ function EventCard({
           )}
         </div>
 
-        {/* Jugador que entra / protagonista */}
-        {event.playerName && (
-          <p className="text-sm font-black text-white truncate leading-tight">
-            {event.playerName}
-          </p>
-        )}
-
-        {/* Jugador que sale (sustitución) */}
-        {event.type === 'SUBSTITUTION' && event.playerOut && (
-          <p className="text-[10px] text-orionix-text-muted truncate">
-            Sale: {event.playerOut}
-          </p>
+        {/* BD: playerName=sale, playerOut=entra — mostrar quien entra primero */}
+        {event.type === 'SUBSTITUTION' ? (
+          <>
+            {event.playerOut && (
+              <p className="text-sm font-black text-white truncate leading-tight">
+                {event.playerOut}
+              </p>
+            )}
+            {event.playerName && (
+              <p className="text-[10px] text-orionix-text-muted truncate">
+                Sale: {event.playerName}
+              </p>
+            )}
+          </>
+        ) : (
+          event.playerName && (
+            <p className="text-sm font-black text-white truncate leading-tight">
+              {event.playerName}
+            </p>
+          )
         )}
 
         {/* Equipo */}
@@ -318,15 +326,27 @@ export default function LiveEventFeed({ events, isLive = true, homeTeamId, homeC
   const scrollRef = useRef<HTMLDivElement>(null);
 
   // Ordenar de más reciente a más antiguo.
-  // - "fulltime" siempre al tope: fue lo último que ocurrió en el partido.
-  // - Otros STATUS_CHANGE restan 0.5 para quedar justo debajo de eventos
-  //   regulares al mismo minuto (INICIO 2T en 46' va tras las subs de 46').
+  // - "fulltime" siempre al tope.
+  // - STATUS_CHANGE resta 0.5 para quedar justo debajo de eventos del mismo minuto.
+  // - Subs al 45' sin extra_minute = subs de medio tiempo (hechas durante el descanso):
+  //   se colocan justo por encima del separador DESCANSO para que aparezcan entre
+  //   DESCANSO e INICIO 2T, igual que lo muestra API-Football.
+  const halftimeSortBase = (() => {
+    const ht = events.find(e => e.type === 'STATUS_CHANGE' && e.detail === 'halftime');
+    if (!ht) return null;
+    return (ht.minute ?? 45) * 100 + (ht.extraMinute ?? 0) - 0.5;
+  })();
+
   const sortKey = (e: MatchEvent) => {
     if (e.type === 'STATUS_CHANGE' && (e.detail === 'fulltime' || e.detail === 'full time')) {
       return Number.MAX_SAFE_INTEGER;
     }
     const base = (e.minute ?? 0) * 100 + (e.extraMinute ?? 0);
-    return e.type === 'STATUS_CHANGE' ? base - 0.5 : base;
+    if (e.type === 'STATUS_CHANGE') return base - 0.5;
+    if (e.type === 'SUBSTITUTION' && !e.extraMinute && e.minute === 45 && halftimeSortBase != null) {
+      return halftimeSortBase + 0.3;
+    }
+    return base;
   };
   const sorted = [...events].sort((a, b) => sortKey(b) - sortKey(a));
 
