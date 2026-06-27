@@ -4,8 +4,9 @@ import { usePathname } from 'next/navigation';
 import { useState, useEffect, ReactNode } from 'react';
 import { useSidebar } from '@/contexts/SidebarContext';
 import { useShowAds } from '@/components/ads/useShowAds';
+import { Footer } from '@/components/Footer';
 
-const AUTH_ROUTES = ['/login', '/register', '/onboarding', '/privacy', '/reset-password'];
+const AUTH_ROUTES = ['/login', '/register', '/onboarding', '/privacy', '/reset-password', '/about'];
 
 const PREMIUM_BG = [
   'radial-gradient(circle, rgba(76,175,80,0.042) 1px, transparent 1px)',
@@ -56,6 +57,7 @@ export function AppShell({ children }: { children: ReactNode }) {
       }}
     >
       {children}
+      {!isAuth && <Footer />}
     </div>
   );
 }

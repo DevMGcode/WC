@@ -28,6 +28,7 @@ import { alpha, alphaOf, borders, gradients } from '@/lib/design/effects';
 
 import { AdSlot } from '@/components/ads';
 import GroupCard, { EQBars } from './_components/GroupCard';
+import { groupsIntroText } from './_components/groupNarrative';
 import { localizeTeamName } from '@/lib/i18n/teamNames';
 import KnockoutCard, { ChampionBanner, ROUND_META, ROUND_I18N, ROUND_GRID } from './_components/KnockoutCard';
 import BracketBg from './_components/BracketBg';
@@ -268,8 +269,22 @@ export default function GroupsClient({ initialTournament, initialGroups, initial
                     <span className="text-[8px] font-black text-green-400 tracking-[0.2em]">{groups.length} {t('groups.title').toUpperCase()}</span>
                   </div>
                 </motion.div>
+                {/* Intro editorial de la fase de grupos (texto indexable SEO/AdSense) */}
+                <motion.div
+                  initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.4, delay: 0.1 }}
+                  className="relative overflow-hidden rounded-2xl mb-4 px-5 py-4"
+                  style={{
+                    background: `linear-gradient(145deg, ${alpha(hex.bg.primary, 0.96)}, ${alpha(hex.bg.secondary, 0.94)})`,
+                    border: `1px solid ${alphaOf('green', 0.10)}`,
+                  }}>
+                  <div className="absolute inset-x-0 top-0 h-px" style={{ background: gradients.divider('green', 0.45) }} />
+                  <p className="text-[12px] sm:text-[13px] leading-relaxed" style={{ color: alpha(hex.text.secondary, 0.70) }}>
+                    {groupsIntroText(locale)}
+                  </p>
+                </motion.div>
+
                 <div data-tour="groups-grid" className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  {groups.map((g, i) => <GroupCard key={`group-${g.id}-${i}`} group={g} index={i} t={t} />)}
+                  {groups.map((g, i) => <GroupCard key={`group-${g.id}-${i}`} group={g} index={i} t={t} locale={locale} />)}
                 </div>
                 <motion.div className="mt-5 flex flex-wrap items-center gap-4"
                   initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.5 }}>

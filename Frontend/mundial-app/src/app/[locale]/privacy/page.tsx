@@ -57,7 +57,7 @@ export default function PrivacyPage() {
             <h1 className="text-2xl font-black text-white mt-3" style={{ fontFamily: 'var(--font-display)' }}>
               Política de Privacidad
             </h1>
-            <p className="text-xs text-orionix-text-muted mt-2">Última actualización: mayo de 2026 · Orionix Gol</p>
+            <p className="text-xs text-orionix-text-muted mt-2">Última actualización: junio de 2026 · Orionix Gol</p>
           </div>
 
           <div className="space-y-8 text-sm leading-relaxed" style={{ color: alpha(hex.accent.slate, 0.85) }}>
@@ -118,9 +118,10 @@ export default function PrivacyPage() {
             <section>
               <h2 className="text-base font-bold text-orionix-text-secondary mb-3">4. Compartición de datos</h2>
               <p>
-                No vendemos, alquilamos ni compartimos tus datos personales con terceros con fines comerciales.
+                No vendemos, alquilamos ni compartimos tus datos personales (nombre, correo, etc.) con terceros con fines comerciales.
                 Tu nombre de usuario y puntuación pueden ser visibles públicamente en el ranking global de la aplicación.
-                El resto de tu información personal es privada.
+                El resto de tu información personal es privada. Los servicios de publicidad y analítica descritos en la sección 8
+                pueden recopilar datos de forma automática mediante cookies, sujetos a sus propias políticas de privacidad.
               </p>
             </section>
 
@@ -166,10 +167,39 @@ export default function PrivacyPage() {
             </section>
 
             <section>
-              <h2 className="text-base font-bold text-orionix-text-secondary mb-3">8. Cookies y almacenamiento local</h2>
-              <p>
+              <h2 className="text-base font-bold text-orionix-text-secondary mb-3">8. Cookies y tecnologías de terceros</h2>
+              <p className="mb-3">
                 Usamos almacenamiento local del navegador (localStorage) para mantener tu sesión activa y recordar tus preferencias de interfaz.
-                No utilizamos cookies de rastreo de terceros.
+              </p>
+              <p className="mb-3">
+                En la versión gratuita mostramos publicidad y medimos el uso del sitio mediante servicios de terceros que pueden
+                usar cookies y tecnologías similares:
+              </p>
+              <ul className="space-y-2 pl-4">
+                <li className="flex items-start gap-2">
+                  <span className="mt-1.5 w-1 h-1 rounded-full flex-shrink-0" style={{ background: alpha(hex.accent.teal, 0.6) }} />
+                  <span>
+                    <strong className="text-orionix-text-secondary">Google AdSense:</strong> Google y sus socios utilizan cookies para
+                    mostrarte anuncios en función de tus visitas previas a este y otros sitios web. Podés desactivar la publicidad
+                    personalizada en la{' '}
+                    <a href="https://www.google.com/settings/ads" target="_blank" rel="noopener noreferrer" className="underline" style={{ color: alpha(hex.accent.teal, 0.8) }}>Configuración de anuncios de Google</a>{' '}
+                    o en{' '}
+                    <a href="https://www.aboutads.info/choices" target="_blank" rel="noopener noreferrer" className="underline" style={{ color: alpha(hex.accent.teal, 0.8) }}>aboutads.info/choices</a>.
+                  </span>
+                </li>
+                <li className="flex items-start gap-2">
+                  <span className="mt-1.5 w-1 h-1 rounded-full flex-shrink-0" style={{ background: alpha(hex.accent.teal, 0.6) }} />
+                  <span><strong className="text-orionix-text-secondary">Adsterra:</strong> red de publicidad que puede usar cookies para mostrar y medir anuncios.</span>
+                </li>
+                <li className="flex items-start gap-2">
+                  <span className="mt-1.5 w-1 h-1 rounded-full flex-shrink-0" style={{ background: alpha(hex.accent.teal, 0.6) }} />
+                  <span><strong className="text-orionix-text-secondary">Google Analytics (GA4):</strong> para entender de forma agregada y anónima cómo se usa el sitio y mejorarlo.</span>
+                </li>
+              </ul>
+              <p className="mt-3">
+                Los usuarios <strong className="text-orionix-text-secondary">Premium (Pase Mundial) navegan sin anuncios</strong>. Para más
+                detalle sobre cómo Google usa la información de los sitios que utilizan sus servicios, consultá{' '}
+                <a href="https://policies.google.com/technologies/partner-sites" target="_blank" rel="noopener noreferrer" className="underline" style={{ color: alpha(hex.accent.teal, 0.8) }}>policies.google.com/technologies/partner-sites</a>.
               </p>
             </section>
 
