@@ -177,6 +177,10 @@ export function useTournamentFixtures(tournamentId: number | null, initialData?:
     queryFn:  () => getTournamentFixtures(tournamentId!),
     enabled:  tournamentId != null,
     refetchOnWindowFocus: true,
+    // Refresca el estado de los partidos (LIVE → FINALIZADO, marcadores) sin que el
+    // usuario tenga que apretar F5. Solo poll mientras la pestaña está activa
+    // (refetchIntervalInBackground es false por defecto).
+    refetchInterval: 60_000,
     ...(initialData ? { initialData, initialDataUpdatedAt: Date.now() } : {}),
   });
 }
