@@ -16,7 +16,7 @@ type ApiEnvelope<T> = {
 
 async function request<T>(
   path: string,
-  params?: Record<string, string | number | boolean | undefined>
+  params?: Record<string, string | number | boolean | null | undefined>
 ): Promise<T> {
   const normalized = path.startsWith('/') ? path : `/${path}`;
   const fullPath = normalized.startsWith('/api/v1/')
