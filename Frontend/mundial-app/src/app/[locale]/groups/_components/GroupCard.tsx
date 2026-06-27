@@ -7,6 +7,7 @@ import { FiShield } from 'react-icons/fi';
 import { hex, type BrandColor } from '@/lib/design/tokens';
 import { alpha, alphaOf, borders, gradients } from '@/lib/design/effects';
 import type { Group } from './types';
+import GroupDescription from './GroupDescription';
 
 /* ══════════════════════════════════════════
    EQ BARS — decorativo (exportado para uso en GroupsClient)
@@ -58,9 +59,10 @@ interface GroupCardProps {
   group: Group;
   index: number;
   t: (key: string) => string;
+  locale: string;
 }
 
-const GroupCard = ({ group, index, t }: GroupCardProps) => {
+const GroupCard = ({ group, index, t, locale }: GroupCardProps) => {
   const maxPts = Math.max(...group.standings.map(s => s.points), 1);
   return (
     <motion.div
@@ -214,6 +216,9 @@ const GroupCard = ({ group, index, t }: GroupCardProps) => {
           </div>
         ))}
       </div>
+
+      {/* Análisis editorial del grupo (texto indexable para SEO/AdSense) */}
+      <GroupDescription group={group} locale={locale} />
 
       {/* Footer */}
       <div className="px-4 py-2.5 flex items-center gap-2"

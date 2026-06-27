@@ -7,6 +7,9 @@ const intlMiddleware = createMiddleware(routing);
 const SOCIAL_BOTS = [
   'whatsapp', 'telegrambot', 'facebookexternalhit', 'twitterbot',
   'linkedinbot', 'slackbot', 'discordbot', 'googlebot', 'bingbot',
+  // Crawlers de Google Ads/AdSense: deben ver el contenido real (no el login)
+  // o AdSense reporta "anuncios en pantallas sin contenido del editor".
+  'mediapartners-google', 'adsbot-google', 'google-adstxt',
 ];
 
 function isSocialBot(req: NextRequest): boolean {
@@ -21,6 +24,7 @@ const PUBLIC_PATHS = [
   '/reset-password',
   '/terms',
   '/privacy',
+  '/about',
 ];
 
 function isPublicPath(pathname: string): boolean {

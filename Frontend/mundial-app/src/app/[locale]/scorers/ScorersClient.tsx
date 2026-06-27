@@ -7,8 +7,9 @@ import { FiAward, FiTarget, FiZap } from 'react-icons/fi';
 import { Header } from '@/components/Navigation';
 import { hex } from '@/lib/design/tokens';
 import { alpha, alphaOf, borders, surfaces } from '@/lib/design/effects';
-import { useTranslations } from 'next-intl';
+import { useTranslations, useLocale } from 'next-intl';
 import { useTopScorers, useTopAssists } from '@/hooks/useTournamentData';
+import { buildScorersNarrative } from './scorersNarrative';
 import { usePremium } from '@/hooks/usePremium';
 import { PremiumGate } from '@/components/premium/PremiumGate';
 import { AdSlot } from '@/components/ads';
@@ -230,7 +231,10 @@ function Skeleton() {
 ══════════════════════════════════════════ */
 export default function ScorersClient() {
   const t = useTranslations();
+  const locale = useLocale();
   const [tab, setTab] = useState<Tab>('goals');
+  // Filtro por equipo (por nombre de equipo, derivado de la lista cargada).
+  const [teamFilter, setTeamFilter] = useState<string | null>(null);
   const { isPremium } = usePremium();
 
   // Header sticky: medimos su altura para pegar las pestañas justo debajo.
@@ -274,9 +278,18 @@ export default function ScorersClient() {
     if (sb !== sa) return sb - sa;
     return (a.minutesPlayed ?? 0) - (b.minutesPlayed ?? 0);
   });
-  const top3    = ranked.slice(0, 3);
-  const rest    = ranked.slice(3);
-  // Tope para las barras de progreso de las filas: stat del líder.
+  // Filtro por equipo: opciones derivadas de la lista, filtrado client-side.
+  const teams = (() => {
+    const map = new Map<string, { name: string; logo: string }>();
+    for (const p of ranked) {
+      if (p.teamName && !map.has(p.teamName)) map.set(p.teamName, { name: p.teamName, logo: p.teamLogoUrl });
+    }
+    return [...map.values()].sort((a, b) => a.name.localeCompare(b.name));
+  })();
+  const visible = teamFilter ? ranked.filter(p => p.teamName === teamFilter) : ranked;
+  const top3    = visible.slice(0, 3);
+  const rest    = visible.slice(3);
+  // Tope para las barras de progreso: stat del líder del torneo (no del filtro).
   const maxStat = (ranked[0]?.[statKey as keyof PlayerStat] as number) ?? 1;
 
   const tabs: { key: Tab; label: string; icon: React.ReactNode; color: string }[] = [
@@ -329,7 +342,7 @@ export default function ScorersClient() {
           {tabs.map(({ key, label, icon, color }) => {
             const active = tab === key;
             return (
-              <motion.button key={key} onClick={() => setTab(key)}
+              <motion.button key={key} onClick={() => { setTab(key); setTeamFilter(null); }}
                 className="flex-1 flex items-center justify-center gap-2 py-2.5 rounded-xl text-[11px] font-black tracking-widest uppercase transition-all"
                 style={{
                   background: active ? alpha(color, 0.12) : 'transparent',
@@ -360,7 +373,7 @@ export default function ScorersClient() {
             <FiAward size={12} style={{ color: alpha(hex.text.secondary, 0.55) }} />
             <p className="text-[11px] tracking-wide" style={{ color: hex.text.secondary }}>
               {tab === 'goals'
-                ? <>Mostrando <strong>Top 10</strong> del plan gratuito. Hazte Premium para ver hasta <strong>Top 50</strong> + filtros por equipo.</>
+                ? <>Mostrando <strong>Top 10</strong> del plan gratuito. Hazte Premium para ver el <strong>ranking completo</strong> de goleadores, las asistencias y el <strong>filtro por equipo</strong>.</>
                 : <>Top asistentes es <strong>exclusivo del Pase Mundial</strong>.</>
               }
             </p>
@@ -371,7 +384,7 @@ export default function ScorersClient() {
         {tab === 'assists' && !isPremium ? (
           <PremiumGate
             feature="el top asistentes del Mundial"
-            description="Las estadísticas de asistencias son exclusivas del Pase Mundial. Desbloquea el ranking completo y filtros por equipo."
+            description="Las estadísticas de asistencias son exclusivas del Pase Mundial. Desbloquea el ranking completo de asistencias del Mundial."
           >
             <div />
           </PremiumGate>
@@ -398,6 +411,54 @@ export default function ScorersClient() {
         ) : (
           <AnimatePresence mode="wait">
             <motion.div key={tab} initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }} transition={{ duration: 0.25 }}>
+
+              {/* ── Filtro por equipo (chips) — solo Premium ── */}
+              {isPremium && teams.length > 1 && (
+                <div className="flex gap-2 overflow-x-auto pb-2 mb-4 -mx-1 px-1"
+                  style={{ scrollbarWidth: 'thin' } as React.CSSProperties}>
+                  <button onClick={() => setTeamFilter(null)}
+                    className="shrink-0 px-3 py-1.5 rounded-full text-[10px] font-black tracking-wide uppercase transition-all"
+                    style={{
+                      background: teamFilter === null ? alpha(hex.green.bright, 0.15) : alpha(hex.neutral.white, 0.04),
+                      border: `1px solid ${teamFilter === null ? alpha(hex.green.bright, 0.40) : alpha(hex.neutral.white, 0.08)}`,
+                      color: teamFilter === null ? hex.green.bright : alpha(hex.text.secondary, 0.6),
+                    }}>
+                    {locale.toLowerCase().startsWith('en') ? 'All' : 'Todos'}
+                  </button>
+                  {teams.map(tm => {
+                    const active = teamFilter === tm.name;
+                    return (
+                      <button key={tm.name} onClick={() => setTeamFilter(active ? null : tm.name)}
+                        className="shrink-0 flex items-center gap-1.5 px-3 py-1.5 rounded-full text-[10px] font-black tracking-wide uppercase transition-all"
+                        style={{
+                          background: active ? alpha(hex.gold.base, 0.15) : alpha(hex.neutral.white, 0.04),
+                          border: `1px solid ${active ? alpha(hex.gold.base, 0.40) : alpha(hex.neutral.white, 0.08)}`,
+                          color: active ? hex.gold.bright : alpha(hex.text.secondary, 0.6),
+                        }}>
+                        {tm.logo && (
+                          <span className="relative w-3.5 h-3.5 shrink-0">
+                            <Image src={tm.logo} alt={tm.name} fill sizes="14px" className="object-contain" />
+                          </span>
+                        )}
+                        {tm.name}
+                      </button>
+                    );
+                  })}
+                </div>
+              )}
+
+              {/* Contexto editorial (texto indexable SEO/AdSense) — generado de los datos */}
+              {(() => {
+                const narrative = buildScorersNarrative(ranked as any, statKey as 'goals' | 'assists', locale);
+                return narrative ? (
+                  <div className="mb-5 rounded-2xl px-4 py-3.5"
+                    style={{ background: alpha(hex.neutral.white, 0.03), border: `1px solid ${alpha(hex.neutral.white, 0.07)}` }}>
+                    <p className="text-[12px] sm:text-[13px] leading-relaxed" style={{ color: alpha(hex.text.secondary, 0.7) }}>
+                      {narrative}
+                    </p>
+                  </div>
+                ) : null;
+              })()}
 
               {/* Top 3 podium — #1 destacado al centro (orden visual 2-1-3) */}
               {top3.length > 0 && (
