@@ -200,7 +200,9 @@
     "legendPoints": "Points",
     "bestDefense": "Meilleure Défense",
     "goalsConceded": "bc",
-    "groupLabel": "Groupe"
+    "groupLabel": "Groupe",
+    "round32": "Seizièmes de finale",
+    "round32Short": "16es de finale"
   },
   "predictions": {
     "title": "Pronostics",

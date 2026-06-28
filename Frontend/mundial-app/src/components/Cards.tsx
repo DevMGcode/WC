@@ -136,7 +136,7 @@ const FixtureCardInner: React.FC<FixtureCardProps> = ({
           <>
             <div>
               {fmtShortDate(kickoffAt, locale)} {fmtTime(kickoffAt, locale)}
-              <span style={{ opacity: 0.7, fontSize: '0.75em', marginLeft: 4 }}>CDMX</span>
+              <span style={{ opacity: 0.7, fontSize: '0.75em', marginLeft: 4 }}>Bogotá</span>
             </div>
             <LocalTimeHint date={kickoffAt} locale={locale} />
           </>

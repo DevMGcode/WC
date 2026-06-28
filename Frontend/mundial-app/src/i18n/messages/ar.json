@@ -200,7 +200,9 @@
     "legendPoints": "نقاط",
     "bestDefense": "أفضل دفاع",
     "goalsConceded": "هـ",
-    "groupLabel": "المجموعة"
+    "groupLabel": "المجموعة",
+    "round32": "دور الـ32",
+    "round32Short": "دور الـ32"
   },
   "predictions": {
     "title": "التوقعات",
