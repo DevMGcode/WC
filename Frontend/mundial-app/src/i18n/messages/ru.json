@@ -200,7 +200,9 @@
     "legendPoints": "Очки",
     "bestDefense": "Лучшая защита",
     "goalsConceded": "ПГ",
-    "groupLabel": "Группа"
+    "groupLabel": "Группа",
+    "round32": "1/16 финала",
+    "round32Short": "1/16"
   },
   "predictions": {
     "title": "Прогнозы",

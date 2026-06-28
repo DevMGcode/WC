@@ -211,7 +211,9 @@
     "legendPoints": "Points",
     "bestDefense": "Best Defense",
     "goalsConceded": "GA",
-    "groupLabel": "Group"
+    "groupLabel": "Group",
+    "round32": "Round of 32",
+    "round32Short": "Round of 32"
   },
   "predictions": {
     "title": "Predictions",

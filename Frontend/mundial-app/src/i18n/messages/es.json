@@ -211,7 +211,9 @@
     "legendPoints": "Puntos",
     "bestDefense": "Mejor Defensa",
     "goalsConceded": "gc",
-    "groupLabel": "Grupo"
+    "groupLabel": "Grupo",
+    "round32": "Dieciseisavos de Final",
+    "round32Short": "Ronda de 32"
   },
   "predictions": {
     "title": "Porras",

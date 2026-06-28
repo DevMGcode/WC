@@ -10,12 +10,11 @@
 
 const DEFAULT_LOCALE = 'es-ES';
 
-// TZ fija del torneo para evitar mismatches SSR/cliente (Bug hydration).
-// Usamos CDMX porque es la sede del partido inaugural (MEX vs RSA, 11-jun-2026)
-// y coincide con lo que muestran FIFA, Google y la TV mexicana. El usuario en
-// Bogotá, BA, Madrid, etc. verá la hora local de la sede del partido — patrón
-// estándar en apps deportivas (ESPN, FotMob).
-const TOURNAMENT_TZ = 'America/Mexico_City';
+// TZ fija para mostrar TODAS las fechas/horas de forma consistente y evitar
+// mismatches SSR/cliente (bug de hydration). Usamos Bogotá (UTC−5): es la hora
+// de referencia de la audiencia y coincide con lo que la FIFA muestra al usuario.
+// Todo el calendario, fixtures y el cuadro eliminatorio quedan en esta misma hora.
+const TOURNAMENT_TZ = 'America/Bogota';
 
 /** Detecta el locale activo desde <html lang="…"> en cliente; SSR → 'es-ES'. */
 function activeLocale(override?: string): string {

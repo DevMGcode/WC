@@ -35,6 +35,7 @@ import BracketBg from './_components/BracketBg';
 import TeamsTab from './_components/TeamsTab';
 import { usePremium } from '@/hooks/usePremium';
 import type { Group, Match, BracketData, KnockoutRound, Team } from './_components/types';
+import { computeKnockout } from './_components/knockoutProgression';
 
 /* ══════════════════════════════════════════
    MOCK DATA — fallback si backend retorna vacío
@@ -69,6 +70,7 @@ const MOCK_GROUPS: Group[] = [
 const _tbd: Team = { id: 0, name: 'Por definir', shortName: 'TBD', flagUrl: '' };
 
 const EMPTY_BRACKET: BracketData = {
+  dieciseisavos: Array.from({ length: 16 }, (_, i) => ({ id: -(i + 16), homeTeam: _tbd, awayTeam: _tbd, isPlayed: false })),
   octavos:     Array.from({ length: 8 }, (_, i) => ({ id: -(i + 1), homeTeam: _tbd, awayTeam: _tbd, isPlayed: false })),
   cuartos:     Array.from({ length: 4 }, (_, i) => ({ id: -(i + 9), homeTeam: _tbd, awayTeam: _tbd, isPlayed: false })),
   semifinales: Array.from({ length: 2 }, (_, i) => ({ id: -(i + 13), homeTeam: _tbd, awayTeam: _tbd, isPlayed: false })),
@@ -82,12 +84,15 @@ function buildBracketFromFixtures(fixtures: any[]): BracketData {
   const toMatch = (f: any): Match => {
     const winner = typeof f.homeScore === 'number' && typeof f.awayScore === 'number'
       ? f.homeScore > f.awayScore ? f.homeTeam : f.awayScore > f.homeScore ? f.awayTeam : null : null;
-    return { id: f.id, homeTeam: f.homeTeam, awayTeam: f.awayTeam, homeScore: f.homeScore, awayScore: f.awayScore, winner, isPlayed: f.status === 'FINISHED' };
+    return { id: f.id, homeTeam: f.homeTeam, awayTeam: f.awayTeam, homeScore: f.homeScore, awayScore: f.awayScore, winner, isPlayed: f.status === 'FINISHED', kickoff: f.kickoffAt };
   };
-  const b: BracketData = { octavos: [], cuartos: [], semifinales: [], final: [] };
+  const b: BracketData = { dieciseisavos: [], octavos: [], cuartos: [], semifinales: [], final: [] };
   fixtures.forEach(f => {
     const s = (f.stageName || '').toLowerCase();
-    if (s.includes('octavos')) b.octavos.push(toMatch(f));
+    // Ronda de 32 (Dieciseisavos) PRIMERO: su nombre contiene "final" ("Dieciseisavos
+    // de Final"), así que hay que capturarla antes del check genérico de "final".
+    if (s.includes('dieciseisavos') || s.includes('round of 32') || s.includes('16avos')) b.dieciseisavos.push(toMatch(f));
+    else if (s.includes('octavos')) b.octavos.push(toMatch(f));
     else if (s.includes('cuartos')) b.cuartos.push(toMatch(f));
     else if (s.includes('semi')) b.semifinales.push(toMatch(f));
     else if (s.includes('final')) b.final.push(toMatch(f));
@@ -107,7 +112,7 @@ export default function GroupsClient({ initialTournament, initialGroups, initial
   const locale = useLocale();
   const [activeTab,    setActiveTab]    = useState<'grupos' | 'eliminatorias' | 'equipos'>('grupos');
   const { isPremium } = usePremium();
-  const [activeRound,  setActiveRound]  = useState<KnockoutRound>('octavos');
+  const [activeRound,  setActiveRound]  = useState<KnockoutRound>('dieciseisavos');
 
   // Header sticky: medimos su altura para pegar la barra de pestañas justo
   // debajo (la barra ya era sticky, pero a top-0 se solapaba con el header).
@@ -149,8 +154,22 @@ export default function GroupsClient({ initialTournament, initialGroups, initial
   const bracketsData: BracketData = useMemo(() => {
     if (!fixtures.length) return EMPTY_BRACKET;
     const bk = buildBracketFromFixtures(fixtures);
-    const hasKnockout = bk.octavos.length > 0 || bk.cuartos.length > 0 || bk.semifinales.length > 0 || bk.final.length > 0;
-    return hasKnockout ? bk : EMPTY_BRACKET;
+    const hasKnockout = bk.dieciseisavos.length > 0 || bk.octavos.length > 0 || bk.cuartos.length > 0 || bk.semifinales.length > 0 || bk.final.length > 0;
+    if (!hasKnockout) return EMPTY_BRACKET;
+    const dieciseisavos = bk.dieciseisavos.length ? bk.dieciseisavos : EMPTY_BRACKET.dieciseisavos;
+    // Octavos → Final se AUTOCOMPLETAN con la progresión fija de la FIFA (P89=W74 vs
+    // W77, etc.) a partir de los resultados de los Dieciseisavos. No dependemos de que
+    // la API publique esas rondas: el cálculo de quién avanza lo hacemos nosotros.
+    // Cada casilla sin definir muestra "Ganador {N}" (el "W{N}" de la FIFA).
+    const ko = computeKnockout({ ...bk, dieciseisavos });
+    return {
+      dieciseisavos,
+      octavos:      ko.octavos,
+      cuartos:      ko.cuartos,
+      semifinales:  ko.semifinales,
+      final:        ko.final,
+      tercerPuesto: ko.tercerPuesto,
+    };
   }, [fixtures]);
 
   const champion = bracketsData?.final[0]?.winner ?? null;

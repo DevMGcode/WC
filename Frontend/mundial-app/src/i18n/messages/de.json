@@ -200,7 +200,9 @@
     "legendPoints": "Punkte",
     "bestDefense": "Beste Defensive",
     "goalsConceded": "GT",
-    "groupLabel": "Gruppe"
+    "groupLabel": "Gruppe",
+    "round32": "Sechzehntelfinale",
+    "round32Short": "Sechzehntel"
   },
   "predictions": {
     "title": "Tipps",

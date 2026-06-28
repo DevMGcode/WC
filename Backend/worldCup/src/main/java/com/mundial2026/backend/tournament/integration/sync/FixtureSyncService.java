@@ -230,9 +230,15 @@ public class FixtureSyncService {
             // First try to resolve the group from the team→group map (sourced from /standings).
             // Fall back to parsing it from the round name (rare — used to work for older seasons
             // where API-Football encoded the letter in leagueRound, e.g. "Group Stage - A").
-            GroupStage groupStage = resolveGroupStageFromTeamMap(tournament, ext.homeTeamId(), teamToGroup)
-                    .or(() -> resolveGroupStage(tournament, ext.leagueRound()))
-                    .orElse(null);
+            // IMPORTANTE: solo los partidos de FASE DE GRUPOS llevan group_stage_id. Los de
+            // eliminatoria (Dieciseisavos, Octavos, etc.) NO pertenecen a ningún grupo. Antes se
+            // les asignaba el grupo del equipo local, lo que al recalcular standings metía al
+            // visitante como fila fantasma (0 jugados) en la tabla de ese grupo.
+            GroupStage groupStage = (stage != null && "GROUPS".equals(stage.getCode()))
+                    ? resolveGroupStageFromTeamMap(tournament, ext.homeTeamId(), teamToGroup)
+                        .or(() -> resolveGroupStage(tournament, ext.leagueRound()))
+                        .orElse(null)
+                    : null;
             Team home = teamRepository.findByExternalProviderId(ext.homeTeamId()).orElse(null);
             Team away = teamRepository.findByExternalProviderId(ext.awayTeamId()).orElse(null);
 

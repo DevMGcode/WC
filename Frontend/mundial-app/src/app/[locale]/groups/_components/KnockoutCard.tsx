@@ -6,12 +6,14 @@ import { motion } from 'framer-motion';
 import { FiGrid, FiTarget, FiZap, FiAward } from 'react-icons/fi';
 import { hex } from '@/lib/design/tokens';
 import { alpha, alphaOf, borders, gradients } from '@/lib/design/effects';
+import { fmtShortDate, fmtTime } from '@/utils/format';
 import type { Match, KnockoutRound, Team, BracketData } from './types';
 
 /* ══════════════════════════════════════════
    ROUND METADATA
 ══════════════════════════════════════════ */
 export const ROUND_META: Record<KnockoutRound, { icon: React.ReactNode; color: string; glow: string }> = {
+  dieciseisavos: { icon: <FiGrid size={12} />, color: hex.green.soft,   glow: alpha(hex.green.soft, 0.55)    },
   octavos:     { icon: <FiGrid size={12} />,   color: hex.green.bright, glow: alphaOf('green', 0.55)         },
   cuartos:     { icon: <FiTarget size={12} />, color: hex.green.muted,  glow: alpha(hex.green.muted, 0.55)   },
   semifinales: { icon: <FiZap size={12} />,    color: '#a78bfa',        glow: 'rgba(167,139,250,0.55)'       },
@@ -19,6 +21,7 @@ export const ROUND_META: Record<KnockoutRound, { icon: React.ReactNode; color: s
 };
 
 export const ROUND_I18N: Record<KnockoutRound, { labelKey: string; shortLabelKey: string }> = {
+  dieciseisavos: { labelKey: 'groups.round32', shortLabelKey: 'groups.round32Short' },
   octavos:     { labelKey: 'groups.round16',   shortLabelKey: 'groups.round16Short'  },
   cuartos:     { labelKey: 'groups.quarter',   shortLabelKey: 'groups.quarterShort'  },
   semifinales: { labelKey: 'groups.semi',      shortLabelKey: 'groups.semiShort'     },
@@ -26,6 +29,7 @@ export const ROUND_I18N: Record<KnockoutRound, { labelKey: string; shortLabelKey
 };
 
 export const ROUND_GRID: Record<KnockoutRound, string> = {
+  dieciseisavos: 'grid-cols-1 sm:grid-cols-2',
   octavos:     'grid-cols-1 sm:grid-cols-2',
   cuartos:     'grid-cols-1 sm:grid-cols-2',
   semifinales: 'grid-cols-1 sm:grid-cols-2',
@@ -144,6 +148,12 @@ const KnockoutCard = ({ match, round, index = 0, t }: KnockoutCardProps) => {
           {match.isPlayed ? t('common.finished') : t('common.pending')}
         </span>
       </div>
+      {match.kickoff && (
+        <div className="px-4 pt-2 text-center text-[10px] font-bold tabular-nums tracking-wide"
+          style={{ color: alpha(hex.text.muted, 0.78) }}>
+          {fmtShortDate(match.kickoff)} · {fmtTime(match.kickoff)}
+        </div>
+      )}
       <div>
         <TeamRow team={match.homeTeam} score={match.homeScore} won={homeWon} side="home" />
         <div className="h-px mx-4" style={{ background: `linear-gradient(90deg, transparent, ${accent}15, transparent)` }} />

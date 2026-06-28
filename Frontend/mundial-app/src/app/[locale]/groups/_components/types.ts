@@ -18,11 +18,16 @@ export type Match = {
   awayScore?: number;
   winner?: Team | null;
   isPlayed?: boolean;
+  /** Instante de inicio (ISO/UTC). Se muestra en la TZ del torneo. */
+  kickoff?: string | Date;
 };
 export type BracketData = {
+  dieciseisavos: Match[];
   octavos: Match[];
   cuartos: Match[];
   semifinales: Match[];
   final: Match[];
+  /** Partido por el 3er puesto (P103). Opcional: solo lo usa el bracket desktop. */
+  tercerPuesto?: Match;
 };
-export type KnockoutRound = 'octavos' | 'cuartos' | 'semifinales' | 'final';
+export type KnockoutRound = 'dieciseisavos' | 'octavos' | 'cuartos' | 'semifinales' | 'final';

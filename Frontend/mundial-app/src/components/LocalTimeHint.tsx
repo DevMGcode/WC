@@ -1,19 +1,19 @@
 'use client';
 
 /**
- * Muestra debajo de la hora oficial (CDMX) la hora LOCAL del navegador del
+ * Muestra debajo de la hora oficial (Bogotá) la hora LOCAL del navegador del
  * usuario, calculada solo en cliente para evitar mismatches SSR/CSR.
  *
  * Ejemplo de uso:
  *
- *   <span>11 jun · 1:00 PM CDMX</span>
+ *   <span>11 jun · 1:00 PM Bogotá</span>
  *   <LocalTimeHint date={fixture.kickoffAt} locale="es" />
  *   // → renderiza: "↳ tu hora: 2:00 PM" (en Bogotá)
  *
  * - En SSR no renderiza nada (devuelve null).
  * - En cliente, después de hidratar, muestra la hora local con un fade-in
  *   sutil para que el cambio no se note como flicker brusco.
- * - Si la TZ del usuario coincide con CDMX, no muestra nada (sería redundante).
+ * - Si la TZ del usuario coincide con Bogotá, no muestra nada (sería redundante).
  */
 
 import React, { useEffect, useState } from 'react';
@@ -28,7 +28,9 @@ interface Props {
   style?: React.CSSProperties;
 }
 
-const SEDE_TZ = 'America/Mexico_City';
+// Hora canónica de la app (Bogotá). Si el navegador del usuario ya está en esta
+// TZ, no mostramos el hint (sería redundante); para otras TZ sí mostramos su hora local.
+const SEDE_TZ = 'America/Bogota';
 
 export default function LocalTimeHint({
   date,

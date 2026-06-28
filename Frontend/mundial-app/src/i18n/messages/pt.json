@@ -200,7 +200,9 @@
     "legendPoints": "Pontos",
     "bestDefense": "Melhor Defesa",
     "goalsConceded": "gc",
-    "groupLabel": "Grupo"
+    "groupLabel": "Grupo",
+    "round32": "Rodada de 32",
+    "round32Short": "Rodada de 32"
   },
   "predictions": {
     "title": "Palpites",
