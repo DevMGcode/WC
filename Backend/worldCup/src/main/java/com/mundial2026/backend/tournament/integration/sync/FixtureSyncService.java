@@ -320,6 +320,8 @@ public class FixtureSyncService {
         f.setStatus(mapStatus(ext.status()));
         f.setHomeScore(ext.homeScore());
         f.setAwayScore(ext.awayScore());
+        f.setHomePenalty(ext.homePenalty());
+        f.setAwayPenalty(ext.awayPenalty());
         f.setElapsedMinutes(ext.elapsedMinutes());
         if (ext.stoppageMinutes() != null) {
             f.setExtraMinutes(ext.stoppageMinutes());
@@ -357,6 +359,15 @@ public class FixtureSyncService {
         }
         if (ext.awayScore() != null && !ext.awayScore().equals(existing.getAwayScore())) {
             existing.setAwayScore(ext.awayScore());
+            changed = true;
+        }
+        // Penales: misma política que el marcador (solo escribir valores no-null).
+        if (ext.homePenalty() != null && !ext.homePenalty().equals(existing.getHomePenalty())) {
+            existing.setHomePenalty(ext.homePenalty());
+            changed = true;
+        }
+        if (ext.awayPenalty() != null && !ext.awayPenalty().equals(existing.getAwayPenalty())) {
+            existing.setAwayPenalty(ext.awayPenalty());
             changed = true;
         }
         // El minuto en curso también cuenta como cambio, así el snapshot REST y el
