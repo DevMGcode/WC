@@ -106,10 +106,10 @@ const TeamBadge = ({
 }: {
   team: Team | null; score?: number; isWinner?: boolean; size?: 'sm' | 'md' | 'lg';
 }) => {
-  const h        = size === 'sm' ? 'h-9' : size === 'lg' ? 'h-14' : 'h-11';
-  const flagCls  = size === 'sm' ? 'w-5 h-5' : size === 'lg' ? 'w-9 h-9' : 'w-7 h-7';
-  const flagSz   = size === 'sm' ? '20px' : size === 'lg' ? '36px' : '28px';
-  const textCls  = size === 'sm' ? 'text-[9px]' : size === 'lg' ? 'text-xs' : 'text-[10px]';
+  const h        = size === 'sm' ? 'h-12' : size === 'lg' ? 'h-16' : 'h-14';
+  const flagCls  = size === 'sm' ? 'w-9 h-9' : size === 'lg' ? 'w-14 h-14' : 'w-11 h-11';
+  const flagSz   = size === 'sm' ? '36px' : size === 'lg' ? '56px' : '44px';
+  const textCls  = size === 'sm' ? 'text-[10px]' : size === 'lg' ? 'text-sm' : 'text-xs';
   const scoreCls = size === 'sm' ? 'text-[10px]' : size === 'lg' ? 'text-sm' : 'text-xs';
 
   if (!team || !team.flagUrl) {

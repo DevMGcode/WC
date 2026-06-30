@@ -23,6 +23,8 @@ type RawFixture = Partial<FixtureDetail> & {
   groupCode?: string | null;
   homeScore?: number | null;
   awayScore?: number | null;
+  homePenalty?: number | null;
+  awayPenalty?: number | null;
   extraMinutes?: number | null;
   elapsedMinutes?: number | null;
   hostCity?: string;
@@ -100,6 +102,8 @@ function normalizeFixture(raw: RawFixture, fallbackIndex = 0, fallbackTournament
     status: normalizeStatus(raw.status),
     homeScore: raw.homeScore ?? undefined,
     awayScore: raw.awayScore ?? undefined,
+    homePenalty: raw.homePenalty ?? null,
+    awayPenalty: raw.awayPenalty ?? null,
     extraMinutes: raw.extraMinutes ?? undefined,
     elapsedMinutes: raw.elapsedMinutes ?? undefined,
     createdAt: toDate(raw.createdAt),

@@ -84,6 +84,9 @@ interface FixtureCardProps {
   awayTeam: Team;
   homeScore?: number;
   awayScore?: number;
+  /** Marcador de la tanda de penales (si el partido se definió por penales). */
+  homePenalty?: number | null;
+  awayPenalty?: number | null;
   kickoffAt: Date;
   status: 'SCHEDULED' | 'FINISHED' | 'LIVE' | 'POSTPONED' | 'CANCELLED';
   elapsedMinutes?: number | null;
@@ -100,6 +103,8 @@ const FixtureCardInner: React.FC<FixtureCardProps> = ({
   awayTeam,
   homeScore,
   awayScore,
+  homePenalty,
+  awayPenalty,
   kickoffAt,
   status,
   elapsedMinutes,
@@ -174,6 +179,12 @@ const FixtureCardInner: React.FC<FixtureCardProps> = ({
                 <p className="text-3xl font-black text-white tech-text-glow">
                   {homeScore} - {awayScore}
                 </p>
+                {homePenalty != null && awayPenalty != null && (
+                  <p className="text-[11px] font-black tracking-wide mt-0.5"
+                    style={{ color: '#D4A72C' }}>
+                    Penales {homePenalty}-{awayPenalty}
+                  </p>
+                )}
                 {showPrediction && predictions && (
                   <p className="text-xs text-green-300 font-semibold mt-1">
                     {predictions.home} - {predictions.away}
