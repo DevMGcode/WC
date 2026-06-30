@@ -146,6 +146,29 @@ public class LiveEventPollingService {
             return;
         }
 
+        if (mappedType == MatchEvent.Type.SHOOTOUT_GOAL || mappedType == MatchEvent.Type.SHOOTOUT_MISSED) {
+            if (ext.playerName() == null || ext.playerName().isBlank()) return;
+            try {
+                matchEventService.persistShootoutPenalty(fixtureId, ext.playerName(),
+                        resolveInternalTeamId(ext.teamId()), ext.elapsedMinute(), ext.extraMinute(),
+                        mappedType == MatchEvent.Type.SHOOTOUT_MISSED);
+            } catch (Exception ex) {
+                log.warn("No se pudo persistir penal de tanda en vivo (partido {}, jugador {}): {}",
+                        fixtureId, ext.playerName(), ex.getMessage());
+            }
+            return;
+        }
+
+        if (mappedType == MatchEvent.Type.VAR_REVIEW) {
+            try {
+                matchEventService.persistVarReview(fixtureId, ext.playerName(),
+                        resolveInternalTeamId(ext.teamId()), ext.elapsedMinute(), ext.extraMinute(), ext.detail());
+            } catch (Exception ex) {
+                log.warn("No se pudo persistir VAR en vivo (partido {}): {}", fixtureId, ex.getMessage());
+            }
+            return;
+        }
+
         if (mappedType != MatchEvent.Type.GOAL
                 && mappedType != MatchEvent.Type.OWN_GOAL
                 && mappedType != MatchEvent.Type.PENALTY_GOAL) {

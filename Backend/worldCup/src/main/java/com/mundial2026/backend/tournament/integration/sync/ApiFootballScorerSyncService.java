@@ -79,53 +79,129 @@ public class ApiFootballScorerSyncService {
                             || "PENALTY_GOAL".equals(e.getEventType()));
             boolean subsAlreadySynced = existing.stream()
                     .anyMatch(e -> "SUBSTITUTION".equals(e.getEventType()));
+            boolean shootoutAlreadySynced = existing.stream()
+                    .anyMatch(e -> "SHOOTOUT_GOAL".equals(e.getEventType())
+                            || "SHOOTOUT_MISSED".equals(e.getEventType()));
+            boolean cardsAlreadySynced = existing.stream()
+                    .anyMatch(e -> "YELLOW_CARD".equals(e.getEventType())
+                            || "RED_CARD".equals(e.getEventType()));
+            // La tanda solo se exige si el partido se definió por penales (homePenalty != null),
+            // así no re-sincronizamos para siempre los partidos que no fueron a penales.
+            boolean shootoutNeeded = fixture.getHomePenalty() != null && !shootoutAlreadySynced;
+            boolean missingSomething = !goalsAlreadySynced || !subsAlreadySynced
+                    || !cardsAlreadySynced || shootoutNeeded;
 
-            if (!goalsAlreadySynced || !subsAlreadySynced) {
-                syncOne(fixture, !goalsAlreadySynced, !subsAlreadySynced);
+            // Ventana de reconciliación (~3h tras el final ≈ kickoff + 5h): dentro de ella
+            // re-consultamos la API y REEMPLAZAMOS los eventos (refleja correcciones, cambios
+            // y bajas). Fuera de la ventana solo rellenamos lo que falte, sin re-consultar de
+            // más (cuida la cuota); a esa altura los datos del proveedor ya están firmes.
+            boolean withinReconcileWindow = fixture.getKickoffAt() != null
+                    && fixture.getKickoffAt().isAfter(OffsetDateTime.now(ZoneOffset.UTC).minusHours(5));
+
+            if (withinReconcileWindow || missingSomething) {
+                syncOne(fixture, withinReconcileWindow);
             }
         }
     }
 
-    private void syncOne(Fixture fixture, boolean syncGoals, boolean syncSubs) {
+    /**
+     * Re-sincroniza los eventos de TODOS los partidos finalizados, SIN la ventana de
+     * 24h y con reemplazo completo (reconcile=true). Pensado para disparo manual desde
+     * el panel admin: completa partidos viejos que quedaron fuera de la ventana o que
+     * no se capturaron en vivo. Devuelve la cantidad de partidos procesados.
+     */
+    @Transactional
+    public int syncAllFinishedEvents() {
+        List<Fixture> finished = fixtureRepository.findByStatus(FixtureStatus.FINISHED).stream()
+                .filter(f -> f.getExternalProviderId() != null)
+                .toList();
+        int processed = 0;
+        for (Fixture fixture : finished) {
+            syncOne(fixture, true); // reconcile=true → reemplazo completo de eventos auto-capturados
+            recentlyAttempted.put(fixture.getId(), Boolean.TRUE);
+            processed++;
+        }
+        log.info("[ScorerSync/ApiFootball] Backfill manual de eventos: {} partidos finalizados procesados", processed);
+        return processed;
+    }
+
+    private void syncOne(Fixture fixture, boolean reconcile) {
         try {
             List<ExternalMatchEvent> events =
                     matchEventDataPort.fetchEventsByFixture(fixture.getExternalProviderId());
+            Long fid = fixture.getId();
 
-            if (syncGoals) {
-                List<MatchEventService.ApiGoal> goals = events.stream()
-                        .filter(e -> "goal".equalsIgnoreCase(e.type()))
-                        .filter(e -> !e.isPenaltyShootout())
-                        .filter(e -> e.detail() == null || !e.detail().toLowerCase().contains("missed"))
-                        .filter(e -> e.playerName() != null)
-                        .map(e -> new MatchEventService.ApiGoal(
-                                e.playerName(),
-                                totalMinute(e),
-                                resolveInternalTeamId(e.teamId())))
-                        .toList();
+            // Goles: syncFromApi ya reconcilia (reemplaza los de API / corrige los manuales).
+            List<MatchEventService.ApiGoal> goals = events.stream()
+                    .filter(e -> "goal".equalsIgnoreCase(e.type()))
+                    .filter(e -> !e.isPenaltyShootout())
+                    .filter(e -> e.detail() == null || !e.detail().toLowerCase().contains("missed"))
+                    .filter(e -> e.playerName() != null)
+                    .map(e -> new MatchEventService.ApiGoal(
+                            e.playerName(), totalMinute(e), resolveInternalTeamId(e.teamId())))
+                    .toList();
+            if (!goals.isEmpty()) {
+                matchEventService.syncFromApi(fid, goals);
+            }
 
-                if (!goals.isEmpty()) {
-                    matchEventService.syncFromApi(fixture.getId(), goals);
-                    log.info("[ScorerSync/ApiFootball] {} goles sincronizados para fixture {} (extId={})",
-                            goals.size(), fixture.getId(), fixture.getExternalProviderId());
+            // Reconciliación SEGURA: solo reemplazamos los tipos que la API REPORTA ahora
+            // (>=1 evento). Si la API no devuelve un tipo (p.ej. dropea la tanda de penales,
+            // cosa que API-Football hace de forma intermitente), NO lo borramos: evita perder
+            // datos buenos por una respuesta parcial del proveedor.
+            if (reconcile) {
+                java.util.Set<String> typesToReplace = new java.util.HashSet<>();
+                if (events.stream().anyMatch(e -> e.type() != null && e.type().toLowerCase().startsWith("subst")))
+                    typesToReplace.add("SUBSTITUTION");
+                if (events.stream().anyMatch(e -> "card".equalsIgnoreCase(e.type()))) {
+                    typesToReplace.add("YELLOW_CARD");
+                    typesToReplace.add("RED_CARD");
+                }
+                if (events.stream().anyMatch(ExternalMatchEvent::isPenaltyShootout)) {
+                    typesToReplace.add("SHOOTOUT_GOAL");
+                    typesToReplace.add("SHOOTOUT_MISSED");
+                }
+                if (events.stream().anyMatch(e -> "var".equalsIgnoreCase(e.type())))
+                    typesToReplace.add("VAR_REVIEW");
+                if (!typesToReplace.isEmpty()) {
+                    matchEventService.deleteApiEventsOfTypes(fid, typesToReplace);
                 }
             }
 
-            if (syncSubs) {
-                List<ExternalMatchEvent> subs = events.stream()
-                        .filter(e -> e.type() != null && e.type().toLowerCase().startsWith("subst"))
-                        .filter(e -> e.playerName() != null && !e.playerName().isBlank())
-                        .toList();
+            // Sustituciones
+            events.stream()
+                    .filter(e -> e.type() != null && e.type().toLowerCase().startsWith("subst"))
+                    .filter(e -> e.playerName() != null && !e.playerName().isBlank())
+                    .forEach(sub -> matchEventService.persistLiveSub(fid, sub.playerName(),
+                            sub.assistPlayerName(), resolveInternalTeamId(sub.teamId()),
+                            sub.elapsedMinute(), sub.extraMinute()));
 
-                for (ExternalMatchEvent sub : subs) {
-                    Long teamId = resolveInternalTeamId(sub.teamId());
-                    matchEventService.persistLiveSub(fixture.getId(), sub.playerName(),
-                            sub.assistPlayerName(), teamId, totalMinute(sub), sub.extraMinute());
-                }
-                if (!subs.isEmpty()) {
-                    log.info("[ScorerSync/ApiFootball] {} sustituciones sincronizadas para fixture {} (extId={})",
-                            subs.size(), fixture.getId(), fixture.getExternalProviderId());
-                }
-            }
+            // Tarjetas
+            events.stream()
+                    .filter(e -> "card".equalsIgnoreCase(e.type()))
+                    .filter(e -> e.playerName() != null && !e.playerName().isBlank())
+                    .forEach(c -> {
+                        String d = c.detail() != null ? c.detail().toLowerCase() : "";
+                        String type = d.contains("red") ? "RED_CARD" : "YELLOW_CARD";
+                        matchEventService.persistLiveCard(fid, c.playerName(),
+                                resolveInternalTeamId(c.teamId()), c.elapsedMinute(), c.extraMinute(), type);
+                    });
+
+            // Penales de tanda (type="Goal" + comments="Penalty Shootout")
+            events.stream()
+                    .filter(ExternalMatchEvent::isPenaltyShootout)
+                    .filter(e -> e.playerName() != null && !e.playerName().isBlank())
+                    .forEach(pen -> matchEventService.persistShootoutPenalty(fid, pen.playerName(),
+                            resolveInternalTeamId(pen.teamId()), pen.elapsedMinute(), pen.extraMinute(),
+                            pen.isMissedShootoutPenalty()));
+
+            // VAR (type="Var": gol anulado, penal revisado…)
+            events.stream()
+                    .filter(e -> "var".equalsIgnoreCase(e.type()))
+                    .forEach(v -> matchEventService.persistVarReview(fid, v.playerName(),
+                            resolveInternalTeamId(v.teamId()), v.elapsedMinute(), v.extraMinute(), v.detail()));
+
+            log.info("[ScorerSync/ApiFootball] Eventos sincronizados (reconcile={}) para fixture {} (extId={})",
+                    reconcile, fid, fixture.getExternalProviderId());
         } catch (Exception ex) {
             log.warn("[ScorerSync/ApiFootball] Error al sincronizar eventos para extId={}: {}",
                     fixture.getExternalProviderId(), ex.getMessage());

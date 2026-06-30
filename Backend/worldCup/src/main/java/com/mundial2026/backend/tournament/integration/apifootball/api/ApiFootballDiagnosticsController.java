@@ -32,6 +32,7 @@ public class ApiFootballDiagnosticsController {
     private final ApiFootballClient client;
     private final TeamSyncService teamSyncService;
     private final FixtureSyncService fixtureSyncService;
+    private final com.mundial2026.backend.tournament.integration.sync.ApiFootballScorerSyncService scorerSyncService;
 
     @GetMapping("/status")
     public ResponseEntity<ApiResponse<Optional<StatusResponse>>> status() {
@@ -98,5 +99,13 @@ public class ApiFootballDiagnosticsController {
     @PostMapping("/sync/fixtures/live")
     public ResponseEntity<ApiResponse<FixtureSyncService.SyncResult>> syncLiveFixtures() {
         return ResponseEntity.ok(ApiResponse.ok("Live fixtures synced", fixtureSyncService.syncLiveFixtures()));
+    }
+
+    /** Re-sincroniza los eventos (goles, tarjetas, subs, penales, VAR) de TODOS los
+     *  partidos finalizados, sin la ventana de 24h. Para completar partidos viejos. */
+    @PostMapping("/sync/events")
+    public ResponseEntity<ApiResponse<Integer>> syncEvents() {
+        int processed = scorerSyncService.syncAllFinishedEvents();
+        return ResponseEntity.ok(ApiResponse.ok("Eventos sincronizados (" + processed + " partidos finalizados)", processed));
     }
 }
