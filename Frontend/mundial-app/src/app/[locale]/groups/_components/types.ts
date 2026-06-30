@@ -16,6 +16,9 @@ export type Match = {
   awayTeam: Team;
   homeScore?: number;
   awayScore?: number;
+  /** Marcador de la tanda de penales (solo si el partido se definió así). */
+  homePenalty?: number | null;
+  awayPenalty?: number | null;
   winner?: Team | null;
   isPlayed?: boolean;
   /** Instante de inicio (ISO/UTC). Se muestra en la TZ del torneo. */
@@ -31,3 +34,5 @@ export type BracketData = {
   tercerPuesto?: Match;
 };
 export type KnockoutRound = 'dieciseisavos' | 'octavos' | 'cuartos' | 'semifinales' | 'final';
+/** Pestañas del cuadro en móvil: incluye el 3er puesto (un solo partido). */
+export type BracketTab = KnockoutRound | 'tercerPuesto';

@@ -12,6 +12,7 @@
     "live": "Ao vivo"
   },
   "common": {
+    "penalties": "Pênaltis",
     "save": "Salvar",
     "cancel": "Cancelar",
     "confirm": "Confirmar",
@@ -190,6 +191,8 @@
     "quarterShort": "Quartas",
     "semiShort": "Semis",
     "finalShort": "Final",
+    "thirdPlace": "Terceiro Lugar",
+    "thirdPlaceShort": "3º Lugar",
     "roundUndefined": "Rodada ainda não definida",
     "champion": "Campeão do Mundo",
     "legendPlayed": "Jogos disputados",

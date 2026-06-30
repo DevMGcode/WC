@@ -7,32 +7,37 @@ import { FiGrid, FiTarget, FiZap, FiAward } from 'react-icons/fi';
 import { hex } from '@/lib/design/tokens';
 import { alpha, alphaOf, borders, gradients } from '@/lib/design/effects';
 import { fmtShortDate, fmtTime } from '@/utils/format';
-import type { Match, KnockoutRound, Team, BracketData } from './types';
+import { useLocale } from 'next-intl';
+import { localizeTeamName } from '@/lib/i18n/teamNames';
+import type { Match, KnockoutRound, BracketTab, Team, BracketData } from './types';
 
 /* ══════════════════════════════════════════
    ROUND METADATA
 ══════════════════════════════════════════ */
-export const ROUND_META: Record<KnockoutRound, { icon: React.ReactNode; color: string; glow: string }> = {
+export const ROUND_META: Record<BracketTab, { icon: React.ReactNode; color: string; glow: string }> = {
   dieciseisavos: { icon: <FiGrid size={12} />, color: hex.green.soft,   glow: alpha(hex.green.soft, 0.55)    },
   octavos:     { icon: <FiGrid size={12} />,   color: hex.green.bright, glow: alphaOf('green', 0.55)         },
   cuartos:     { icon: <FiTarget size={12} />, color: hex.green.muted,  glow: alpha(hex.green.muted, 0.55)   },
   semifinales: { icon: <FiZap size={12} />,    color: '#a78bfa',        glow: 'rgba(167,139,250,0.55)'       },
+  tercerPuesto:{ icon: <FiAward size={12} />,  color: '#cd7f32',        glow: 'rgba(205,127,50,0.55)'        },
   final:       { icon: <FiAward size={12} />,  color: hex.gold.muted,   glow: alphaOf('gold', 0.55)          },
 };
 
-export const ROUND_I18N: Record<KnockoutRound, { labelKey: string; shortLabelKey: string }> = {
+export const ROUND_I18N: Record<BracketTab, { labelKey: string; shortLabelKey: string }> = {
   dieciseisavos: { labelKey: 'groups.round32', shortLabelKey: 'groups.round32Short' },
   octavos:     { labelKey: 'groups.round16',   shortLabelKey: 'groups.round16Short'  },
   cuartos:     { labelKey: 'groups.quarter',   shortLabelKey: 'groups.quarterShort'  },
   semifinales: { labelKey: 'groups.semi',      shortLabelKey: 'groups.semiShort'     },
+  tercerPuesto:{ labelKey: 'groups.thirdPlace', shortLabelKey: 'groups.thirdPlaceShort' },
   final:       { labelKey: 'groups.final',     shortLabelKey: 'groups.finalShort'    },
 };
 
-export const ROUND_GRID: Record<KnockoutRound, string> = {
+export const ROUND_GRID: Record<BracketTab, string> = {
   dieciseisavos: 'grid-cols-1 sm:grid-cols-2',
   octavos:     'grid-cols-1 sm:grid-cols-2',
   cuartos:     'grid-cols-1 sm:grid-cols-2',
   semifinales: 'grid-cols-1 sm:grid-cols-2',
+  tercerPuesto: 'grid-cols-1 max-w-xs mx-auto',
   final:       'grid-cols-1 max-w-xs mx-auto',
 };
 
@@ -41,12 +46,13 @@ export const ROUND_GRID: Record<KnockoutRound, string> = {
 ══════════════════════════════════════════ */
 interface KnockoutCardProps {
   match: Match;
-  round: KnockoutRound;
+  round: BracketTab;
   index?: number;
   t: (key: string) => string;
 }
 
 const KnockoutCard = ({ match, round, index = 0, t }: KnockoutCardProps) => {
+  const locale   = useLocale();
   const meta     = { ...ROUND_META[round], shortLabel: t(ROUND_I18N[round].shortLabelKey) };
   const isFinal  = round === 'final';
   const homeWon  = Boolean(match.isPlayed && match.winner?.id === match.homeTeam?.id);
@@ -78,8 +84,14 @@ const KnockoutCard = ({ match, round, index = 0, t }: KnockoutCardProps) => {
       </div>
       <span className="flex-1 text-[12px] font-black truncate leading-none"
         style={{ color: won ? accent : alpha(hex.text.secondary, 0.75), textShadow: won ? `0 0 12px ${accentGlow}` : 'none' }}>
-        {team?.name ?? '?'}
+        {localizeTeamName(team?.name, locale) || '?'}
       </span>
+      {match.isPlayed && match.homePenalty != null && match.awayPenalty != null && (
+        <span className="text-[10px] font-black uppercase tracking-wide shrink-0 tabular-nums whitespace-nowrap"
+          style={{ color: won ? accent : alpha(hex.text.muted, 0.6) }}>
+          {t('common.penalties')} {side === 'home' ? match.homePenalty : match.awayPenalty}
+        </span>
+      )}
       {match.isPlayed && score !== undefined && (
         <motion.span
           className="text-xl font-black tabular-nums w-7 text-center shrink-0 leading-none"
@@ -175,7 +187,9 @@ interface ChampionBannerProps {
   t: (key: string) => string;
 }
 
-export const ChampionBanner = ({ winner, t }: ChampionBannerProps) => (
+export const ChampionBanner = ({ winner, t }: ChampionBannerProps) => {
+  const locale = useLocale();
+  return (
   <motion.div
     initial={{ opacity: 0, scale: 0.88, y: 20 }}
     animate={{ opacity: 1, scale: 1, y: 0 }}
@@ -216,7 +230,7 @@ export const ChampionBanner = ({ winner, t }: ChampionBannerProps) => (
             style={{ textShadow: `0 0 24px ${alphaOf('gold', 0.80)}` }}
             animate={{ textShadow: [`0 0 14px ${alphaOf('gold', 0.60)}`, `0 0 36px ${alphaOf('gold', 1)}`, `0 0 14px ${alphaOf('gold', 0.60)}`] }}
             transition={{ duration: 2.4, repeat: Infinity }}>
-            {winner.name}
+            {localizeTeamName(winner.name, locale) || winner.name}
           </motion.p>
         </div>
         <div className="h-px my-3" style={{ background: gradients.divider('gold', 0.25) }} />
@@ -224,4 +238,5 @@ export const ChampionBanner = ({ winner, t }: ChampionBannerProps) => (
       </div>
     </div>
   </motion.div>
-);
+  );
+};

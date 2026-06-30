@@ -182,7 +182,7 @@ const FixtureCardInner: React.FC<FixtureCardProps> = ({
                 {homePenalty != null && awayPenalty != null && (
                   <p className="text-[11px] font-black tracking-wide mt-0.5"
                     style={{ color: '#D4A72C' }}>
-                    Penales {homePenalty}-{awayPenalty}
+                    {t('common.penalties')} {homePenalty}-{awayPenalty}
                   </p>
                 )}
                 {showPrediction && predictions && (

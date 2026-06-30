@@ -3,6 +3,7 @@
 import React, { useState, useEffect } from 'react';
 import Image from 'next/image';
 import { motion } from 'framer-motion';
+import { useTranslations } from 'next-intl';
 import { fmtShortDate, fmtTime } from '@/utils/format';
 
 /* ── Animated background (kept for showBg=true) ── */
@@ -379,6 +380,7 @@ const BracketConnectorsSymmetric = ({ octavosLeftRefs, cuartosLeftRefs, semifina
 
 /* ── Bracket ── */
 export const Bracket = ({ data, showBg = false }: BracketProps) => {
+  const t                     = useTranslations();
   const containerRef          = React.useRef<HTMLDivElement>(null);
   const octavosLeftRefs       = React.useRef<(HTMLDivElement | null)[]>([]);
   const cuartosLeftRefs       = React.useRef<(HTMLDivElement | null)[]>([]);
@@ -407,7 +409,7 @@ export const Bracket = ({ data, showBg = false }: BracketProps) => {
             {/* OCTAVOS LEFT (0–3) */}
             <motion.div initial={{ opacity: 0, x: -50 }} animate={{ opacity: 1, x: 0 }} transition={{ duration: 0.5 }}
               className="flex flex-col gap-1">
-              <RoundLabel label="Octavos" />
+              <RoundLabel label={t('groups.round16')} />
               <div className="flex flex-col gap-2">
                 {data.octavos.slice(0, 4).map((match, idx) => (
                   <motion.div key={match.id}
@@ -423,7 +425,7 @@ export const Bracket = ({ data, showBg = false }: BracketProps) => {
             {/* CUARTOS LEFT (0–1) */}
             <motion.div initial={{ opacity: 0, x: -30 }} animate={{ opacity: 1, x: 0 }} transition={{ duration: 0.5, delay: 0.1 }}
               className="flex flex-col gap-1 items-center">
-              <RoundLabel label="Cuartos" />
+              <RoundLabel label={t('groups.quarter')} />
               <div className="flex flex-col gap-24">
                 {data.cuartos.slice(0, 2).map((match, idx) => (
                   <motion.div key={match.id}
@@ -439,7 +441,7 @@ export const Bracket = ({ data, showBg = false }: BracketProps) => {
             {/* SEMIFINAL LEFT */}
             <motion.div initial={{ opacity: 0, x: -20 }} animate={{ opacity: 1, x: 0 }} transition={{ duration: 0.5, delay: 0.2 }}
               className="flex flex-col gap-1 items-center h-full justify-center">
-              <RoundLabel label="Semifinal" />
+              <RoundLabel label={t('groups.semi')} />
               <div ref={(el) => { if (el) semifinalesLeftRefs.current[0] = el; }}>
                 <MatchBox match={data.semifinales[0]} size="sm" />
               </div>
@@ -448,7 +450,7 @@ export const Bracket = ({ data, showBg = false }: BracketProps) => {
             {/* FINAL (CENTER) */}
             <motion.div initial={{ opacity: 0, scale: 0.8 }} animate={{ opacity: 1, scale: 1 }} transition={{ duration: 0.6, delay: 0.3 }}
               className="flex flex-col items-center justify-center gap-2 px-4 relative">
-              <RoundLabel label="Final" isFinal />
+              <RoundLabel label={t('groups.final')} isFinal />
               <div ref={finalRef}>
                 <MatchBox match={data.final[0]} size="md" isFinal />
               </div>
@@ -459,7 +461,7 @@ export const Bracket = ({ data, showBg = false }: BracketProps) => {
                   <div ref={thirdRef}>
                     <MatchBox match={data.tercerPuesto} size="md" />
                   </div>
-                  <RoundLabel label="Tercer Puesto" />
+                  <RoundLabel label={t('groups.thirdPlace')} />
                 </div>
               )}
             </motion.div>
@@ -467,7 +469,7 @@ export const Bracket = ({ data, showBg = false }: BracketProps) => {
             {/* SEMIFINAL RIGHT */}
             <motion.div initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} transition={{ duration: 0.5, delay: 0.2 }}
               className="flex flex-col gap-1 items-center h-full justify-center">
-              <RoundLabel label="Semifinal" />
+              <RoundLabel label={t('groups.semi')} />
               <div ref={(el) => { if (el) semifinalesRightRefs.current[0] = el; }}>
                 <MatchBox match={data.semifinales[1]} size="sm" />
               </div>
@@ -476,7 +478,7 @@ export const Bracket = ({ data, showBg = false }: BracketProps) => {
             {/* CUARTOS RIGHT (2–3) */}
             <motion.div initial={{ opacity: 0, x: 30 }} animate={{ opacity: 1, x: 0 }} transition={{ duration: 0.5, delay: 0.1 }}
               className="flex flex-col gap-1 items-center">
-              <RoundLabel label="Cuartos" />
+              <RoundLabel label={t('groups.quarter')} />
               <div className="flex flex-col gap-24">
                 {data.cuartos.slice(2, 4).map((match, idx) => (
                   <motion.div key={match.id}
@@ -492,7 +494,7 @@ export const Bracket = ({ data, showBg = false }: BracketProps) => {
             {/* OCTAVOS RIGHT (4–7) */}
             <motion.div initial={{ opacity: 0, x: 50 }} animate={{ opacity: 1, x: 0 }} transition={{ duration: 0.5 }}
               className="flex flex-col gap-1">
-              <RoundLabel label="Octavos" />
+              <RoundLabel label={t('groups.round16')} />
               <div className="flex flex-col gap-2">
                 {data.octavos.slice(4, 8).map((match, idx) => (
                   <motion.div key={match.id}

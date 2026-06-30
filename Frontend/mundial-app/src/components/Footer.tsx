@@ -21,28 +21,20 @@ const CONTACT_EMAIL = 'orionixgol@gmail.com';
 
 export function Footer() {
   const locale = useLocale();
-  const en = locale.toLowerCase().startsWith('en');
   const lh = (p: string) => `/${locale}${p}`;
 
-  const L = {
-    tagline:   en ? 'Live the 2026 World Cup, match by match.' : 'Viví el Mundial 2026, partido a partido.',
-    host:      en ? 'USA · Mexico · Canada' : 'USA · México · Canadá',
-    nav:       en ? 'Navigation' : 'Navegación',
-    links:     en ? 'Links'      : 'Enlaces',
-    community: en ? 'Community'   : 'Comunidad',
-    home:      en ? 'Home'        : 'Inicio',
-    calendar:  en ? 'Schedule'    : 'Calendario',
-    groups:    en ? 'Groups'      : 'Grupos',
-    scorers:   en ? 'Top scorers' : 'Goleadores',
-    predictions: en ? 'Predictions' : 'Porras',
-    about:     en ? 'About'      : 'Acerca de',
-    privacy:   en ? 'Privacy'    : 'Privacidad',
-    terms:     en ? 'Terms'      : 'Términos',
-    news:      en ? 'Updates'    : 'Novedades',
-    contact:   en ? 'Contact'    : 'Contacto',
-    rights:    en ? '© 2026 Orionix Gol — All rights reserved'
-                  : '© 2026 Orionix Gol — Todos los derechos reservados',
-  };
+  const FOOTER_COPY = {
+    es: { tagline: 'Viví el Mundial 2026, partido a partido.', host: 'USA · México · Canadá', nav: 'Navegación', links: 'Enlaces', community: 'Comunidad', home: 'Inicio', calendar: 'Calendario', groups: 'Grupos', scorers: 'Goleadores', predictions: 'Porras', about: 'Acerca de', privacy: 'Privacidad', terms: 'Términos', news: 'Novedades', contact: 'Contacto', rights: '© 2026 Orionix Gol — Todos los derechos reservados' },
+    en: { tagline: 'Live the 2026 World Cup, match by match.', host: 'USA · Mexico · Canada', nav: 'Navigation', links: 'Links', community: 'Community', home: 'Home', calendar: 'Schedule', groups: 'Groups', scorers: 'Top scorers', predictions: 'Predictions', about: 'About', privacy: 'Privacy', terms: 'Terms', news: 'Updates', contact: 'Contact', rights: '© 2026 Orionix Gol — All rights reserved' },
+    fr: { tagline: 'Vivez la Coupe du Monde 2026, match après match.', host: 'USA · Mexique · Canada', nav: 'Navigation', links: 'Liens', community: 'Communauté', home: 'Accueil', calendar: 'Calendrier', groups: 'Groupes', scorers: 'Buteurs', predictions: 'Pronostics', about: 'À propos', privacy: 'Confidentialité', terms: 'Conditions', news: 'Actualités', contact: 'Contact', rights: '© 2026 Orionix Gol — Tous droits réservés' },
+    pt: { tagline: 'Viva a Copa do Mundo 2026, jogo a jogo.', host: 'EUA · México · Canadá', nav: 'Navegação', links: 'Links', community: 'Comunidade', home: 'Início', calendar: 'Calendário', groups: 'Grupos', scorers: 'Artilheiros', predictions: 'Palpites', about: 'Sobre', privacy: 'Privacidade', terms: 'Termos', news: 'Novidades', contact: 'Contato', rights: '© 2026 Orionix Gol — Todos os direitos reservados' },
+    de: { tagline: 'Erlebe die WM 2026, Spiel für Spiel.', host: 'USA · Mexiko · Kanada', nav: 'Navigation', links: 'Links', community: 'Community', home: 'Startseite', calendar: 'Spielplan', groups: 'Gruppen', scorers: 'Torschützen', predictions: 'Tipps', about: 'Über uns', privacy: 'Datenschutz', terms: 'AGB', news: 'Neuigkeiten', contact: 'Kontakt', rights: '© 2026 Orionix Gol — Alle Rechte vorbehalten' },
+    ru: { tagline: 'Живи Чемпионатом мира 2026, матч за матчем.', host: 'США · Мексика · Канада', nav: 'Навигация', links: 'Ссылки', community: 'Сообщество', home: 'Главная', calendar: 'Расписание', groups: 'Группы', scorers: 'Бомбардиры', predictions: 'Прогнозы', about: 'О нас', privacy: 'Конфиденциальность', terms: 'Условия', news: 'Новости', contact: 'Контакты', rights: '© 2026 Orionix Gol — Все права защищены' },
+    ar: { tagline: 'عِش كأس العالم 2026، مباراة تلو الأخرى.', host: 'الولايات المتحدة · المكسيك · كندا', nav: 'التنقل', links: 'روابط', community: 'المجتمع', home: 'الرئيسية', calendar: 'التقويم', groups: 'المجموعات', scorers: 'الهدافون', predictions: 'التوقعات', about: 'من نحن', privacy: 'الخصوصية', terms: 'الشروط', news: 'المستجدات', contact: 'اتصل بنا', rights: '© 2026 Orionix Gol — جميع الحقوق محفوظة' },
+  } as const;
+  const lang = (Object.keys(FOOTER_COPY) as (keyof typeof FOOTER_COPY)[])
+    .find(k => k === locale.toLowerCase().slice(0, 2)) ?? 'es';
+  const L = FOOTER_COPY[lang];
 
   // Links más grandes y legibles; hover → color primario.
   const linkCls = 'inline-flex items-center gap-2 text-[14px] leading-none transition-colors duration-200';

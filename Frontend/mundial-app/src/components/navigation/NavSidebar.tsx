@@ -270,7 +270,7 @@ export const NavSidebar: React.FC<NavSidebarProps> = ({
                 >
                   <FiZap size={11} className="shrink-0" style={{ color: hex.gold.base } as any} />
                   {/* "WORLD CUP": 11px mínimo — legible */}
-                  <span className="text-[11px] font-black tracking-[0.16em] uppercase flex-1 truncate" style={{ color: alpha(hex.gold.bright, 0.90) }}>
+                  <span className="text-[11px] font-black tracking-[0.10em] uppercase flex-1 leading-tight break-words" style={{ color: alpha(hex.gold.bright, 0.90) }}>
                     {t('common.worldCup')}
                   </span>
                   <div className="flex gap-0.5 shrink-0">

@@ -12,6 +12,7 @@
     "live": "مباشر"
   },
   "common": {
+    "penalties": "ركلات الترجيح",
     "save": "حفظ",
     "cancel": "إلغاء",
     "confirm": "تأكيد",
@@ -190,6 +191,8 @@
     "quarterShort": "ربع",
     "semiShort": "نصف",
     "finalShort": "نهائي",
+    "thirdPlace": "المركز الثالث",
+    "thirdPlaceShort": "المركز 3",
     "roundUndefined": "الجولة غير محددة بعد",
     "champion": "بطل العالم",
     "legendPlayed": "مباريات مُلعبة",

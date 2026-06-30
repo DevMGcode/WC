@@ -23,6 +23,7 @@
     "others": "Ranking"
   },
   "common": {
+    "penalties": "Penalties",
     "save": "Save",
     "cancel": "Cancel",
     "confirm": "Confirm",
@@ -201,6 +202,8 @@
     "quarterShort": "QF",
     "semiShort": "SF",
     "finalShort": "Final",
+    "thirdPlace": "Third Place",
+    "thirdPlaceShort": "3rd Place",
     "roundUndefined": "Round not yet defined",
     "champion": "World Champion",
     "legendPlayed": "Matches Played",

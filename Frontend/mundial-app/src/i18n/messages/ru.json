@@ -12,6 +12,7 @@
     "live": "Прямой эфир"
   },
   "common": {
+    "penalties": "Пенальти",
     "save": "Сохранить",
     "cancel": "Отмена",
     "confirm": "Подтвердить",
@@ -190,6 +191,8 @@
     "quarterShort": "1/4",
     "semiShort": "1/2",
     "finalShort": "Фин",
+    "thirdPlace": "Матч за 3-е место",
+    "thirdPlaceShort": "3-е место",
     "roundUndefined": "Раунд ещё не определён",
     "champion": "Чемпион мира",
     "legendPlayed": "Игры сыграны",

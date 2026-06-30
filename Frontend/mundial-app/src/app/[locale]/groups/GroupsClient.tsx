@@ -34,7 +34,7 @@ import KnockoutCard, { ChampionBanner, ROUND_META, ROUND_I18N, ROUND_GRID } from
 import BracketBg from './_components/BracketBg';
 import TeamsTab from './_components/TeamsTab';
 import { usePremium } from '@/hooks/usePremium';
-import type { Group, Match, BracketData, KnockoutRound, Team } from './_components/types';
+import type { Group, Match, BracketData, KnockoutRound, BracketTab, Team } from './_components/types';
 import { computeKnockout } from './_components/knockoutProgression';
 
 /* ══════════════════════════════════════════
@@ -80,7 +80,7 @@ const EMPTY_BRACKET: BracketData = {
 /* ══════════════════════════════════════════
    BRACKET BUILDER
 ══════════════════════════════════════════ */
-function buildBracketFromFixtures(fixtures: any[]): BracketData {
+function buildBracketFromFixtures(fixtures: any[]): BracketData & { tercerPuestoFx: Match[] } {
   const toMatch = (f: any): Match => {
     // Ganador: por marcador; si quedó empatado y hubo tanda de penales, desempata
     // por el marcador de penales (así los partidos definidos por penales también
@@ -92,9 +92,10 @@ function buildBracketFromFixtures(fixtures: any[]): BracketData {
             ? (f.homePenalty > f.awayPenalty ? f.homeTeam : f.awayPenalty > f.homePenalty ? f.awayTeam : null)
             : null)
       : null;
-    return { id: f.id, homeTeam: f.homeTeam, awayTeam: f.awayTeam, homeScore: f.homeScore, awayScore: f.awayScore, winner, isPlayed: f.status === 'FINISHED', kickoff: f.kickoffAt };
+    return { id: f.id, homeTeam: f.homeTeam, awayTeam: f.awayTeam, homeScore: f.homeScore, awayScore: f.awayScore, homePenalty: f.homePenalty, awayPenalty: f.awayPenalty, winner, isPlayed: f.status === 'FINISHED', kickoff: f.kickoffAt };
   };
-  const b: BracketData = { dieciseisavos: [], octavos: [], cuartos: [], semifinales: [], final: [] };
+  const b: BracketData & { tercerPuestoFx: Match[] } =
+    { dieciseisavos: [], octavos: [], cuartos: [], semifinales: [], final: [], tercerPuestoFx: [] };
   fixtures.forEach(f => {
     const s = (f.stageName || '').toLowerCase();
     // Ronda de 32 (Dieciseisavos) PRIMERO: su nombre contiene "final" ("Dieciseisavos
@@ -103,6 +104,9 @@ function buildBracketFromFixtures(fixtures: any[]): BracketData {
     else if (s.includes('octavos')) b.octavos.push(toMatch(f));
     else if (s.includes('cuartos')) b.cuartos.push(toMatch(f));
     else if (s.includes('semi')) b.semifinales.push(toMatch(f));
+    // 3er puesto ANTES de "final": etapas como "Third Place Final" / "Play-off por el
+    // tercer puesto" contienen "final" y se irían a la final si no se capturan aquí.
+    else if (s.includes('tercer') || s.includes('third') || s.includes('3rd') || s.includes('3er') || s.includes('3º') || s.includes('play-off') || s.includes('playoff')) b.tercerPuestoFx.push(toMatch(f));
     else if (s.includes('final')) b.final.push(toMatch(f));
   });
   return b;
@@ -120,7 +124,7 @@ export default function GroupsClient({ initialTournament, initialGroups, initial
   const locale = useLocale();
   const [activeTab,    setActiveTab]    = useState<'grupos' | 'eliminatorias' | 'equipos'>('grupos');
   const { isPremium } = usePremium();
-  const [activeRound,  setActiveRound]  = useState<KnockoutRound>('dieciseisavos');
+  const [activeRound,  setActiveRound]  = useState<BracketTab>('dieciseisavos');
 
   // Header sticky: medimos su altura para pegar la barra de pestañas justo
   // debajo (la barra ya era sticky, pero a top-0 se solapaba con el header).
@@ -169,7 +173,7 @@ export default function GroupsClient({ initialTournament, initialGroups, initial
     // W77, etc.) a partir de los resultados de los Dieciseisavos. No dependemos de que
     // la API publique esas rondas: el cálculo de quién avanza lo hacemos nosotros.
     // Cada casilla sin definir muestra "Ganador {N}" (el "W{N}" de la FIFA).
-    const ko = computeKnockout({ ...bk, dieciseisavos });
+    const ko = computeKnockout({ ...bk, dieciseisavos }, bk.tercerPuestoFx, locale);
     return {
       dieciseisavos,
       octavos:      ko.octavos,
@@ -178,9 +182,16 @@ export default function GroupsClient({ initialTournament, initialGroups, initial
       final:        ko.final,
       tercerPuesto: ko.tercerPuesto,
     };
-  }, [fixtures]);
+  }, [fixtures, locale]);
 
   const champion = bracketsData?.final[0]?.winner ?? null;
+  // Pestañas del cuadro en móvil, en orden (el 3er puesto va entre semis y final).
+  const MOBILE_TABS: BracketTab[] = ['dieciseisavos', 'octavos', 'cuartos', 'semifinales', 'tercerPuesto', 'final'];
+  // El 3er puesto es un único partido (no un array); el resto sí son arrays.
+  const matchesFor = (round: BracketTab): Match[] =>
+    round === 'tercerPuesto'
+      ? (bracketsData.tercerPuesto ? [bracketsData.tercerPuesto] : [])
+      : bracketsData[round];
   const pageBg   = `radial-gradient(ellipse at 22% 30%, ${hex.bg.primary} 0%, ${hex.bg.secondary} 50%, ${hex.bg.primary} 100%)`;
 
   return (
@@ -368,10 +379,10 @@ export default function GroupsClient({ initialTournament, initialGroups, initial
                     <div className="absolute inset-x-0 top-0 h-px"
                       style={{ background: `linear-gradient(90deg, transparent, ${alphaOf('gold', 0.25)}, transparent)` }} />
                     <div className="flex gap-1.5 overflow-x-auto">
-                      {(Object.keys(ROUND_META) as KnockoutRound[]).map((round) => {
+                      {MOBILE_TABS.map((round) => {
                         const meta    = { ...ROUND_META[round], shortLabel: t(ROUND_I18N[round].shortLabelKey) };
                         const isActive = activeRound === round;
-                        const count   = bracketsData[round].length;
+                        const count   = matchesFor(round).length;
                         return (
                           <motion.button key={round} onClick={() => setActiveRound(round)}
                             className="relative flex items-center gap-2 px-4 py-2 rounded-xl flex-shrink-0 overflow-hidden"
@@ -410,10 +421,10 @@ export default function GroupsClient({ initialTournament, initialGroups, initial
                       initial={{ opacity: 0, x: 16 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -16 }}
                       transition={{ duration: 0.26, ease: [0.22, 1, 0.36, 1] }}
                       className={`grid gap-3 ${ROUND_GRID[activeRound]}`}>
-                      {bracketsData[activeRound].map((match, i) => (
+                      {matchesFor(activeRound).map((match, i) => (
                         <KnockoutCard key={match.id} match={match} round={activeRound} index={i} t={t} />
                       ))}
-                      {bracketsData[activeRound].length === 0 && (
+                      {matchesFor(activeRound).length === 0 && (
                         <div className="col-span-2 flex flex-col items-center gap-3 py-16">
                           <div className="w-12 h-12 rounded-2xl flex items-center justify-center"
                             style={{ background: alphaOf('gold', 0.07), border: borders.brand('gold', 0.18) }}>

@@ -96,19 +96,29 @@ const ROUND_OF = (num: number): 'octavos' | 'cuartos' | 'semifinales' | 'final' 
 const codeOf = (t?: Team | null): string =>
   String((t as { fifaCode?: string })?.fifaCode || t?.shortName || '').toUpperCase();
 
-/** Equipo-placeholder "Gan. {N}" (el "W{N}" de la FIFA). */
-const placeholder = (num: number): Team => ({
+type Lang = 'es' | 'en' | 'fr' | 'pt' | 'de' | 'ru' | 'ar';
+const LANGS: readonly Lang[] = ['es', 'en', 'fr', 'pt', 'de', 'ru', 'ar'];
+const pickLang = (locale: string): Lang => {
+  const l = locale.toLowerCase().slice(0, 2) as Lang;
+  return LANGS.includes(l) ? l : 'es';
+};
+// Prefijos "Ganador" / "Perdedor" por idioma para los placeholders del cuadro.
+const WIN_PREFIX:  Record<Lang, string> = { es: 'Gan.', en: 'Win.', fr: 'Vainq.', pt: 'Venc.', de: 'Sieger', ru: 'Поб.', ar: 'الفائز' };
+const LOSE_PREFIX: Record<Lang, string> = { es: 'Perdedor', en: 'Loser', fr: 'Perdant', pt: 'Perdedor', de: 'Verlierer', ru: 'Проигр.', ar: 'الخاسر' };
+
+/** Equipo-placeholder "Gan. {N}" (el "W{N}" de la FIFA), localizado. */
+const placeholder = (num: number, lang: Lang): Team => ({
   id: -num,
-  name: `Gan. ${num}`,
-  shortName: `Gan. ${num}`,
+  name: `${WIN_PREFIX[lang]} ${num}`,
+  shortName: `${WIN_PREFIX[lang]} ${num}`,
   flagUrl: '',
 });
 
-/** Equipo-placeholder "Perdedor {N}" (para el partido por el 3er puesto). */
-const loserPlaceholder = (num: number): Team => ({
+/** Equipo-placeholder "Perdedor {N}" (para el partido por el 3er puesto), localizado. */
+const loserPlaceholder = (num: number, lang: Lang): Team => ({
   id: -(900 + num),
-  name: `Perdedor ${num}`,
-  shortName: `Perdedor ${num}`,
+  name: `${LOSE_PREFIX[lang]} ${num}`,
+  shortName: `${LOSE_PREFIX[lang]} ${num}`,
   flagUrl: '',
 });
 
@@ -128,7 +138,8 @@ export function computeKnockout(rounds: {
   cuartos: Match[];
   semifinales: Match[];
   final: Match[];
-}): { octavos: Match[]; cuartos: Match[]; semifinales: Match[]; final: Match[]; tercerPuesto: Match } {
+}, thirdPlaceFx: Match[] = [], locale: string = 'es'): { octavos: Match[]; cuartos: Match[]; semifinales: Match[]; final: Match[]; tercerPuesto: Match } {
+  const lang = pickLang(locale);
   // R32 reales mapeados a su número de partido por el par de equipos.
   const r32ByNum = new Map<number, Match>();
   for (const fx of rounds.dieciseisavos) {
@@ -192,8 +203,8 @@ export function computeKnockout(rounds: {
     const feed = FEEDS[num];
     return {
       id: -num,
-      homeTeam: winnerTeam(feed.home) ?? placeholder(feed.home),
-      awayTeam: winnerTeam(feed.away) ?? placeholder(feed.away),
+      homeTeam: winnerTeam(feed.home) ?? placeholder(feed.home, lang),
+      awayTeam: winnerTeam(feed.away) ?? placeholder(feed.away, lang),
       isPlayed: false,
       winner: null,
       kickoff: SCHEDULE[num],
@@ -201,14 +212,20 @@ export function computeKnockout(rounds: {
   };
 
   // Partido por el 3er puesto (P103): Perdedor 101 vs Perdedor 102.
-  const tercerPuesto: Match = {
-    id: -103,
-    homeTeam: loserTeam(101) ?? loserPlaceholder(101),
-    awayTeam: loserTeam(102) ?? loserPlaceholder(102),
-    isPlayed: false,
-    winner: null,
-    kickoff: SCHEDULE[103],
-  };
+  // Si la API ya publicó el partido real (con ambos equipos definidos), se usa tal
+  // cual (marcador, ganador). Si no, se muestran los perdedores de las semis en
+  // cuanto se jueguen, o los placeholders "Perdedor 101/102" mientras tanto.
+  const tpReal = thirdPlaceFx.find(m => codeOf(m.homeTeam) && codeOf(m.awayTeam)) ?? null;
+  const tercerPuesto: Match = tpReal
+    ? { ...tpReal, kickoff: tpReal.kickoff ?? SCHEDULE[103] }
+    : {
+        id: -103,
+        homeTeam: loserTeam(101) ?? loserPlaceholder(101, lang),
+        awayTeam: loserTeam(102) ?? loserPlaceholder(102, lang),
+        isPlayed: false,
+        winner: null,
+        kickoff: SCHEDULE[103],
+      };
 
   return {
     octavos:     OCTAVOS_POS.map(buildMatch),

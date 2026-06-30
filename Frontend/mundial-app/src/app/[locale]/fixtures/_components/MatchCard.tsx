@@ -213,6 +213,13 @@ const MatchCard = ({ fixture, index, isFirst, t }: MatchCardProps) => {
                   </p>
                 </div>
               )}
+              {/* Marcador de penales — cuando el partido se definió en la tanda (vivo o finalizado) */}
+              {(isFinished || isLive) && fixture.homePenalty != null && fixture.awayPenalty != null && (
+                <span className="text-[11px] font-black tracking-[0.18em] uppercase mt-1"
+                  style={{ color: alpha(hex.gold.muted, 0.8) }}>
+                  {t('common.penalties')} {fixture.homePenalty}-{fixture.awayPenalty}
+                </span>
+              )}
               {isLive && (
                 <motion.div className="flex items-center gap-1 mt-1"
                   animate={{ opacity: [1, 0.3, 1] }}

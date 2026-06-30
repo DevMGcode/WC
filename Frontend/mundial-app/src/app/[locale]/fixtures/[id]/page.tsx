@@ -987,7 +987,7 @@ export default function FixtureDetailPage({ params }: { params: { id: string } }
               <div className="flex items-center gap-2 mb-4">
                 <div className="w-[3px] h-5 rounded-full"
                   style={{ background: `linear-gradient(180deg, ${hex.gold.bright}, ${hex.gold.muted})` }} />
-                <span className="text-[10px] font-black text-orionix-text-muted tracking-[0.24em] uppercase">Penales</span>
+                <span className="text-[10px] font-black text-orionix-text-muted tracking-[0.24em] uppercase">{t('common.penalties')}</span>
                 {fixture.homePenalty != null && fixture.awayPenalty != null && (
                   <span className="text-[8px] font-black px-1.5 py-0.5 rounded-full"
                     style={{ background: alphaOf('gold', 0.10), color: hex.gold.bright, border: borders.brand('gold', 0.20) }}>

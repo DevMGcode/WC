@@ -12,6 +12,7 @@
     "live": "En direct"
   },
   "common": {
+    "penalties": "Tirs au but",
     "save": "Enregistrer",
     "cancel": "Annuler",
     "confirm": "Confirmer",
@@ -190,6 +191,8 @@
     "quarterShort": "QF",
     "semiShort": "DF",
     "finalShort": "Finale",
+    "thirdPlace": "Troisième place",
+    "thirdPlaceShort": "3e place",
     "roundUndefined": "Tour non encore défini",
     "champion": "Champion du monde",
     "legendPlayed": "Matchs joués",
