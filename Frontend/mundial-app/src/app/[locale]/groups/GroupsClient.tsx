@@ -82,8 +82,16 @@ const EMPTY_BRACKET: BracketData = {
 ══════════════════════════════════════════ */
 function buildBracketFromFixtures(fixtures: any[]): BracketData {
   const toMatch = (f: any): Match => {
+    // Ganador: por marcador; si quedó empatado y hubo tanda de penales, desempata
+    // por el marcador de penales (así los partidos definidos por penales también
+    // avanzan en el cuadro eliminatorio).
     const winner = typeof f.homeScore === 'number' && typeof f.awayScore === 'number'
-      ? f.homeScore > f.awayScore ? f.homeTeam : f.awayScore > f.homeScore ? f.awayTeam : null : null;
+      ? f.homeScore > f.awayScore ? f.homeTeam
+        : f.awayScore > f.homeScore ? f.awayTeam
+        : (typeof f.homePenalty === 'number' && typeof f.awayPenalty === 'number'
+            ? (f.homePenalty > f.awayPenalty ? f.homeTeam : f.awayPenalty > f.homePenalty ? f.awayTeam : null)
+            : null)
+      : null;
     return { id: f.id, homeTeam: f.homeTeam, awayTeam: f.awayTeam, homeScore: f.homeScore, awayScore: f.awayScore, winner, isPlayed: f.status === 'FINISHED', kickoff: f.kickoffAt };
   };
   const b: BracketData = { dieciseisavos: [], octavos: [], cuartos: [], semifinales: [], final: [] };

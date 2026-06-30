@@ -47,6 +47,9 @@ export interface Fixture {
   status: 'SCHEDULED' | 'FINISHED' | 'POSTPONED' | 'CANCELLED' | 'LIVE';
   homeScore?: number;
   awayScore?: number;
+  /** Marcador de la tanda de penales (si el partido se definió por penales). */
+  homePenalty?: number | null;
+  awayPenalty?: number | null;
   /** Minutos de reposición (90' + X). Fuente: API-Football o EXTENDER del admin. */
   extraMinutes?: number;
   /** Minuto de juego en curso (status.elapsed). Solo relevante en vivo. */

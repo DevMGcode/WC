@@ -39,7 +39,7 @@ public class StatusChangeBackfillRunner implements ApplicationRunner {
                 if (homeId == null || awayId == null) continue;
                 matchEventService.backfillStatusChangesIfMissing(
                         f.getId(), homeId, awayId, f.getHomeScore(), f.getAwayScore(),
-                        f.getExtraMinutes());
+                        f.getExtraMinutes(), f.getHomePenalty(), f.getAwayPenalty());
                 processed++;
             } catch (Exception ex) {
                 log.warn("[Backfill] Error STATUS_CHANGE fixture {}: {}", f.getId(), ex.getMessage());

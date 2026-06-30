@@ -85,7 +85,9 @@ public class ApiFootballMapper {
                         .map(FixtureItem.FixtureBlock::venue)
                         .map(FixtureItem.VenueBlock::city)
                         .orElse(null),
-                league != null ? league.round() : null
+                league != null ? league.round() : null,
+                item.score() != null && item.score().penalty() != null ? item.score().penalty().home() : null,
+                item.score() != null && item.score().penalty() != null ? item.score().penalty().away() : null
         );
     }
 

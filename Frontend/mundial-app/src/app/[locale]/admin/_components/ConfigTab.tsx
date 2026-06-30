@@ -24,6 +24,7 @@ export default function ConfigTab() {
   const [restoring,       setRestoring]       = useState(false);
   const [confirmRestore,  setConfirmRestore]  = useState(false);
   const [recalculating,   setRecalculating]   = useState(false);
+  const [syncingEvents,   setSyncingEvents]   = useState(false);
   const [selectedSeason,  setSelectedSeason]  = useState(2026);
   const [message,         setMessage]         = useState('');
   const [error,           setError]           = useState('');
@@ -111,6 +112,17 @@ export default function ConfigTab() {
       setMessage('Standings recalculados correctamente desde los resultados de los partidos');
     } catch { setError('Error de conexión'); }
     finally { setRecalculating(false); }
+  };
+
+  const syncEvents = async () => {
+    setSyncingEvents(true); setError(''); setMessage('');
+    try {
+      const res  = await apiFetch('/api/v1/admin/apifootball/sync/events', { method: 'POST' });
+      const data = await res.json();
+      if (!res.ok) { setError(data?.message || 'Error al sincronizar eventos'); return; }
+      setMessage(`Eventos sincronizados: ${data?.data ?? 0} partidos finalizados (goles, tarjetas, penales, VAR)`);
+    } catch { setError('Error de conexión'); }
+    finally { setSyncingEvents(false); }
   };
 
   const restoreDemo = async () => {
@@ -395,6 +407,27 @@ export default function ConfigTab() {
             style={{ background: alphaOf('gold', 0.08), border: borders.brand('gold', 0.22), color: hex.gold.base }}>
             <FiRefreshCw size={11} className={recalculating ? 'animate-spin' : ''} />
             {recalculating ? 'Calculando...' : 'Recalcular'}
+          </motion.button>
+        </div>
+      </div>
+
+      {/* Sync events (backfill sin ventana) */}
+      <div className="relative overflow-hidden rounded-2xl p-5"
+        style={{ background: surfaces.card(), border: `1px solid ${alpha(hex.gold.base, 0.15)}`, backdropFilter: 'blur(20px)' }}>
+        <div className="absolute inset-x-0 top-0 h-px" style={{ background: `linear-gradient(90deg,transparent,${alpha(hex.gold.base, 0.4)},transparent)` }} />
+        <div className="flex items-start justify-between gap-4">
+          <div className="min-w-0">
+            <p className="text-sm font-black text-white tracking-wide">Sincronizar eventos</p>
+            <p className="text-[10px] mt-0.5" style={{ color: alpha(hex.text.secondary, 0.45) }}>
+              Trae goles, tarjetas, sustituciones, penales y VAR de todos los partidos finalizados (sin ventana de 24h)
+            </p>
+          </div>
+          <motion.button onClick={syncEvents} disabled={syncingEvents}
+            whileHover={{ scale: 1.03 }} whileTap={{ scale: 0.97 }}
+            className="flex items-center gap-1.5 px-3 py-2 rounded-xl text-[10px] font-black shrink-0"
+            style={{ background: alphaOf('gold', 0.08), border: borders.brand('gold', 0.22), color: hex.gold.base }}>
+            <FiRefreshCw size={11} className={syncingEvents ? 'animate-spin' : ''} />
+            {syncingEvents ? 'Sincronizando...' : 'Sincronizar eventos'}
           </motion.button>
         </div>
       </div>

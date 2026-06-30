@@ -61,6 +61,13 @@ public class Fixture {
     @Column(name = "away_score")
     private Integer awayScore;
 
+    /** Marcador de la tanda de penales (null si el partido no se definió por penales). */
+    @Column(name = "home_penalty")
+    private Integer homePenalty;
+
+    @Column(name = "away_penalty")
+    private Integer awayPenalty;
+
     @Enumerated(EnumType.STRING)
     @Column(nullable = false, length = 30)
     private FixtureStatus status = FixtureStatus.SCHEDULED;

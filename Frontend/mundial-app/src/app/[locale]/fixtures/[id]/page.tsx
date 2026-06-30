@@ -157,8 +157,14 @@ export default function FixtureDetailPage({ params }: { params: { id: string } }
   // Merge: eventos del WebSocket + eventos de BD, sin duplicados.
   // Dedup global por type|minute|teamId|playerName para cubrir duplicados dentro de cada fuente.
   const allLiveEvents = useMemo(() => {
-    const evKey = (e: { type?: string; minute?: number; teamId?: number | null; playerName?: string | null }) =>
-      `${e.type}|${e.minute}|${e.teamId ?? 'x'}|${e.playerName ?? ''}`;
+    // Los STATUS_CHANGE no tienen equipo ni jugador, y varios caen en el mismo minuto
+    // (p.ej. al min 120: "end extra time", "penalties", "match finished"). Si se dedupea
+    // solo por type|minute|team|player, los tres colapsan en uno y se pierden divisores.
+    // Para ese tipo discriminamos por detail + extraMinute; el resto queda igual.
+    const evKey = (e: { type?: string; minute?: number; extraMinute?: number; teamId?: number | null; playerName?: string | null; detail?: string | null }) =>
+      e.type === 'STATUS_CHANGE'
+        ? `STATUS_CHANGE|${e.minute}|${e.extraMinute ?? 'x'}|${e.detail ?? ''}`
+        : `${e.type}|${e.minute}|${e.teamId ?? 'x'}|${e.playerName ?? ''}`;
     const seen = new Set<string>();
     const result: MatchEvent[] = [];
     for (const e of [...liveEvents, ...dbEvents]) {
@@ -303,6 +309,19 @@ export default function FixtureDetailPage({ params }: { params: { id: string } }
 
     return [...cappedDbScorers, ...wsOnlyGoals].sort((a, b) => (a.minute ?? 0) - (b.minute ?? 0));
   }, [fixture?.scorers, fixture?.homeTeam?.id, fixture?.awayTeam?.id, fixture?.homeScore, fixture?.awayScore, liveEvents, fixtureId]);
+
+  // Tanda de penales: agrupa los SHOOTOUT_* por equipo (en orden de ejecución).
+  const shootout = useMemo(() => {
+    const homeId = fixture?.homeTeam?.id;
+    const awayId = fixture?.awayTeam?.id;
+    const pens = allLiveEvents
+      .filter(e => e.type === 'SHOOTOUT_GOAL' || e.type === 'SHOOTOUT_MISSED')
+      .sort((a, b) => ((a.minute ?? 0) + (a.extraMinute ?? 0)) - ((b.minute ?? 0) + (b.extraMinute ?? 0)));
+    const pick = (id?: number) => pens
+      .filter(e => e.teamId === id)
+      .map(e => ({ name: e.playerName ?? '?', made: e.type === 'SHOOTOUT_GOAL', minute: e.minute, extraMinute: e.extraMinute }));
+    return { home: pick(homeId), away: pick(awayId), has: pens.length > 0 };
+  }, [allLiveEvents, fixture?.homeTeam?.id, fixture?.awayTeam?.id]);
 
   useEffect(() => {
     const loadFixture = async () => {
@@ -480,6 +499,8 @@ export default function FixtureDetailPage({ params }: { params: { id: string } }
             awayTeam={fixture.awayTeam}
             homeScore={liveHomeScore}
             awayScore={liveAwayScore}
+            homePenalty={fixture.homePenalty}
+            awayPenalty={fixture.awayPenalty}
             kickoffAt={fixture.kickoffAt}
             status={liveStatus}
             elapsedMinutes={isLive ? (displayMinute ?? elapsedMinutes) : undefined}
@@ -954,6 +975,52 @@ export default function FixtureDetailPage({ params }: { params: { id: string } }
                     </motion.div>
                   );
                 })}
+              </div>
+            </div>
+          </DarkCard>
+        )}
+
+        {/* ── PENALES (tanda) ── */}
+        {(isFinished || isLive) && shootout.has && (
+          <DarkCard accent="gold" delay={0.24} className="mb-4">
+            <div className="p-5">
+              <div className="flex items-center gap-2 mb-4">
+                <div className="w-[3px] h-5 rounded-full"
+                  style={{ background: `linear-gradient(180deg, ${hex.gold.bright}, ${hex.gold.muted})` }} />
+                <span className="text-[10px] font-black text-orionix-text-muted tracking-[0.24em] uppercase">Penales</span>
+                {fixture.homePenalty != null && fixture.awayPenalty != null && (
+                  <span className="text-[8px] font-black px-1.5 py-0.5 rounded-full"
+                    style={{ background: alphaOf('gold', 0.10), color: hex.gold.bright, border: borders.brand('gold', 0.20) }}>
+                    {fixture.homePenalty}-{fixture.awayPenalty}
+                  </span>
+                )}
+              </div>
+              <div className="grid grid-cols-2 gap-3">
+                {[{ team: fixture.homeTeam, list: shootout.home }, { team: fixture.awayTeam, list: shootout.away }].map((col, ci) => (
+                  <div key={ci} className="space-y-1.5">
+                    <p className="text-[11px] font-black tracking-wide text-center mb-2"
+                      style={{ color: hex.gold.bright }}>
+                      {col.team?.shortName ?? col.team?.name}
+                    </p>
+                    {col.list.map((p: { name: string; made: boolean; minute?: number | null; extraMinute?: number | null }, i: number) => (
+                      <div key={i} className="flex items-center gap-2 px-2.5 py-2 rounded-lg"
+                        style={{
+                          background: alpha(hex.bg.primary, 0.60),
+                          border: `1px solid ${alpha(hex.neutral.white, 0.04)}`,
+                          borderLeft: `3px solid ${p.made ? hex.green.bright : hex.status.danger}`,
+                        }}>
+                        <span className="text-sm shrink-0">{p.made ? '✅' : '❌'}</span>
+                        <span className="flex-1 min-w-0 text-xs font-bold text-orionix-text-secondary truncate">{p.name}</span>
+                        {p.minute != null && (
+                          <span className="text-[9px] font-black text-orionix-text-muted px-1.5 py-0.5 rounded-md shrink-0"
+                            style={{ background: alpha(hex.neutral.white, 0.04), border: `1px solid ${alpha(hex.neutral.white, 0.06)}` }}>
+                            {p.minute}{p.extraMinute ? `+${p.extraMinute}` : ''}&apos;
+                          </span>
+                        )}
+                      </div>
+                    ))}
+                  </div>
+                ))}
               </div>
             </div>
           </DarkCard>

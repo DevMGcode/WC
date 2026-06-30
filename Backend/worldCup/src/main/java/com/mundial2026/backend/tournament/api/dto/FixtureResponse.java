@@ -19,6 +19,9 @@ public record FixtureResponse(
         String status,
         Integer homeScore,
         Integer awayScore,
+        /** Marcador de penales (null si no hubo tanda). */
+        Integer homePenalty,
+        Integer awayPenalty,
         /** Minutos de reposición (90' + X). Fuente: API-Football o botón EXTENDER del admin. */
         Integer extraMinutes,
         /** Minuto de juego en curso (status.elapsed). null si el partido no está en vivo. */

@@ -85,8 +85,13 @@ public class MatchEventService {
             Fixture fixture = fixtureRepository.findById(fixtureId).orElse(null);
             if (fixture == null) return;
 
-            // Borrar cualquier registro API anterior de este partido antes de reinsertar
-            matchEventRepository.findByFixtureIdAndSource(fixtureId, MatchEvent.Source.API)
+            // Borrar SOLO los goles de fuente API antes de reinsertar. No tocar
+            // subs/tarjetas/VAR/penales/STATUS_CHANGE (se gestionan por otras vías):
+            // antes este delete arrasaba con todos y borraba los marcadores de estado.
+            matchEventRepository.findByFixtureIdAndSource(fixtureId, MatchEvent.Source.API).stream()
+                    .filter(e -> "GOAL".equals(e.getEventType())
+                            || "OWN_GOAL".equals(e.getEventType())
+                            || "PENALTY_GOAL".equals(e.getEventType()))
                     .forEach(matchEventRepository::delete);
 
             for (ApiGoal g : apiGoals) {
@@ -256,6 +261,83 @@ public class MatchEventService {
                 playerOut, playerIn, minute, extraMinute, fixtureId);
     }
 
+    /* ── Persistencia de penales de tanda (SHOOTOUT_GOAL / SHOOTOUT_MISSED) ── */
+    @Transactional
+    public void persistShootoutPenalty(Long fixtureId, String playerName, Long internalTeamId,
+                                       Integer minute, Integer extraMinute, boolean missed) {
+        if (playerName == null || playerName.isBlank()) return;
+        String eventType = missed ? "SHOOTOUT_MISSED" : "SHOOTOUT_GOAL";
+        // Dedup: no repetir el mismo penal (mismo jugador+tipo) ya guardado vía API.
+        boolean exists = matchEventRepository.findByFixtureIdAndSource(fixtureId, MatchEvent.Source.API)
+                .stream()
+                .anyMatch(e -> eventType.equals(e.getEventType())
+                        && playerName.trim().equalsIgnoreCase(e.getPlayerName()));
+        if (exists) return;
+
+        Fixture fixture = fixtureRepository.findById(fixtureId).orElse(null);
+        if (fixture == null) return;
+        Team team = internalTeamId != null ? teamRepository.findById(internalTeamId).orElse(null) : null;
+
+        MatchEvent event = new MatchEvent();
+        event.setFixture(fixture);
+        event.setPlayerName(playerName.trim());
+        event.setTeam(team);
+        event.setMinute(minute);
+        event.setExtraMinute(extraMinute);
+        event.setEventType(eventType);
+        event.setSource(MatchEvent.Source.API);
+        event.setVerified(false);
+        event.setMismatch(false);
+
+        matchEventRepository.save(event);
+        log.info("[MatchEvent] Penal de tanda persistido: {} {} (partido {})", eventType, playerName, fixtureId);
+    }
+
+    /* ── Persistencia de revisiones VAR (VAR_REVIEW) ── */
+    @Transactional
+    public void persistVarReview(Long fixtureId, String playerName, Long internalTeamId,
+                                 Integer minute, Integer extraMinute, String detail) {
+        // Dedup por detalle + minuto (un VAR no se repite).
+        boolean exists = matchEventRepository.findByFixtureIdAndSource(fixtureId, MatchEvent.Source.API)
+                .stream()
+                .anyMatch(e -> "VAR_REVIEW".equals(e.getEventType())
+                        && java.util.Objects.equals(e.getMinute(), minute)
+                        && java.util.Objects.equals(e.getDetail(), detail));
+        if (exists) return;
+
+        Fixture fixture = fixtureRepository.findById(fixtureId).orElse(null);
+        if (fixture == null) return;
+        Team team = internalTeamId != null ? teamRepository.findById(internalTeamId).orElse(null) : null;
+
+        MatchEvent event = new MatchEvent();
+        event.setFixture(fixture);
+        // playerName es NOT NULL en la entidad; el VAR puede no traer jugador.
+        event.setPlayerName(playerName != null && !playerName.isBlank() ? playerName.trim() : "VAR");
+        event.setTeam(team);
+        event.setMinute(minute);
+        event.setExtraMinute(extraMinute);
+        event.setEventType("VAR_REVIEW");
+        event.setDetail(detail);
+        event.setSource(MatchEvent.Source.API);
+        event.setVerified(false);
+        event.setMismatch(false);
+
+        matchEventRepository.save(event);
+        log.info("[MatchEvent] VAR persistido: '{}' min {} (partido {})", detail, minute, fixtureId);
+    }
+
+    /**
+     * Borra los eventos de FUENTE API de los tipos indicados (para reconciliar:
+     * se reinsertan luego desde la API y así se reflejan cambios/correcciones/bajas).
+     * No toca eventos MANUAL del admin.
+     */
+    @Transactional
+    public void deleteApiEventsOfTypes(Long fixtureId, java.util.Set<String> eventTypes) {
+        matchEventRepository.findByFixtureIdAndSource(fixtureId, MatchEvent.Source.API).stream()
+                .filter(e -> eventTypes.contains(e.getEventType()))
+                .forEach(matchEventRepository::delete);
+    }
+
     /* ── Persistencia de cambios de estado (DESCANSO, INICIO 2T, TIEMPO COMPLETO…) ── */
 
     @Transactional
@@ -315,20 +397,34 @@ public class MatchEventService {
     public void backfillStatusChangesIfMissing(Long fixtureId,
                                                Long homeTeamId, Long awayTeamId,
                                                Integer finalHomeScore, Integer finalAwayScore,
-                                               Integer fixtureExtraMinutes) {
-        if (matchEventRepository.existsStatusChangeForFixture(fixtureId, "halftime")) return;
+                                               Integer fixtureExtraMinutes,
+                                               Integer homePenalty, Integer awayPenalty) {
         if (finalHomeScore == null || finalAwayScore == null) return;
 
+        // persistStatusChange deduplica por (fixture, detail) y solo rellena el extra si
+        // estaba null → llamarlo siempre es idempotente y NO pisa los minutos exactos (+X)
+        // que se hayan cargado a mano para un partido.
         int homeHt = matchEventRepository.countGoalsForTeamUpToMinute(fixtureId, homeTeamId, 45)
                    + matchEventRepository.countOwnGoalsByTeamUpToMinute(fixtureId, awayTeamId, 45);
         int awayHt = matchEventRepository.countGoalsForTeamUpToMinute(fixtureId, awayTeamId, 45)
                    + matchEventRepository.countOwnGoalsByTeamUpToMinute(fixtureId, homeTeamId, 45);
 
-        persistStatusChange(fixtureId, "halftime",    45, null,               homeHt,          awayHt);
-        persistStatusChange(fixtureId, "second half", 46, null,               homeHt,          awayHt);
-        persistStatusChange(fixtureId, "fulltime",    90, fixtureExtraMinutes, finalHomeScore, finalAwayScore);
-        log.info("[MatchEvent] STATUS_CHANGE retroactivos para fixture {} (HT {}-{}, FT {}-{}, +{})",
-                fixtureId, homeHt, awayHt, finalHomeScore, finalAwayScore, fixtureExtraMinutes);
+        persistStatusChange(fixtureId, "halftime",    45, null, homeHt, awayHt);
+        persistStatusChange(fixtureId, "second half", 46, null, homeHt, awayHt);
+
+        if (homePenalty != null && awayPenalty != null) {
+            // Partido definido por PENALES → estructura de prórroga + tanda + fin del partido,
+            // en minutos base (el +X exacto no lo entrega la API; se ajusta a mano por partido).
+            persistStatusChange(fixtureId, "extra time",          90,  null, finalHomeScore, finalAwayScore);
+            persistStatusChange(fixtureId, "extra time halftime", 105, null, finalHomeScore, finalAwayScore);
+            persistStatusChange(fixtureId, "end extra time",      120, null, finalHomeScore, finalAwayScore);
+            persistStatusChange(fixtureId, "penalties",           120, null, finalHomeScore, finalAwayScore);
+            persistStatusChange(fixtureId, "match finished",      120, null, finalHomeScore, finalAwayScore);
+        } else {
+            persistStatusChange(fixtureId, "fulltime", 90, fixtureExtraMinutes, finalHomeScore, finalAwayScore);
+        }
+        log.info("[MatchEvent] STATUS_CHANGE backfill fixture {} (HT {}-{}, FT {}-{}, penales={})",
+                fixtureId, homeHt, awayHt, finalHomeScore, finalAwayScore, homePenalty != null);
     }
 
     /** Persiste el inicio del segundo tiempo solo si ya existe un evento de descanso
