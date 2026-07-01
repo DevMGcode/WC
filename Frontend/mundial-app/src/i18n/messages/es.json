@@ -450,11 +450,15 @@
     "sectionDataError": "No se pudieron cargar los datos de esta sección",
     "matchDetail": "⚽ Detalle del Partido",
     "loading": "Cargando",
+    "result": "Resultado",
+    "stadium": "Estadio",
+    "city": "Ciudad",
     "tabs": {
       "lineups": "Alineaciones",
       "stats": "Estadísticas",
       "players": "Jugadores",
-      "h2h": "H2H"
+      "h2h": "H2H",
+      "live": "En Vivo"
     },
     "rules": {
       "exactLabel": "Marcador exacto",

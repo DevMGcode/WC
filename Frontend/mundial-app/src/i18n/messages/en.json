@@ -450,11 +450,15 @@
     "sectionDataError": "Could not load this section data",
     "matchDetail": "⚽ Match Detail",
     "loading": "Loading",
+    "result": "Result",
+    "stadium": "Stadium",
+    "city": "City",
     "tabs": {
       "lineups": "Lineups",
       "stats": "Statistics",
       "players": "Players",
-      "h2h": "H2H"
+      "h2h": "H2H",
+      "live": "Live"
     },
     "rules": {
       "exactLabel": "Exact score",

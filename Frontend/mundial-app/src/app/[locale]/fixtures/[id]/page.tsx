@@ -83,7 +83,7 @@ export default function FixtureDetailPage({ params }: { params: { id: string } }
   /* Tabs y reglas de puntuación dependen de t() ⇒ se construyen dentro del
    * componente para reaccionar al cambio de locale. */
   const DETAIL_TABS: { key: DetailTab; label: string; icon: React.ReactNode; liveOnly?: boolean }[] = [
-    { key: 'live',    label: 'En Vivo',                                       icon: <FiRadio     size={12} />, liveOnly: true },
+    { key: 'live',    label: t('fixture.tabs.live'),                                       icon: <FiRadio     size={12} />, liveOnly: true },
     { key: 'lineups',  label: t('fixture.tabs.lineups')   ?? 'Alineaciones', icon: <FiList      size={12} /> },
     { key: 'stats',    label: t('fixture.tabs.stats')     ?? 'Estadísticas', icon: <FiBarChart2 size={12} /> },
     { key: 'players',  label: t('fixture.tabs.players')   ?? 'Jugadores',    icon: <FiUsers     size={12} /> },
@@ -418,7 +418,7 @@ export default function FixtureDetailPage({ params }: { params: { id: string } }
             style={{ borderColor: alphaOf('green', 0.20), borderTopColor: hex.green.base }}
             animate={{ rotate: 360 }} transition={{ duration: 0.9, repeat: Infinity, ease: 'linear' }} />
           <p className="text-[10px] tracking-[0.3em] uppercase font-bold"
-            style={{ color: alphaOf('green', 0.6) }}>Cargando</p>
+            style={{ color: alphaOf('green', 0.6) }}>{t('fixture.loading')}</p>
         </div>
       </div>
     );
@@ -583,7 +583,7 @@ export default function FixtureDetailPage({ params }: { params: { id: string } }
                 {prediction && (
                   <div className="mt-4 inline-flex items-center gap-3 px-5 py-3 rounded-xl"
                     style={{ background: alphaOf('danger', 0.06), border: borders.brand('danger', 0.15) }}>
-                    <span className="text-orionix-text-muted text-sm font-bold">Tu porra:</span>
+                    <span className="text-orionix-text-muted text-sm font-bold">{t('fixture.yourPredictionLabel')}</span>
                     <span className="text-white font-black text-lg tabular-nums">
                       {prediction.predictedHomeScore} – {prediction.predictedAwayScore}
                     </span>
@@ -857,7 +857,7 @@ export default function FixtureDetailPage({ params }: { params: { id: string } }
                   </div>
                   <div className="flex-1 text-center rounded-xl p-4"
                     style={{ background: alpha(hex.bg.primary, 0.60), border: `1px solid ${alpha(hex.neutral.white, 0.06)}` }}>
-                    <p className="text-[8px] font-black text-orionix-text-muted tracking-[0.25em] uppercase mb-2">Resultado</p>
+                    <p className="text-[8px] font-black text-orionix-text-muted tracking-[0.25em] uppercase mb-2">{t('fixture.result')}</p>
                     <p className="text-3xl font-black text-white tabular-nums">
                       {fixture.homeScore}
                       <span className="text-orionix-text-muted mx-1 text-xl">–</span>
@@ -896,13 +896,13 @@ export default function FixtureDetailPage({ params }: { params: { id: string } }
               <div className="grid grid-cols-2 gap-4">
                 {fixture.stadiumName && (
                   <div>
-                    <p className="text-[9px] font-black text-orionix-text-muted tracking-[0.22em] uppercase mb-1">Estadio</p>
+                    <p className="text-[9px] font-black text-orionix-text-muted tracking-[0.22em] uppercase mb-1">{t('fixture.stadium')}</p>
                     <p className="text-sm font-bold text-orionix-text-secondary">{fixture.stadiumName}</p>
                   </div>
                 )}
                 {fixture.hostCity && (
                   <div>
-                    <p className="text-[9px] font-black text-orionix-text-muted tracking-[0.22em] uppercase mb-1">Ciudad</p>
+                    <p className="text-[9px] font-black text-orionix-text-muted tracking-[0.22em] uppercase mb-1">{t('fixture.city')}</p>
                     <p className="text-sm font-bold text-orionix-text-secondary">{fixture.hostCity}{fixture.hostCountry ? `, ${fixture.hostCountry}` : ''}</p>
                   </div>
                 )}

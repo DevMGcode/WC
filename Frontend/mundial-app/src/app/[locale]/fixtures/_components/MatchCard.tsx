@@ -268,7 +268,7 @@ const MatchCard = ({ fixture, index, isFirst, t }: MatchCardProps) => {
                 style={{ background: alpha(hex.neutral.black, 0.28), border: `1px solid ${alpha(hex.neutral.white, 0.05)}` }}>
                 <div className="flex items-center gap-1.5 mb-2">
                   <span className="text-[8px] font-black tracking-[0.22em] uppercase"
-                    style={{ color: alpha(hex.gold.muted, 0.55) }}>Goleadores</span>
+                    style={{ color: alpha(hex.gold.muted, 0.55) }}>{t('fixture.scorers')}</span>
                   <span className="text-[7px] font-black px-1.5 py-0.5 rounded-full"
                     style={{ background: alpha(hex.gold.muted, 0.08), color: alpha(hex.gold.muted, 0.7),
                              border: `1px solid ${alpha(hex.gold.muted, 0.18)}` }}>
