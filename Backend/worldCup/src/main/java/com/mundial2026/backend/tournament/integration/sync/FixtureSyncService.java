@@ -339,7 +339,11 @@ public class FixtureSyncService {
         OffsetDateTime kickoff = ext.kickoffUtc().atOffset(ZoneOffset.UTC);
         FixtureStatus newStatus = mapStatus(ext.status());
 
-        if (!existing.getKickoffAt().isEqual(kickoff)) {
+        // No pisar el kickoff de partidos que ya arrancaron: la hora es histórica
+        // y puede haber sido corregida manualmente (ej. API-Football con hora incorrecta).
+        boolean kickoffCanChange = existing.getStatus() != FixtureStatus.LIVE
+                && existing.getStatus() != FixtureStatus.FINISHED;
+        if (kickoffCanChange && !existing.getKickoffAt().isEqual(kickoff)) {
             existing.setKickoffAt(kickoff);
             existing.setPredictionLockedAt(kickoff.minusMinutes(
                     existing.getPredictionLockMinutesBefore() != null
