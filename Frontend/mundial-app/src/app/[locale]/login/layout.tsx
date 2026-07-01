@@ -22,6 +22,10 @@ export function generateMetadata({ params }: Props): Metadata {
 
   return {
     title: TITLES[locale] ?? TITLES.es,
+    // Página utilitaria sin valor SEO: fuera del índice. Combinado con quitarla del
+    // Disallow de robots.txt, Google puede rastrearla, leer el noindex y descartarla
+    // limpiamente (evita el estado "Duplicada: sin versión canónica" en Search Console).
+    robots: { index: false, follow: false },
     alternates: {
       canonical,
       languages: Object.fromEntries(

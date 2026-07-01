@@ -2,6 +2,7 @@ import { cache } from 'react';
 import type { Metadata } from 'next';
 import type { ReactNode } from 'react';
 import { getFixtureById } from '@/services/publicTournament';
+import { localizeTeamName } from '@/lib/i18n/teamNames';
 import { locales } from '@/i18n/locales';
 
 const APP_URL = process.env.NEXT_PUBLIC_APP_URL ?? 'https://www.orionixgol.com';
@@ -22,8 +23,9 @@ export async function generateMetadata({
   const fixture = await fetchFixture(fixtureId);
   if (!fixture) return { title: 'Partido | Orionix Gol' };
 
-  const homeName = fixture.homeTeam?.name ?? 'Local';
-  const awayName = fixture.awayTeam?.name ?? 'Visitante';
+  const locale = params.locale ?? 'es';
+  const homeName = localizeTeamName(fixture.homeTeam?.name, locale) || 'Local';
+  const awayName = localizeTeamName(fixture.awayTeam?.name, locale) || 'Visitante';
   const homeCode = fixture.homeTeam?.fifaCode ?? fixture.homeTeam?.shortName ?? homeName;
   const awayCode = fixture.awayTeam?.fifaCode ?? fixture.awayTeam?.shortName ?? awayName;
 
@@ -46,7 +48,6 @@ export async function generateMetadata({
     description = `Predice ${homeName} vs ${awayName} del Mundial 2026. Compite con tus amigos en ligas privadas y sigue el partido en vivo en Orionix Gol.`;
   }
 
-  const locale = params.locale ?? 'es';
   const canonical = `${APP_URL}/${locale}/fixtures/${fixtureId}`;
 
   // Imagen OG dinámica: tarjeta del partido (banderas + códigos + marcador/VS).
@@ -102,8 +103,8 @@ export default async function FixtureDetailLayout({ params, children }: Props) {
   let jsonLd: Record<string, unknown> | null = null;
 
   if (fixture) {
-    const homeName = fixture.homeTeam?.name ?? 'Local';
-    const awayName = fixture.awayTeam?.name ?? 'Visitante';
+    const homeName = localizeTeamName(fixture.homeTeam?.name, locale) || 'Local';
+    const awayName = localizeTeamName(fixture.awayTeam?.name, locale) || 'Visitante';
     const canonical = `${APP_URL}/${locale}/fixtures/${fixtureId}`;
 
     const eventStatus =
