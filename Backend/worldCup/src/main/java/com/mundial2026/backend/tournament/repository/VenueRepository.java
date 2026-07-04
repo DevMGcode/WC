@@ -4,7 +4,7 @@ import com.mundial2026.backend.tournament.domain.Venue;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 
-import java.util.Optional;
+import java.util.List;
 
 /**
  * Repository for {@link Venue}.
@@ -27,14 +27,27 @@ import java.util.Optional;
  */
 public interface VenueRepository extends JpaRepository<Venue, Long> {
 
-    Optional<Venue> findByExternalProviderId(Long externalProviderId);
+    /**
+     * Venues con este {@code external_provider_id}, ordenados por id ascendente.
+     *
+     * <p>Devolvemos {@link List} (no {@link java.util.Optional}) a propósito: aunque
+     * lo normal es 0 o 1 fila, el histórico puede tener duplicados (venues demo
+     * insertados manualmente antes de que existiera el upsert por id). Con {@code Optional}
+     * eso reventaba con {@code NonUniqueResultException} y abortaba TODO el sync de fixtures.
+     * Con {@code List} el caller elige de forma determinista (el primero) y sigue.
+     */
+    List<Venue> findByExternalProviderIdOrderByIdAsc(Long externalProviderId);
 
     /**
      * Lookup case-insensitive por (name, city). Solo se usa cuando el venue viene
-     * sin {@code external_provider_id}. Para venues con id, preferir {@link #findByExternalProviderId}.
+     * sin {@code external_provider_id}. Para venues con id, preferir {@link #findByExternalProviderIdOrderByIdAsc}.
+     *
+     * <p>Devuelve {@link List} ordenada (primero el que tenga {@code external_provider_id},
+     * luego menor id) por la misma razón: tolerar duplicados históricos sin reventar el sync.
      */
     @Query("SELECT v FROM Venue v " +
            "WHERE LOWER(v.name) = LOWER(:name) " +
-           "  AND LOWER(v.cityName) = LOWER(:city)")
-    Optional<Venue> findByNameAndCityIgnoreCase(String name, String city);
+           "  AND LOWER(v.cityName) = LOWER(:city) " +
+           "ORDER BY v.externalProviderId ASC NULLS LAST, v.id ASC")
+    List<Venue> findAllByNameAndCityIgnoreCase(String name, String city);
 }
