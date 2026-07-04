@@ -62,6 +62,20 @@ function loadLocalImage(filename: string): string {
   }
 }
 
+// Fuentes explícitas: sin ellas, @vercel/og usa una fuente por defecto que crashea
+// ("memory access out of bounds"). Cubren Latin, Cirílico (ru) y Árabe (ar); satori
+// hace fallback glifo a glifo entre ellas. Se cargan una vez al iniciar el proceso.
+const loadFont = (file: string): Buffer =>
+  readFileSync(join(process.cwd(), 'public', 'fonts', file));
+const FONTS: { name: string; data: Buffer; weight: 400 | 700; style: 'normal' }[] = [
+  { name: 'Noto Sans', data: loadFont('NotoSans-Latin-400.woff'),    weight: 400, style: 'normal' },
+  { name: 'Noto Sans', data: loadFont('NotoSans-Latin-700.woff'),    weight: 700, style: 'normal' },
+  { name: 'Noto Sans', data: loadFont('NotoSans-Cyrillic-400.woff'), weight: 400, style: 'normal' },
+];
+// NOTA árabe: @vercel/og (opentype.js) no soporta el shaping RTL del árabe
+// (lookupType 5 / substFormat 3) → romperia la imagen. Para 'ar' NO enviamos texto
+// árabe a la librería: se renderiza la tarjeta con texto latino (inglés + códigos).
+
 async function loadImage(url: string): Promise<string> {
   try {
     const res = await fetch(url, { signal: AbortSignal.timeout?.(4000) ?? undefined });
@@ -131,6 +145,9 @@ export async function GET(request: Request) {
   const { origin, searchParams } = new URL(request.url);
   const raw = searchParams.get('locale') ?? 'es';
   const locale: Locale = VALID.includes(raw as Locale) ? (raw as Locale) : 'es';
+  // El árabe no se puede shapear en @vercel/og → se renderiza con texto latino (inglés).
+  const rtlUnsafe = locale === 'ar';
+  const textLocale: Locale = rtlUnsafe ? 'en' : locale;
 
   const logoSrc = loadLocalImage('logotipo_Orionix_Gol_transparente.png');
 
@@ -148,7 +165,7 @@ export async function GET(request: Request) {
     const hs = searchParams.get('hs');
     const as_ = searchParams.get('as');
     const st = searchParams.get('st') ?? 'SCHEDULED';
-    const m = MATCH_COPY[locale];
+    const m = MATCH_COPY[textLocale];
 
     const [homeFlag, awayFlag] = await Promise.all([
       hf ? loadImage(hf) : Promise.resolve(''),
@@ -169,7 +186,7 @@ export async function GET(request: Request) {
         <div style={{
           width: '1200px', height: '630px',
           display: 'flex', flexDirection: 'column',
-          fontFamily: 'system-ui, -apple-system, sans-serif',
+          fontFamily: 'Noto Sans',
           position: 'relative', overflow: 'hidden',
           background: C.bg1,
         }}>
@@ -204,7 +221,7 @@ export async function GET(request: Request) {
           {/* ── CUERPO: equipos + marcador ── */}
           <div style={{ display: 'flex', flex: 1, alignItems: 'center', justifyContent: 'center', gap: 0, padding: '0 40px 0' }}>
             {/* Equipo local */}
-            <Team flag={homeFlag} code={hc} name={home} align="left" />
+            <Team flag={homeFlag} code={hc} name={rtlUnsafe ? hc : home} align="left" />
 
             {/* Centro: estado + score/VS */}
             <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 16, width: 220, marginTop: -20 }}>
@@ -232,7 +249,7 @@ export async function GET(request: Request) {
             </div>
 
             {/* Equipo visitante */}
-            <Team flag={awayFlag} code={ac} name={away} align="right" />
+            <Team flag={awayFlag} code={ac} name={rtlUnsafe ? ac : away} align="right" />
           </div>
 
           {/* ── FOOTER: CTA ── */}
@@ -246,21 +263,21 @@ export async function GET(request: Request) {
           </div>
         </div>
       ),
-      { width: 1200, height: 630 }
+      { width: 1200, height: 630, fonts: FONTS, headers: { 'X-Robots-Tag': 'noindex' } }
     );
   }
 
   // ══════════════════════════════════════════════════
   // MODO GENÉRICO (banner de marca)
   // ══════════════════════════════════════════════════
-  const c = COPY[locale];
+  const c = COPY[textLocale];
 
   return new ImageResponse(
     (
       <div style={{
         width: '1200px', height: '630px',
         display: 'flex', flexDirection: 'column',
-        fontFamily: 'system-ui, -apple-system, sans-serif',
+        fontFamily: 'Noto Sans',
         position: 'relative', overflow: 'hidden',
         background: C.bg1,
       }}>
@@ -333,6 +350,6 @@ export async function GET(request: Request) {
         </div>
       </div>
     ),
-    { width: 1200, height: 630 }
+    { width: 1200, height: 630, fonts: FONTS, headers: { 'X-Robots-Tag': 'noindex' } }
   );
 }
