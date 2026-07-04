@@ -14,6 +14,7 @@
 
 import React, { useState, useMemo, useRef, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
+import Link from 'next/link';
 import { useParams } from 'next/navigation';
 import { FiAward, FiBarChart2, FiUsers } from 'react-icons/fi';
 import { Header } from '@/components/Navigation';
@@ -28,7 +29,7 @@ import { alpha, alphaOf, borders, gradients } from '@/lib/design/effects';
 
 import { AdSlot } from '@/components/ads';
 import GroupCard, { EQBars } from './_components/GroupCard';
-import { groupsIntroText } from './_components/groupNarrative';
+import { groupsIntroText, knockoutIntroText } from './_components/groupNarrative';
 import { localizeTeamName } from '@/lib/i18n/teamNames';
 import KnockoutCard, { ChampionBanner, ROUND_META, ROUND_I18N, ROUND_GRID } from './_components/KnockoutCard';
 import BracketBg from './_components/BracketBg';
@@ -192,6 +193,18 @@ export default function GroupsClient({ initialTournament, initialGroups, initial
     round === 'tercerPuesto'
       ? (bracketsData.tercerPuesto ? [bracketsData.tercerPuesto] : [])
       : bracketsData[round];
+
+  // Rondas eliminatorias en orden, con su etiqueta localizada. Se usa en la
+  // sección SEO (siempre renderizada en el servidor) para listar los cruces
+  // reales como enlaces internos rastreables hacia cada ficha de partido.
+  const knockoutRoundsList: { round: BracketTab; label: string; matches: Match[] }[] = [
+    { round: 'dieciseisavos', label: t('groups.round32'),    matches: bracketsData.dieciseisavos },
+    { round: 'octavos',       label: t('groups.round16'),    matches: bracketsData.octavos },
+    { round: 'cuartos',       label: t('groups.quarter'),    matches: bracketsData.cuartos },
+    { round: 'semifinales',   label: t('groups.semi'),       matches: bracketsData.semifinales },
+    { round: 'tercerPuesto',  label: t('groups.thirdPlace'), matches: bracketsData.tercerPuesto ? [bracketsData.tercerPuesto] : [] },
+    { round: 'final',         label: t('groups.final'),      matches: bracketsData.final },
+  ];
   const pageBg   = `radial-gradient(ellipse at 22% 30%, ${hex.bg.primary} 0%, ${hex.bg.secondary} 50%, ${hex.bg.primary} 100%)`;
 
   return (
@@ -473,6 +486,50 @@ export default function GroupsClient({ initialTournament, initialGroups, initial
         )}
 
       </div>
+
+      {/* ── SECCIÓN SEO (siempre renderizada en SSR) ──────────────────────────
+          El cuadro interactivo vive detrás de la pestaña "Eliminatorias" y NO se
+          renderiza en el servidor. Esta sección garantiza que el texto editorial
+          (A) y los enlaces internos a cada partido (B) SÍ estén en el HTML que
+          rastrea Google, con contenido original e indexable.
+          Se MONTA siempre (queda en el código fuente para el crawler) pero solo
+          se MUESTRA en la pestaña "Eliminatorias" — en Grupos/Equipos se oculta
+          por CSS para no ser redundante. Google igual la indexa desde el HTML. ── */}
+      <section className={`relative z-10 max-w-7xl mx-auto px-4 sm:px-5 pb-28 ${activeTab === 'eliminatorias' ? '' : 'hidden'}`} aria-label={t('groups.knockoutPhase')}>
+        <div className="relative overflow-hidden rounded-2xl px-5 py-5 sm:px-6 sm:py-6"
+          style={{
+            background: `linear-gradient(145deg, ${alpha(hex.bg.primary, 0.96)}, ${alpha(hex.bg.secondary, 0.94)})`,
+            border: `1px solid ${alphaOf('gold', 0.10)}`,
+          }}>
+          <div className="absolute inset-x-0 top-0 h-px" style={{ background: gradients.divider('gold', 0.45) }} />
+          <h2 className="text-lg font-black text-white tracking-wide mb-2">{t('groups.knockoutPhase')}</h2>
+          <p className="text-[12px] sm:text-[13px] leading-relaxed mb-5" style={{ color: alpha(hex.text.secondary, 0.72) }}>
+            {knockoutIntroText(locale)}
+          </p>
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-x-6 gap-y-4">
+            {knockoutRoundsList.map(({ round, label, matches }) => {
+              const real = matches.filter((m) => m.id > 0);
+              if (real.length === 0) return null;
+              return (
+                <div key={round}>
+                  <h3 className="text-[10px] font-black tracking-[0.2em] uppercase mb-2" style={{ color: alphaOf('gold', 0.75) }}>{label}</h3>
+                  <ul className="space-y-1">
+                    {real.map((m) => (
+                      <li key={m.id}>
+                        <Link href={`/${locale}/fixtures/${m.id}`} className="text-[12px] leading-snug hover:underline"
+                          style={{ color: alpha(hex.text.secondary, 0.85) }}>
+                          {localizeTeamName(m.homeTeam?.name, locale) || '?'} vs {localizeTeamName(m.awayTeam?.name, locale) || '?'}
+                        </Link>
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      </section>
+
       <TourButton steps={getTourSteps(locale, 'groups')} />
     </div>
   );

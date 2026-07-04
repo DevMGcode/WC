@@ -2,6 +2,7 @@
 
 import React from 'react';
 import Image from 'next/image';
+import Link from 'next/link';
 import { motion } from 'framer-motion';
 import { FiGrid, FiTarget, FiZap, FiAward } from 'react-icons/fi';
 import { hex } from '@/lib/design/tokens';
@@ -59,6 +60,9 @@ const KnockoutCard = ({ match, round, index = 0, t }: KnockoutCardProps) => {
   const awayWon  = Boolean(match.isPlayed && match.winner?.id === match.awayTeam?.id);
   const accent   = isFinal ? hex.gold.muted : meta.color;
   const accentGlow = isFinal ? alphaOf('gold', 0.55) : meta.glow;
+  // Solo los partidos REALES (id de fixture > 0) enlazan a su página de detalle.
+  // Los placeholders del cuadro ("Gan. 89", "Perdedor 101") tienen id negativo y no enlazan.
+  const href = match.id > 0 ? `/${locale}/fixtures/${match.id}` : null;
 
   const TeamRow = ({ team, score, won, side }: { team: Team; score?: number; won: boolean; side: 'home' | 'away' }) => (
     <div className="flex items-center gap-3 px-4 py-3 relative"
@@ -111,14 +115,14 @@ const KnockoutCard = ({ match, round, index = 0, t }: KnockoutCardProps) => {
     </div>
   );
 
-  return (
+  const card = (
     <motion.div
       initial={{ opacity: 0, y: 16, scale: 0.95 }}
       animate={{ opacity: 1, y: 0, scale: 1 }}
       exit={{ opacity: 0, scale: 0.95 }}
       transition={{ duration: 0.42, delay: index * 0.06, ease: [0.22, 1, 0.36, 1] }}
       whileHover={{ y: -3, scale: 1.02 }}
-      className="relative overflow-hidden rounded-2xl"
+      className="group relative overflow-hidden rounded-2xl"
       style={{
         background: isFinal
           ? `linear-gradient(145deg, ${alpha('#0E0A02', 0.98)}, ${alpha('#161004', 0.97)})`
@@ -174,6 +178,16 @@ const KnockoutCard = ({ match, round, index = 0, t }: KnockoutCardProps) => {
       <div className="absolute inset-0 pointer-events-none rounded-2xl opacity-0 group-hover:opacity-100 transition-opacity duration-300"
         style={{ background: `linear-gradient(108deg, transparent 25%, ${alpha(hex.neutral.white, 0.018)} 50%, transparent 75%)` }} />
     </motion.div>
+  );
+
+  // Partido real → enlace a su página de detalle (mejora SEO: enlaces internos
+  // rastreables + cada cruce del cuadro apunta a su ficha). Placeholder → sin enlace.
+  if (!href) return card;
+  return (
+    <Link href={href} className="block"
+      aria-label={`${localizeTeamName(match.homeTeam?.name, locale) || '?'} vs ${localizeTeamName(match.awayTeam?.name, locale) || '?'} — ${meta.shortLabel}`}>
+      {card}
+    </Link>
   );
 };
 
