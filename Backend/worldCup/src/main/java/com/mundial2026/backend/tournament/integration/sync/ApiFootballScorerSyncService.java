@@ -200,11 +200,46 @@ public class ApiFootballScorerSyncService {
                     .forEach(v -> matchEventService.persistVarReview(fid, v.playerName(),
                             resolveInternalTeamId(v.teamId()), v.elapsedMinute(), v.extraMinute(), v.detail()));
 
+            // Re-sincroniza el marcador de la tanda (home_penalty/away_penalty) desde los
+            // goles de tanda ya persistidos, para que el encabezado "Penales X-Y" SIEMPRE
+            // coincida con la tarjeta de penales. Corrige el caso en que el score.penalty
+            // se capturó a media tanda (p.ej. 2-3) y no se actualizó al final (2-4).
+            reconcilePenaltyScoreFromEvents(fixture);
+
             log.info("[ScorerSync/ApiFootball] Eventos sincronizados (reconcile={}) para fixture {} (extId={})",
                     reconcile, fid, fixture.getExternalProviderId());
         } catch (Exception ex) {
             log.warn("[ScorerSync/ApiFootball] Error al sincronizar eventos para extId={}: {}",
                     fixture.getExternalProviderId(), ex.getMessage());
+        }
+    }
+
+    /**
+     * Ajusta el marcador de la tanda del fixture (home_penalty / away_penalty) al conteo
+     * REAL de goles de tanda (SHOOTOUT_GOAL) por equipo. Solo actúa si el partido tuvo
+     * tanda (hay eventos de tanda); nunca la borra. Garantiza que el encabezado coincida
+     * con la tarjeta y evita que el marcador quede pegado a un valor de media tanda.
+     */
+    private void reconcilePenaltyScoreFromEvents(Fixture fixture) {
+        List<MatchEvent> events = matchEventRepository.findByFixtureIdAndSource(fixture.getId(), MatchEvent.Source.API);
+        boolean hadShootout = events.stream().anyMatch(e ->
+                "SHOOTOUT_GOAL".equals(e.getEventType()) || "SHOOTOUT_MISSED".equals(e.getEventType()));
+        if (!hadShootout) return; // no fue a penales → no tocar el marcador
+
+        Long homeId = fixture.getHomeTeam() != null ? fixture.getHomeTeam().getId() : null;
+        Long awayId = fixture.getAwayTeam() != null ? fixture.getAwayTeam().getId() : null;
+        int home = (int) events.stream().filter(e -> "SHOOTOUT_GOAL".equals(e.getEventType())
+                && e.getTeam() != null && e.getTeam().getId().equals(homeId)).count();
+        int away = (int) events.stream().filter(e -> "SHOOTOUT_GOAL".equals(e.getEventType())
+                && e.getTeam() != null && e.getTeam().getId().equals(awayId)).count();
+
+        boolean changed = false;
+        if (!Integer.valueOf(home).equals(fixture.getHomePenalty())) { fixture.setHomePenalty(home); changed = true; }
+        if (!Integer.valueOf(away).equals(fixture.getAwayPenalty())) { fixture.setAwayPenalty(away); changed = true; }
+        if (changed) {
+            fixtureRepository.save(fixture);
+            log.info("[ScorerSync/ApiFootball] Marcador de penales re-sincronizado (fixture {}): {}-{}",
+                    fixture.getId(), home, away);
         }
     }
 
