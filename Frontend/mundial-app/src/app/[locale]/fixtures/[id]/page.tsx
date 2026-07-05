@@ -23,7 +23,6 @@ import {
 
 import { hex, type BrandColor, resolveBrandHex } from '@/lib/design/tokens';
 import { alpha, alphaOf, borders, gradients } from '@/lib/design/effects';
-import { buildMatchSummary } from './_components/matchSummary';
 
 import dynamic from 'next/dynamic';
 import { TabSkeleton } from '@/components/PageSkeleton';
@@ -508,28 +507,9 @@ export default function FixtureDetailPage({ params }: { params: { id: string } }
           />
         </motion.div>
 
-        {/* ── RESUMEN TEXTUAL DEL PARTIDO (indexable SEO/AdSense) — generado de los datos ── */}
-        {(() => {
-          const summary = buildMatchSummary({
-            status: liveStatus,
-            homeTeam: fixture.homeTeam,
-            awayTeam: fixture.awayTeam,
-            homeScore: liveHomeScore,
-            awayScore: liveAwayScore,
-            stadiumName: fixture.stadiumName,
-            hostCity: fixture.hostCity,
-            scorers: fixture.scorers,
-          }, locale);
-          return summary ? (
-            <motion.div className="mb-4 rounded-2xl px-4 py-3.5"
-              initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.3, delay: 0.05 }}
-              style={{ background: alpha(hex.neutral.white, 0.03), border: `1px solid ${alpha(hex.neutral.white, 0.07)}` }}>
-              <p className="text-[12px] sm:text-[13px] leading-relaxed" style={{ color: alpha(hex.text.secondary, 0.72) }}>
-                {summary}
-              </p>
-            </motion.div>
-          ) : null;
-        })()}
+        {/* El resumen textual del partido (prosa indexable) ahora se renderiza en el
+            SERVIDOR desde layout.tsx, para que Google lo reciba en el HTML inicial y no
+            marque la ficha como Soft 404. Antes estaba acá (cliente) y no llegaba al SSR. */}
 
         {/* ── PORRA SECTION ── */}
         <div className="mb-4">

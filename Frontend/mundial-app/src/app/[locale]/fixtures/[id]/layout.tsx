@@ -3,6 +3,7 @@ import type { Metadata } from 'next';
 import type { ReactNode } from 'react';
 import { getFixtureById } from '@/services/publicTournament';
 import { localizeTeamName } from '@/lib/i18n/teamNames';
+import { buildMatchSummary } from './_components/matchSummary';
 import { locales } from '@/i18n/locales';
 
 const APP_URL = process.env.NEXT_PUBLIC_APP_URL ?? 'https://www.orionixgol.com';
@@ -245,6 +246,39 @@ export default async function FixtureDetailLayout({ params, children }: Props) {
     };
   }
 
+  // ── Contenido SSR indexable (evita el "Soft 404" de Google) ────────────────
+  // El contenido rico de la ficha (resumen, marcador, pestañas) se renderiza en el
+  // CLIENTE con datos de React Query, así que NO llegaba al HTML del servidor: el
+  // crawler recibía una página sin prosa real (solo placeholders "No data") y la
+  // marcaba como Soft 404 ("página flaca"). Acá, desde los datos que el servidor YA
+  // tiene, renderizamos el título del partido y un resumen en prosa (localizado a 7
+  // idiomas) para que Google vea contenido sustancial y único apenas abre la página.
+  const lang = pickLang(locale);
+  let matchHeading = '';
+  let previewText = '';
+  const factParts: string[] = [];
+  if (fixture) {
+    const hName = localizeTeamName(fixture.homeTeam?.name, locale) || 'Local';
+    const aName = localizeTeamName(fixture.awayTeam?.name, locale) || 'Visitante';
+    matchHeading = `${hName} vs ${aName} — ${WC[lang]}`;
+    previewText = buildMatchSummary({
+      status: fixture.status,
+      homeTeam: fixture.homeTeam,
+      awayTeam: fixture.awayTeam,
+      homeScore: fixture.homeScore,
+      awayScore: fixture.awayScore,
+      stadiumName: fixture.stadiumName,
+      hostCity: fixture.hostCity,
+      scorers: fixture.scorers,
+    }, locale);
+    if (fixture.kickoffAt) {
+      try {
+        factParts.push(new Intl.DateTimeFormat(locale, { day: 'numeric', month: 'long', year: 'numeric' }).format(new Date(fixture.kickoffAt)));
+      } catch { /* fecha inválida → se omite */ }
+    }
+    if (fixture.stadiumName) factParts.push(`${fixture.stadiumName}${fixture.hostCity ? `, ${fixture.hostCity}` : ''}`);
+  }
+
   return (
     <>
       {jsonLd && (
@@ -254,6 +288,20 @@ export default async function FixtureDetailLayout({ params, children }: Props) {
         />
       )}
       {children}
+      {matchHeading && (
+        <section aria-label={matchHeading}
+          style={{ maxWidth: 900, margin: '0 auto', padding: '4px 20px 40px' }}>
+          <div style={{ borderRadius: 16, padding: '16px 20px', background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.07)' }}>
+            <h1 style={{ fontSize: 17, fontWeight: 800, color: '#eafbea', margin: '0 0 8px', lineHeight: 1.35 }}>{matchHeading}</h1>
+            {previewText && (
+              <p style={{ fontSize: 13, lineHeight: 1.65, color: 'rgba(226,241,226,0.72)', margin: 0 }}>{previewText}</p>
+            )}
+            {factParts.length > 0 && (
+              <p style={{ fontSize: 12, color: 'rgba(210,228,210,0.5)', margin: '8px 0 0' }}>{factParts.join(' · ')}</p>
+            )}
+          </div>
+        </section>
+      )}
     </>
   );
 }
