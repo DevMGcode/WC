@@ -54,10 +54,18 @@ async function request<T>(
     if (token) headers['Authorization'] = `Bearer ${token}`;
   }
 
+  // Caché:
+  //  - SERVIDOR (SSR/RSC): revalidación cada 10 min en vez de cachear indefinidamente.
+  //    Con 'default', Next congelaba el meta/JSON-LD para siempre: cuando cambiaba un
+  //    dato (p. ej. se cargaba la sede de un partido) la ficha seguía mostrando lo
+  //    viejo hasta recrear el contenedor. Con revalidate el HTML se refresca solo y
+  //    Google recibe el dato actualizado al re-rastrear.
+  //  - CLIENTE (browser): caché estándar del navegador (los datos en vivo van por
+  //    React Query, no por acá).
   const response = await fetch(finalUrl, {
     method: 'GET',
     headers,
-    cache: 'default',
+    ...(isServer ? { next: { revalidate: 600 } } : { cache: 'default' }),
   });
 
   if (!response.ok) {
