@@ -289,7 +289,10 @@ export default async function FixtureDetailLayout({ params, children }: Props) {
       )}
       {children}
       {matchHeading && (
-        <section aria-label={matchHeading}
+        // La página cliente re-renderiza este mismo resumen en su posición ideal
+        // (tras el marcador) y oculta este bloque por id — ver page.tsx. Para el
+        // crawler (HTML inicial, sin JS) este bloque es el contenido indexable.
+        <section id="fixture-ssr-summary" aria-label={matchHeading}
           style={{ maxWidth: 900, margin: '0 auto', padding: '4px 20px 40px' }}>
           <div style={{ borderRadius: 16, padding: '16px 20px', background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.07)' }}>
             <h1 style={{ fontSize: 17, fontWeight: 800, color: '#eafbea', margin: '0 0 8px', lineHeight: 1.35 }}>{matchHeading}</h1>
