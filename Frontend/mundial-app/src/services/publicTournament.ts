@@ -205,6 +205,27 @@ export async function getAllFixtures(status?: string): Promise<FixtureDetail[]> 
   }
 }
 
+// ── Top scorers (para SSR de /scorers) ──────────────────────────────────────
+export type PublicScorer = {
+  playerName: string;
+  teamName: string;
+  goals: number;
+  assists: number;
+};
+
+/**
+ * Ranking de goleadores del torneo (endpoint público). Lo usa el server
+ * component de /scorers para renderizar narrativa y lista indexables en SSR.
+ */
+export async function getTopScorers(limit = 10): Promise<PublicScorer[]> {
+  try {
+    const list = await request<PublicScorer[]>('/players/topscorers', { limit });
+    return Array.isArray(list) ? list : [];
+  } catch {
+    return [];
+  }
+}
+
 // ── Groups ──────────────────────────────────────────────────────────────────
 
 export async function getTournamentGroups(tournamentId: number): Promise<any[]> {
