@@ -14,6 +14,7 @@
 
 import React, { useState, useMemo, useRef, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
+import Link from 'next/link';
 import { useParams } from 'next/navigation';
 import { FiAward, FiBarChart2, FiUsers } from 'react-icons/fi';
 import { Header } from '@/components/Navigation';
@@ -28,13 +29,14 @@ import { alpha, alphaOf, borders, gradients } from '@/lib/design/effects';
 
 import { AdSlot } from '@/components/ads';
 import GroupCard, { EQBars } from './_components/GroupCard';
-import { groupsIntroText } from './_components/groupNarrative';
+import { groupsIntroText, knockoutIntroText } from './_components/groupNarrative';
 import { localizeTeamName } from '@/lib/i18n/teamNames';
 import KnockoutCard, { ChampionBanner, ROUND_META, ROUND_I18N, ROUND_GRID } from './_components/KnockoutCard';
 import BracketBg from './_components/BracketBg';
 import TeamsTab from './_components/TeamsTab';
 import { usePremium } from '@/hooks/usePremium';
-import type { Group, Match, BracketData, KnockoutRound, Team } from './_components/types';
+import type { Group, Match, BracketData, KnockoutRound, BracketTab, Team } from './_components/types';
+import { computeKnockout } from './_components/knockoutProgression';
 
 /* ══════════════════════════════════════════
    MOCK DATA — fallback si backend retorna vacío
@@ -69,6 +71,7 @@ const MOCK_GROUPS: Group[] = [
 const _tbd: Team = { id: 0, name: 'Por definir', shortName: 'TBD', flagUrl: '' };
 
 const EMPTY_BRACKET: BracketData = {
+  dieciseisavos: Array.from({ length: 16 }, (_, i) => ({ id: -(i + 16), homeTeam: _tbd, awayTeam: _tbd, isPlayed: false })),
   octavos:     Array.from({ length: 8 }, (_, i) => ({ id: -(i + 1), homeTeam: _tbd, awayTeam: _tbd, isPlayed: false })),
   cuartos:     Array.from({ length: 4 }, (_, i) => ({ id: -(i + 9), homeTeam: _tbd, awayTeam: _tbd, isPlayed: false })),
   semifinales: Array.from({ length: 2 }, (_, i) => ({ id: -(i + 13), homeTeam: _tbd, awayTeam: _tbd, isPlayed: false })),
@@ -78,18 +81,33 @@ const EMPTY_BRACKET: BracketData = {
 /* ══════════════════════════════════════════
    BRACKET BUILDER
 ══════════════════════════════════════════ */
-function buildBracketFromFixtures(fixtures: any[]): BracketData {
+function buildBracketFromFixtures(fixtures: any[]): BracketData & { tercerPuestoFx: Match[] } {
   const toMatch = (f: any): Match => {
+    // Ganador: por marcador; si quedó empatado y hubo tanda de penales, desempata
+    // por el marcador de penales (así los partidos definidos por penales también
+    // avanzan en el cuadro eliminatorio).
     const winner = typeof f.homeScore === 'number' && typeof f.awayScore === 'number'
-      ? f.homeScore > f.awayScore ? f.homeTeam : f.awayScore > f.homeScore ? f.awayTeam : null : null;
-    return { id: f.id, homeTeam: f.homeTeam, awayTeam: f.awayTeam, homeScore: f.homeScore, awayScore: f.awayScore, winner, isPlayed: f.status === 'FINISHED' };
+      ? f.homeScore > f.awayScore ? f.homeTeam
+        : f.awayScore > f.homeScore ? f.awayTeam
+        : (typeof f.homePenalty === 'number' && typeof f.awayPenalty === 'number'
+            ? (f.homePenalty > f.awayPenalty ? f.homeTeam : f.awayPenalty > f.homePenalty ? f.awayTeam : null)
+            : null)
+      : null;
+    return { id: f.id, homeTeam: f.homeTeam, awayTeam: f.awayTeam, homeScore: f.homeScore, awayScore: f.awayScore, homePenalty: f.homePenalty, awayPenalty: f.awayPenalty, winner, isPlayed: f.status === 'FINISHED', kickoff: f.kickoffAt };
   };
-  const b: BracketData = { octavos: [], cuartos: [], semifinales: [], final: [] };
+  const b: BracketData & { tercerPuestoFx: Match[] } =
+    { dieciseisavos: [], octavos: [], cuartos: [], semifinales: [], final: [], tercerPuestoFx: [] };
   fixtures.forEach(f => {
     const s = (f.stageName || '').toLowerCase();
-    if (s.includes('octavos')) b.octavos.push(toMatch(f));
+    // Ronda de 32 (Dieciseisavos) PRIMERO: su nombre contiene "final" ("Dieciseisavos
+    // de Final"), así que hay que capturarla antes del check genérico de "final".
+    if (s.includes('dieciseisavos') || s.includes('round of 32') || s.includes('16avos')) b.dieciseisavos.push(toMatch(f));
+    else if (s.includes('octavos')) b.octavos.push(toMatch(f));
     else if (s.includes('cuartos')) b.cuartos.push(toMatch(f));
     else if (s.includes('semi')) b.semifinales.push(toMatch(f));
+    // 3er puesto ANTES de "final": etapas como "Third Place Final" / "Play-off por el
+    // tercer puesto" contienen "final" y se irían a la final si no se capturan aquí.
+    else if (s.includes('tercer') || s.includes('third') || s.includes('3rd') || s.includes('3er') || s.includes('3º') || s.includes('play-off') || s.includes('playoff')) b.tercerPuestoFx.push(toMatch(f));
     else if (s.includes('final')) b.final.push(toMatch(f));
   });
   return b;
@@ -107,7 +125,7 @@ export default function GroupsClient({ initialTournament, initialGroups, initial
   const locale = useLocale();
   const [activeTab,    setActiveTab]    = useState<'grupos' | 'eliminatorias' | 'equipos'>('grupos');
   const { isPremium } = usePremium();
-  const [activeRound,  setActiveRound]  = useState<KnockoutRound>('octavos');
+  const [activeRound,  setActiveRound]  = useState<BracketTab>('dieciseisavos');
 
   // Header sticky: medimos su altura para pegar la barra de pestañas justo
   // debajo (la barra ya era sticky, pero a top-0 se solapaba con el header).
@@ -149,11 +167,44 @@ export default function GroupsClient({ initialTournament, initialGroups, initial
   const bracketsData: BracketData = useMemo(() => {
     if (!fixtures.length) return EMPTY_BRACKET;
     const bk = buildBracketFromFixtures(fixtures);
-    const hasKnockout = bk.octavos.length > 0 || bk.cuartos.length > 0 || bk.semifinales.length > 0 || bk.final.length > 0;
-    return hasKnockout ? bk : EMPTY_BRACKET;
-  }, [fixtures]);
+    const hasKnockout = bk.dieciseisavos.length > 0 || bk.octavos.length > 0 || bk.cuartos.length > 0 || bk.semifinales.length > 0 || bk.final.length > 0;
+    if (!hasKnockout) return EMPTY_BRACKET;
+    const dieciseisavos = bk.dieciseisavos.length ? bk.dieciseisavos : EMPTY_BRACKET.dieciseisavos;
+    // Octavos → Final se AUTOCOMPLETAN con la progresión fija de la FIFA (P89=W74 vs
+    // W77, etc.) a partir de los resultados de los Dieciseisavos. No dependemos de que
+    // la API publique esas rondas: el cálculo de quién avanza lo hacemos nosotros.
+    // Cada casilla sin definir muestra "Ganador {N}" (el "W{N}" de la FIFA).
+    const ko = computeKnockout({ ...bk, dieciseisavos }, bk.tercerPuestoFx, locale);
+    return {
+      dieciseisavos,
+      octavos:      ko.octavos,
+      cuartos:      ko.cuartos,
+      semifinales:  ko.semifinales,
+      final:        ko.final,
+      tercerPuesto: ko.tercerPuesto,
+    };
+  }, [fixtures, locale]);
 
   const champion = bracketsData?.final[0]?.winner ?? null;
+  // Pestañas del cuadro en móvil, en orden (el 3er puesto va entre semis y final).
+  const MOBILE_TABS: BracketTab[] = ['dieciseisavos', 'octavos', 'cuartos', 'semifinales', 'tercerPuesto', 'final'];
+  // El 3er puesto es un único partido (no un array); el resto sí son arrays.
+  const matchesFor = (round: BracketTab): Match[] =>
+    round === 'tercerPuesto'
+      ? (bracketsData.tercerPuesto ? [bracketsData.tercerPuesto] : [])
+      : bracketsData[round];
+
+  // Rondas eliminatorias en orden, con su etiqueta localizada. Se usa en la
+  // sección SEO (siempre renderizada en el servidor) para listar los cruces
+  // reales como enlaces internos rastreables hacia cada ficha de partido.
+  const knockoutRoundsList: { round: BracketTab; label: string; matches: Match[] }[] = [
+    { round: 'dieciseisavos', label: t('groups.round32'),    matches: bracketsData.dieciseisavos },
+    { round: 'octavos',       label: t('groups.round16'),    matches: bracketsData.octavos },
+    { round: 'cuartos',       label: t('groups.quarter'),    matches: bracketsData.cuartos },
+    { round: 'semifinales',   label: t('groups.semi'),       matches: bracketsData.semifinales },
+    { round: 'tercerPuesto',  label: t('groups.thirdPlace'), matches: bracketsData.tercerPuesto ? [bracketsData.tercerPuesto] : [] },
+    { round: 'final',         label: t('groups.final'),      matches: bracketsData.final },
+  ];
   const pageBg   = `radial-gradient(ellipse at 22% 30%, ${hex.bg.primary} 0%, ${hex.bg.secondary} 50%, ${hex.bg.primary} 100%)`;
 
   return (
@@ -341,10 +392,10 @@ export default function GroupsClient({ initialTournament, initialGroups, initial
                     <div className="absolute inset-x-0 top-0 h-px"
                       style={{ background: `linear-gradient(90deg, transparent, ${alphaOf('gold', 0.25)}, transparent)` }} />
                     <div className="flex gap-1.5 overflow-x-auto">
-                      {(Object.keys(ROUND_META) as KnockoutRound[]).map((round) => {
+                      {MOBILE_TABS.map((round) => {
                         const meta    = { ...ROUND_META[round], shortLabel: t(ROUND_I18N[round].shortLabelKey) };
                         const isActive = activeRound === round;
-                        const count   = bracketsData[round].length;
+                        const count   = matchesFor(round).length;
                         return (
                           <motion.button key={round} onClick={() => setActiveRound(round)}
                             className="relative flex items-center gap-2 px-4 py-2 rounded-xl flex-shrink-0 overflow-hidden"
@@ -383,10 +434,10 @@ export default function GroupsClient({ initialTournament, initialGroups, initial
                       initial={{ opacity: 0, x: 16 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -16 }}
                       transition={{ duration: 0.26, ease: [0.22, 1, 0.36, 1] }}
                       className={`grid gap-3 ${ROUND_GRID[activeRound]}`}>
-                      {bracketsData[activeRound].map((match, i) => (
+                      {matchesFor(activeRound).map((match, i) => (
                         <KnockoutCard key={match.id} match={match} round={activeRound} index={i} t={t} />
                       ))}
-                      {bracketsData[activeRound].length === 0 && (
+                      {matchesFor(activeRound).length === 0 && (
                         <div className="col-span-2 flex flex-col items-center gap-3 py-16">
                           <div className="w-12 h-12 rounded-2xl flex items-center justify-center"
                             style={{ background: alphaOf('gold', 0.07), border: borders.brand('gold', 0.18) }}>
@@ -435,6 +486,50 @@ export default function GroupsClient({ initialTournament, initialGroups, initial
         )}
 
       </div>
+
+      {/* ── SECCIÓN SEO (siempre renderizada en SSR) ──────────────────────────
+          El cuadro interactivo vive detrás de la pestaña "Eliminatorias" y NO se
+          renderiza en el servidor. Esta sección garantiza que el texto editorial
+          (A) y los enlaces internos a cada partido (B) SÍ estén en el HTML que
+          rastrea Google, con contenido original e indexable.
+          Se MONTA siempre (queda en el código fuente para el crawler) pero solo
+          se MUESTRA en la pestaña "Eliminatorias" — en Grupos/Equipos se oculta
+          por CSS para no ser redundante. Google igual la indexa desde el HTML. ── */}
+      <section className={`relative z-10 max-w-7xl mx-auto px-4 sm:px-5 pb-28 ${activeTab === 'eliminatorias' ? '' : 'hidden'}`} aria-label={t('groups.knockoutPhase')}>
+        <div className="relative overflow-hidden rounded-2xl px-5 py-5 sm:px-6 sm:py-6"
+          style={{
+            background: `linear-gradient(145deg, ${alpha(hex.bg.primary, 0.96)}, ${alpha(hex.bg.secondary, 0.94)})`,
+            border: `1px solid ${alphaOf('gold', 0.10)}`,
+          }}>
+          <div className="absolute inset-x-0 top-0 h-px" style={{ background: gradients.divider('gold', 0.45) }} />
+          <h2 className="text-lg font-black text-white tracking-wide mb-2">{t('groups.knockoutPhase')}</h2>
+          <p className="text-[12px] sm:text-[13px] leading-relaxed mb-5" style={{ color: alpha(hex.text.secondary, 0.72) }}>
+            {knockoutIntroText(locale)}
+          </p>
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-x-6 gap-y-4">
+            {knockoutRoundsList.map(({ round, label, matches }) => {
+              const real = matches.filter((m) => m.id > 0);
+              if (real.length === 0) return null;
+              return (
+                <div key={round}>
+                  <h3 className="text-[10px] font-black tracking-[0.2em] uppercase mb-2" style={{ color: alphaOf('gold', 0.75) }}>{label}</h3>
+                  <ul className="space-y-1">
+                    {real.map((m) => (
+                      <li key={m.id}>
+                        <Link href={`/${locale}/fixtures/${m.id}`} className="text-[12px] leading-snug hover:underline"
+                          style={{ color: alpha(hex.text.secondary, 0.85) }}>
+                          {localizeTeamName(m.homeTeam?.name, locale) || '?'} vs {localizeTeamName(m.awayTeam?.name, locale) || '?'}
+                        </Link>
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      </section>
+
       <TourButton steps={getTourSteps(locale, 'groups')} />
     </div>
   );

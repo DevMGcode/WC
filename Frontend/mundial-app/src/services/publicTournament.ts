@@ -23,6 +23,8 @@ type RawFixture = Partial<FixtureDetail> & {
   groupCode?: string | null;
   homeScore?: number | null;
   awayScore?: number | null;
+  homePenalty?: number | null;
+  awayPenalty?: number | null;
   extraMinutes?: number | null;
   elapsedMinutes?: number | null;
   hostCity?: string;
@@ -100,6 +102,8 @@ function normalizeFixture(raw: RawFixture, fallbackIndex = 0, fallbackTournament
     status: normalizeStatus(raw.status),
     homeScore: raw.homeScore ?? undefined,
     awayScore: raw.awayScore ?? undefined,
+    homePenalty: raw.homePenalty ?? null,
+    awayPenalty: raw.awayPenalty ?? null,
     extraMinutes: raw.extraMinutes ?? undefined,
     elapsedMinutes: raw.elapsedMinutes ?? undefined,
     createdAt: toDate(raw.createdAt),
@@ -196,6 +200,27 @@ export async function getAllFixtures(status?: string): Promise<FixtureDetail[]> 
     const fixtures = await getTournamentFixtures(tournament.id);
     if (!status || status === 'ALL') return fixtures;
     return fixtures.filter((f) => f.status === status);
+  } catch {
+    return [];
+  }
+}
+
+// ── Top scorers (para SSR de /scorers) ──────────────────────────────────────
+export type PublicScorer = {
+  playerName: string;
+  teamName: string;
+  goals: number;
+  assists: number;
+};
+
+/**
+ * Ranking de goleadores del torneo (endpoint público). Lo usa el server
+ * component de /scorers para renderizar narrativa y lista indexables en SSR.
+ */
+export async function getTopScorers(limit = 10): Promise<PublicScorer[]> {
+  try {
+    const list = await request<PublicScorer[]>('/players/topscorers', { limit });
+    return Array.isArray(list) ? list : [];
   } catch {
     return [];
   }

@@ -23,6 +23,7 @@
     "others": "Ranking"
   },
   "common": {
+    "penalties": "Penalties",
     "save": "Save",
     "cancel": "Cancel",
     "confirm": "Confirm",
@@ -201,6 +202,8 @@
     "quarterShort": "QF",
     "semiShort": "SF",
     "finalShort": "Final",
+    "thirdPlace": "Third Place",
+    "thirdPlaceShort": "3rd Place",
     "roundUndefined": "Round not yet defined",
     "champion": "World Champion",
     "legendPlayed": "Matches Played",
@@ -211,7 +214,9 @@
     "legendPoints": "Points",
     "bestDefense": "Best Defense",
     "goalsConceded": "GA",
-    "groupLabel": "Group"
+    "groupLabel": "Group",
+    "round32": "Round of 32",
+    "round32Short": "Round of 32"
   },
   "predictions": {
     "title": "Predictions",
@@ -445,11 +450,15 @@
     "sectionDataError": "Could not load this section data",
     "matchDetail": "⚽ Match Detail",
     "loading": "Loading",
+    "result": "Result",
+    "stadium": "Stadium",
+    "city": "City",
     "tabs": {
       "lineups": "Lineups",
       "stats": "Statistics",
       "players": "Players",
-      "h2h": "H2H"
+      "h2h": "H2H",
+      "live": "Live"
     },
     "rules": {
       "exactLabel": "Exact score",

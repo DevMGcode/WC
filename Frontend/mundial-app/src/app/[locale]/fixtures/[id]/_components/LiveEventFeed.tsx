@@ -38,12 +38,18 @@ function getEventCfg(type: MatchEvent['type'], detail?: string | null): EventCfg
     case 'VAR_REVIEW': {
       const varLabels: Record<string, string> = {
         'goal disallowed':   'VAR — Gol anulado',
+        'goal cancelled':    'VAR — Gol anulado',
+        'goal canceled':     'VAR — Gol anulado',
         'goal confirmed':    'VAR — Gol confirmado',
         'penalty confirmed': 'VAR — Penal confirmado',
         'penalty cancelled': 'VAR — Penal anulado',
         'card upgrade':      'VAR — Tarjeta revisada',
       };
-      const varLabel = detail ? (varLabels[detail.toLowerCase()] ?? `VAR — ${detail}`) : 'REVISIÓN VAR';
+      // El detalle de la API puede venir extendido ("Goal Disallowed - Foul"),
+      // así que buscamos por coincidencia parcial, no exacta.
+      const d = detail?.toLowerCase() ?? '';
+      const matchedKey = Object.keys(varLabels).find(k => d.includes(k));
+      const varLabel = matchedKey ? varLabels[matchedKey] : (detail ? `VAR — ${detail}` : 'REVISIÓN VAR');
       return { icon: '📹', label: varLabel, accent: '#a78bfa', glow: 'rgba(167,139,250,0.40)' };
     }
     case 'STATUS_CHANGE': {
@@ -53,7 +59,10 @@ function getEventCfg(type: MatchEvent['type'], detail?: string | null): EventCfg
         'second half':    'INICIO 2T',
         'fulltime':       'TIEMPO COMPLETO',
         'full time':      'TIEMPO COMPLETO',
-        'extra time':     'TIEMPO EXTRA',
+        'extra time':          'TIEMPO EXTRA',
+        'extra time halftime': 'MEDIO TIEMPO DEL TIEMPO EXTRA',
+        'end extra time':      'FIN DEL TIEMPO EXTRA',
+        'match finished':      'FIN DEL PARTIDO',
         'penalties':      'TANDAS DE PENALES',
       };
       const statusLabel = detail ? (statusLabels[detail.toLowerCase()] ?? detail.toUpperCase()) : 'CAMBIO DE ESTADO';
@@ -289,7 +298,7 @@ function StatusDivider({
           <span className="text-[10px] font-black tracking-[0.20em] uppercase" style={{ color: cfg.accent }}>
             {cfg.label}
           </span>
-          {event.minute != null && (
+          {event.minute != null && event.detail !== 'match finished' && (
             <span className="text-[9px] font-bold" style={{ color: alpha(cfg.accent, 0.55) }}>
               {event.minute}{event.extraMinute ? `+${event.extraMinute}` : ''}&apos;
             </span>
@@ -340,6 +349,18 @@ export default function LiveEventFeed({ events, isLive = true, homeTeamId, homeC
   const sortKey = (e: MatchEvent) => {
     if (e.type === 'STATUS_CHANGE' && (e.detail === 'fulltime' || e.detail === 'full time')) {
       return Number.MAX_SAFE_INTEGER;
+    }
+    // Fase de penales (todo cae en el minuto 120): forzamos el orden cronológico real
+    //   Fin del tiempo extra (120+3) → Tandas de penales → [penales en orden] → Fin del partido
+    // sin alterar el minuto que se muestra en cada fila.
+    if (e.type === 'STATUS_CHANGE' && e.detail === 'match finished') {
+      return Number.MAX_SAFE_INTEGER; // siempre el más nuevo → arriba del todo
+    }
+    if (e.type === 'SHOOTOUT_GOAL' || e.type === 'SHOOTOUT_MISSED') {
+      return 120 * 100 + 50 + (e.extraMinute ?? 0); // tras "Tandas de penales", en orden de tanda
+    }
+    if (e.type === 'STATUS_CHANGE' && e.detail === 'penalties') {
+      return 120 * 100 + 49; // justo antes de la tanda y después de "Fin del tiempo extra"
     }
     const base = (e.minute ?? 0) * 100 + (e.extraMinute ?? 0);
     if (e.type === 'STATUS_CHANGE') return base - 0.5;

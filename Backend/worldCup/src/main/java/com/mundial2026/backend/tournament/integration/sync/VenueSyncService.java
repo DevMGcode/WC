@@ -7,6 +7,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.List;
 import java.util.Optional;
 
 /**
@@ -44,9 +45,9 @@ public class VenueSyncService {
 
         // Ruta A — por id externo (preferida).
         if (externalId != null) {
-            Optional<Venue> existing = venueRepository.findByExternalProviderId(externalId);
-            if (existing.isPresent()) {
-                return Optional.of(maybeUpdate(existing.get(), name, city));
+            List<Venue> matches = venueRepository.findByExternalProviderIdOrderByIdAsc(externalId);
+            if (!matches.isEmpty()) {
+                return Optional.of(maybeUpdate(pickFirst(matches, "externalId=" + externalId), name, city));
             }
             return Optional.of(create(externalId, name, city));
         }
@@ -58,11 +59,27 @@ public class VenueSyncService {
             log.debug("Skipping venue without city and without externalId: name={}", name);
             return Optional.empty();
         }
-        Optional<Venue> existing = venueRepository.findByNameAndCityIgnoreCase(name, city);
-        if (existing.isPresent()) {
-            return Optional.of(maybeUpdate(existing.get(), name, city));
+        List<Venue> matches = venueRepository.findAllByNameAndCityIgnoreCase(name, city);
+        if (!matches.isEmpty()) {
+            return Optional.of(maybeUpdate(pickFirst(matches, "name='" + name + "', city='" + city + "'"), name, city));
         }
         return Optional.of(create(null, name, city));
+    }
+
+    /**
+     * Elige el primer venue de la lista (ya viene ordenada de forma determinista por el repo).
+     * Si detecta más de uno, loguea un WARN para que quede rastro de que hay duplicados
+     * históricos que conviene deduplicar en BD — pero NO revienta el sync (que es lo que
+     * antes pasaba con {@code NonUniqueResultException}, abortando la importación entera).
+     */
+    private Venue pickFirst(List<Venue> matches, String criteria) {
+        if (matches.size() > 1) {
+            log.warn("Venue duplicado por [{}]: {} filas (ids={}). Uso id={} y conviene deduplicar en BD.",
+                    criteria, matches.size(),
+                    matches.stream().map(v -> String.valueOf(v.getId())).toList(),
+                    matches.get(0).getId());
+        }
+        return matches.get(0);
     }
 
     private Venue create(Long externalId, String name, String city) {

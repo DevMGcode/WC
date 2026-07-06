@@ -16,6 +16,8 @@ const staticRoutes = [
   '/groups',
   '/scorers',
   '/premium',
+  '/about',
+  '/faq',
   '/privacy',
   '/terms',
 ];

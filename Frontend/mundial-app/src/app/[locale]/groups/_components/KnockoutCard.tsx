@@ -2,33 +2,43 @@
 
 import React from 'react';
 import Image from 'next/image';
+import Link from 'next/link';
 import { motion } from 'framer-motion';
 import { FiGrid, FiTarget, FiZap, FiAward } from 'react-icons/fi';
 import { hex } from '@/lib/design/tokens';
 import { alpha, alphaOf, borders, gradients } from '@/lib/design/effects';
-import type { Match, KnockoutRound, Team, BracketData } from './types';
+import { fmtShortDate, fmtTime } from '@/utils/format';
+import { useLocale } from 'next-intl';
+import { localizeTeamName } from '@/lib/i18n/teamNames';
+import type { Match, KnockoutRound, BracketTab, Team, BracketData } from './types';
 
 /* ══════════════════════════════════════════
    ROUND METADATA
 ══════════════════════════════════════════ */
-export const ROUND_META: Record<KnockoutRound, { icon: React.ReactNode; color: string; glow: string }> = {
+export const ROUND_META: Record<BracketTab, { icon: React.ReactNode; color: string; glow: string }> = {
+  dieciseisavos: { icon: <FiGrid size={12} />, color: hex.green.soft,   glow: alpha(hex.green.soft, 0.55)    },
   octavos:     { icon: <FiGrid size={12} />,   color: hex.green.bright, glow: alphaOf('green', 0.55)         },
   cuartos:     { icon: <FiTarget size={12} />, color: hex.green.muted,  glow: alpha(hex.green.muted, 0.55)   },
   semifinales: { icon: <FiZap size={12} />,    color: '#a78bfa',        glow: 'rgba(167,139,250,0.55)'       },
+  tercerPuesto:{ icon: <FiAward size={12} />,  color: '#cd7f32',        glow: 'rgba(205,127,50,0.55)'        },
   final:       { icon: <FiAward size={12} />,  color: hex.gold.muted,   glow: alphaOf('gold', 0.55)          },
 };
 
-export const ROUND_I18N: Record<KnockoutRound, { labelKey: string; shortLabelKey: string }> = {
+export const ROUND_I18N: Record<BracketTab, { labelKey: string; shortLabelKey: string }> = {
+  dieciseisavos: { labelKey: 'groups.round32', shortLabelKey: 'groups.round32Short' },
   octavos:     { labelKey: 'groups.round16',   shortLabelKey: 'groups.round16Short'  },
   cuartos:     { labelKey: 'groups.quarter',   shortLabelKey: 'groups.quarterShort'  },
   semifinales: { labelKey: 'groups.semi',      shortLabelKey: 'groups.semiShort'     },
+  tercerPuesto:{ labelKey: 'groups.thirdPlace', shortLabelKey: 'groups.thirdPlaceShort' },
   final:       { labelKey: 'groups.final',     shortLabelKey: 'groups.finalShort'    },
 };
 
-export const ROUND_GRID: Record<KnockoutRound, string> = {
+export const ROUND_GRID: Record<BracketTab, string> = {
+  dieciseisavos: 'grid-cols-1 sm:grid-cols-2',
   octavos:     'grid-cols-1 sm:grid-cols-2',
   cuartos:     'grid-cols-1 sm:grid-cols-2',
   semifinales: 'grid-cols-1 sm:grid-cols-2',
+  tercerPuesto: 'grid-cols-1 max-w-xs mx-auto',
   final:       'grid-cols-1 max-w-xs mx-auto',
 };
 
@@ -37,18 +47,22 @@ export const ROUND_GRID: Record<KnockoutRound, string> = {
 ══════════════════════════════════════════ */
 interface KnockoutCardProps {
   match: Match;
-  round: KnockoutRound;
+  round: BracketTab;
   index?: number;
   t: (key: string) => string;
 }
 
 const KnockoutCard = ({ match, round, index = 0, t }: KnockoutCardProps) => {
+  const locale   = useLocale();
   const meta     = { ...ROUND_META[round], shortLabel: t(ROUND_I18N[round].shortLabelKey) };
   const isFinal  = round === 'final';
   const homeWon  = Boolean(match.isPlayed && match.winner?.id === match.homeTeam?.id);
   const awayWon  = Boolean(match.isPlayed && match.winner?.id === match.awayTeam?.id);
   const accent   = isFinal ? hex.gold.muted : meta.color;
   const accentGlow = isFinal ? alphaOf('gold', 0.55) : meta.glow;
+  // Solo los partidos REALES (id de fixture > 0) enlazan a su página de detalle.
+  // Los placeholders del cuadro ("Gan. 89", "Perdedor 101") tienen id negativo y no enlazan.
+  const href = match.id > 0 ? `/${locale}/fixtures/${match.id}` : null;
 
   const TeamRow = ({ team, score, won, side }: { team: Team; score?: number; won: boolean; side: 'home' | 'away' }) => (
     <div className="flex items-center gap-3 px-4 py-3 relative"
@@ -74,8 +88,14 @@ const KnockoutCard = ({ match, round, index = 0, t }: KnockoutCardProps) => {
       </div>
       <span className="flex-1 text-[12px] font-black truncate leading-none"
         style={{ color: won ? accent : alpha(hex.text.secondary, 0.75), textShadow: won ? `0 0 12px ${accentGlow}` : 'none' }}>
-        {team?.name ?? '?'}
+        {localizeTeamName(team?.name, locale) || '?'}
       </span>
+      {match.isPlayed && match.homePenalty != null && match.awayPenalty != null && (
+        <span className="text-[10px] font-black uppercase tracking-wide shrink-0 tabular-nums whitespace-nowrap"
+          style={{ color: won ? accent : alpha(hex.text.muted, 0.6) }}>
+          {t('common.penalties')} {side === 'home' ? match.homePenalty : match.awayPenalty}
+        </span>
+      )}
       {match.isPlayed && score !== undefined && (
         <motion.span
           className="text-xl font-black tabular-nums w-7 text-center shrink-0 leading-none"
@@ -95,14 +115,14 @@ const KnockoutCard = ({ match, round, index = 0, t }: KnockoutCardProps) => {
     </div>
   );
 
-  return (
+  const card = (
     <motion.div
       initial={{ opacity: 0, y: 16, scale: 0.95 }}
       animate={{ opacity: 1, y: 0, scale: 1 }}
       exit={{ opacity: 0, scale: 0.95 }}
       transition={{ duration: 0.42, delay: index * 0.06, ease: [0.22, 1, 0.36, 1] }}
       whileHover={{ y: -3, scale: 1.02 }}
-      className="relative overflow-hidden rounded-2xl"
+      className="group relative overflow-hidden rounded-2xl"
       style={{
         background: isFinal
           ? `linear-gradient(145deg, ${alpha('#0E0A02', 0.98)}, ${alpha('#161004', 0.97)})`
@@ -144,6 +164,12 @@ const KnockoutCard = ({ match, round, index = 0, t }: KnockoutCardProps) => {
           {match.isPlayed ? t('common.finished') : t('common.pending')}
         </span>
       </div>
+      {match.kickoff && (
+        <div className="px-4 pt-2 text-center text-[10px] font-bold tabular-nums tracking-wide"
+          style={{ color: alpha(hex.text.muted, 0.78) }}>
+          {fmtShortDate(match.kickoff)} · {fmtTime(match.kickoff)}
+        </div>
+      )}
       <div>
         <TeamRow team={match.homeTeam} score={match.homeScore} won={homeWon} side="home" />
         <div className="h-px mx-4" style={{ background: `linear-gradient(90deg, transparent, ${accent}15, transparent)` }} />
@@ -152,6 +178,16 @@ const KnockoutCard = ({ match, round, index = 0, t }: KnockoutCardProps) => {
       <div className="absolute inset-0 pointer-events-none rounded-2xl opacity-0 group-hover:opacity-100 transition-opacity duration-300"
         style={{ background: `linear-gradient(108deg, transparent 25%, ${alpha(hex.neutral.white, 0.018)} 50%, transparent 75%)` }} />
     </motion.div>
+  );
+
+  // Partido real → enlace a su página de detalle (mejora SEO: enlaces internos
+  // rastreables + cada cruce del cuadro apunta a su ficha). Placeholder → sin enlace.
+  if (!href) return card;
+  return (
+    <Link href={href} className="block"
+      aria-label={`${localizeTeamName(match.homeTeam?.name, locale) || '?'} vs ${localizeTeamName(match.awayTeam?.name, locale) || '?'} — ${meta.shortLabel}`}>
+      {card}
+    </Link>
   );
 };
 
@@ -165,7 +201,9 @@ interface ChampionBannerProps {
   t: (key: string) => string;
 }
 
-export const ChampionBanner = ({ winner, t }: ChampionBannerProps) => (
+export const ChampionBanner = ({ winner, t }: ChampionBannerProps) => {
+  const locale = useLocale();
+  return (
   <motion.div
     initial={{ opacity: 0, scale: 0.88, y: 20 }}
     animate={{ opacity: 1, scale: 1, y: 0 }}
@@ -206,7 +244,7 @@ export const ChampionBanner = ({ winner, t }: ChampionBannerProps) => (
             style={{ textShadow: `0 0 24px ${alphaOf('gold', 0.80)}` }}
             animate={{ textShadow: [`0 0 14px ${alphaOf('gold', 0.60)}`, `0 0 36px ${alphaOf('gold', 1)}`, `0 0 14px ${alphaOf('gold', 0.60)}`] }}
             transition={{ duration: 2.4, repeat: Infinity }}>
-            {winner.name}
+            {localizeTeamName(winner.name, locale) || winner.name}
           </motion.p>
         </div>
         <div className="h-px my-3" style={{ background: gradients.divider('gold', 0.25) }} />
@@ -214,4 +252,5 @@ export const ChampionBanner = ({ winner, t }: ChampionBannerProps) => (
       </div>
     </div>
   </motion.div>
-);
+  );
+};

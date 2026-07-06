@@ -12,6 +12,7 @@
     "live": "Прямой эфир"
   },
   "common": {
+    "penalties": "Пенальти",
     "save": "Сохранить",
     "cancel": "Отмена",
     "confirm": "Подтвердить",
@@ -190,6 +191,8 @@
     "quarterShort": "1/4",
     "semiShort": "1/2",
     "finalShort": "Фин",
+    "thirdPlace": "Матч за 3-е место",
+    "thirdPlaceShort": "3-е место",
     "roundUndefined": "Раунд ещё не определён",
     "champion": "Чемпион мира",
     "legendPlayed": "Игры сыграны",
@@ -200,7 +203,9 @@
     "legendPoints": "Очки",
     "bestDefense": "Лучшая защита",
     "goalsConceded": "ПГ",
-    "groupLabel": "Группа"
+    "groupLabel": "Группа",
+    "round32": "1/16 финала",
+    "round32Short": "1/16"
   },
   "predictions": {
     "title": "Прогнозы",
@@ -434,11 +439,15 @@
     "sectionDataError": "Не удалось загрузить данные этого раздела",
     "matchDetail": "⚽ Детали матча",
     "loading": "Загрузка",
+    "result": "Результат",
+    "stadium": "Стадион",
+    "city": "Город",
     "tabs": {
       "lineups": "Составы",
       "stats": "Статистика",
       "players": "Игроки",
-      "h2h": "H2H"
+      "h2h": "H2H",
+      "live": "В прямом эфире"
     },
     "rules": {
       "exactLabel": "Точный счёт",

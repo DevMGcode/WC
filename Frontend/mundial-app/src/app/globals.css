@@ -567,3 +567,13 @@ select:focus {
   color: #2E7D32;
   @apply px-3 py-1 rounded-full text-sm font-semibold;
 }
+
+/* ── AdSense: ocultar anuncios en pantallas funcionales (política "Valor del
+   inventario"). El atributo lo pone GoogleAdsense.tsx al navegar en modo SPA
+   desde una ruta de contenido a una funcional (login, perfil, porras...):
+   el script ya no se puede descargar, pero los contenedores inyectados por
+   Auto Ads (incluidos los anclados, que viven en <ins> colgados del body)
+   se ocultan hasta volver a una ruta con contenido. */
+html[data-hide-google-ads] ins.adsbygoogle {
+  display: none !important;
+}

@@ -12,6 +12,7 @@
     "live": "Live"
   },
   "common": {
+    "penalties": "Elfmeter",
     "save": "Speichern",
     "cancel": "Abbrechen",
     "confirm": "Bestätigen",
@@ -190,6 +191,8 @@
     "quarterShort": "VF",
     "semiShort": "HF",
     "finalShort": "Finale",
+    "thirdPlace": "Spiel um Platz 3",
+    "thirdPlaceShort": "Platz 3",
     "roundUndefined": "Runde noch nicht definiert",
     "champion": "Weltmeister",
     "legendPlayed": "Spiele",
@@ -200,7 +203,9 @@
     "legendPoints": "Punkte",
     "bestDefense": "Beste Defensive",
     "goalsConceded": "GT",
-    "groupLabel": "Gruppe"
+    "groupLabel": "Gruppe",
+    "round32": "Sechzehntelfinale",
+    "round32Short": "Sechzehntel"
   },
   "predictions": {
     "title": "Tipps",
@@ -434,11 +439,15 @@
     "sectionDataError": "Die Daten dieses Abschnitts konnten nicht geladen werden",
     "matchDetail": "⚽ Spieldetail",
     "loading": "Laden",
+    "result": "Ergebnis",
+    "stadium": "Stadion",
+    "city": "Stadt",
     "tabs": {
       "lineups": "Aufstellungen",
       "stats": "Statistiken",
       "players": "Spieler",
-      "h2h": "H2H"
+      "h2h": "H2H",
+      "live": "Live"
     },
     "rules": {
       "exactLabel": "Exaktes Ergebnis",

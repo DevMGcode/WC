@@ -50,6 +50,10 @@ export function generateMetadata(
   return {
     title: meta.title,
     description: meta.description,
+    alternates: {
+      canonical,
+      languages: Object.fromEntries(locales.map((l) => [l, `${APP_URL}/${l}`])),
+    },
     openGraph: {
       title: meta.title,
       description: meta.description,

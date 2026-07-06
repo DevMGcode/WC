@@ -213,6 +213,13 @@ const MatchCard = ({ fixture, index, isFirst, t }: MatchCardProps) => {
                   </p>
                 </div>
               )}
+              {/* Marcador de penales — cuando el partido se definió en la tanda (vivo o finalizado) */}
+              {(isFinished || isLive) && fixture.homePenalty != null && fixture.awayPenalty != null && (
+                <span className="text-[11px] font-black tracking-[0.18em] uppercase mt-1"
+                  style={{ color: alpha(hex.gold.muted, 0.8) }}>
+                  {t('common.penalties')} {fixture.homePenalty}-{fixture.awayPenalty}
+                </span>
+              )}
               {isLive && (
                 <motion.div className="flex items-center gap-1 mt-1"
                   animate={{ opacity: [1, 0.3, 1] }}
@@ -261,7 +268,7 @@ const MatchCard = ({ fixture, index, isFirst, t }: MatchCardProps) => {
                 style={{ background: alpha(hex.neutral.black, 0.28), border: `1px solid ${alpha(hex.neutral.white, 0.05)}` }}>
                 <div className="flex items-center gap-1.5 mb-2">
                   <span className="text-[8px] font-black tracking-[0.22em] uppercase"
-                    style={{ color: alpha(hex.gold.muted, 0.55) }}>Goleadores</span>
+                    style={{ color: alpha(hex.gold.muted, 0.55) }}>{t('fixture.scorers')}</span>
                   <span className="text-[7px] font-black px-1.5 py-0.5 rounded-full"
                     style={{ background: alpha(hex.gold.muted, 0.08), color: alpha(hex.gold.muted, 0.7),
                              border: `1px solid ${alpha(hex.gold.muted, 0.18)}` }}>

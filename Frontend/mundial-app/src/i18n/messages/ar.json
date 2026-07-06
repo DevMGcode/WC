@@ -12,6 +12,7 @@
     "live": "مباشر"
   },
   "common": {
+    "penalties": "ركلات الترجيح",
     "save": "حفظ",
     "cancel": "إلغاء",
     "confirm": "تأكيد",
@@ -190,6 +191,8 @@
     "quarterShort": "ربع",
     "semiShort": "نصف",
     "finalShort": "نهائي",
+    "thirdPlace": "المركز الثالث",
+    "thirdPlaceShort": "المركز 3",
     "roundUndefined": "الجولة غير محددة بعد",
     "champion": "بطل العالم",
     "legendPlayed": "مباريات مُلعبة",
@@ -200,7 +203,9 @@
     "legendPoints": "نقاط",
     "bestDefense": "أفضل دفاع",
     "goalsConceded": "هـ",
-    "groupLabel": "المجموعة"
+    "groupLabel": "المجموعة",
+    "round32": "دور الـ32",
+    "round32Short": "دور الـ32"
   },
   "predictions": {
     "title": "التوقعات",
@@ -434,11 +439,15 @@
     "sectionDataError": "تعذر تحميل بيانات هذا القسم",
     "matchDetail": "⚽ تفاصيل المباراة",
     "loading": "جارٍ التحميل",
+    "result": "النتيجة",
+    "stadium": "الملعب",
+    "city": "المدينة",
     "tabs": {
       "lineups": "التشكيلات",
       "stats": "الإحصائيات",
       "players": "اللاعبون",
-      "h2h": "المواجهات"
+      "h2h": "المواجهات",
+      "live": "مباشر"
     },
     "rules": {
       "exactLabel": "نتيجة دقيقة",

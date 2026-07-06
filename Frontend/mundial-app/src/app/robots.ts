@@ -8,16 +8,16 @@ export default function robots(): MetadataRoute.Robots {
       {
         userAgent: '*',
         allow: '/',
-        // Rutas privadas o sin valor para buscadores
+        // Rutas privadas (protegidas además por el login del middleware).
+        // NOTA: login/register/reset-password NO se bloquean aquí a propósito: llevan
+        // meta robots "noindex", y para que Google lo lea debe poder rastrearlas. Si se
+        // bloquearan en robots, nunca leería el noindex y quedarían como "Duplicada".
         disallow: [
           '/api/',
-          '/*/login',
-          '/*/register',
           '/*/admin',
           '/*/profile',
           '/*/checkout',
           '/*/onboarding',
-          '/*/reset-password',
           '/*/predictions',
         ],
       },

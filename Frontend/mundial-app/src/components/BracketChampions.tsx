@@ -3,6 +3,8 @@
 import React, { useState, useEffect } from 'react';
 import Image from 'next/image';
 import { motion } from 'framer-motion';
+import { useTranslations } from 'next-intl';
+import { fmtShortDate, fmtTime } from '@/utils/format';
 
 /* ── Animated background (kept for showBg=true) ── */
 const AnimatedBackground = ({ constrained = false }: { constrained?: boolean }) => {
@@ -60,12 +62,14 @@ interface Match {
   awayScore?: number;
   winner?: Team | null;
   isPlayed?: boolean;
+  kickoff?: string | Date;
 }
 interface BracketData {
   octavos: Match[];
   cuartos: Match[];
   semifinales: Match[];
   final: Match[];
+  tercerPuesto?: Match;
 }
 interface BracketProps {
   data: BracketData;
@@ -103,10 +107,10 @@ const TeamBadge = ({
 }: {
   team: Team | null; score?: number; isWinner?: boolean; size?: 'sm' | 'md' | 'lg';
 }) => {
-  const h        = size === 'sm' ? 'h-9' : size === 'lg' ? 'h-14' : 'h-11';
-  const flagCls  = size === 'sm' ? 'w-5 h-5' : size === 'lg' ? 'w-9 h-9' : 'w-7 h-7';
-  const flagSz   = size === 'sm' ? '20px' : size === 'lg' ? '36px' : '28px';
-  const textCls  = size === 'sm' ? 'text-[9px]' : size === 'lg' ? 'text-xs' : 'text-[10px]';
+  const h        = size === 'sm' ? 'h-12' : size === 'lg' ? 'h-16' : 'h-14';
+  const flagCls  = size === 'sm' ? 'w-9 h-9' : size === 'lg' ? 'w-14 h-14' : 'w-11 h-11';
+  const flagSz   = size === 'sm' ? '36px' : size === 'lg' ? '56px' : '44px';
+  const textCls  = size === 'sm' ? 'text-[10px]' : size === 'lg' ? 'text-sm' : 'text-xs';
   const scoreCls = size === 'sm' ? 'text-[10px]' : size === 'lg' ? 'text-sm' : 'text-xs';
 
   if (!team || !team.flagUrl) {
@@ -116,7 +120,7 @@ const TeamBadge = ({
         <div className={`shrink-0 ${flagCls} rounded-full flex items-center justify-center`}
           style={{ border: '1.5px dashed rgba(148,163,184,0.18)', background: 'rgba(255,255,255,0.03)' }} />
         <span className={`font-black flex-1 truncate ${textCls}`}
-          style={{ color: 'rgba(148,163,184,0.28)', letterSpacing: '0.1em' }}>TBD</span>
+          style={{ color: 'rgba(148,163,184,0.34)', letterSpacing: '0.08em' }}>{team?.shortName || 'TBD'}</span>
       </div>
     );
   }
@@ -197,8 +201,15 @@ const MatchBox = ({
           animate={{ opacity: [0, 0.05, 0] }} transition={{ duration: 3, repeat: Infinity }}
           style={{ background: 'radial-gradient(ellipse at 50% 50%, rgba(212,167,44,0.25), transparent 65%)' }} />
       )}
+      {/* Fecha y hora (TZ del torneo) */}
+      {match.kickoff && (
+        <div className="pt-1.5 text-center text-[10px] font-bold tracking-[0.06em] tabular-nums"
+          style={{ color: 'rgba(148,163,184,0.62)' }}>
+          {fmtShortDate(match.kickoff)} · {fmtTime(match.kickoff)}
+        </div>
+      )}
       {/* Teams */}
-      <div className="p-1.5 flex flex-col gap-1">
+      <div className="px-1.5 pb-1.5 pt-1 flex flex-col gap-1">
         <TeamBadge team={match.homeTeam} score={match.homeScore} isWinner={homeWon} size={size} />
         <div className="h-px mx-1.5"
           style={{ background: `linear-gradient(90deg, transparent, ${accent}20, transparent)` }} />
@@ -209,7 +220,7 @@ const MatchBox = ({
 };
 
 /* ── Premium SVG Connector Lines ── */
-const BracketConnectorsSymmetric = ({ octavosLeftRefs, cuartosLeftRefs, semifinalesLeftRefs, octavosRightRefs, cuartosRightRefs, semifinalesRightRefs, finalRef, containerRef }: {
+const BracketConnectorsSymmetric = ({ octavosLeftRefs, cuartosLeftRefs, semifinalesLeftRefs, octavosRightRefs, cuartosRightRefs, semifinalesRightRefs, finalRef, thirdRef, containerRef }: {
   octavosLeftRefs:    React.MutableRefObject<(HTMLDivElement | null)[]>;
   cuartosLeftRefs:    React.MutableRefObject<(HTMLDivElement | null)[]>;
   semifinalesLeftRefs: React.MutableRefObject<(HTMLDivElement | null)[]>;
@@ -217,6 +228,7 @@ const BracketConnectorsSymmetric = ({ octavosLeftRefs, cuartosLeftRefs, semifina
   cuartosRightRefs:   React.MutableRefObject<(HTMLDivElement | null)[]>;
   semifinalesRightRefs: React.MutableRefObject<(HTMLDivElement | null)[]>;
   finalRef:           React.MutableRefObject<HTMLDivElement | null>;
+  thirdRef:           React.MutableRefObject<HTMLDivElement | null>;
   containerRef:       React.MutableRefObject<HTMLDivElement | null>;
 }) => {
   const svgRef = React.useRef<SVGSVGElement>(null);
@@ -272,6 +284,25 @@ const BracketConnectorsSymmetric = ({ octavosLeftRefs, cuartosLeftRefs, semifina
           getXLeft(cuartosRightRefs.current[i]), getXRight(semifinalesRightRefs.current[0])), id: `cr${i}`, isFinal: false });
       }
       newPaths.push({ d: mkPath(getY(semifinalesRightRefs.current[0]), yFinal, getXLeft(semifinalesRightRefs.current[0]), xFinal), id: 'sfr', isFinal: true });
+
+      /* ── TERCER PUESTO: ambas semifinales → tarjeta P103 ── */
+      const third = thirdRef.current;
+      if (third) {
+        const tRect = third.getBoundingClientRect();
+        // Ambas líneas convergen en UN solo vértice: el centro-superior de la tarjeta.
+        const apexX = (tRect.left - cRect.left) + tRect.width * 0.5;
+        const apexY = tRect.top - cRect.top;
+        const semiL = semifinalesLeftRefs.current[0];
+        const semiR = semifinalesRightRefs.current[0];
+        if (semiL) {
+          const r = semiL.getBoundingClientRect();
+          newPaths.push({ d: mkPath(r.bottom - cRect.top, apexY, (r.left + r.right) / 2 - cRect.left, apexX), id: 'tp-l', isFinal: false });
+        }
+        if (semiR) {
+          const r = semiR.getBoundingClientRect();
+          newPaths.push({ d: mkPath(r.bottom - cRect.top, apexY, (r.left + r.right) / 2 - cRect.left, apexX), id: 'tp-r', isFinal: false });
+        }
+      }
 
       setPaths(newPaths);
     };
@@ -349,6 +380,7 @@ const BracketConnectorsSymmetric = ({ octavosLeftRefs, cuartosLeftRefs, semifina
 
 /* ── Bracket ── */
 export const Bracket = ({ data, showBg = false }: BracketProps) => {
+  const t                     = useTranslations();
   const containerRef          = React.useRef<HTMLDivElement>(null);
   const octavosLeftRefs       = React.useRef<(HTMLDivElement | null)[]>([]);
   const cuartosLeftRefs       = React.useRef<(HTMLDivElement | null)[]>([]);
@@ -357,6 +389,7 @@ export const Bracket = ({ data, showBg = false }: BracketProps) => {
   const cuartosRightRefs      = React.useRef<(HTMLDivElement | null)[]>([]);
   const semifinalesRightRefs  = React.useRef<(HTMLDivElement | null)[]>([]);
   const finalRef              = React.useRef<HTMLDivElement | null>(null);
+  const thirdRef              = React.useRef<HTMLDivElement | null>(null);
 
   return (
     <div className="w-full relative">
@@ -367,7 +400,8 @@ export const Bracket = ({ data, showBg = false }: BracketProps) => {
             octavosLeftRefs={octavosLeftRefs}       cuartosLeftRefs={cuartosLeftRefs}
             semifinalesLeftRefs={semifinalesLeftRefs} octavosRightRefs={octavosRightRefs}
             cuartosRightRefs={cuartosRightRefs}     semifinalesRightRefs={semifinalesRightRefs}
-            finalRef={finalRef}                     containerRef={containerRef}
+            finalRef={finalRef}                     thirdRef={thirdRef}
+            containerRef={containerRef}
           />
 
           <div className="flex gap-3 items-center justify-center relative" style={{ zIndex: 10 }}>
@@ -375,7 +409,7 @@ export const Bracket = ({ data, showBg = false }: BracketProps) => {
             {/* OCTAVOS LEFT (0–3) */}
             <motion.div initial={{ opacity: 0, x: -50 }} animate={{ opacity: 1, x: 0 }} transition={{ duration: 0.5 }}
               className="flex flex-col gap-1">
-              <RoundLabel label="Octavos" />
+              <RoundLabel label={t('groups.round16')} />
               <div className="flex flex-col gap-2">
                 {data.octavos.slice(0, 4).map((match, idx) => (
                   <motion.div key={match.id}
@@ -391,7 +425,7 @@ export const Bracket = ({ data, showBg = false }: BracketProps) => {
             {/* CUARTOS LEFT (0–1) */}
             <motion.div initial={{ opacity: 0, x: -30 }} animate={{ opacity: 1, x: 0 }} transition={{ duration: 0.5, delay: 0.1 }}
               className="flex flex-col gap-1 items-center">
-              <RoundLabel label="Cuartos" />
+              <RoundLabel label={t('groups.quarter')} />
               <div className="flex flex-col gap-24">
                 {data.cuartos.slice(0, 2).map((match, idx) => (
                   <motion.div key={match.id}
@@ -407,7 +441,7 @@ export const Bracket = ({ data, showBg = false }: BracketProps) => {
             {/* SEMIFINAL LEFT */}
             <motion.div initial={{ opacity: 0, x: -20 }} animate={{ opacity: 1, x: 0 }} transition={{ duration: 0.5, delay: 0.2 }}
               className="flex flex-col gap-1 items-center h-full justify-center">
-              <RoundLabel label="Semifinal" />
+              <RoundLabel label={t('groups.semi')} />
               <div ref={(el) => { if (el) semifinalesLeftRefs.current[0] = el; }}>
                 <MatchBox match={data.semifinales[0]} size="sm" />
               </div>
@@ -415,17 +449,27 @@ export const Bracket = ({ data, showBg = false }: BracketProps) => {
 
             {/* FINAL (CENTER) */}
             <motion.div initial={{ opacity: 0, scale: 0.8 }} animate={{ opacity: 1, scale: 1 }} transition={{ duration: 0.6, delay: 0.3 }}
-              className="flex flex-col items-center justify-center gap-2 px-4">
-              <RoundLabel label="Final" isFinal />
+              className="flex flex-col items-center justify-center gap-2 px-4 relative">
+              <RoundLabel label={t('groups.final')} isFinal />
               <div ref={finalRef}>
                 <MatchBox match={data.final[0]} size="md" isFinal />
               </div>
+
+              {/* PARTIDO POR EL TERCER PUESTO (P103) — centrado justo debajo de la final */}
+              {data.tercerPuesto && (
+                <div className="absolute left-1/2 -translate-x-1/2 top-full mt-12 flex flex-col items-center gap-2">
+                  <div ref={thirdRef}>
+                    <MatchBox match={data.tercerPuesto} size="md" />
+                  </div>
+                  <RoundLabel label={t('groups.thirdPlace')} />
+                </div>
+              )}
             </motion.div>
 
             {/* SEMIFINAL RIGHT */}
             <motion.div initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} transition={{ duration: 0.5, delay: 0.2 }}
               className="flex flex-col gap-1 items-center h-full justify-center">
-              <RoundLabel label="Semifinal" />
+              <RoundLabel label={t('groups.semi')} />
               <div ref={(el) => { if (el) semifinalesRightRefs.current[0] = el; }}>
                 <MatchBox match={data.semifinales[1]} size="sm" />
               </div>
@@ -434,7 +478,7 @@ export const Bracket = ({ data, showBg = false }: BracketProps) => {
             {/* CUARTOS RIGHT (2–3) */}
             <motion.div initial={{ opacity: 0, x: 30 }} animate={{ opacity: 1, x: 0 }} transition={{ duration: 0.5, delay: 0.1 }}
               className="flex flex-col gap-1 items-center">
-              <RoundLabel label="Cuartos" />
+              <RoundLabel label={t('groups.quarter')} />
               <div className="flex flex-col gap-24">
                 {data.cuartos.slice(2, 4).map((match, idx) => (
                   <motion.div key={match.id}
@@ -450,7 +494,7 @@ export const Bracket = ({ data, showBg = false }: BracketProps) => {
             {/* OCTAVOS RIGHT (4–7) */}
             <motion.div initial={{ opacity: 0, x: 50 }} animate={{ opacity: 1, x: 0 }} transition={{ duration: 0.5 }}
               className="flex flex-col gap-1">
-              <RoundLabel label="Octavos" />
+              <RoundLabel label={t('groups.round16')} />
               <div className="flex flex-col gap-2">
                 {data.octavos.slice(4, 8).map((match, idx) => (
                   <motion.div key={match.id}

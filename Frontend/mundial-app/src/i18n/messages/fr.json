@@ -12,6 +12,7 @@
     "live": "En direct"
   },
   "common": {
+    "penalties": "Tirs au but",
     "save": "Enregistrer",
     "cancel": "Annuler",
     "confirm": "Confirmer",
@@ -190,6 +191,8 @@
     "quarterShort": "QF",
     "semiShort": "DF",
     "finalShort": "Finale",
+    "thirdPlace": "Troisième place",
+    "thirdPlaceShort": "3e place",
     "roundUndefined": "Tour non encore défini",
     "champion": "Champion du monde",
     "legendPlayed": "Matchs joués",
@@ -200,7 +203,9 @@
     "legendPoints": "Points",
     "bestDefense": "Meilleure Défense",
     "goalsConceded": "bc",
-    "groupLabel": "Groupe"
+    "groupLabel": "Groupe",
+    "round32": "Seizièmes de finale",
+    "round32Short": "16es de finale"
   },
   "predictions": {
     "title": "Pronostics",
@@ -434,11 +439,15 @@
     "sectionDataError": "Impossible de charger les données de cette section",
     "matchDetail": "⚽ Détail du match",
     "loading": "Chargement",
+    "result": "Résultat",
+    "stadium": "Stade",
+    "city": "Ville",
     "tabs": {
       "lineups": "Compositions",
       "stats": "Statistiques",
       "players": "Joueurs",
-      "h2h": "H2H"
+      "h2h": "H2H",
+      "live": "En direct"
     },
     "rules": {
       "exactLabel": "Score exact",

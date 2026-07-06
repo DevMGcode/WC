@@ -25,6 +25,8 @@ public record ExternalMatch(
         Long venueExternalId,
         String venueName,
         String venueCity,
-        String leagueRound
+        String leagueRound,
+        Integer homePenalty,
+        Integer awayPenalty
 ) {
 }

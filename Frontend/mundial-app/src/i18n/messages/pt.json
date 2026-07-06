@@ -12,6 +12,7 @@
     "live": "Ao vivo"
   },
   "common": {
+    "penalties": "Pênaltis",
     "save": "Salvar",
     "cancel": "Cancelar",
     "confirm": "Confirmar",
@@ -190,6 +191,8 @@
     "quarterShort": "Quartas",
     "semiShort": "Semis",
     "finalShort": "Final",
+    "thirdPlace": "Terceiro Lugar",
+    "thirdPlaceShort": "3º Lugar",
     "roundUndefined": "Rodada ainda não definida",
     "champion": "Campeão do Mundo",
     "legendPlayed": "Jogos disputados",
@@ -200,7 +203,9 @@
     "legendPoints": "Pontos",
     "bestDefense": "Melhor Defesa",
     "goalsConceded": "gc",
-    "groupLabel": "Grupo"
+    "groupLabel": "Grupo",
+    "round32": "Rodada de 32",
+    "round32Short": "Rodada de 32"
   },
   "predictions": {
     "title": "Palpites",
@@ -434,11 +439,15 @@
     "sectionDataError": "Não foi possível carregar os dados desta seção",
     "matchDetail": "⚽ Detalhe da Partida",
     "loading": "Carregando",
+    "result": "Resultado",
+    "stadium": "Estádio",
+    "city": "Cidade",
     "tabs": {
       "lineups": "Escalações",
       "stats": "Estatísticas",
       "players": "Jogadores",
-      "h2h": "H2H"
+      "h2h": "H2H",
+      "live": "Ao vivo"
     },
     "rules": {
       "exactLabel": "Placar exato",

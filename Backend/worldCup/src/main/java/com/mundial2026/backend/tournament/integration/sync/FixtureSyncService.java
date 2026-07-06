@@ -230,9 +230,15 @@ public class FixtureSyncService {
             // First try to resolve the group from the team→group map (sourced from /standings).
             // Fall back to parsing it from the round name (rare — used to work for older seasons
             // where API-Football encoded the letter in leagueRound, e.g. "Group Stage - A").
-            GroupStage groupStage = resolveGroupStageFromTeamMap(tournament, ext.homeTeamId(), teamToGroup)
-                    .or(() -> resolveGroupStage(tournament, ext.leagueRound()))
-                    .orElse(null);
+            // IMPORTANTE: solo los partidos de FASE DE GRUPOS llevan group_stage_id. Los de
+            // eliminatoria (Dieciseisavos, Octavos, etc.) NO pertenecen a ningún grupo. Antes se
+            // les asignaba el grupo del equipo local, lo que al recalcular standings metía al
+            // visitante como fila fantasma (0 jugados) en la tabla de ese grupo.
+            GroupStage groupStage = (stage != null && "GROUPS".equals(stage.getCode()))
+                    ? resolveGroupStageFromTeamMap(tournament, ext.homeTeamId(), teamToGroup)
+                        .or(() -> resolveGroupStage(tournament, ext.leagueRound()))
+                        .orElse(null)
+                    : null;
             Team home = teamRepository.findByExternalProviderId(ext.homeTeamId()).orElse(null);
             Team away = teamRepository.findByExternalProviderId(ext.awayTeamId()).orElse(null);
 
@@ -314,6 +320,8 @@ public class FixtureSyncService {
         f.setStatus(mapStatus(ext.status()));
         f.setHomeScore(ext.homeScore());
         f.setAwayScore(ext.awayScore());
+        f.setHomePenalty(ext.homePenalty());
+        f.setAwayPenalty(ext.awayPenalty());
         f.setElapsedMinutes(ext.elapsedMinutes());
         if (ext.stoppageMinutes() != null) {
             f.setExtraMinutes(ext.stoppageMinutes());
@@ -331,7 +339,11 @@ public class FixtureSyncService {
         OffsetDateTime kickoff = ext.kickoffUtc().atOffset(ZoneOffset.UTC);
         FixtureStatus newStatus = mapStatus(ext.status());
 
-        if (!existing.getKickoffAt().isEqual(kickoff)) {
+        // No pisar el kickoff de partidos que ya arrancaron: la hora es histórica
+        // y puede haber sido corregida manualmente (ej. API-Football con hora incorrecta).
+        boolean kickoffCanChange = existing.getStatus() != FixtureStatus.LIVE
+                && existing.getStatus() != FixtureStatus.FINISHED;
+        if (kickoffCanChange && !existing.getKickoffAt().isEqual(kickoff)) {
             existing.setKickoffAt(kickoff);
             existing.setPredictionLockedAt(kickoff.minusMinutes(
                     existing.getPredictionLockMinutesBefore() != null
@@ -351,6 +363,15 @@ public class FixtureSyncService {
         }
         if (ext.awayScore() != null && !ext.awayScore().equals(existing.getAwayScore())) {
             existing.setAwayScore(ext.awayScore());
+            changed = true;
+        }
+        // Penales: misma política que el marcador (solo escribir valores no-null).
+        if (ext.homePenalty() != null && !ext.homePenalty().equals(existing.getHomePenalty())) {
+            existing.setHomePenalty(ext.homePenalty());
+            changed = true;
+        }
+        if (ext.awayPenalty() != null && !ext.awayPenalty().equals(existing.getAwayPenalty())) {
+            existing.setAwayPenalty(ext.awayPenalty());
             changed = true;
         }
         // El minuto en curso también cuenta como cambio, así el snapshot REST y el

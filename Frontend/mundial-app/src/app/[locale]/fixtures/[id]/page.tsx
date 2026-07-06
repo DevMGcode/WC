@@ -23,12 +23,12 @@ import {
 
 import { hex, type BrandColor, resolveBrandHex } from '@/lib/design/tokens';
 import { alpha, alphaOf, borders, gradients } from '@/lib/design/effects';
-import { buildMatchSummary } from './_components/matchSummary';
 
 import dynamic from 'next/dynamic';
 import { TabSkeleton } from '@/components/PageSkeleton';
 import { ErrorBoundary } from '@/components/ErrorBoundary';
 import { AdSlot } from '@/components/ads';
+import { buildMatchSummary } from './_components/matchSummary';
 
 const LineupsTab    = dynamic(() => import('./_components/LineupsTab'),    { loading: () => <TabSkeleton /> });
 const StatisticsTab = dynamic(() => import('./_components/StatisticsTab'), { loading: () => <TabSkeleton /> });
@@ -83,7 +83,7 @@ export default function FixtureDetailPage({ params }: { params: { id: string } }
   /* Tabs y reglas de puntuación dependen de t() ⇒ se construyen dentro del
    * componente para reaccionar al cambio de locale. */
   const DETAIL_TABS: { key: DetailTab; label: string; icon: React.ReactNode; liveOnly?: boolean }[] = [
-    { key: 'live',    label: 'En Vivo',                                       icon: <FiRadio     size={12} />, liveOnly: true },
+    { key: 'live',    label: t('fixture.tabs.live'),                                       icon: <FiRadio     size={12} />, liveOnly: true },
     { key: 'lineups',  label: t('fixture.tabs.lineups')   ?? 'Alineaciones', icon: <FiList      size={12} /> },
     { key: 'stats',    label: t('fixture.tabs.stats')     ?? 'Estadísticas', icon: <FiBarChart2 size={12} /> },
     { key: 'players',  label: t('fixture.tabs.players')   ?? 'Jugadores',    icon: <FiUsers     size={12} /> },
@@ -148,6 +148,16 @@ export default function FixtureDetailPage({ params }: { params: { id: string } }
     fetchDbEvents();
   }, [fetchDbEvents]);
 
+  // El layout renderiza el resumen del partido en SSR (id "fixture-ssr-summary")
+  // para que el crawler reciba la prosa en el HTML inicial. En cliente, esta
+  // página lo muestra en su posición ideal (tras el marcador, antes de la porra),
+  // así que el bloque del layout se oculta para que no se vea duplicado al final.
+  useEffect(() => {
+    const el = document.getElementById('fixture-ssr-summary');
+    if (el) el.style.display = 'none';
+    return () => { if (el) el.style.display = ''; };
+  }, []);
+
   useEffect(() => {
     if (fixture?.status !== 'LIVE') return;
     const interval = setInterval(fetchDbEvents, 30_000);
@@ -157,8 +167,14 @@ export default function FixtureDetailPage({ params }: { params: { id: string } }
   // Merge: eventos del WebSocket + eventos de BD, sin duplicados.
   // Dedup global por type|minute|teamId|playerName para cubrir duplicados dentro de cada fuente.
   const allLiveEvents = useMemo(() => {
-    const evKey = (e: { type?: string; minute?: number; teamId?: number | null; playerName?: string | null }) =>
-      `${e.type}|${e.minute}|${e.teamId ?? 'x'}|${e.playerName ?? ''}`;
+    // Los STATUS_CHANGE no tienen equipo ni jugador, y varios caen en el mismo minuto
+    // (p.ej. al min 120: "end extra time", "penalties", "match finished"). Si se dedupea
+    // solo por type|minute|team|player, los tres colapsan en uno y se pierden divisores.
+    // Para ese tipo discriminamos por detail + extraMinute; el resto queda igual.
+    const evKey = (e: { type?: string; minute?: number; extraMinute?: number; teamId?: number | null; playerName?: string | null; detail?: string | null }) =>
+      e.type === 'STATUS_CHANGE'
+        ? `STATUS_CHANGE|${e.minute}|${e.extraMinute ?? 'x'}|${e.detail ?? ''}`
+        : `${e.type}|${e.minute}|${e.teamId ?? 'x'}|${e.playerName ?? ''}`;
     const seen = new Set<string>();
     const result: MatchEvent[] = [];
     for (const e of [...liveEvents, ...dbEvents]) {
@@ -304,6 +320,19 @@ export default function FixtureDetailPage({ params }: { params: { id: string } }
     return [...cappedDbScorers, ...wsOnlyGoals].sort((a, b) => (a.minute ?? 0) - (b.minute ?? 0));
   }, [fixture?.scorers, fixture?.homeTeam?.id, fixture?.awayTeam?.id, fixture?.homeScore, fixture?.awayScore, liveEvents, fixtureId]);
 
+  // Tanda de penales: agrupa los SHOOTOUT_* por equipo (en orden de ejecución).
+  const shootout = useMemo(() => {
+    const homeId = fixture?.homeTeam?.id;
+    const awayId = fixture?.awayTeam?.id;
+    const pens = allLiveEvents
+      .filter(e => e.type === 'SHOOTOUT_GOAL' || e.type === 'SHOOTOUT_MISSED')
+      .sort((a, b) => ((a.minute ?? 0) + (a.extraMinute ?? 0)) - ((b.minute ?? 0) + (b.extraMinute ?? 0)));
+    const pick = (id?: number) => pens
+      .filter(e => e.teamId === id)
+      .map(e => ({ name: e.playerName ?? '?', made: e.type === 'SHOOTOUT_GOAL', minute: e.minute, extraMinute: e.extraMinute }));
+    return { home: pick(homeId), away: pick(awayId), has: pens.length > 0 };
+  }, [allLiveEvents, fixture?.homeTeam?.id, fixture?.awayTeam?.id]);
+
   useEffect(() => {
     const loadFixture = async () => {
       try {
@@ -399,7 +428,7 @@ export default function FixtureDetailPage({ params }: { params: { id: string } }
             style={{ borderColor: alphaOf('green', 0.20), borderTopColor: hex.green.base }}
             animate={{ rotate: 360 }} transition={{ duration: 0.9, repeat: Infinity, ease: 'linear' }} />
           <p className="text-[10px] tracking-[0.3em] uppercase font-bold"
-            style={{ color: alphaOf('green', 0.6) }}>Cargando</p>
+            style={{ color: alphaOf('green', 0.6) }}>{t('fixture.loading')}</p>
         </div>
       </div>
     );
@@ -480,6 +509,8 @@ export default function FixtureDetailPage({ params }: { params: { id: string } }
             awayTeam={fixture.awayTeam}
             homeScore={liveHomeScore}
             awayScore={liveAwayScore}
+            homePenalty={fixture.homePenalty}
+            awayPenalty={fixture.awayPenalty}
             kickoffAt={fixture.kickoffAt}
             status={liveStatus}
             elapsedMinutes={isLive ? (displayMinute ?? elapsedMinutes) : undefined}
@@ -487,7 +518,9 @@ export default function FixtureDetailPage({ params }: { params: { id: string } }
           />
         </motion.div>
 
-        {/* ── RESUMEN TEXTUAL DEL PARTIDO (indexable SEO/AdSense) — generado de los datos ── */}
+        {/* ── RESUMEN TEXTUAL DEL PARTIDO — misma prosa que el bloque SSR del layout
+            (que se oculta al montar esta página); acá se muestra en su posición ideal:
+            tras el marcador y antes de la porra. ── */}
         {(() => {
           const summary = buildMatchSummary({
             status: liveStatus,
@@ -562,7 +595,7 @@ export default function FixtureDetailPage({ params }: { params: { id: string } }
                 {prediction && (
                   <div className="mt-4 inline-flex items-center gap-3 px-5 py-3 rounded-xl"
                     style={{ background: alphaOf('danger', 0.06), border: borders.brand('danger', 0.15) }}>
-                    <span className="text-orionix-text-muted text-sm font-bold">Tu porra:</span>
+                    <span className="text-orionix-text-muted text-sm font-bold">{t('fixture.yourPredictionLabel')}</span>
                     <span className="text-white font-black text-lg tabular-nums">
                       {prediction.predictedHomeScore} – {prediction.predictedAwayScore}
                     </span>
@@ -836,7 +869,7 @@ export default function FixtureDetailPage({ params }: { params: { id: string } }
                   </div>
                   <div className="flex-1 text-center rounded-xl p-4"
                     style={{ background: alpha(hex.bg.primary, 0.60), border: `1px solid ${alpha(hex.neutral.white, 0.06)}` }}>
-                    <p className="text-[8px] font-black text-orionix-text-muted tracking-[0.25em] uppercase mb-2">Resultado</p>
+                    <p className="text-[8px] font-black text-orionix-text-muted tracking-[0.25em] uppercase mb-2">{t('fixture.result')}</p>
                     <p className="text-3xl font-black text-white tabular-nums">
                       {fixture.homeScore}
                       <span className="text-orionix-text-muted mx-1 text-xl">–</span>
@@ -875,13 +908,13 @@ export default function FixtureDetailPage({ params }: { params: { id: string } }
               <div className="grid grid-cols-2 gap-4">
                 {fixture.stadiumName && (
                   <div>
-                    <p className="text-[9px] font-black text-orionix-text-muted tracking-[0.22em] uppercase mb-1">Estadio</p>
+                    <p className="text-[9px] font-black text-orionix-text-muted tracking-[0.22em] uppercase mb-1">{t('fixture.stadium')}</p>
                     <p className="text-sm font-bold text-orionix-text-secondary">{fixture.stadiumName}</p>
                   </div>
                 )}
                 {fixture.hostCity && (
                   <div>
-                    <p className="text-[9px] font-black text-orionix-text-muted tracking-[0.22em] uppercase mb-1">Ciudad</p>
+                    <p className="text-[9px] font-black text-orionix-text-muted tracking-[0.22em] uppercase mb-1">{t('fixture.city')}</p>
                     <p className="text-sm font-bold text-orionix-text-secondary">{fixture.hostCity}{fixture.hostCountry ? `, ${fixture.hostCountry}` : ''}</p>
                   </div>
                 )}
@@ -954,6 +987,52 @@ export default function FixtureDetailPage({ params }: { params: { id: string } }
                     </motion.div>
                   );
                 })}
+              </div>
+            </div>
+          </DarkCard>
+        )}
+
+        {/* ── PENALES (tanda) ── */}
+        {(isFinished || isLive) && shootout.has && (
+          <DarkCard accent="gold" delay={0.24} className="mb-4">
+            <div className="p-5">
+              <div className="flex items-center gap-2 mb-4">
+                <div className="w-[3px] h-5 rounded-full"
+                  style={{ background: `linear-gradient(180deg, ${hex.gold.bright}, ${hex.gold.muted})` }} />
+                <span className="text-[10px] font-black text-orionix-text-muted tracking-[0.24em] uppercase">{t('common.penalties')}</span>
+                {fixture.homePenalty != null && fixture.awayPenalty != null && (
+                  <span className="text-[8px] font-black px-1.5 py-0.5 rounded-full"
+                    style={{ background: alphaOf('gold', 0.10), color: hex.gold.bright, border: borders.brand('gold', 0.20) }}>
+                    {fixture.homePenalty}-{fixture.awayPenalty}
+                  </span>
+                )}
+              </div>
+              <div className="grid grid-cols-2 gap-3">
+                {[{ team: fixture.homeTeam, list: shootout.home }, { team: fixture.awayTeam, list: shootout.away }].map((col, ci) => (
+                  <div key={ci} className="space-y-1.5">
+                    <p className="text-[11px] font-black tracking-wide text-center mb-2"
+                      style={{ color: hex.gold.bright }}>
+                      {col.team?.shortName ?? col.team?.name}
+                    </p>
+                    {col.list.map((p: { name: string; made: boolean; minute?: number | null; extraMinute?: number | null }, i: number) => (
+                      <div key={i} className="flex items-center gap-2 px-2.5 py-2 rounded-lg"
+                        style={{
+                          background: alpha(hex.bg.primary, 0.60),
+                          border: `1px solid ${alpha(hex.neutral.white, 0.04)}`,
+                          borderLeft: `3px solid ${p.made ? hex.green.bright : hex.status.danger}`,
+                        }}>
+                        <span className="text-sm shrink-0">{p.made ? '✅' : '❌'}</span>
+                        <span className="flex-1 min-w-0 text-xs font-bold text-orionix-text-secondary truncate">{p.name}</span>
+                        {p.minute != null && (
+                          <span className="text-[9px] font-black text-orionix-text-muted px-1.5 py-0.5 rounded-md shrink-0"
+                            style={{ background: alpha(hex.neutral.white, 0.04), border: `1px solid ${alpha(hex.neutral.white, 0.06)}` }}>
+                            {p.minute}{p.extraMinute ? `+${p.extraMinute}` : ''}&apos;
+                          </span>
+                        )}
+                      </div>
+                    ))}
+                  </div>
+                ))}
               </div>
             </div>
           </DarkCard>
