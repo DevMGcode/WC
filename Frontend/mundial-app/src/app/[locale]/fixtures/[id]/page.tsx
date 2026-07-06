@@ -28,6 +28,7 @@ import dynamic from 'next/dynamic';
 import { TabSkeleton } from '@/components/PageSkeleton';
 import { ErrorBoundary } from '@/components/ErrorBoundary';
 import { AdSlot } from '@/components/ads';
+import { buildMatchSummary } from './_components/matchSummary';
 
 const LineupsTab    = dynamic(() => import('./_components/LineupsTab'),    { loading: () => <TabSkeleton /> });
 const StatisticsTab = dynamic(() => import('./_components/StatisticsTab'), { loading: () => <TabSkeleton /> });
@@ -146,6 +147,16 @@ export default function FixtureDetailPage({ params }: { params: { id: string } }
   useEffect(() => {
     fetchDbEvents();
   }, [fetchDbEvents]);
+
+  // El layout renderiza el resumen del partido en SSR (id "fixture-ssr-summary")
+  // para que el crawler reciba la prosa en el HTML inicial. En cliente, esta
+  // página lo muestra en su posición ideal (tras el marcador, antes de la porra),
+  // así que el bloque del layout se oculta para que no se vea duplicado al final.
+  useEffect(() => {
+    const el = document.getElementById('fixture-ssr-summary');
+    if (el) el.style.display = 'none';
+    return () => { if (el) el.style.display = ''; };
+  }, []);
 
   useEffect(() => {
     if (fixture?.status !== 'LIVE') return;
@@ -507,9 +518,30 @@ export default function FixtureDetailPage({ params }: { params: { id: string } }
           />
         </motion.div>
 
-        {/* El resumen textual del partido (prosa indexable) ahora se renderiza en el
-            SERVIDOR desde layout.tsx, para que Google lo reciba en el HTML inicial y no
-            marque la ficha como Soft 404. Antes estaba acá (cliente) y no llegaba al SSR. */}
+        {/* ── RESUMEN TEXTUAL DEL PARTIDO — misma prosa que el bloque SSR del layout
+            (que se oculta al montar esta página); acá se muestra en su posición ideal:
+            tras el marcador y antes de la porra. ── */}
+        {(() => {
+          const summary = buildMatchSummary({
+            status: liveStatus,
+            homeTeam: fixture.homeTeam,
+            awayTeam: fixture.awayTeam,
+            homeScore: liveHomeScore,
+            awayScore: liveAwayScore,
+            stadiumName: fixture.stadiumName,
+            hostCity: fixture.hostCity,
+            scorers: fixture.scorers,
+          }, locale);
+          return summary ? (
+            <motion.div className="mb-4 rounded-2xl px-4 py-3.5"
+              initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.3, delay: 0.05 }}
+              style={{ background: alpha(hex.neutral.white, 0.03), border: `1px solid ${alpha(hex.neutral.white, 0.07)}` }}>
+              <p className="text-[12px] sm:text-[13px] leading-relaxed" style={{ color: alpha(hex.text.secondary, 0.72) }}>
+                {summary}
+              </p>
+            </motion.div>
+          ) : null;
+        })()}
 
         {/* ── PORRA SECTION ── */}
         <div className="mb-4">

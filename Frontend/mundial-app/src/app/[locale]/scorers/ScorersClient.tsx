@@ -250,6 +250,15 @@ export default function ScorersClient() {
     return () => ro.disconnect();
   }, []);
 
+  // El page (server) renderiza narrativa + top-10 en SSR (id "scorers-ssr-summary")
+  // para el crawler. En cliente esta tabla interactiva muestra lo mismo, así que
+  // el bloque SSR se oculta para no duplicar contenido en pantalla.
+  useEffect(() => {
+    const ssr = document.getElementById('scorers-ssr-summary');
+    if (ssr) ssr.style.display = 'none';
+    return () => { if (ssr) ssr.style.display = ''; };
+  }, []);
+
   // Free → top 10, Premium → top 50. El backend igual fuerza el cap, pero pedimos
   // explícitamente el número correcto para no traer datos extras y agilizar el cache.
   const desiredLimit = isPremium ? 50 : 10;

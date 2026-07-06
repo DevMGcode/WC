@@ -21,6 +21,7 @@ const PUBLIC_PATHS = [
   '/premium',    // landing de venta del Pase Mundial
   // Institucionales / legales
   '/about',
+  '/faq',
   '/terms',
   '/privacy',
   // Autenticación

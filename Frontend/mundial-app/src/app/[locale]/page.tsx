@@ -1,396 +1,161 @@
-'use client';
+import Link from 'next/link';
+import HomeClient from './HomeClient';
+import { getAllFixtures } from '@/services/publicTournament';
+import { buildHomeEditorial } from './home/_components/homeNarrative';
 
 /**
- * Home dashboard — migrated to the design-token system.
+ * Server component de la home (Inicio).
  *
- * Sub-components are co-located in `./_components/`:
- *   HomeUtils    → micro-components (KPIChip, Flag, Ring, GlowBar, …)
- *   HomeCountdown → ROW 2  countdown / mundial-started banner
- *   UpcomingMatches → ROW 3 left top   (PRÓXIMOS PARTIDOS)
- *   RecentResults   → ROW 3 left bottom (ÚLTIMOS RESULTADOS)
- *   RightColumn     → ROW 3 right       (RENDIMIENTO + CLASIFICACIÓN)
- *   QuickAccessBento → ROW 4            (quick-access grid)
+ * El dashboard interactivo vive en HomeClient (datos por React Query y solo
+ * para usuarios autenticados), así que NO llega al HTML del servidor. Este
+ * bloque SSR garantiza que el crawler — y el visitante anónimo — reciban
+ * contenido real: qué es el sitio, estado del torneo, últimos resultados,
+ * próximos partidos con enlace a su ficha y CTAs de registro/login.
+ *
+ * HomeClient lo oculta al montar SOLO si hay sesión (id "home-ssr-summary");
+ * para el visitante anónimo queda visible como landing — coherente con la
+ * decisión anti-cloaking: la home es pública y muestra a bots y humanos lo mismo.
+ *
+ * Diseño: hero centrado con la estética de la app (verde + dorado, glows
+ * suaves), chips de estado del torneo, resultados como tarjetas de marcador y
+ * próximos partidos clickeables. Sin JS de cliente: hovers por clases Tailwind.
  */
+export default async function HomePage({ params }: { params: { locale: string } }) {
+  const locale = params.locale ?? 'es';
+  const fixtures = await getAllFixtures().catch(() => []);
+  const ed = buildHomeEditorial(fixtures, locale);
 
-import React, { useState, useEffect, useMemo, useRef } from 'react';
-import { motion } from 'framer-motion';
-import { useRouter } from 'next/navigation';
-import dynamic from 'next/dynamic';
-import {
-  FiActivity, FiCrosshair, FiAward, FiBarChart2, FiZap, FiArrowRight,
-} from 'react-icons/fi';
-import { useAuth } from '@/contexts/AuthContext';
-import { usePremium } from '@/hooks/usePremium';
-import { Header } from '@/components/Navigation';
-import { useTranslations, useLocale } from 'next-intl';
-import {
-  useCurrentTournament,
-  useTournamentFixtures,
-  useUserPredictions,
-  useUserScore,
-  useGlobalRanking,
-} from '@/hooks/useTournamentData';
-import { WORLD_CUP_START, MS, RANKING_PAGE } from '@/constants/tournament';
-import { fmtTodayHeader, dayKey } from '@/utils/format';
-import TourButton from '@/components/Tour/TourButton';
-import { getTourSteps } from '@/components/Tour/tourSteps';
-import WhatsAppButton from '@/components/WhatsAppButton';
-
-import { hex } from '@/lib/design/tokens';
-import { alpha, alphaOf, gradients } from '@/lib/design/effects';
-import { TabSkeleton } from '@/components/PageSkeleton';
-
-import { KPIChip } from './home/_components/HomeUtils';
-import PremiumOnboardingModal from '@/components/premium/PremiumOnboardingModal';
-import { AdSlot, PromoCarousel } from '@/components/ads';
-import { achievementsService } from '@/services/achievements';
-
-// Lazy load de secciones pesadas — se descargan en paralelo pero no bloquean el render inicial
-const HomeCountdown   = dynamic(() => import('./home/_components/HomeCountdown'),   { loading: () => <TabSkeleton /> });
-const UpcomingMatches = dynamic(() => import('./home/_components/UpcomingMatches'), { loading: () => <TabSkeleton /> });
-const RecentResults   = dynamic(() => import('./home/_components/RecentResults'),   { loading: () => <TabSkeleton /> });
-const RightColumn     = dynamic(() => import('./home/_components/RightColumn'),     { loading: () => <TabSkeleton /> });
-const QuickAccessBento = dynamic(() => import('./home/_components/QuickAccessBento'), { loading: () => <TabSkeleton /> });
-
-/* ══════════════════════════════════════════
-   PAGE
-══════════════════════════════════════════ */
-export default function HomePage() {
-  const router = useRouter();
-  const t      = useTranslations();
-  const locale = useLocale();
-  const { user, loading: authLoading, isAuthenticated } = useAuth();
-  const { isPremium } = usePremium();
-
-  const [countdown, setCountdown]           = useState({ days: 0, hours: 0, minutes: 0, seconds: 0 });
-  const [mundialStarted, setMundialStarted] = useState(false);
-
-  // Header + barra de bienvenida "sticky": medimos la altura del header para
-  // pegar la barra justo debajo (mismo patrón que en el calendario).
-  const headerRef = useRef<HTMLDivElement>(null);
-  const [headerH, setHeaderH] = useState(0);
-  useEffect(() => {
-    const el = headerRef.current;
-    if (!el) return;
-    const measure = () => setHeaderH(el.offsetHeight);
-    measure();
-    const ro = new ResizeObserver(measure);
-    ro.observe(el);
-    return () => ro.disconnect();
-  }, []);
-
-  useEffect(() => {
-    if (!authLoading && !isAuthenticated) router.push('/login');
-  }, [isAuthenticated, authLoading, router]);
-
-  useEffect(() => {
-    const target = WORLD_CUP_START.getTime();
-    const tick = () => {
-      const diff = target - Date.now();
-      if (diff <= 0) { setMundialStarted(true); return; }
-      setCountdown({
-        days:    Math.floor(diff / MS.day),
-        hours:   Math.floor((diff % MS.day)    / MS.hour),
-        minutes: Math.floor((diff % MS.hour)   / MS.minute),
-        seconds: Math.floor((diff % MS.minute) / MS.second),
-      });
-    };
-    tick();
-    const id = setInterval(tick, MS.second);
-    return () => clearInterval(id);
-  }, []);
-
-  // ── TanStack Query ──
-  const userId                                           = user ? Number(user.id) : null;
-  const { data: tournament }                             = useCurrentTournament();
-  const tid                                              = tournament?.id ?? null;
-  const { data: allFixtures = [], isLoading: loading }  = useTournamentFixtures(tid);
-  const { data: rawPredictions = [] }                   = useUserPredictions(userId);
-  const { data: scoreData }                             = useUserScore(userId, tid);
-  const { data: rankingData = [] }                      = useGlobalRanking(tid, RANKING_PAGE.home, isPremium);
-
-  // ── Derived state ──
-  const todayUpcoming = useMemo(() =>
-    (allFixtures as any[])
-      .filter(f => f.status === 'SCHEDULED' || f.status === 'LIVE')
-      .sort((a, b) => new Date(a.kickoffAt).getTime() - new Date(b.kickoffAt).getTime())
-      .slice(0, 5),
-    [allFixtures]
-  );
-
-  const recentResults = useMemo(() => {
-    const finished = (allFixtures as any[])
-      .filter(f => f.status === 'FINISHED')
-      .sort((a, b) => new Date(b.kickoffAt).getTime() - new Date(a.kickoffAt).getTime());
-    if (finished.length === 0) return [];
-    // Solo la jornada más reciente: partidos del mismo día (en la TZ del torneo,
-    // igual que el calendario) que el último finalizado. El historial completo
-    // vive en "Mis porras".
-    const lastDay = dayKey(finished[0].kickoffAt);
-    return finished.filter(f => dayKey(f.kickoffAt) === lastDay);
-  }, [allFixtures]);
-
-  const myPredictions = useMemo(() => {
-    const predMap: Record<number, any> = {};
-    recentResults.forEach((r: any) => {
-      const p = (rawPredictions as any[]).find((pred: any) => pred.fixtureId === r.id);
-      if (p) predMap[r.id] = p;
-    });
-    return predMap;
-  }, [recentResults, rawPredictions]);
-
-  // IDs de partidos que el usuario ya predijo → el botón "Porra" muestra "Editar".
-  const predictedFixtureIds = useMemo(
-    () => new Set((rawPredictions as any[]).map((p: any) => Number(p.fixtureId))),
-    [rawPredictions]
-  );
-
-  // Racha de aciertos para el chip 🔥 del panel RENDIMIENTO.
-  const [currentStreak, setCurrentStreak] = useState(0);
-  useEffect(() => {
-    if (!userId || !tid) return;
-    let alive = true;
-    achievementsService.get(tid, userId)
-      .then(r => { if (alive) setCurrentStreak(r.currentStreak); })
-      .catch(() => {});
-    return () => { alive = false; };
-  }, [userId, tid]);
-
-  const stats = useMemo(() => ({
-    predictions: (rawPredictions as any[]).length,
-    exactas:     (scoreData as any)?.exactScores ?? 0,
-    puntos:      (scoreData as any)?.totalPoints ?? 0,
-    rank:        (scoreData as any)?.rankPosition ?? 0,
-  }), [rawPredictions, scoreData]);
-
-  const topRanking = useMemo(() =>
-    (rankingData as any[]).slice(0, 5).map((s: any, i: number) => ({
-      rank:   s.rankPosition ?? i + 1,
-      name:   s.fullName || s.username || 'Usuario',
-      points: s.totalPoints ?? 0,
-      isMe:   Number(s.userId) === (userId ?? -1),
-    })),
-    [rankingData, userId]
-  );
-
-  const maxRankPts = topRanking.length > 0 ? Math.max(...topRanking.map(r => r.points), 1) : 1;
-
-  if (!authLoading && !isAuthenticated) return null;
+  const gold = '#D4AF37';
+  const cardBg = 'linear-gradient(160deg, rgba(18,34,18,0.72), rgba(7,12,7,0.92))';
+  const cardBorder = '1px solid rgba(255,255,255,0.07)';
+  const label: React.CSSProperties = {
+    fontSize: 10, fontWeight: 800, letterSpacing: '0.22em', textTransform: 'uppercase',
+    color: 'rgba(212,175,55,0.8)', margin: '0 0 10px',
+  };
 
   return (
-    <div className="w-full relative">
+    <>
+      <HomeClient />
+      <section id="home-ssr-summary" aria-label={ed.title}
+        style={{ maxWidth: 980, margin: '0 auto', padding: '28px 20px 64px' }}>
 
-      {/* ═══ BACKGROUND ORBS ═══ */}
-      <div className="fixed rounded-full pointer-events-none" style={{
-        width: 800, height: 800, top: -280, left: -200,
-        background: `radial-gradient(circle, ${alphaOf('success', 0.06)} 0%, transparent 60%)`,
-        filter: 'blur(80px)', zIndex: 0, willChange: 'transform', transform: 'translateZ(0)',
-      }} />
-      <div className="fixed rounded-full pointer-events-none" style={{
-        width: 600, height: 600, bottom: -150, right: -150,
-        background: `radial-gradient(circle, ${alphaOf('gold', 0.04)} 0%, transparent 60%)`,
-        filter: 'blur(80px)', zIndex: 0, willChange: 'transform', transform: 'translateZ(0)',
-      }} />
+        {/* ── HERO ── */}
+        <div className="relative overflow-hidden text-center"
+          style={{ borderRadius: 22, padding: '44px 26px 38px', background: cardBg, border: '1px solid rgba(212,175,55,0.16)' }}>
+          {/* Glows decorativos */}
+          <div aria-hidden style={{ position: 'absolute', width: 420, height: 420, top: -220, left: '50%', transform: 'translateX(-50%)',
+            background: 'radial-gradient(circle, rgba(74,222,128,0.14) 0%, transparent 65%)', filter: 'blur(40px)', pointerEvents: 'none' }} />
+          <div aria-hidden style={{ position: 'absolute', width: 300, height: 300, bottom: -180, right: -100,
+            background: 'radial-gradient(circle, rgba(212,175,55,0.10) 0%, transparent 65%)', filter: 'blur(40px)', pointerEvents: 'none' }} />
 
-      {/* Pitch grid */}
-      <svg className="fixed inset-0 w-full h-full pointer-events-none" style={{ zIndex: 0, opacity: 0.022 }} xmlns="http://www.w3.org/2000/svg">
-        <defs>
-          <pattern id="pgrid" width="52" height="52" patternUnits="userSpaceOnUse">
-            <path d="M 52 0 L 0 0 0 52" fill="none" stroke={hex.green.bright} strokeWidth="0.5" />
-          </pattern>
-          <radialGradient id="pfade" cx="45%" cy="35%" r="55%">
-            <stop offset="0%" stopColor="white" stopOpacity="1" />
-            <stop offset="100%" stopColor="white" stopOpacity="0" />
-          </radialGradient>
-          <mask id="pmask"><rect width="100%" height="100%" fill="url(#pfade)" /></mask>
-        </defs>
-        <rect width="100%" height="100%" fill="url(#pgrid)" mask="url(#pmask)" />
-      </svg>
-
-      {/* ═══ HEADER (sticky) ═══ */}
-      <div ref={headerRef} className="sticky top-0" style={{ zIndex: 40 }}>
-        <Header
-          title="⚽ Orionix Gol"
-          subtitle="Dashboard"
-          centerContent={
-            <div className="flex items-center gap-3">
-              <div className="relative shrink-0">
-                <div className="w-10 h-10 rounded-full flex items-center justify-center text-white font-black text-base"
-                  style={{ background: `linear-gradient(135deg, ${hex.green.dark}, ${hex.green.base})`,
-                           boxShadow: `0 0 20px ${alphaOf('green', 0.40)}` }}>
-                  {user?.displayName?.charAt(0).toUpperCase()}
-                </div>
-                <div className="absolute inset-0 rounded-full" style={{ border: `1px solid ${alphaOf('green', 0.30)}` }} />
-              </div>
-              <div className="min-w-0 flex-1">
-                <p className="text-[14px] font-black text-transparent bg-clip-text leading-none truncate"
-                  style={{ backgroundImage: `linear-gradient(90deg, ${hex.green.soft}, ${hex.green.bright})` }}>
-                  {user?.displayName}
-                </p>
-                <p className="text-[11px] leading-none mt-0.5 text-orionix-text-muted truncate">{user?.email}</p>
-              </div>
+          <div className="relative">
+            {/* Badge del torneo */}
+            <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full mb-5"
+              style={{ background: 'rgba(212,175,55,0.10)', border: '1px solid rgba(212,175,55,0.30)' }}>
+              <span style={{ fontSize: 14 }}>🏆</span>
+              <span style={{ fontSize: 11, fontWeight: 900, letterSpacing: '0.16em', color: gold }}>FIFA WORLD CUP 2026</span>
+              <span style={{ fontSize: 11, color: 'rgba(255,255,255,0.35)' }}>·</span>
+              <span style={{ fontSize: 11, fontWeight: 700, letterSpacing: '0.08em', color: 'rgba(226,241,226,0.75)' }}>{ed.host}</span>
             </div>
-          }
-        />
-      </div>
 
-      {/* ═══ DASHBOARD CONTENT ═══ */}
-      <div className="relative z-10 px-4 sm:px-6 py-5 max-w-6xl mx-auto w-full pb-44 md:pb-32">
-
-        {/* Modal de bienvenida Premium — solo Free, una vez por sesión */}
-        <PremiumOnboardingModal enabled={isAuthenticated && !isPremium} locale={locale} />
-
-        {/* Loading bar */}
-        {loading && (
-          <div className="w-full h-[2px] rounded-full overflow-hidden mb-3"
-            style={{ background: alphaOf('green', 0.08) }}>
-            <motion.div
-              className="h-full rounded-full"
-              style={{ background: gradients.divider('green', 1), width: '38%' }}
-              animate={{ x: ['-100%', '360%'] }}
-              transition={{ duration: 1.1, repeat: Infinity, ease: 'easeInOut' }}
-            />
-          </div>
-        )}
-
-        {/* ── TOURNAMENT MASTHEAD (sticky, justo bajo el header) ── */}
-        <div
-          className="sticky z-30 mb-5 rounded-2xl px-4 py-3"
-          style={{
-            top: headerH,
-            background: alpha(hex.bg.primary, 0.85),
-            backdropFilter: 'blur(16px)',
-            WebkitBackdropFilter: 'blur(16px)',
-            border: `1px solid ${alpha(hex.neutral.white, 0.06)}`,
-          }}
-        >
-        <motion.div
-          initial={{ opacity: 0, y: -8 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.45, ease: [0.22, 1, 0.36, 1] }}
-          className="flex items-center justify-between"
-        >
-          <div>
-            {/* Título principal: text-2xl / text-3xl para máxima legibilidad */}
-            <h1 className="text-2xl sm:text-3xl font-black text-white leading-none">
-              {t('home.welcome')},{' '}
-              <span className="text-transparent bg-clip-text"
-                style={{ backgroundImage: `linear-gradient(90deg, ${hex.green.soft}, ${hex.green.bright})` }}>
-                {user?.displayName?.split(' ')[0]}
-              </span>{' '}
-              <motion.span
-                animate={{ rotate: [0, 14, -8, 14, 0] }}
-                transition={{ duration: 1.5, delay: 0.9, repeat: Infinity, repeatDelay: 5 }}>
-                👋
-              </motion.span>
+            <h1 className="text-transparent bg-clip-text mx-auto"
+              style={{ fontSize: 'clamp(26px, 4.5vw, 40px)', fontWeight: 900, lineHeight: 1.18, maxWidth: 760,
+                backgroundImage: 'linear-gradient(92deg, #eafbea 10%, #86efac 55%, #D4AF37 100%)' }}>
+              {ed.title}
             </h1>
-            {/* Fecha: mínimo 13px */}
-            <p className="text-[13px] mt-1.5 tracking-wide text-orionix-text-secondary" suppressHydrationWarning>
-              {fmtTodayHeader(new Date(), locale)}
-            </p>
-            {/* CTA "Pásate a Premium" — solo Free. Conversión visible al entrar al dashboard. */}
-            {!isPremium && (
-              <motion.button
-                onClick={() => router.push(`/${locale}/premium`)}
-                initial={{ opacity: 0, y: 6 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.4, delay: 0.3 }}
-                whileHover={{ scale: 1.03, y: -1 }}
-                whileTap={{ scale: 0.98 }}
-                className="mt-3 inline-flex items-center gap-2 px-3.5 py-2 rounded-xl font-black tracking-wider uppercase text-[11px] sm:text-[12px]"
-                style={{
-                  background: `linear-gradient(135deg, ${hex.gold.base} 0%, ${hex.gold.muted} 100%)`,
-                  color: hex.neutral.black,
-                  boxShadow: `0 6px 18px ${alphaOf('gold', 0.45)}, inset 0 1px 0 ${alpha(hex.neutral.white, 0.35)}`,
-                  border: `1px solid ${alphaOf('gold', 0.65)}`,
-                }}
-                title="Hazte Premium y desbloquea todo el Mundial">
-                <FiZap size={13} style={{ fill: hex.neutral.black }} />
-                <span>Pásate a Premium</span>
-                <FiArrowRight size={13} />
-              </motion.button>
-            )}
-          </div>
 
-          <div className="flex flex-col items-end gap-1.5">
-            {/* Badge torneo: "FIFA" mínimo 10px, "WORLD CUP" mínimo 13px */}
-            <div className="flex items-center gap-2.5 px-3.5 py-2 rounded-xl"
-              style={{
-                background: `linear-gradient(135deg, ${alphaOf('gold', 0.14)} 0%, ${alpha(hex.neutral.black, 0.55)} 100%)`,
-                border: `1px solid ${alphaOf('gold', 0.32)}`,
-                boxShadow: `0 4px 16px ${alphaOf('gold', 0.12)}`,
-              }}>
-              <span className="text-lg">🏆</span>
-              <div>
-                <p className="text-[10px] font-black tracking-[0.26em] uppercase leading-none"
-                  style={{ color: alphaOf('gold', 0.70) }}>FIFA</p>
-                <p className="text-[13px] font-black tracking-[0.10em] leading-none mt-0.5" style={{ color: hex.gold.bright }}>WORLD CUP 2026</p>
-              </div>
+            <p className="mx-auto" style={{ fontSize: 14.5, lineHeight: 1.75, color: 'rgba(226,241,226,0.72)', maxWidth: 680, margin: '16px auto 0' }}>
+              {ed.intro}
+            </p>
+            <p className="mx-auto" style={{ fontSize: 13, lineHeight: 1.6, color: 'rgba(212,175,55,0.85)', fontWeight: 600, maxWidth: 620, margin: '10px auto 0' }}>
+              {ed.state}
+            </p>
+
+            {/* CTAs */}
+            <div className="flex items-center justify-center gap-3 flex-wrap" style={{ marginTop: 26 }}>
+              <Link href={`/${locale}/register`}
+                className="transition-transform duration-200 hover:scale-[1.04]"
+                style={{ display: 'inline-block', padding: '13px 26px', borderRadius: 14, fontSize: 14, fontWeight: 900, letterSpacing: '0.02em', textDecoration: 'none',
+                  background: `linear-gradient(135deg, ${gold}, #b8962e)`, color: '#0a0f0a',
+                  border: '1px solid rgba(212,175,55,0.7)', boxShadow: '0 8px 28px rgba(212,175,55,0.35)' }}>
+                {ed.ctaRegister}
+              </Link>
+              <Link href={`/${locale}/login`}
+                className="transition-colors duration-200 hover:bg-white/10"
+                style={{ display: 'inline-block', padding: '13px 26px', borderRadius: 14, fontSize: 14, fontWeight: 800, textDecoration: 'none',
+                  background: 'rgba(255,255,255,0.05)', color: '#d8ecd8', border: '1px solid rgba(255,255,255,0.14)' }}>
+                {ed.ctaLogin}
+              </Link>
             </div>
-            {/* Sedes: código de país mínimo 10px */}
-            <div className="hidden sm:flex items-center gap-2.5">
-              {[
-                { flag: '🇺🇸', code: 'USA', color: hex.host.usaRed },
-                { flag: '🇲🇽', code: 'MEX', color: hex.host.mexGreen },
-                { flag: '🇨🇦', code: 'CAN', color: hex.host.canRed },
-              ].map((n, i) => (
-                <React.Fragment key={n.code}>
-                  {i > 0 && <span className="text-white/15 text-sm">·</span>}
-                  <div className="flex items-center gap-1">
-                    <span className="text-sm leading-none">{n.flag}</span>
-                    <span className="text-[10px] font-black tracking-[0.14em]" style={{ color: n.color }}>{n.code}</span>
-                  </div>
-                </React.Fragment>
+          </div>
+        </div>
+
+        {/* ── CHIPS DE ESTADO DEL TORNEO ── */}
+        <div className="grid grid-cols-2 gap-4" style={{ marginTop: 18 }}>
+          <div className="text-center" style={{ borderRadius: 16, padding: '18px 14px', background: cardBg, border: cardBorder }}>
+            <p style={{ fontSize: 26, fontWeight: 900, color: '#86efac', lineHeight: 1, margin: 0 }}>
+              {ed.played}<span style={{ fontSize: 15, fontWeight: 700, color: 'rgba(226,241,226,0.45)' }}>/{ed.total}</span>
+            </p>
+            <p style={{ fontSize: 10, fontWeight: 800, letterSpacing: '0.18em', textTransform: 'uppercase', color: 'rgba(226,241,226,0.5)', margin: '8px 0 0' }}>{ed.playedLabel}</p>
+          </div>
+          <div className="text-center" style={{ borderRadius: 16, padding: '18px 14px', background: cardBg, border: cardBorder }}>
+            <p style={{ fontSize: 19, fontWeight: 900, color: gold, lineHeight: 1.2, margin: '4px 0 0' }}>{ed.phaseShort ?? '—'}</p>
+            <p style={{ fontSize: 10, fontWeight: 800, letterSpacing: '0.18em', textTransform: 'uppercase', color: 'rgba(226,241,226,0.5)', margin: '8px 0 0' }}>{ed.phaseLabel}</p>
+          </div>
+        </div>
+
+        {/* ── ÚLTIMOS RESULTADOS (tarjetas de marcador) ── */}
+        {ed.latestResults.length > 0 && (
+          <div style={{ marginTop: 26 }}>
+            <p style={label}>{ed.latestLabel}</p>
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+              {ed.latestResults.map((r) => (
+                <div key={`${r.home}-${r.away}`} className="text-center"
+                  style={{ borderRadius: 14, padding: '16px 12px', background: cardBg, border: cardBorder }}>
+                  <p style={{ fontSize: 12.5, fontWeight: 700, color: 'rgba(226,241,226,0.82)', margin: 0, lineHeight: 1.4 }}>{r.home}</p>
+                  <p style={{ fontSize: 22, fontWeight: 900, color: '#eafbea', margin: '6px 0', lineHeight: 1, fontVariantNumeric: 'tabular-nums' }}>{r.score}</p>
+                  <p style={{ fontSize: 12.5, fontWeight: 700, color: 'rgba(226,241,226,0.82)', margin: 0, lineHeight: 1.4 }}>{r.away}</p>
+                </div>
               ))}
             </div>
           </div>
-        </motion.div>
-        </div>
+        )}
 
-        {/* ── ROW 1 — KPI CHIPS ── */}
-        <div data-tour="stats" className="grid grid-cols-2 sm:grid-cols-4 gap-4 mb-5">
-          <KPIChip icon={<FiActivity />}  value={stats.predictions}                        label={t('home.stats.predictions')} color={hex.green.bright} glow={hex.green.bright} bg={alphaOf('green', 0.07)}        delay={0.08} />
-          <KPIChip icon={<FiCrosshair />} value={stats.exactas}                            label={t('home.stats.exact')}        color={hex.green.hover}  glow={hex.green.hover}  bg={alphaOf('success', 0.07)}      delay={0.14} />
-          <KPIChip icon={<FiAward />}     value={stats.puntos}                             label={t('home.stats.points')}       color={hex.gold.base}    glow={hex.gold.base}    bg={alphaOf('gold', 0.07)}         delay={0.20} />
-          <KPIChip icon={<FiBarChart2 />} value={stats.rank > 0 ? `#${stats.rank}` : '—'} label={t('home.stats.ranking')}     color={hex.green.muted}  glow={hex.green.muted}  bg={alpha(hex.green.muted, 0.07)}  delay={0.26} />
-        </div>
-
-        {/* ── ROW 2 — COUNTDOWN / MUNDIAL EN CURSO ── */}
-        <HomeCountdown countdown={countdown} mundialStarted={mundialStarted} t={t} />
-
-        {/* ── PROMO + PUBLICIDAD simétrico (solo Free) ── */}
-        <div className="my-5 grid grid-cols-1 sm:grid-cols-2 gap-4">
-          <PromoCarousel className="" />
-          <AdSlot className="my-0" />
-        </div>
-
-        {/* ── ROW 3 — BENTO GRID ── */}
-        <div className="grid grid-cols-1 lg:grid-cols-[1fr_316px] gap-5">
-
-          {/* LEFT COLUMN */}
-          <div className="flex flex-col gap-5">
-            <UpcomingMatches fixtures={todayUpcoming} predictedFixtureIds={predictedFixtureIds} t={t} />
-            <RecentResults fixtures={recentResults} predictions={myPredictions} t={t} />
+        {/* ── PRÓXIMOS PARTIDOS (filas clickeables) ── */}
+        {ed.nextMatches.length > 0 && (
+          <div style={{ marginTop: 26 }}>
+            <p style={label}>{ed.nextLabel}</p>
+            <div className="flex flex-col gap-2.5">
+              {ed.nextMatches.map((m) => (
+                <Link key={m.id} href={`/${locale}/fixtures/${m.id}`}
+                  className="flex items-center justify-between gap-3 transition-colors duration-200 hover:bg-white/[0.05]"
+                  style={{ borderRadius: 14, padding: '14px 18px', background: cardBg, border: cardBorder, textDecoration: 'none' }}>
+                  <span style={{ fontSize: 13.5, fontWeight: 800, color: '#d8ecd8' }}>{m.teams}</span>
+                  <span className="shrink-0 inline-flex items-center gap-2">
+                    <span style={{ fontSize: 12, fontWeight: 600, color: 'rgba(212,175,55,0.8)' }}>{m.date}</span>
+                    <span aria-hidden style={{ fontSize: 14, color: 'rgba(226,241,226,0.4)' }}>›</span>
+                  </span>
+                </Link>
+              ))}
+            </div>
           </div>
+        )}
 
-          {/* RIGHT COLUMN */}
-          <RightColumn
-            stats={stats}
-            recentResults={recentResults}
-            myPredictions={myPredictions}
-            topRanking={topRanking}
-            maxRankPts={maxRankPts}
-            currentStreak={currentStreak}
-            t={t}
-          />
+        {/* ── EXPLORAR (pills) ── */}
+        <div style={{ marginTop: 26 }}>
+          <p style={label}>{ed.exploreLabel}</p>
+          <div className="flex flex-wrap gap-2.5">
+            {ed.links.map((l) => (
+              <Link key={l.href} href={`/${locale}/${l.href}`}
+                className="transition-colors duration-200 hover:bg-white/[0.08]"
+                style={{ display: 'inline-block', padding: '9px 16px', borderRadius: 999, fontSize: 12.5, fontWeight: 700, textDecoration: 'none',
+                  background: 'rgba(255,255,255,0.045)', color: '#9fd89f', border: '1px solid rgba(159,216,159,0.22)' }}>
+                {l.label}
+              </Link>
+            ))}
+          </div>
         </div>
-
-        {/* ── ROW 4 — QUICK ACCESS BENTO ── */}
-        <QuickAccessBento t={t} />
-      </div>
-
-      <WhatsAppButton />
-      <TourButton steps={getTourSteps(locale, 'dashboard')} />
-    </div>
+      </section>
+    </>
   );
 }
