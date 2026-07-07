@@ -152,11 +152,17 @@ export default function FixtureDetailPage({ params }: { params: { id: string } }
   // para que el crawler reciba la prosa en el HTML inicial. En cliente, esta
   // página lo muestra en su posición ideal (tras el marcador, antes de la porra),
   // así que el bloque del layout se oculta para que no se vea duplicado al final.
+  // IMPORTANTE: solo se oculta cuando el fixture YA cargó (el resumen del cliente
+  // está en pantalla). Ocultarlo al montar dejaba la página sin prosa durante la
+  // carga — y el renderizado de Googlebot sacaba la foto en ese instante y la
+  // marcaba Soft 404 pese a que el HTML inicial sí tenía el contenido.
+  const fixtureLoaded = Boolean(fixture);
   useEffect(() => {
+    if (!fixtureLoaded) return;
     const el = document.getElementById('fixture-ssr-summary');
     if (el) el.style.display = 'none';
     return () => { if (el) el.style.display = ''; };
-  }, []);
+  }, [fixtureLoaded]);
 
   useEffect(() => {
     if (fixture?.status !== 'LIVE') return;

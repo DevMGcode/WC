@@ -250,14 +250,6 @@ export default function ScorersClient() {
     return () => ro.disconnect();
   }, []);
 
-  // El page (server) renderiza narrativa + top-10 en SSR (id "scorers-ssr-summary")
-  // para el crawler. En cliente esta tabla interactiva muestra lo mismo, así que
-  // el bloque SSR se oculta para no duplicar contenido en pantalla.
-  useEffect(() => {
-    const ssr = document.getElementById('scorers-ssr-summary');
-    if (ssr) ssr.style.display = 'none';
-    return () => { if (ssr) ssr.style.display = ''; };
-  }, []);
 
   // Free → top 10, Premium → top 50. El backend igual fuerza el cap, pero pedimos
   // explícitamente el número correcto para no traer datos extras y agilizar el cache.
@@ -271,6 +263,19 @@ export default function ScorersClient() {
   // Defensivo: nullish coalescing porque el endpoint puede devolver null si está vacío o 422
   const scorers = (rawScorers ?? []) as PlayerStat[];
   const assists = (rawAssists ?? []) as PlayerStat[];
+
+  // El page (server) renderiza narrativa + top-10 en SSR (id "scorers-ssr-summary")
+  // para el crawler. En cliente esta tabla muestra lo mismo, así que el bloque SSR
+  // se oculta — pero SOLO cuando la tabla ya tiene datos: ocultarlo al montar
+  // dejaba la página sin contenido durante la carga y el renderizado de Googlebot
+  // podía fotografiar ese instante y marcarla Soft 404.
+  const scorersLoaded = scorers.length > 0;
+  useEffect(() => {
+    if (!scorersLoaded) return;
+    const ssr = document.getElementById('scorers-ssr-summary');
+    if (ssr) ssr.style.display = 'none';
+    return () => { if (ssr) ssr.style.display = ''; };
+  }, [scorersLoaded]);
 
   const loading = loadingScorers || loadingAssists;
   const error   = (errScorers || errAssists) ? t('common.connectionError') : '';
